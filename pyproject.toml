@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "setu"
+version = "0.1.0"
+description = "SETU: AI-Powered Indian Sign Language Translation System"
+authors = [{ name = "SETU Project Team" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24.0",
+    "opencv-python>=4.8.0",
+    "mediapipe>=0.10.14",
+    "h5py>=3.10.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["setu*"]

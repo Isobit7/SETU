@@ -1,0 +1,67 @@
+# Python Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Bytecode and Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Large Model Weights and Task Bundles (Keep manifests/READMEs only)
+*.h5
+*.keras
+*.tflite
+*.task
+*.onnx
+*.pt
+*.pth
+*.bin
+*.weights
+models/tasks/*.task
+models/reference/*.h5
+
+# Datasets and Large Media Files
+data/raw/
+data/processed/
+*.mp4
+*.avi
+*.mov
+*.npy
+*.npz
+*.jpg
+*.jpeg
+*.png
+
+# Temporary Scratch Files and Logs
+scratch/
+*.log
+*.tmp
+temp/
+tmp/
+
+# Secrets and Local Configurations
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE and Operating System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
