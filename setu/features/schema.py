@@ -6,6 +6,8 @@ Immutable slice definitions, constants, and validation rules for the 158-dimensi
 from typing import Final
 import numpy as np
 
+from setu.exceptions import FeatureValidationError
+
 # Total Dimensions
 FEATURE_DIM: Final[int] = 158
 
@@ -58,33 +60,33 @@ def validate_schema_vector(vec: np.ndarray) -> bool:
         
     if vec.ndim == 1:
         if vec.shape[0] != FEATURE_DIM:
-            raise ValueError(f"Feature vector must have length {FEATURE_DIM}, got {vec.shape[0]}")
+            raise FeatureValidationError(f"Feature vector must have length {FEATURE_DIM}, got {vec.shape[0]}")
     elif vec.ndim == 2:
         if vec.shape[1] != FEATURE_DIM:
-            raise ValueError(f"Feature sequence must have feature dimension {FEATURE_DIM}, got {vec.shape[1]}")
+            raise FeatureValidationError(f"Feature sequence must have feature dimension {FEATURE_DIM}, got {vec.shape[1]}")
     else:
-        raise ValueError(f"Vector must be 1D or 2D, got shape {vec.shape}")
+        raise FeatureValidationError(f"Vector must be 1D or 2D, got shape {vec.shape}")
         
     if not np.issubdtype(vec.dtype, np.floating):
         raise TypeError(f"Vector must have floating dtype, got {vec.dtype}")
         
     if np.isnan(vec).any():
-        raise ValueError("Feature vector contains NaN values")
+        raise FeatureValidationError("Feature vector contains NaN values")
         
     if np.isinf(vec).any():
-        raise ValueError("Feature vector contains Inf values")
+        raise FeatureValidationError("Feature vector contains Inf values")
         
     # Check bounds on 1D vector
     if vec.ndim == 1:
         rp = vec[RIGHT_PRESENCE_INDEX]
         lp = vec[LEFT_PRESENCE_INDEX]
         if rp not in (0.0, 1.0):
-            raise ValueError(f"Right presence flag must be 0.0 or 1.0, got {rp}")
+            raise FeatureValidationError(f"Right presence flag must be 0.0 or 1.0, got {rp}")
         if lp not in (0.0, 1.0):
-            raise ValueError(f"Left presence flag must be 0.0 or 1.0, got {lp}")
+            raise FeatureValidationError(f"Left presence flag must be 0.0 or 1.0, got {lp}")
             
         c_score = vec[CONTACT_SCORE_INDEX]
         if not (0.0 <= c_score <= 1.0001):
-            raise ValueError(f"Contact score must be in [0.0, 1.0], got {c_score}")
+            raise FeatureValidationError(f"Contact score must be in [0.0, 1.0], got {c_score}")
             
     return True

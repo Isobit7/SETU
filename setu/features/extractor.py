@@ -7,6 +7,7 @@ and inter-hand relational features from MediaPipe hand landmarks.
 from typing import Optional, Union, List, Any
 import numpy as np
 
+from setu.exceptions import LandmarkExtractionError
 from setu.utils.geometry import (
     normalize_hand_landmarks,
     compute_finger_distances,
@@ -49,7 +50,7 @@ def _to_numpy_21x3(landmarks: Optional[Union[np.ndarray, List[Any]]]) -> Optiona
             z = np.zeros((21, 1), dtype=np.float32)
             return np.hstack([landmarks, z]).astype(np.float32)
         else:
-            raise ValueError(f"Expected array of shape (21, 3) or (21, 2), got {landmarks.shape}")
+            raise LandmarkExtractionError(f"Expected array of shape (21, 3) or (21, 2), got {landmarks.shape}")
             
     # List of landmark objects with .x, .y, .z attributes
     coords = []
@@ -60,7 +61,7 @@ def _to_numpy_21x3(landmarks: Optional[Union[np.ndarray, List[Any]]]) -> Optiona
         coords.append([x, y, z])
     coords_arr = np.array(coords, dtype=np.float32)
     if coords_arr.shape != (21, 3):
-        raise ValueError(f"Expected 21 landmarks, extracted shape {coords_arr.shape}")
+        raise LandmarkExtractionError(f"Expected 21 landmarks, extracted shape {coords_arr.shape}")
     return coords_arr
 
 class FeatureExtractor158:
