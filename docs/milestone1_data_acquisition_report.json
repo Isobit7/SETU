@@ -1,0 +1,258 @@
+{
+  "dataset_name": "SETU-ISL-MVP-Controlled",
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "feature_dim": 158,
+  "summary": {
+    "total_samples": 24,
+    "classes_count": 3,
+    "samples_per_class": {
+      "no_sign": 18,
+      "hello": 3,
+      "thank_you": 3
+    },
+    "samples_per_split": {
+      "train": 10,
+      "val": 7,
+      "test": 7,
+      "unassigned": 0
+    },
+    "samples_per_signer": {
+      "signer_01": 5,
+      "signer_02": 5,
+      "signer_03": 5,
+      "signer_S01": 1,
+      "signer_S02": 1,
+      "signer_S03": 1,
+      "signer_S04": 1,
+      "signer_S05": 1,
+      "signer_S06": 1,
+      "signer_webcam_01": 3
+    },
+    "low_hand_presence_samples": {
+      "no_sign": 3
+    }
+  },
+  "genuine_samples_count": 9,
+  "synthetic_samples_count": 15,
+  "signer_independent_feasible": true,
+  "extraction_failure_rate": 0.0,
+  "samples": [
+    {
+      "sample_id": "no_sign_signer_01_empty_000",
+      "label": "no_sign",
+      "signer_id": "signer_01",
+      "split": "train",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 0.0
+    },
+    {
+      "sample_id": "no_sign_signer_01_resting_1_001",
+      "label": "no_sign",
+      "signer_id": "signer_01",
+      "split": "train",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_01_resting_2_002",
+      "label": "no_sign",
+      "signer_id": "signer_01",
+      "split": "train",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_01_face_touch_1_003",
+      "label": "no_sign",
+      "signer_id": "signer_01",
+      "split": "train",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_01_face_touch_2_004",
+      "label": "no_sign",
+      "signer_id": "signer_01",
+      "split": "train",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_02_empty_005",
+      "label": "no_sign",
+      "signer_id": "signer_02",
+      "split": "val",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 0.0
+    },
+    {
+      "sample_id": "no_sign_signer_02_resting_1_006",
+      "label": "no_sign",
+      "signer_id": "signer_02",
+      "split": "val",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_02_resting_2_007",
+      "label": "no_sign",
+      "signer_id": "signer_02",
+      "split": "val",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_02_face_touch_1_008",
+      "label": "no_sign",
+      "signer_id": "signer_02",
+      "split": "val",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_02_face_touch_2_009",
+      "label": "no_sign",
+      "signer_id": "signer_02",
+      "split": "val",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_03_empty_010",
+      "label": "no_sign",
+      "signer_id": "signer_03",
+      "split": "test",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 0.0
+    },
+    {
+      "sample_id": "no_sign_signer_03_resting_1_011",
+      "label": "no_sign",
+      "signer_id": "signer_03",
+      "split": "test",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_03_resting_2_012",
+      "label": "no_sign",
+      "signer_id": "signer_03",
+      "split": "test",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_03_face_touch_1_013",
+      "label": "no_sign",
+      "signer_id": "signer_03",
+      "split": "test",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "no_sign_signer_03_face_touch_2_014",
+      "label": "no_sign",
+      "signer_id": "signer_03",
+      "split": "test",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_hello_s01_0029",
+      "label": "hello",
+      "signer_id": "signer_S01",
+      "split": "train",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_hello_s02_0089",
+      "label": "hello",
+      "signer_id": "signer_S02",
+      "split": "val",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_hello_s03_9914",
+      "label": "hello",
+      "signer_id": "signer_S03",
+      "split": "test",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_thank_you_s04_0006",
+      "label": "thank_you",
+      "signer_id": "signer_S04",
+      "split": "train",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 0.85
+    },
+    {
+      "sample_id": "include_thank_you_s05_0058",
+      "label": "thank_you",
+      "signer_id": "signer_S05",
+      "split": "val",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 0.85
+    },
+    {
+      "sample_id": "include_thank_you_s06_9948",
+      "label": "thank_you",
+      "signer_id": "signer_S06",
+      "split": "test",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 0.85
+    },
+    {
+      "sample_id": "real_no_sign_webcam_face_touch_adjust_003",
+      "label": "no_sign",
+      "signer_id": "signer_webcam_01",
+      "split": "train",
+      "source_dataset": "SETU-Webcam-Genuine",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "real_no_sign_webcam_idle_sitting_001",
+      "label": "no_sign",
+      "signer_id": "signer_webcam_01",
+      "split": "train",
+      "source_dataset": "SETU-Webcam-Genuine",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "real_no_sign_webcam_lap_resting_002",
+      "label": "no_sign",
+      "signer_id": "signer_webcam_01",
+      "split": "train",
+      "source_dataset": "SETU-Webcam-Genuine",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    }
+  ]
+}

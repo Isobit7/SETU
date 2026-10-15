@@ -1,0 +1,12 @@
+{
+  "camera_accessible": true,
+  "resolution": "640x480",
+  "aspect_ratio": 1.3333333333333333,
+  "anisotropy_ratio": 1.3333333333333333,
+  "frames_evaluated": 75,
+  "right_hand_detections": 0,
+  "left_hand_detections": 47,
+  "both_hands_detections": 0,
+  "mean_contact_score": 0.0,
+  "genuine_nonsign_samples_created": 3
+}

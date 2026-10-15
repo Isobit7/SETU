@@ -2,21 +2,30 @@
   "name": "SETU-ISL-MVP-Controlled",
   "version": "1.0.0",
   "summary": {
-    "total_samples": 15,
-    "classes_count": 1,
+    "total_samples": 24,
+    "classes_count": 3,
     "samples_per_class": {
-      "no_sign": 15
+      "no_sign": 18,
+      "hello": 3,
+      "thank_you": 3
     },
     "samples_per_split": {
-      "train": 5,
-      "val": 5,
-      "test": 5,
+      "train": 10,
+      "val": 7,
+      "test": 7,
       "unassigned": 0
     },
     "samples_per_signer": {
       "signer_01": 5,
       "signer_02": 5,
-      "signer_03": 5
+      "signer_03": 5,
+      "signer_S01": 1,
+      "signer_S02": 1,
+      "signer_S03": 1,
+      "signer_S04": 1,
+      "signer_S05": 1,
+      "signer_S06": 1,
+      "signer_webcam_01": 3
     },
     "low_hand_presence_samples": {
       "no_sign": 3
@@ -276,6 +285,180 @@
       "metadata": {
         "scenario": "face_touch_2",
         "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "include_hello_s01_0029",
+      "label": "hello",
+      "class_id": 0,
+      "signer_id": "signer_S01",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\hello_s01_mvi_0029.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_hello_s01_0029.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "ee17e5ad43c8d2b926c609949a67b236c05b4889d91367af4886c1aa9a88cb52",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/48. Hello/MVI_0029.MOV",
+        "features_sha256": "d5549594e7e44c046c06da7a20fc6e39e980c49b2ed11a0a31bf916e83f4d905",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "include_hello_s02_0089",
+      "label": "hello",
+      "class_id": 0,
+      "signer_id": "signer_S02",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\hello_s02_mvi_0089.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_hello_s02_0089.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "27dcdf7c417145543126209022411f5f59c7853d4dcbdaf1ab5abdcc06891e88",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/48. Hello/MVI_0089.MOV",
+        "features_sha256": "894e037735ee8760ec7e00af8e82b448c2583303a2e6d43d175cd3503fe81afc",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "include_hello_s03_9914",
+      "label": "hello",
+      "class_id": 0,
+      "signer_id": "signer_S03",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\hello_s03_mvi_9914.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_hello_s03_9914.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "433ca89d583bb8f7657c8402857047afa9e4de5874de1d746b569fc036da115b",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/48. Hello/MVI_9914.MOV",
+        "features_sha256": "ddd8c393d3f0afa5c33b3e462699a4c8e753c8120ec1b129b8b217a6718569fa",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "include_thank_you_s04_0006",
+      "label": "thank_you",
+      "class_id": 1,
+      "signer_id": "signer_S04",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\thank_you_s04_mvi_0006.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_thank_you_s04_0006.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "48cd9741b508b757fc0993430003ac4d5adc232ffb15ac9ed2683e301181491b",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/55. Thank you/MVI_0006.MOV",
+        "features_sha256": "da85921c25cc1b3bbccdf8bd2c14896b790ae040317fea6797dbc7f77298b4b5",
+        "hand_presence_ratio": 0.85
+      }
+    },
+    {
+      "sample_id": "include_thank_you_s05_0058",
+      "label": "thank_you",
+      "class_id": 1,
+      "signer_id": "signer_S05",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\thank_you_s05_mvi_0058.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_thank_you_s05_0058.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "58a0628626ae4a67e3ec619650f1f5a66bfd17858e04a40c8ae551d9e2ead048",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/55. Thank you/MVI_0058.MOV",
+        "features_sha256": "c5c6949b48f27573d512257d388e4b4d124b3a04388344611f5c97d546fa189d",
+        "hand_presence_ratio": 0.85
+      }
+    },
+    {
+      "sample_id": "include_thank_you_s06_9948",
+      "label": "thank_you",
+      "class_id": 1,
+      "signer_id": "signer_S06",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\thank_you_s06_mvi_9948.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_thank_you_s06_9948.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "916bacee008b83b3ea910a08478ce199045c438a1e05e76cb2188d9e38dcc50f",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/55. Thank you/MVI_9948.MOV",
+        "features_sha256": "0686e87a7daaa2aba032bdfd059586c37fdda6ca1231c693c78c354f17b3c4e9",
+        "hand_presence_ratio": 0.85
+      }
+    },
+    {
+      "sample_id": "real_no_sign_webcam_face_touch_adjust_003",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_webcam_01",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\real_no_sign\\real_no_sign_webcam_face_touch_adjust_003.mp4",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\real_no_sign_webcam_face_touch_adjust_003.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "2fca9f40fd2a09b6f04cb28d224a4072589e561da64a66c05ef8076e54394a2c",
+      "source_dataset": "SETU-Webcam-Genuine",
+      "license": "Proprietary / SETU Internal Test",
+      "metadata": {
+        "is_synthetic": false,
+        "scenario": "face_touch_adjust",
+        "features_sha256": "d5d7314b2bba7fdc2ecc3e67b4ef44105aff23dba905ad59c9ac11f0873d0b36"
+      }
+    },
+    {
+      "sample_id": "real_no_sign_webcam_idle_sitting_001",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_webcam_01",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\real_no_sign\\real_no_sign_webcam_idle_sitting_001.mp4",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\real_no_sign_webcam_idle_sitting_001.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "ef672bb921b5616c5091fbf5615253be578a62321af1d7032dba6bc3fc033f40",
+      "source_dataset": "SETU-Webcam-Genuine",
+      "license": "Proprietary / SETU Internal Test",
+      "metadata": {
+        "is_synthetic": false,
+        "scenario": "idle_sitting",
+        "features_sha256": "6457a63de0b3a623dcfba21f627b2a75d378ac4be261b8388ffead3ac688a095"
+      }
+    },
+    {
+      "sample_id": "real_no_sign_webcam_lap_resting_002",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_webcam_01",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\real_no_sign\\real_no_sign_webcam_lap_resting_002.mp4",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\real_no_sign_webcam_lap_resting_002.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "00989e977699d856aef9c3b5c780423a2198b100d0e2cf675806f50094d5ce20",
+      "source_dataset": "SETU-Webcam-Genuine",
+      "license": "Proprietary / SETU Internal Test",
+      "metadata": {
+        "is_synthetic": false,
+        "scenario": "lap_resting",
+        "features_sha256": "27f91c4de6c0de97221732f3a8f7f41b91c38985dab85266018f722460a12c24"
       }
     }
   ]

@@ -36,7 +36,11 @@ class DatasetManifest:
         self.samples: List[SampleRecord] = []
 
     def add_sample(self, record: SampleRecord) -> None:
-        """Adds a sample record to the manifest."""
+        """Adds or updates a sample record in the manifest by unique sample_id."""
+        for i, existing in enumerate(self.samples):
+            if existing.sample_id == record.sample_id:
+                self.samples[i] = record
+                return
         self.samples.append(record)
 
     def split_by_signer(
