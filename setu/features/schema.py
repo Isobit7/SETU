@@ -8,6 +8,9 @@ import numpy as np
 
 from setu.exceptions import FeatureValidationError
 
+# Schema Metadata
+SCHEMA_VERSION: Final[str] = "1.0.0"
+
 # Total Dimensions
 FEATURE_DIM: Final[int] = 158
 

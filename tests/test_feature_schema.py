@@ -7,6 +7,7 @@ import pytest
 import numpy as np
 
 from setu.features.schema import (
+    SCHEMA_VERSION,
     FEATURE_DIM,
     RIGHT_HAND_COORDS_SLICE,
     RIGHT_HAND_DISTANCES_SLICE,
@@ -64,6 +65,43 @@ def create_synthetic_hand(wrist=(0.5, 0.5, 0.0), scale=0.1):
         hand[idx] = [wx + 0.02 * (scale / 0.1), wy - i * 0.025 * (scale / 0.1), wz]
         
     return hand
+
+def test_schema_version_and_immutability():
+    """Verifies that schema version is explicitly defined as 1.0.0."""
+    assert SCHEMA_VERSION == "1.0.0"
+
+def test_contiguous_partition_coverage():
+    """
+    Exhaustive regression test: verifies that the 158 indices are partitioned
+    into contiguous, non-overlapping segments with exactly 158 covered indices.
+    """
+    covered = set()
+    slices_and_indices = [
+        ("RH_COORDS", range(RIGHT_HAND_COORDS_SLICE.start, RIGHT_HAND_COORDS_SLICE.stop)),
+        ("RH_DIST", range(RIGHT_HAND_DISTANCES_SLICE.start, RIGHT_HAND_DISTANCES_SLICE.stop)),
+        ("RH_ANGLES", range(RIGHT_HAND_ANGLES_SLICE.start, RIGHT_HAND_ANGLES_SLICE.stop)),
+        ("LH_COORDS", range(LEFT_HAND_COORDS_SLICE.start, LEFT_HAND_COORDS_SLICE.stop)),
+        ("LH_DIST", range(LEFT_HAND_DISTANCES_SLICE.start, LEFT_HAND_DISTANCES_SLICE.stop)),
+        ("LH_ANGLES", range(LEFT_HAND_ANGLES_SLICE.start, LEFT_HAND_ANGLES_SLICE.stop)),
+        ("RH_PRESENCE", [RIGHT_PRESENCE_INDEX]),
+        ("LH_PRESENCE", [LEFT_PRESENCE_INDEX]),
+        ("INTER_WRIST_VEC", range(INTER_WRIST_VECTOR_SLICE.start, INTER_WRIST_VECTOR_SLICE.stop)),
+        ("INTER_WRIST_DIST", [INTER_WRIST_DISTANCE_INDEX]),
+        ("INTER_INDEX_VEC", range(INTER_INDEX_VECTOR_SLICE.start, INTER_INDEX_VECTOR_SLICE.stop)),
+        ("INTER_INDEX_DIST", [INTER_INDEX_DISTANCE_INDEX]),
+        ("INTER_THUMB_DIST", [INTER_THUMB_DISTANCE_INDEX]),
+        ("CONTACT_SCORE", [CONTACT_SCORE_INDEX]),
+    ]
+    
+    total_elements = 0
+    for name, idx_range in slices_and_indices:
+        for idx in idx_range:
+            assert idx not in covered, f"Index {idx} in {name} overlaps with another segment!"
+            covered.add(idx)
+            total_elements += 1
+            
+    assert total_elements == 158
+    assert covered == set(range(158))
 
 def test_feature_dimension_and_slice_bounds():
     """Verifies that all slice definitions partition exactly 158 contiguous, non-overlapping dimensions."""

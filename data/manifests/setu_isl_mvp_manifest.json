@@ -1,0 +1,282 @@
+{
+  "name": "SETU-ISL-MVP-Controlled",
+  "version": "1.0.0",
+  "summary": {
+    "total_samples": 15,
+    "classes_count": 1,
+    "samples_per_class": {
+      "no_sign": 15
+    },
+    "samples_per_split": {
+      "train": 5,
+      "val": 5,
+      "test": 5,
+      "unassigned": 0
+    },
+    "samples_per_signer": {
+      "signer_01": 5,
+      "signer_02": 5,
+      "signer_03": 5
+    },
+    "low_hand_presence_samples": {
+      "no_sign": 3
+    }
+  },
+  "samples": [
+    {
+      "sample_id": "no_sign_signer_01_empty_000",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_01",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_01_empty_000.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "693b8c347e75ac13e882a53e45ecdcb053dc86792e5bcdfa318375b2bca46c79",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "empty",
+        "hand_presence_ratio": 0.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_01_resting_1_001",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_01",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_01_resting_1_001.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "3cd5ba1056c8075e1762879b8a756ed8469f1d9a4158e3454327b6ec7bc05208",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "resting_1",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_01_resting_2_002",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_01",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_01_resting_2_002.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "aa198c82a8a5da857733d6ed75d5615e4eba636365682ff58cd15b6d0010347a",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "resting_2",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_01_face_touch_1_003",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_01",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_01_face_touch_1_003.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "124a8d556f47c2bfa735b38e9810db66b420318f23ab5f1234f89fb311fe5453",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "face_touch_1",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_01_face_touch_2_004",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_01",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_01_face_touch_2_004.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "ca0572a83635042f802d9db12702cf3cfd04edce27a0854e405f336a0b412664",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "face_touch_2",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_02_empty_005",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_02",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_02_empty_005.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "693b8c347e75ac13e882a53e45ecdcb053dc86792e5bcdfa318375b2bca46c79",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "empty",
+        "hand_presence_ratio": 0.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_02_resting_1_006",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_02",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_02_resting_1_006.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "ccd04cbc386068d406b67f7bbeb293c3ca7083bdca622deeb242afc6b9d80ed3",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "resting_1",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_02_resting_2_007",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_02",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_02_resting_2_007.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "60cc9fbbb8ac21869c5f77432f6fe3cff2079d66d4759db67d2b4390afdd6e86",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "resting_2",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_02_face_touch_1_008",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_02",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_02_face_touch_1_008.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "cdabcd9ac08e3701a7c8a087f6684228a71782bbd17bacbb64cbf2f4f598522b",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "face_touch_1",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_02_face_touch_2_009",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_02",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_02_face_touch_2_009.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "313e60635663f4da569a00261d65a1acd3d1e52a1df89cbc3edcc973b39658cd",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "face_touch_2",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_03_empty_010",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_03",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_03_empty_010.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "693b8c347e75ac13e882a53e45ecdcb053dc86792e5bcdfa318375b2bca46c79",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "empty",
+        "hand_presence_ratio": 0.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_03_resting_1_011",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_03",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_03_resting_1_011.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "b20f42e363b4ce195ac61087a40577ab2c7215da9b3611a5b85a410d07ded356",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "resting_1",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_03_resting_2_012",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_03",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_03_resting_2_012.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "b050342c12069078257128540c7cb234422f72584117f5514ad9ee13a2d2fda7",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "resting_2",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_03_face_touch_1_013",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_03",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_03_face_touch_1_013.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "fa7060ae0752bd29e63df033278124627ba2b8506302083e91b178c24395a6e5",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "face_touch_1",
+        "hand_presence_ratio": 1.0
+      }
+    },
+    {
+      "sample_id": "no_sign_signer_03_face_touch_2_014",
+      "label": "no_sign",
+      "class_id": 10,
+      "signer_id": "signer_03",
+      "raw_path": "synthetic_controlled_generator",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\no_sign_signer_03_face_touch_2_014.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "2e2ef2a63eba703f6278db1ee74717e4cc21687cb5bd89cb3bf849cdbe096b89",
+      "source_dataset": "SETU-Controlled-Baseline",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "scenario": "face_touch_2",
+        "hand_presence_ratio": 1.0
+      }
+    }
+  ]
+}

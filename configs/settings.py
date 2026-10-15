@@ -13,6 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 @dataclass(frozen=True)
 class FeatureSettings:
     """Settings governing the 158-feature representation."""
+    schema_version: str = "1.0.0"
     feature_dim: int = 158
     single_hand_coords_dim: int = 63
     single_hand_geom_dim: int = 10
