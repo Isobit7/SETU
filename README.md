@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Isobit7/SETU/main/logo.png" alt="SETU - Bridging Silence" width="220" />
-  <h1>SETU</h1>
-  <h3>Bridging Silence — Real-Time Indian Sign Language (ISL) Translation SaaS</h3>
-  
+  <img src="logo.png" alt="SETU Logo" width="560" />
+
+  <br />
+
   [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
   [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
@@ -16,30 +16,30 @@
 
 ---
 
-## 📌 Project Overview
+## 📌 Overview
 
-**SETU** ("Bridge" in Sanskrit) is an end-to-end, high-performance, real-time Indian Sign Language (ISL) translation SaaS. Hand gestures are only one part of the complex linguistic structures of ISL—grammar and syntactic meaning also rely heavily on facial expressions and spatiotemporal transition speed. 
+**SETU** ("Bridge" in Sanskrit) is a high-performance, real-time Indian Sign Language (ISL) translation platform. It bridges accessibility gaps by interpreting both **static fingerspelling (A–Z)** and **dynamic multi-frame phrases** into fluent text using computer vision and deep learning.
 
-SETU leverages **MediaPipe Holistic (543 keypoints)** to track hands, pose, and face geometry at 30 FPS, extract **328-D spatiotemporal vectors** (combining relative positions, facial ratios, and frame-to-frame velocity), and evaluate them through an **Attention-based Bidirectional LSTM** for dynamic sequence classification. Static fingerspelling (A–Z) is captured instantly via a dedicated **63-D wrist-centered MLP**, resulting in responsive, fluid translation directly in the web browser.
+Unlike basic gesture trackers, SETU analyzes **543 MediaPipe keypoints** (hands, pose, face mesh) to process spatial hand configurations alongside grammatical **Non-Manual Markers (NMMs)** like eyebrow movement, eye squints, and mouth opening ratios.
 
 ---
 
-## ✨ Features & Architecture
+## ⚡ Key Highlights
 
-| Feature | Description | Technical Implementation |
+| Feature | Architecture | Specification |
 | :--- | :--- | :--- |
-| **Real-Time Streaming** | 30 FPS non-blocking WebSocket stream processing with offscreen frame downsampling ($320 \times 240$) | FastAPI Async, OpenCV JPEG compression |
-| **A–Z Fingerspelling** | Instant single-frame static letter recognition with wrist-centered palm normalization | 63-D MLP PyTorch Classifier ($21 \times 3$ points) |
-| **Dynamic ISL Sequences** | 328-D spatiotemporal sequence modeling over 30-frame rolling windows | Attention-based Bidirectional LSTM |
-| **Non-Manual Markers (NMM)** | 6-D scale-invariant facial ratio extraction (Eyebrow Elevation, MAR, EAR) for grammatical context | MediaPipe Face Mesh sub-indices |
-| **Noise Filtering** | Temporal debouncing, confidence hysteresis gating, and refractory cooldown | 4-Tier Post-Processing Pipeline |
-| **In-App Dataset Recorder** | Interactive CLI and API endpoints to record custom video samples and retrain signs | OpenCV HUD, NumPy `.npz` container |
-| **Movie-Style Subtitle HUD** | Cinema-grade live captioning with positioning guidance & collision avoidance | React 18, Glassmorphic Tailwind CSS |
-| **Voice Synthesis** | Instant real-time text-to-speech for continuous signed phrases | Web Speech API integration |
+| **Streaming Pipeline** | Async FastAPI + WebSockets | 30 FPS non-blocking frame downsampling ($320 \times 240$) |
+| **Alphabet Recognition** | 63-D Wrist-Normalized MLP | Instant single-frame A–Z fingerspelling |
+| **Sequence Modeling** | Attention-based BiLSTM | 328-D spatiotemporal vector over 30-frame rolling window |
+| **Facial NMM Ratios** | MediaPipe Face Mesh | 6-D scale-invariant metrics (MAR, EAR, Eyebrow Elevation) |
+| **Noise Filtering** | Post-Processing Engine | Temporal debouncing, confidence hysteresis, 350 ms cooldown |
+| **Dataset Engine** | In-App OpenCV CLI & API | Dynamic `.npz` sample recording and retraining loader |
+| **Movie-Style Subtitle HUD** | React 18 + Tailwind | Cinema-grade live captioning with collision avoidance |
+| **Voice Synthesis** | Web Speech API | Instant real-time text-to-speech for translated signs |
 
 ---
 
-## 📐 System Pipeline Architecture
+## 📐 System Architecture
 
 ```
                   ┌─────────────────────────────────────┐
@@ -210,7 +210,7 @@ Non-manual markers are essential syntactic components of Indian Sign Language. Q
 
 ## 🛡️ Post-Processing & Temporal Stability Engine
 
-Real-time sign language recognition faces three common failures in practice:
+Real-time sign language recognition faces three common challenges in practice:
 1. **Prediction Flicker:** High-frequency flipping between adjacent classes.
 2. **Runaway Letter Duplication:** Static letters repeating indefinitely every 33ms frame.
 3. **Transition Artifacts:** Erroneous recognition during hand movement into/out of camera view.
