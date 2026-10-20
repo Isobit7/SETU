@@ -1,168 +1,187 @@
-# SETU — Real-Time Indian Sign Language (ISL) Recognition SaaS
-
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
-[![React](https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
-
-> **SETU** ("Bridge" in Sanskrit) is an end-to-end, real-time Indian Sign Language (ISL) translation platform. It bridges communication gaps by interpreting static fingerspelling (A–Z) and dynamic multi-frame phrase sequences into fluent text using computer vision and deep learning.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/Isobit7/SETU/main/logo.png" alt="SETU - Bridging Silence" width="220" />
+  <h1>SETU</h1>
+  <h3>Bridging Silence — Real-Time Indian Sign Language (ISL) Translation SaaS</h3>
+  
+  [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+  [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
+  [![MediaPipe](https://img.shields.io/badge/MediaPipe-Holistic-00C7B7?style=for-the-badge&logo=google&logoColor=white)](https://google.github.io/mediapipe/)
+  [![React](https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+  [![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+  [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4+-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+  [![Test Suite](https://img.shields.io/badge/PyTest-87%20Passed-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)]()
+</div>
 
 ---
 
-## 🌟 Key Features
+## 📌 Project Overview
 
-| Feature | Description | Tech Stack |
+**SETU** ("Bridge" in Sanskrit) is an end-to-end, high-performance, real-time Indian Sign Language (ISL) translation SaaS. Hand gestures are only one part of the complex linguistic structures of ISL—grammar and syntactic meaning also rely heavily on facial expressions and spatiotemporal transition speed. 
+
+SETU leverages **MediaPipe Holistic (543 keypoints)** to track hands, pose, and face geometry at 30 FPS, extract **328-D spatiotemporal vectors** (combining relative positions, facial ratios, and frame-to-frame velocity), and evaluate them through an **Attention-based Bidirectional LSTM** for dynamic sequence classification. Static fingerspelling (A–Z) is captured instantly via a dedicated **63-D wrist-centered MLP**, resulting in responsive, fluid translation directly in the web browser.
+
+---
+
+## ✨ Features & Architecture
+
+| Feature | Description | Technical Implementation |
 | :--- | :--- | :--- |
-| **Real-Time Streaming** | 30 FPS non-blocking WebSocket stream processing with offscreen frame downsampling ($320 \times 240$) | FastAPI Async, OpenCV |
-| **A–Z Fingerspelling** | Instant single-frame static letter recognition with wrist-centered palm normalization | 63-D MLP PyTorch Classifier |
-| **Dynamic ISL Sequences** | 328-D spatiotemporal sequence modeling over 30-frame rolling windows | Attention-based BiLSTM |
-| **Non-Manual Markers (NMM)** | 6-D scale-invariant facial ratio extraction (Eyebrow Elevation, MAR, EAR) for grammatical context | MediaPipe Face Mesh |
-| **Noise Filtering** | Temporal debouncing, confidence hysteresis gating, and refractory cooldown | Custom Post-Processing Pipeline |
-| **In-App Dataset Recorder** | Interactive CLI and API endpoints to record custom video samples and retrain signs | OpenCV HUD, NumPy `.npz` |
+| **Real-Time Streaming** | 30 FPS non-blocking WebSocket stream processing with offscreen frame downsampling ($320 \times 240$) | FastAPI Async, OpenCV JPEG compression |
+| **A–Z Fingerspelling** | Instant single-frame static letter recognition with wrist-centered palm normalization | 63-D MLP PyTorch Classifier ($21 \times 3$ points) |
+| **Dynamic ISL Sequences** | 328-D spatiotemporal sequence modeling over 30-frame rolling windows | Attention-based Bidirectional LSTM |
+| **Non-Manual Markers (NMM)** | 6-D scale-invariant facial ratio extraction (Eyebrow Elevation, MAR, EAR) for grammatical context | MediaPipe Face Mesh sub-indices |
+| **Noise Filtering** | Temporal debouncing, confidence hysteresis gating, and refractory cooldown | 4-Tier Post-Processing Pipeline |
+| **In-App Dataset Recorder** | Interactive CLI and API endpoints to record custom video samples and retrain signs | OpenCV HUD, NumPy `.npz` container |
+| **Movie-Style Subtitle HUD** | Cinema-grade live captioning with positioning guidance & collision avoidance | React 18, Glassmorphic Tailwind CSS |
+| **Voice Synthesis** | Instant real-time text-to-speech for continuous signed phrases | Web Speech API integration |
 
 ---
 
-## 📐 System Architecture
-
-### Architectural Flowchart
+## 📐 System Pipeline Architecture
 
 ```
-                 ┌────────────────────────────────┐
-                 │  Client Camera Stream (HD)     │
-                 └──────────────┬─────────────────┘
-                                │
-                                ▼
-                 ┌────────────────────────────────┐
-                 │ Offscreen Downsample (320x240) │
-                 └──────────────┬─────────────────┘
-                                │ WebSocket (JPEG binary)
-                                ▼
-                 ┌────────────────────────────────┐
-                 │ FastAPI WebSocket Receiver     │
-                 │ (Asynchronous Thread Offload)  │
-                 └──────────────┬─────────────────┘
-                                │
-                                ▼
-                 ┌────────────────────────────────┐
-                 │ MediaPipe Landmarker Pipeline  │
-                 │ Holistic (Pose, Face) + Hands  │
-                 └──────────────┬─────────────────┘
-                                │
-        ┌───────────────────────┴───────────────────────┐
-        ▼                                               ▼
-┌───────────────────────────────┐     ┌─────────────────────────────────┐
-│ Alphabet Mode (A–Z)           │     │ Sequence / Phrase Mode          │
-│ Dedicated 63-D Hand Vector    │     │ 164-D Spatial + 164-D Velocity  │
-│ - Wrist origin translation    │     │ - 158-D Holistic coordinates    │
-│ - Palm-scale normalization    │     │ - 6-D Facial NMM ratios         │
-│ - Zero sequence buffer delay  │     │ - 30-frame rolling deque        │
-└───────────────┬───────────────┘     └─────────────────┬───────────────┘
-                │                                       │
-                ▼                                       ▼
-┌───────────────────────────────┐     ┌─────────────────────────────────┐
-│ RealSign 26-Class PyTorch MLP │     │ Attention-based BiLSTM (PyTorch)│
-│ Single-frame inference        │     │ Spatiotemporal 328-D modeling   │
-└───────────────┬───────────────┘     └─────────────────┬───────────────┘
-                │                                       │
-                └───────────────────────┬───────────────┘
-                                        │
-                                        ▼
-                 ┌──────────────────────────────────────┐
-                 │ Post-Processing & Temporal Stability │
-                 │ - Confidence Hysteresis (P >= 0.35)  │
-                 │ - Consecutive Streak Verification    │
-                 │ - Refractory Cooldown (350ms)        │
-                 │ - Idle Baseline Transition Gate      │
-                 └──────────────────────┬───────────────┘
-                                        │
-                                        ▼
-                 ┌──────────────────────────────────────┐
-                 │ React 18 Glassmorphic UI             │
-                 │ - Real-Time Movie Subtitle HUD       │
-                 │ - MediaPipe Joint Skeleton Overlay   │
-                 │ - Camera Framing & Distance Guidance │
-                 │ - Web Speech API Text-to-Speech      │
-                 └──────────────────────────────────────┘
+                  ┌─────────────────────────────────────┐
+                  │      Client Camera Stream (HD)      │
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │ Offscreen Canvas Downsample 320x240 │
+                  └──────────────────┬──────────────────┘
+                                     │ WebSocket (Binary JPEG)
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │    FastAPI WebSocket Controller     │
+                  │   (Asynchronous Thread Offloading)  │
+                  └──────────────────┬──────────────────┘
+                                     │
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │   MediaPipe Vision Inference Engine │
+                  │   Holistic (Pose + Face) & Hands    │
+                  └──────────────────┬──────────────────┘
+                                     │
+         ┌───────────────────────────┴───────────────────────────┐
+         ▼                                                       ▼
+┌─────────────────────────────────┐             ┌─────────────────────────────────┐
+│     Alphabet Mode (A–Z)         │             │    Sequence / Phrase Mode       │
+│  Wrist-Centered 63-D Vector     │             │ 164-D Position + 164-D Velocity │
+│  - Origin at Wrist (0, 0, 0)    │             │  - 158-D Holistic coordinates   │
+│  - Scaled by Palm Size (MCP 9)  │             │  - 6-D Facial NMM ratios        │
+│  - Zero Sequence Delay          │             │  - 30-Frame Rolling Buffer      │
+└────────────────┬────────────────┘             └────────────────┬────────────────┘
+                 │                                               │
+                 ▼                                               ▼
+┌─────────────────────────────────┐             ┌─────────────────────────────────┐
+│  RealSign 26-Class PyTorch MLP  │             │ Attention Bidirectional LSTM    │
+│  Single-Frame Evaluation        │             │ Spatiotemporal 328-D Modeling   │
+└────────────────┬────────────────┘             └────────────────┬────────────────┘
+                 │                                               │
+                 └───────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │     Temporal Stability & Filtering Engine    │
+                  │  - Confidence Hysteresis (P >= 0.35)         │
+                  │  - Consecutive Frame Streak Verification     │
+                  │  - Refractory Duplicate Cooldown (350ms)     │
+                  │  - Idle Baseline Transition Gate             │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │          React 18 Glassmorphic UI            │
+                  │  - Real-Time Movie Subtitle HUD              │
+                  │  - Dynamic Skeleton Joint Overlay            │
+                  │  - Ergonomic Framing & Distance Guidance     │
+                  │  - Web Speech Text-to-Speech Engine          │
+                  └──────────────────────────────────────────────┘
 ```
 
 ---
 
-### 1. Spatiotemporal Feature Vector (328-D)
+## 🧮 Mathematical Formulations & Feature Engineering
 
-To capture multi-joint bodily movement and temporal inflection without relying on pixel appearance, SETU extracts a **328-dimensional spatiotemporal representation**:
+### 1. The 328-D Spatiotemporal Representation
+
+To capture dynamic signing gestures without background pixel bias, SETU extracts a **328-dimensional spatiotemporal vector** $\mathbf{F}_{328}$:
 
 $$\mathbf{F}_{328} = \begin{bmatrix} \mathbf{x}_t^{(164)} & \Delta \mathbf{x}_t^{(164)} \end{bmatrix} \in \mathbb{R}^{328}$$
 
 Where:
-- **$\mathbf{x}_t^{(164)}$ (Spatial Component):** 158 Holistic coordinates and inter-hand relations $+$ 6 Facial Non-Manual Marker ratios.
-- **$\Delta \mathbf{x}_t^{(164)}$ (Velocity Component):** First-order finite differences $\mathbf{x}_t - \mathbf{x}_{t-1}$ representing the joint velocity and signing acceleration.
+- $\mathbf{x}_t^{(164)}$ is the spatial feature state at frame $t$.
+- $\Delta \mathbf{x}_t^{(164)} = \mathbf{x}_t - \mathbf{x}_{t-1}$ is the first-order finite difference capturing signing velocity and acceleration.
 
-#### Dimensional Partition:
-```
-Index Range   | Dimension | Feature Category
---------------|-----------|---------------------------------------------------------
-[0 : 63]      | 63-D      | Right Hand: 21 points (x, y, z) wrist-centered & normalized
-[63 : 68]     | 5-D       | Right Hand: Fingertip-to-wrist Euclidean distances
-[68 : 73]     | 5-D       | Right Hand: Inter-finger adjacent spread angles
-[73 : 136]    | 63-D      | Left Hand: 21 points (x, y, z) wrist-centered & normalized
-[136 : 141]   | 5-D       | Left Hand: Fingertip-to-wrist Euclidean distances
-[141 : 146]   | 5-D       | Left Hand: Inter-finger adjacent spread angles
-[146 : 148]   | 2-D       | Hand Presence Flags (Right present, Left present)
-[148 : 151]   | 3-D       | Inter-wrist 3D spatial vector
-[151]         | 1-D       | Inter-wrist Euclidean distance
-[152 : 155]   | 3-D       | Inter-index fingertip 3D spatial vector
-[155]         | 1-D       | Inter-index fingertip Euclidean distance
-[156]         | 1-D       | Inter-thumb fingertip Euclidean distance
-[157]         | 1-D       | Geometric Hand Contact Score [0.0 - 1.0]
-[158 : 164]   | 6-D       | Facial Non-Manual Marker (NMM) Ratios
-[164 : 328]   | 164-D     | First-Order Temporal Velocity Features (Δx_t = x_t - x_{t-1})
-```
+#### Detailed Feature Partition Breakdown:
+
+| Index Range | Dimension | Category | Mathematical Description |
+| :--- | :--- | :--- | :--- |
+| **`[0 : 63]`** | 63-D | Right Hand Geometry | 21 keypoints $(x, y, z)$ wrist-centered and scaled by palm size |
+| **`[63 : 68]`** | 5-D | Right Finger Distances | Euclidean distance from wrist $P_0$ to fingertips: $\|P_i - P_0\|_2, \, i \in \{4, 8, 12, 16, 20\}$ |
+| **`[68 : 73]`** | 5-D | Right Finger Angles | Adjacent finger spread angles $\angle(P_{i}, P_0, P_{i+4})$ across all digits |
+| **`[73 : 136]`** | 63-D | Left Hand Geometry | 21 keypoints $(x, y, z)$ wrist-centered and scaled by palm size |
+| **`[136 : 141]`**| 5-D | Left Finger Distances | Euclidean distance from left wrist to all five left fingertips |
+| **`[141 : 146]`**| 5-D | Left Finger Angles | Adjacent finger spread angles for the left hand |
+| **`[146 : 148]`**| 2-D | Hand Presence | Binary indicators $[I_{\text{right}}, I_{\text{left}}]$ representing hand detection |
+| **`[148 : 151]`**| 3-D | Inter-Wrist Vector | Spatial vector $\mathbf{v}_{\text{wrist}} = \mathbf{w}_{\text{right}} - \mathbf{w}_{\text{left}}$ |
+| **`[151]`** | 1-D | Inter-Wrist Distance | Euclidean separation $\|\mathbf{w}_{\text{right}} - \mathbf{w}_{\text{left}}\|_2$ |
+| **`[152 : 155]`**| 3-D | Inter-Index Vector | Spatial vector $\mathbf{v}_{\text{index}} = \mathbf{idx}_{\text{right}} - \mathbf{idx}_{\text{left}}$ |
+| **`[155]`** | 1-D | Inter-Index Distance | Euclidean separation $\|\mathbf{idx}_{\text{right}} - \mathbf{idx}_{\text{left}}\|_2$ |
+| **`[156]`** | 1-D | Inter-Thumb Distance | Euclidean separation $\|\mathbf{th}_{\text{right}} - \mathbf{th}_{\text{left}}\|_2$ |
+| **`[157]`** | 1-D | Contact Score | Continuous hand proximity score $\exp(-\|\mathbf{v}_{\text{contact}}\|_2 / \sigma)$ |
+| **`[158 : 164]`**| 6-D | Facial NMM Ratios | Scale-invariant expressions: MAR, Eyebrow Ratios, Eye Aspect Ratios |
+| **`[164 : 328]`**| 164-D | Temporal Velocities | Frame-to-frame difference $\Delta \mathbf{x}_t^{(164)} = \mathbf{x}_t^{(164)} - \mathbf{x}_{t-1}^{(164)}$ |
 
 ---
 
-### 2. Static A–Z Hand Feature Normalization (63-D)
+### 2. Static A–Z Hand Normalization (63-D)
 
-RealSign alphabet fingerspelling processes isolated hands per frame with zero sequence delay. To maintain invariance against camera distance, hand orientation, and subject positioning:
+RealSign static alphabet fingerspelling processes isolated hand frames instantaneously. To ensure complete invariance against camera distance, hand size, and screen placement:
 
-1. **Wrist Origin Centering:** The wrist coordinate ($P_0$) is subtracted from all 21 hand keypoints:
-   $$\mathbf{p}'_i = \mathbf{p}_i - \mathbf{p}_0 \quad \forall i \in \{0, \dots, 20\}$$
-2. **Scale Invariance:** Normalized coordinates are divided by the subject's palm size (distance from wrist $P_0$ to middle finger metacarpophalangeal joint $P_9$):
+1. **Wrist-Centered Translation:**
+   $$\mathbf{p}'_i = \mathbf{p}_i - \mathbf{p}_0 \quad \forall i \in \{0, 1, \dots, 20\}$$
+   *(Sets wrist keypoint $\mathbf{p}'_0 = (0, 0, 0)$ as the local coordinate origin).*
+
+2. **Palm-Scale Normalization:**
    $$S_{\text{palm}} = \max\left(\|\mathbf{p}_9 - \mathbf{p}_0\|_2, \, 10^{-6}\right)$$
    $$\hat{\mathbf{p}}_i = \frac{\mathbf{p}'_i}{S_{\text{palm}}}$$
-3. **Vector Flattening:** Flattens $21 \times 3$ into a single 63-D float vector feeding directly into the PyTorch RealSign MLP.
+   *(Divides all 21 keypoints by the Euclidean distance between wrist $P_0$ and the middle finger metacarpophalangeal joint $P_9$).*
+
+3. **Inference Vector:**
+   The normalized $21 \times 3$ matrix is flattened into $\hat{\mathbf{x}} \in \mathbb{R}^{63}$ and passed directly into the RealSign MLP.
 
 ---
 
-### 3. MediaPipe Keypoint Topology & Facial Ratios
+### 3. Non-Manual Markers (NMM): 6-D Facial Ratios
 
-#### Hand Landmark Indices (21 Points)
+Non-manual markers are essential syntactic components of Indian Sign Language. Questions, negations, and conditional clauses in ISL are conveyed using eyebrow position, mouth opening, and head gestures.
+
 ```
-          8 (INDEX_TIP)    12 (MID_TIP)   16 (RING_TIP)   20 (PINKY_TIP)
-          │                │              │               │
-          7 (INDEX_DIP)    11 (MID_DIP)   15 (RING_DIP)   19 (PINKY_DIP)
-          │                │              │               │
-          6 (INDEX_PIP)    10 (MID_PIP)   14 (RING_PIP)   18 (PINKY_PIP)
-4 (THUMB) │                │              │               │
-    \     5 (INDEX_MCP)────9 (MID_MCP)───13 (RING_MCP)───17 (PINKY_MCP)
-     3 (IP)         \      │             /
-      \              \     │            /
-       2 (MCP)────────0 (WRIST)────────┘
-        \            /
-         1 (CMC)────┘
+          10 (FOREHEAD_TOP)
+               ▲
+               │ (Face Height)
+  105 (L_BROW) │    334 (R_BROW)
+   •           │          •
+  159 (L_EYE)  │    386 (R_EYE)
+   •           │          •
+               │
+        61 •───────• 291 (Mouth Width)
+          13 • / • 14 (Mouth Height)
+               │
+               ▼
+           152 (CHIN)
 ```
 
-#### Facial Non-Manual Marker (NMM) Ratios (6-D)
-Facial expressions provide vital grammatical cues (questions, negations, emphasis) in Indian Sign Language:
-
-1. **Mouth Aspect Ratio (MAR):** Measures mouth opening / shape:
+1. **Mouth Aspect Ratio (MAR):** Quantifies open mouth shape (interrogatives, emphasis):
    $$\text{MAR} = \frac{\|P_{13} - P_{14}\|_2}{\max(\|P_{61} - P_{291}\|_2, \, 10^{-6})}$$
 2. **Left Eyebrow Elevation Ratio (LEER):**
    $$\text{LEER} = \frac{\|P_{105} - P_{159}\|_2}{\max(\|P_{10} - P_{152}\|_2, \, 10^{-6})}$$
 3. **Right Eyebrow Elevation Ratio (REER):**
    $$\text{REER} = \frac{\|P_{334} - P_{386}\|_2}{\max(\|P_{10} - P_{152}\|_2, \, 10^{-6})}$$
-4. **Mean Eyebrow Elevation Ratio (MEER):** $\frac{\text{LEER} + \text{REER}}{2}$
+4. **Mean Eyebrow Elevation Ratio (MEER):**
+   $$\text{MEER} = \frac{\text{LEER} + \text{REER}}{2}$$
 5. **Left Eye Aspect Ratio (LEAR):**
    $$\text{LEAR} = \frac{\|P_{160} - P_{144}\|_2 + \|P_{158} - P_{153}\|_2}{2 \cdot \max(\|P_{33} - P_{133}\|_2, \, 10^{-6})}$$
 6. **Right Eye Aspect Ratio (REAR):**
@@ -170,90 +189,183 @@ Facial expressions provide vital grammatical cues (questions, negations, emphasi
 
 ---
 
-## 🛡️ Post-Processing & Temporal Stability Pipeline
-
-To eliminate jitter, runaway text duplication, and transient hand transition artifacts, SETU applies a 4-tier filtering pipeline:
-
-1. **Confidence Hysteresis Gate:** Softmax probabilities must satisfy $P \ge 0.35$ (dynamically adjustable via the client UI slider). Sub-threshold predictions are mapped to `"Awaiting Sign Input"`.
-2. **Consecutive Frame Streak Filter:**
-   - **Alphabet Mode (A–Z):** Requires model prediction consistency across **2 consecutive frames** (~66ms at 30 FPS).
-   - **Sequence Mode (Phrases):** Requires consistency across **3 consecutive frames** (~100ms).
-3. **Refractory Cooldown & Idle Baseline:**
-   - Enforces a **350ms cooldown** before allowing the same character or sign to register again.
-   - Requires the user's hand to return through an idle resting baseline (`no_sign` or hand relaxed) before accepting consecutive duplicates.
-4. **Positioning & Subtitle Collision Guidance:**
-   - Monitors shoulder width and nose position: guides users if they are "Too close", "Too far", or if camera tilt needs adjustment.
-   - Alerts signers if hands collide with the lower viewport subtitle area ($y \in [0.72, 0.98]$).
-
----
-
-## 💻 Tech Stack & Dependencies
+### 4. MediaPipe Hand Landmark Keypoint Topology
 
 ```
-SETU Platform
-├── Backend
-│   ├── Python 3.12 (Virtualenv)
-│   ├── FastAPI & Uvicorn (Asynchronous REST & WebSocket server)
-│   ├── PyTorch 2.2+ (CPU & CUDA accelerated neural network execution)
-│   ├── MediaPipe 0.10+ (Holistic and HandLandmarker task pipelines)
-│   └── OpenCV (imdecode, colorspace transformations, video capture)
-│
-└── Frontend
-    ├── React 18 & TypeScript 5
-    ├── Vite 6 (Lightning-fast HMR and production bundle optimization)
-    ├── Tailwind CSS 3.4 (Custom glassmorphic HUD styling)
-    └── Lucide React (Clean semantic iconography)
+                  8 (INDEX_TIP)    12 (MID_TIP)   16 (RING_TIP)   20 (PINKY_TIP)
+                  │                │              │               │
+                  7 (INDEX_DIP)    11 (MID_DIP)   15 (RING_DIP)   19 (PINKY_DIP)
+                  │                │              │               │
+                  6 (INDEX_PIP)    10 (MID_PIP)   14 (RING_PIP)   18 (PINKY_PIP)
+ 4 (THUMB_TIP)    │                │              │               │
+      \           5 (INDEX_MCP)────9 (MID_MCP)───13 (RING_MCP)───17 (PINKY_MCP)
+       3 (IP)           \          │             /
+        \                \         │            /
+         2 (MCP)──────────0 (WRIST_ORIGIN)─────┘
+          \              /
+           1 (CMC)──────┘
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🛡️ Post-Processing & Temporal Stability Engine
+
+Real-time sign language recognition faces three common failures in practice:
+1. **Prediction Flicker:** High-frequency flipping between adjacent classes.
+2. **Runaway Letter Duplication:** Static letters repeating indefinitely every 33ms frame.
+3. **Transition Artifacts:** Erroneous recognition during hand movement into/out of camera view.
+
+SETU resolves these challenges through a **4-tier filtering pipeline**:
+
+```
+[Raw Softmax Prediction]
+          │
+          ▼
+┌───────────────────────────────────────┐
+│ Tier 1: Confidence Hysteresis Gate    │
+│ Is Softmax Confidence >= 0.35?        │
+└─────────┬───────────────────┬─────────┘
+          │ NO                │ YES
+          ▼                   ▼
+[Awaiting Sign Input] ┌───────────────────────────────────────┐
+                      │ Tier 2: Consecutive Streak Filter     │
+                      │ A-Z: 2 frames (66ms)                  │
+                      │ Sequence: 3 frames (100ms)            │
+                      └───────┬───────────────────┬───────────┘
+                              │ NO                │ YES
+                              ▼                   ▼
+                      [Accumulating...]   ┌───────────────────────────────────────┐
+                                          │ Tier 3: Refractory Cooldown (350ms)   │
+                                          │ Distinct new sign?                    │
+                                          └───────┬───────────────────┬───────────┘
+                                                  │ DUPLICATE         │ NEW SIGN
+                                                  ▼                   ▼
+                                          [Requires 350ms +   [Commit Immediately]
+                                           Idle Baseline]             │
+                                                  │                   │
+                                                  └─────────┬─────────┘
+                                                            │
+                                                            ▼
+                                          ┌───────────────────────────────────────┐
+                                          │ Tier 4: Subtitle HUD & Voice Dispatch │
+                                          └───────────────────────────────────────┘
+```
+
+- **Confidence Hysteresis Gate:** Predictions below $P < 0.35$ (adjustable via the client UI slider) are suppressed and displayed as `"Awaiting Sign Input"`.
+- **Temporal Streak Filter:** Requires identical label predictions across 2 consecutive frames for static alphabet and 3 consecutive frames for phrases.
+- **Refractory Duplicate Cooldown:** Identical consecutive signs must undergo a 350ms refractory period AND transition through an idle resting baseline (`no_sign` or relaxed hands).
+- **Positioning Guidance:**
+  * Shoulder width $> 0.70$: *"Too close to camera — please step back"*
+  * Shoulder width $< 0.16$: *"Too far from camera — please move closer"*
+  * Nose $y < 0.05$: *"Camera too low — tilt up or lower position"*
+  * Nose $y > 0.45$: *"Camera too high — step back or raise camera"*
+- **Subtitle Collision Prevention:** Detects if hands enter the lower viewport area ($y \in [0.72, 0.98]$ and $x \in [0.20, 0.80]$).
+
+---
+
+## 📹 Interactive Dataset Recorder Workflow
+
+SETU allows non-engineers and signers to record, persist, and integrate custom signs into the model pipeline.
+
+```
++--------------------------------------------------------------------------------+
+|                        SETU DATASET RECORDER HUD                               |
+|                                                                                |
+|  [REC] Sign: 'NAMASTE' | Take: 3/10                                            |
+|                                                                                |
+|                     ┌───────────────────────────────┐                          |
+|                     │                               │                          |
+|                     │   RECORDING IN 2...           │                          |
+|                     │                               │                          |
+|                     └───────────────────────────────┘                          |
+|                                                                                |
+|  Frame: 18/30  [||||||||||||||...............]                                 |
+|  Landmarks: Right Hand [OK] | Left Hand [OK] | Face [OK]                       |
++--------------------------------------------------------------------------------+
+```
+
+### CLI Recording Execution
+```powershell
+# Record 10 takes of a new sign (e.g., 'namaste')
+.\.venv\Scripts\python scripts/record_custom_signs.py --label namaste --takes 10
+```
+
+1. **Sign Specification:** Provide the sign label via CLI arguments or interactive terminal prompt.
+2. **Visual Countdown:** The camera displays an on-screen HUD countdown ("Recording in 3... 2... 1...").
+3. **Automated Burst Capture:** Exactly 30 frames are recorded at 20–25 FPS.
+4. **Feature Extraction:** Extracts 164-D vectors (158 Holistic + 6-D Facial Ratios) per frame.
+5. **Storage:** Saved to `data/processed/custom_<label>_<timestamp>.npz` containing:
+   - `features`: Array of shape `(30, 164)`
+   - `label`: Clean string identifier
+   - `created_at`: ISO timestamp
+
+### Retraining with Custom Data
+The Attention-based BiLSTM training pipeline automatically scans, balances, and incorporates custom `.npz` recordings:
+```powershell
+.\.venv\Scripts\python training/train_sequence_lstm.py --epochs 60 --lr 0.001
+```
+
+---
+
+## 🔧 Diagnostics & Troubleshooting Guide
+
+| Issue / Symptom | Probable Cause | Recommended Solution |
+| :--- | :--- | :--- |
+| **"Waiting for a hand..." persists** | Hand not entering MediaPipe bounding volume | Ensure entire wrist and all five fingers are in camera frame with clear lighting. |
+| **"Too close / Step back" warning** | Shoulder keypoint width $> 0.70$ normalized width | Step back 1.5 to 2.0 meters from the camera so head, shoulders, and chest are visible. |
+| **WebSocket Connection Drops** | Backend port 8000 busy or firewall restriction | Run `netstat -ano \| findstr :8000` to inspect port. Verify backend console logs. |
+| **Low Streaming FPS (< 15 FPS)** | High-DPI frame capture choking WebSocket bandwidth | Ensure offscreen downsampling canvas in `useRecognitionStream.ts` is set to $320 \times 240$. |
+| **Letter Flickering during Signing** | Confidence threshold set too low | Increase the UI Confidence Slider to $0.50 - 0.65$ to tighten the hysteresis gate. |
+| **GPU Not Utilized** | CUDA PyTorch mismatch | Run `python -c "import torch; print(torch.cuda.is_available())"`. If `False`, reinstall CUDA wheels. |
+
+---
+
+## 🚀 Installation & Running Guide
 
 ### Prerequisites
-- **Python:** 3.10 to 3.12
+- **Python:** 3.10 to 3.12 (Python 3.12 recommended)
 - **Node.js:** 18+ and `npm`
-- **Hardware:** Standard USB or integrated webcam
+- **Hardware:** Webcam (720p or 1080p recommended)
 
 ---
 
-### Quick Launch (Windows)
+### One-Click Launch (Windows)
 
-Launch both backend and frontend servers simultaneously using the automated launcher:
+Launch the complete application (FastAPI backend + Vite frontend):
 ```powershell
 .\Start_SETU.bat
 ```
-To run the standalone webcam alphabet demonstration:
+Launch the standalone webcam alphabet demonstration:
 ```powershell
 .\Start_Alphabet_Demo.bat
 ```
 
 ---
 
-### Manual Setup & Execution
+### Manual Setup
 
-#### 1. Backend Setup
+#### 1. Backend Service (FastAPI)
 ```powershell
-# 1. Clone repository
-git clone https://github.com/Isobit7/SETU.git
-cd SETU
+# Navigate to repository root
+cd c:\MINI PROJ-SETU
 
-# 2. Create and activate virtual environment
+# Create and activate Python virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# 3. Install packages in editable mode
+# Install editable SETU package and dependencies
 pip install -e .
 
-# 4. Verify test suite (87 tests)
+# Run test suite to verify installation
 pytest -v
 
-# 5. Start FastAPI WebSocket server
+# Launch FastAPI Uvicorn server on port 8000
 uvicorn setu.api.server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### 2. Frontend Setup
+#### 2. Frontend Application (Vite + React)
 ```powershell
-# In a separate terminal:
+# Open a second terminal and navigate to frontend
 cd frontend
 
 # Install npm dependencies
@@ -263,83 +375,68 @@ npm install
 npm run dev
 ```
 
-Navigate to **`http://localhost:5173`** in your browser.
-
----
-
-## 📹 Dataset Recording & Model Training CLI
-
-### Record Custom Sign Samples
-Record a 30-frame sequence ($30 \times 164$-D) directly with visual countdowns and bounding HUD:
-```powershell
-.\.venv\Scripts\python scripts/record_custom_signs.py --label namaste --takes 10
-```
-Files are compressed and saved to `data/processed/custom_<label>_<timestamp>.npz`.
-
-### Train Sequence LSTM Classifier
-Trains the Attention-based Bidirectional LSTM on balanced synthetic, benchmark (AI4Bharat INCLUDE), and custom datasets:
-```powershell
-.\.venv\Scripts\python training/train_sequence_lstm.py --epochs 60 --lr 0.001
-```
-
-### Standalone Webcam Demos
-- **A–Z RealSign Alphabet:**
-  ```powershell
-  .\.venv\Scripts\python scripts/demo_realsign_26class_webcam.py --camera 0
-  ```
-- **ISL MVP 5-Sign Sequence:**
-  ```powershell
-  .\.venv\Scripts\python scripts/demo_isl_mvp_webcam.py --camera 0
-  ```
+Open **`http://localhost:5173`** in your browser.
 
 ---
 
 ## 📡 REST & WebSocket API Specification
 
-### WebSocket Recognition Stream
+### 1. WebSocket Streaming Endpoint
 - **URL:** `ws://localhost:8000/api/v1/ws/recognize?model=realsign&threshold=0.35`
-- **Supported Models:** `realsign` (Alphabet), `isl_sequence_lstm` (Phrases), `isl_mvp` (5-Sign Baseline)
-- **Client Inbound:**
-  * Binary JPEG image buffer (scaled to $320 \times 240$).
-  * JSON commands: `{"action": "set_model", "model": "realsign"}`, `{"action": "set_threshold", "threshold": 0.5}`, `{"action": "reset"}`.
-- **Server Outbound:**
-  ```json
-  {
-    "type": "prediction",
-    "active_model": "realsign",
-    "label": "A",
-    "display_name": "LETTER A",
+- **Query Parameters:**
+  * `model`: `realsign` (Alphabet), `isl_sequence_lstm` (Phrases), `isl_mvp` (5-Sign Baseline)
+  * `threshold`: Softmax confidence cutoff ($0.10 - 0.95$)
+- **Client Frame Transmission:** Binary JPEG blob ($320 \times 240$).
+- **Client Control Messages:**
+  * `{"action": "set_model", "model": "realsign" | "isl_sequence_lstm"}`
+  * `{"action": "set_threshold", "threshold": 0.50}`
+  * `{"action": "reset"}` (clears rolling sequence deque)
+
+#### Response Payload Schema:
+```json
+{
+  "type": "prediction",
+  "active_model": "realsign",
+  "label": "A",
+  "display_name": "LETTER A",
+  "confidence": 0.8924,
+  "is_known_sign": true,
+  "is_stable": true,
+  "streak_count": 2,
+  "required_streak": 2,
+  "hand_detected": true,
+  "hands_in_subtitle_zone": false,
+  "guidance": "Position good — Ready to translate",
+  "fps": 28.5,
+  "latency_ms": 14.2,
+  "landmarks": {
+    "left_hand": [],
+    "right_hand": [{"x": 0.521, "y": 0.612, "z": -0.012}],
+    "pose": [...],
+    "face": [...]
+  },
+  "realsign_prediction": {
+    "letter": "A",
     "confidence": 0.8924,
     "is_known_sign": true,
-    "is_stable": true,
-    "streak_count": 2,
-    "required_streak": 2,
-    "hand_detected": true,
-    "hands_in_subtitle_zone": false,
-    "guidance": "Position good — Ready to translate",
-    "fps": 28.5,
-    "latency_ms": 14.2,
-    "landmarks": { "left_hand": [], "right_hand": [...], "pose": [...], "face": [...] },
-    "realsign_prediction": {
-      "letter": "A",
-      "confidence": 0.8924,
-      "top_3": [["A", 0.8924], ["S", 0.0512], ["E", 0.0211]]
-    }
+    "top_3": [["A", 0.8924], ["S", 0.0512], ["E", 0.0211]],
+    "logits": { "A": 4.12, "B": -1.25, "...": "..." }
   }
-  ```
+}
+```
 
-### Key REST Endpoints
-- `GET /api/v1/models`: Catalog of active and available AI model services.
-- `GET /api/v1/models/realsign/classes`: Class list of 26 alphabet letters.
-- `GET /api/v1/vocabulary`: Complete ISL phrase vocabulary with execution descriptions.
-- `POST /api/v1/dataset/record_sample`: Upload and persist a $30 \times 164$ feature array for a custom sign.
-- `GET /api/v1/dataset/custom_samples`: List all saved custom sign samples.
+### 2. REST Endpoints
+- `GET /api/v1/models` — Catalog of active classifiers and status metadata.
+- `GET /api/v1/models/realsign/classes` — 26 alphabet letters and index map.
+- `GET /api/v1/vocabulary` — Full 11-class phrase vocabulary with execution descriptions.
+- `POST /api/v1/dataset/record_sample` — Uploads and stores a $30 \times 164$ custom sign sequence.
+- `GET /api/v1/dataset/custom_samples` — Lists all custom `.npz` recordings in `data/processed/`.
 
 ---
 
-## 🧪 Test Suite & Invariant Verification
+## 🧪 Automated Testing & Verification Suite
 
-SETU maintains a rigorous test suite verifying algorithmic invariants, mathematical scaling, and API contracts:
+SETU maintains 87 automated tests covering schema invariance, geometric scaling, signer isolation, and WebSocket API contracts:
 
 ```powershell
 .\.venv\Scripts\pytest.exe -v
@@ -350,10 +447,14 @@ SETU maintains a rigorous test suite verifying algorithmic invariants, mathemati
 collected 87 items
 
 tests/test_api.py::test_health_endpoint PASSED                           [  1%]
+tests/test_api.py::test_models_catalog_endpoint PASSED                   [  2%]
 tests/test_api.py::test_websocket_recognize_mock_frame PASSED            [  8%]
+tests/test_custom_sign_pipeline.py::test_sanitize_label PASSED           [ 16%]
+tests/test_custom_sign_pipeline.py::test_load_sequence_dataset_with_custom_files PASSED [ 19%]
 tests/test_feature_schema.py::test_facial_expression_ratio_math PASSED   [ 34%]
 tests/test_feature_schema.py::test_expanded_164_feature_vector_validation PASSED [ 35%]
 tests/test_feature_schema.py::test_velocity_features_328_computation PASSED [ 36%]
+tests/test_isl_mvp_model.py::test_hand_presence_gate_both_hands_absent PASSED [ 52%]
 tests/test_isl_sequence_lstm_classifier.py::test_classifier_predict_sequence_shape_30x328 PASSED [ 66%]
 tests/test_real_data_readiness.py::test_strict_signer_isolation_and_no_leakage PASSED [ 75%]
 tests/test_realsign_classifier.py::test_extract_realsign_hand_features PASSED [ 81%]
@@ -395,6 +496,7 @@ SETU/
 │   └── vision/                  # MediaPipe Holistic & Hand landmarker wrappers
 ├── tests/                       # 87 automated pytest test suites
 ├── training/                    # Sequence LSTM and RealSign MLP training scripts
+├── logo.png                     # Official SETU brand logo emblem
 ├── pyproject.toml               # Python package configuration
 ├── requirements.txt             # Pip dependencies
 └── README.md                    # Primary technical documentation
@@ -405,5 +507,5 @@ SETU/
 ## 📄 License & Attribution
 
 - **License:** MIT License.
-- **Dataset:** Built with references and subsets from the **AI4Bharat INCLUDE** dataset, licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
-- **Vision Models:** MediaPipe Holistic and HandLandmarker by Google LLC (Apache 2.0).
+- **Dataset Attribution:** Indian Sign Language video subsets and vocabulary references from the **AI4Bharat INCLUDE** dataset, licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+- **Vision Framework:** MediaPipe Holistic and HandLandmarker by Google LLC (Apache 2.0).
