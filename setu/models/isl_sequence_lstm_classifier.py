@@ -236,23 +236,23 @@ class ISLSequenceLSTMClassifier:
             )
 
         T = seq_features.shape[0]
-        if T < 10:
+        if T < 6:
             return self._empty_prediction()
 
-        # Resample or pad to 30 frames
-        if T < 30:
-            pad = np.repeat(seq_features[-1:], 30 - T, axis=0)
-            seq_30 = np.concatenate([seq_features, pad], axis=0)
+        # Resample or pad to 15 frames if under 15; keep up to 30 frames
+        if T < 15:
+            pad = np.repeat(seq_features[-1:], 15 - T, axis=0)
+            seq_proc = np.concatenate([seq_features, pad], axis=0)
         elif T > 30:
-            seq_30 = seq_features[-30:]
+            seq_proc = seq_features[-30:]
         else:
-            seq_30 = seq_features
+            seq_proc = seq_features
 
-        if not np.all(np.isfinite(seq_30)):
+        if not np.all(np.isfinite(seq_proc)):
             raise ValueError("Feature sequence contains NaN or Inf values")
 
         with torch.no_grad():
-            tensor = torch.from_numpy(seq_30.astype(np.float32)).unsqueeze(0).to(self.device)
+            tensor = torch.from_numpy(seq_proc.astype(np.float32)).unsqueeze(0).to(self.device)
             logits = self.model(tensor)
             probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
 

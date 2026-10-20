@@ -47,6 +47,9 @@ def _to_numpy_21x3(landmarks: Optional[Union[np.ndarray, List[Any]]]) -> Optiona
     if landmarks is None or len(landmarks) == 0:
         return None
         
+    if hasattr(landmarks, "landmark"):
+        landmarks = landmarks.landmark
+
     if isinstance(landmarks, np.ndarray):
         if landmarks.shape == (21, 3):
             return landmarks.astype(np.float32)
@@ -360,10 +363,15 @@ def extract_realsign_hand_features(
 
     # Handle wrapped hand list if a list of hands was provided
     target = hand_landmarks
+    if hasattr(target, "landmark"):
+        target = target.landmark
+
     if isinstance(target, (list, tuple)) and len(target) > 0:
         first_elem = target[0]
+        if hasattr(first_elem, "landmark"):
+            target = first_elem.landmark
         # If target[0] is itself a list/tuple/array of 21 landmarks, unwrap the first hand
-        if isinstance(first_elem, (list, tuple, np.ndarray)) and len(first_elem) == 21:
+        elif isinstance(first_elem, (list, tuple, np.ndarray)) and len(first_elem) == 21:
             target = first_elem
 
     try:

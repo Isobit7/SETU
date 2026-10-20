@@ -287,11 +287,11 @@ async def list_models():
                 "name": "Dynamic ISL Sequence LSTM (GPU)",
                 "type": "streaming_sequence",
                 "classes_count": len(pipeline.sequence_lstm_classifier.class_names) if sequence_lstm_ready else 6,
-                "input_dim": 158,
-                "sequence_length": 30,
+                "input_dim": 328,
+                "sequence_length": 15,
                 "device": str(pipeline.sequence_lstm_classifier.device) if sequence_lstm_ready else "cuda",
                 "is_ready": sequence_lstm_ready,
-                "description": "GPU-accelerated 2-layer LSTM sequence recognition for dynamic ISL signs over rolling 30-frame Holistic landmark buffers.",
+                "description": "GPU-accelerated 2-layer LSTM sequence recognition for dynamic ISL signs over rolling 15-frame Holistic landmark buffers.",
             },
             {
                 "id": "include",
@@ -318,8 +318,8 @@ async def get_sequence_lstm_status():
         "is_ready": is_ready,
         "classes_count": len(classes),
         "classes": classes,
-        "input_features": clf.input_size if is_ready else 158,
-        "sequence_length": 30,
+        "input_features": clf.input_size if is_ready else 328,
+        "sequence_length": 15,
         "device": str(clf.device) if is_ready else "cuda",
         "gpu_name": getattr(clf, "gpu_name", None) or ("NVIDIA GeForce RTX 3050" if is_ready and clf.device.type == "cuda" else "CPU"),
         "test_accuracy": clf.test_accuracy if (is_ready and clf.test_accuracy is not None) else 0.88,
@@ -679,7 +679,7 @@ async def websocket_recognize(
     if active_model not in ("realsign", "isl_mvp", "isl_sequence_lstm"):
         active_model = "realsign"
 
-    rolling_features: deque = deque(maxlen=30)
+    rolling_features: deque = deque(maxlen=15)
     # Respect dynamically passed client threshold if provided
     client_threshold: Optional[float] = None
     if threshold is not None:
@@ -813,7 +813,7 @@ async def websocket_recognize(
                 # 7. Dynamic ISL Sequence LSTM Prediction (GPU) (offloaded to thread executor)
                 seq_pred: Optional[ISLSequencePrediction] = None
                 if active_model == "isl_sequence_lstm" and pipeline.sequence_lstm_classifier is not None:
-                    if len(rolling_features) >= 10:
+                    if len(rolling_features) >= 5:
                         feat_array = np.array(rolling_features, dtype=np.float32)
                         seq_pred = await loop.run_in_executor(
                             None,
@@ -825,7 +825,7 @@ async def websocket_recognize(
                         seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
 
                 # 8. ISL MVP 5-Sign Sequence Prediction (offloaded to thread executor)
-                if len(rolling_features) >= 15:
+                if len(rolling_features) >= 5:
                     feat_array = np.array(rolling_features, dtype=np.float32)
                     if feat_array.shape[0] < 30:
                         pad = np.repeat(feat_array[-1:], 30 - feat_array.shape[0], axis=0)
@@ -898,7 +898,7 @@ async def websocket_recognize(
                     raw_top_conf = float(seq_pred.top_3[0][1]) if seq_pred.top_3 else 0.0
                     raw_top_3 = seq_pred.top_3
                     res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()}
-                    buffer_fill = round(len(rolling_features) / 30.0, 2)
+                    buffer_fill = round(len(rolling_features) / 15.0, 2)
                     no_sign_prob = res_probs.get("no_sign", 0.0)
 
                     if not hand_detected or seq_pred.label == "no_sign":
@@ -921,7 +921,7 @@ async def websocket_recognize(
                     raw_top_conf = float(sorted_isl[0][1]) if sorted_isl else 0.0
                     raw_top_3 = [(k, round(v, 4)) for k, v in sorted_isl]
                     res_probs = {k: round(v, 4) for k, v in isl_pred.probabilities.items()}
-                    buffer_fill = round(len(rolling_features) / 30.0, 2)
+                    buffer_fill = round(len(rolling_features) / 15.0, 2)
                     no_sign_prob = res_probs.get("no_sign", 0.0)
 
                     if not hand_detected or isl_pred.label == "no_sign":
@@ -1026,13 +1026,13 @@ async def websocket_recognize(
                         res_is_known = False
                         res_conf = raw_conf
 
-                # Every 5th frame: print detailed raw stream debug logging to terminal console
-                if total_stream_frames % 5 == 0:
-                    top_3_str = ", ".join([f"{l}: {c:.3f}" for l, c in raw_top_3])
-                    print(f"[DEBUG] Hand Detected: {hand_detected} | Raw Top Class: {raw_top_class} | Raw Confidence: {raw_top_conf:.2f}", flush=True)
-                    print(f"[DEBUG Frame #{total_stream_frames}] Model: {active_model} | Landmark Range: {coords_summary}", flush=True)
-                    print(f"[DEBUG Frame #{total_stream_frames}] Raw Top 3: [{top_3_str}] | Filter: {filter_status} | Output: '{res_label}' (is_known={res_is_known})", flush=True)
-                    logger.info("[DEBUG Frame #%d] Model: %s | Hand: %s | Raw Top: %s (%.2f) | Filter: %s", total_stream_frames, active_model, hand_detected, raw_top_class, raw_top_conf, filter_status)
+                # Print live diagnostic logs to terminal on every 3rd frame
+                if total_stream_frames % 3 == 0:
+                    print(
+                        f"[LIVE DEBUG] Mode: {active_model} | Hand Present: {hand_detected} | "
+                        f"Raw Top Class: {raw_top_class} ({raw_top_conf:.2f}) | Output: {res_label}",
+                        flush=True,
+                    )
 
                 # Send structured response back to client
                 response = {

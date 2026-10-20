@@ -11,10 +11,10 @@ from configs.settings import (
 )
 
 # Real-Time Detection Thresholds & Temporal Debouncing Defaults
-CONFIDENCE_THRESHOLD_ALPHABET = 0.35
+CONFIDENCE_THRESHOLD_ALPHABET = 0.30
 CONFIDENCE_THRESHOLD_SEQUENCE = 0.35
 STREAK_ALPHABET = 2
-STREAK_SEQUENCE = 3
+STREAK_SEQUENCE = 2
 COOLDOWN_MS = 350
 
 __all__ = [

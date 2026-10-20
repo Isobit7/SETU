@@ -150,7 +150,7 @@ class ISLSequenceLSTM(nn.Module):
         return logits, attn_weights.squeeze(-1)
 
 
-def temporal_resample_np(seq: np.ndarray, target_len: int = 30) -> np.ndarray:
+def temporal_resample_np(seq: np.ndarray, target_len: int = 15) -> np.ndarray:
     """Resamples a (T, D) array along the temporal dimension using 1D linear interpolation."""
     T, D = seq.shape
     if T == target_len:
@@ -197,7 +197,7 @@ def augment_sequence(seq: np.ndarray) -> np.ndarray:
 
     # 4. Temporal speed warping (0.85x to 1.15x)
     speed = np.random.uniform(0.85, 1.15)
-    warped_len = max(18, int(round(T * speed)))
+    warped_len = max(8, int(round(T * speed)))
     warped_seq = temporal_resample_np(aug, warped_len)
     resampled = temporal_resample_np(warped_seq, T)
 
@@ -335,9 +335,11 @@ def load_sequence_dataset(
             try:
                 with np.load(feat_path) as data:
                     features = data["features"].astype(np.float32)
-                if features.shape[0] != 30 or features.shape[1] not in (158, 164):
+                if features.ndim != 2 or features.shape[1] not in (158, 164):
                     logger.warning(f"Unexpected shape {features.shape} in manifest sample {feat_path.name}")
                     continue
+                if features.shape[0] != 15:
+                    features = temporal_resample_np(features, target_len=15)
                 manifest_samples.append((features, label_str, sample_id, split))
                 all_labels_set.add(label_str)
                 seen_paths.add(feat_path.resolve())
@@ -356,8 +358,11 @@ def load_sequence_dataset(
                     feat = data["features"].astype(np.float32)
                     lbl = str(data.get("label", "")).strip()
 
-                if feat.ndim != 2 or feat.shape[0] != 30 or feat.shape[1] not in (158, 164):
+                if feat.ndim != 2 or feat.shape[1] not in (158, 164):
                     continue
+
+                if feat.shape[0] != 15:
+                    feat = temporal_resample_np(feat, target_len=15)
 
                 if not lbl and npz_path.name.startswith("custom_"):
                     parts = npz_path.stem.split("_")
