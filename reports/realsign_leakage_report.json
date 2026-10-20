@@ -1,0 +1,697 @@
+{
+  "dataset_archive": "data\\raw\\realsign\\Dataset.zip",
+  "total_images_scanned": 25977,
+  "corrupt_or_non_image_files": [
+    {
+      "path": "Testing/E/301.jpg",
+      "size_bytes": 314,
+      "error": "cannot identify image file <_io.BytesIO object at 0x0000018CA499D030>",
+      "snippet": "import os\r\n\r\nloc = 'D:/Projects/Capstone Dataset/Split_dataset/Split_dataset/extra/'   #change this location to where your dataset images are saved\r\nx"
+    },
+    {
+      "path": "Testing/K/301.jpg",
+      "size_bytes": 314,
+      "error": "cannot identify image file <_io.BytesIO object at 0x0000018CA499D030>",
+      "snippet": "import os\r\n\r\nloc = 'D:/Projects/Capstone Dataset/Split_dataset/Split_dataset/extra/'   #change this location to where your dataset images are saved\r\nx"
+    }
+  ],
+  "exact_sha256_duplicates": {
+    "total_exact_duplicates_across_splits": 648,
+    "train_test_exact": 549,
+    "train_val_exact": 48,
+    "test_val_exact": 1,
+    "all_three_splits_exact": 50,
+    "intra_split_duplicates": {
+      "Testing": 38,
+      "Training": 144,
+      "Validation": 11
+    },
+    "sample_duplicate_pairs": [
+      {
+        "sha256": "a5910fb8678febca1e8434c48ccdb8f8d621c4e0f35344a3ba820005b9f8a893",
+        "occurrences": [
+          "Testing/E/251.jpg",
+          "Training/E/E_aap_852.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "4a5bb8511cd5fe3e1c799885431661a9a325759cfd53658e59bfaea7e4f2dd68",
+        "occurrences": [
+          "Testing/E/252.jpg",
+          "Training/E/E_aap_853.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "fc630dc7934c6141d9fabfdfeda31f5c4136a75f636b31035638beecc596a7a6",
+        "occurrences": [
+          "Testing/E/253.jpg",
+          "Training/E/E_aap_854.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "9d18859350c138d8f7b69defa591e092efefbd6adaaf976be84903d865a173e4",
+        "occurrences": [
+          "Testing/E/254.jpg",
+          "Training/E/E_aap_855.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "b76f95bf51dd9816590438f346a91b1308a6c12306a7a84108efdb8f89ad90fd",
+        "occurrences": [
+          "Testing/E/255.jpg",
+          "Training/E/E_aap_856.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "e6b5efdea7d7628d98ea1565c143a382a422d3b7581157ddcc01e1abd3bc070d",
+        "occurrences": [
+          "Testing/E/256.jpg",
+          "Training/E/E_aap_857.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "4db3faa6ee5a60f6d107f10893486df1081442e64c8877520d4a9804bb651bad",
+        "occurrences": [
+          "Testing/E/257.jpg",
+          "Training/E/E_aap_858.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "1a6d9a23fa8f49a660e74c9ec5367b9b634cfaf36f48a63b7be530d01e279277",
+        "occurrences": [
+          "Testing/E/258.jpg",
+          "Training/E/E_aap_859.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "52d4dcfeda9ddd6ae3f83c3c4091364201543b7ad96a30139fa5312f29e35880",
+        "occurrences": [
+          "Testing/E/259.jpg",
+          "Training/E/E_aap_860.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "1dc366893dc517f6f41a936a159466cc6572012906681eb22591bcb865e62b8a",
+        "occurrences": [
+          "Testing/E/260.jpg",
+          "Training/E/E_aap_861.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "20904449af0f2055b98f68be7effee0ecb058e9e79ec014e4c7df5ecba71cd09",
+        "occurrences": [
+          "Testing/E/261.jpg",
+          "Training/E/E_aap_862.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "e18bbc5d9c6bc216bd9cde7e18b785b138878708f5a84c85e783be16671264ff",
+        "occurrences": [
+          "Testing/E/262.jpg",
+          "Training/E/E_aap_863.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "7bbd64c6ca51988993be2049dabd43d9487154da5572ec5630cfd6605c3b6d25",
+        "occurrences": [
+          "Testing/E/263.jpg",
+          "Training/E/E_aap_864.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "0bf1f2548b1d372ec6781b3ee07f3ee48b964a8345675e4a96e8492218db2a80",
+        "occurrences": [
+          "Testing/E/264.jpg",
+          "Training/E/E_aap_865.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      },
+      {
+        "sha256": "abfa8a2128e424a594ddc5584f44389a3eec668068f0cc05fd55091012016e02",
+        "occurrences": [
+          "Testing/E/265.jpg",
+          "Training/E/E_aap_866.jpg"
+        ],
+        "splits": [
+          "Testing",
+          "Training"
+        ]
+      }
+    ]
+  },
+  "perceptual_similarity_dhash": {
+    "total_test_frames": 5186,
+    "test_exact_dhash_in_train": 1829,
+    "test_exact_dhash_ratio": 0.3527,
+    "test_near2_dhash_in_train": 1550,
+    "test_near2_dhash_ratio": 0.2989,
+    "val_exact_dhash_in_train": 700,
+    "val_near2_dhash_in_train": 796
+  },
+  "temporal_frame_leakage": {
+    "test_frames_adjacent_to_train_k_plus_minus_1": 173,
+    "adjacent_leakage_percentage": 3.34,
+    "test_frames_within_2_of_train": 256,
+    "within_2_leakage_percentage": 4.94
+  },
+  "filename_identity_mapping": {
+    "can_map_to_signer_identity": false,
+    "findings": "Filenames are anonymous consecutive integer frame numbers (e.g., '0.jpg' to '999.jpg'). There is no metadata, CSV, or signer/subject ID in filenames. The frame numbers 0 to N form a continuous video recording sequence. The dataset authors performed a pseudo-random shuffle of individual video frames into Training, Testing, and Validation. Because adjacent frames (e.g. frame 174 in Train, 175 in Test) belong to the exact same video recording session, the pre-packaged test split suffers from severe temporal autocorrelation leakage.",
+    "sample_letter_distributions": {
+      "A": {
+        "total_frames": 1000,
+        "range": [
+          0,
+          999
+        ],
+        "is_contiguous_0_to_max": true,
+        "train_sample_head": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "test_sample_head": [
+          175,
+          176,
+          177,
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184
+        ],
+        "val_sample_head": [
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234
+        ]
+      },
+      "B": {
+        "total_frames": 1000,
+        "range": [
+          0,
+          999
+        ],
+        "is_contiguous_0_to_max": false,
+        "train_sample_head": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "test_sample_head": [
+          175,
+          176,
+          177,
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184
+        ],
+        "val_sample_head": [
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234
+        ]
+      },
+      "C": {
+        "total_frames": 1000,
+        "range": [
+          0,
+          999
+        ],
+        "is_contiguous_0_to_max": true,
+        "train_sample_head": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "test_sample_head": [
+          175,
+          176,
+          177,
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184
+        ],
+        "val_sample_head": [
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234
+        ]
+      },
+      "Z": {
+        "total_frames": 300,
+        "range": [
+          175,
+          1000
+        ],
+        "is_contiguous_0_to_max": false,
+        "train_sample_head": [],
+        "test_sample_head": [
+          175,
+          176,
+          177,
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184
+        ],
+        "val_sample_head": [
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234
+        ]
+      }
+    }
+  },
+  "per_class_summary": {
+    "A": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 41,
+      "test_dhash_near2_match_in_train": 84,
+      "val_dhash_exact_match_in_train": 4,
+      "val_dhash_near2_match_in_train": 37,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "B": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 94,
+      "test_dhash_near2_match_in_train": 78,
+      "val_dhash_exact_match_in_train": 37,
+      "val_dhash_near2_match_in_train": 47,
+      "test_frames_adjacent_to_train": 5,
+      "test_frames_within_2_of_train": 9,
+      "adjacent_leakage_ratio": 0.025
+    },
+    "C": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 90,
+      "test_dhash_near2_match_in_train": 38,
+      "val_dhash_exact_match_in_train": 46,
+      "val_dhash_near2_match_in_train": 21,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "D": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 82,
+      "test_dhash_near2_match_in_train": 69,
+      "val_dhash_exact_match_in_train": 39,
+      "val_dhash_near2_match_in_train": 36,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 6,
+      "adjacent_leakage_ratio": 0.0158
+    },
+    "E": {
+      "train_count": 700,
+      "test_count": 199,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 78,
+      "test_dhash_near2_match_in_train": 37,
+      "val_dhash_exact_match_in_train": 9,
+      "val_dhash_near2_match_in_train": 32,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.0201
+    },
+    "F": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 58,
+      "test_dhash_near2_match_in_train": 30,
+      "val_dhash_exact_match_in_train": 3,
+      "val_dhash_near2_match_in_train": 16,
+      "test_frames_adjacent_to_train": 53,
+      "test_frames_within_2_of_train": 56,
+      "adjacent_leakage_ratio": 0.265
+    },
+    "G": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 91,
+      "test_dhash_near2_match_in_train": 88,
+      "val_dhash_exact_match_in_train": 55,
+      "val_dhash_near2_match_in_train": 34,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 6,
+      "adjacent_leakage_ratio": 0.015
+    },
+    "H": {
+      "train_count": 699,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 97,
+      "test_dhash_near2_match_in_train": 66,
+      "val_dhash_exact_match_in_train": 44,
+      "val_dhash_near2_match_in_train": 46,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "I": {
+      "train_count": 699,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 39,
+      "test_dhash_near2_match_in_train": 73,
+      "val_dhash_exact_match_in_train": 17,
+      "val_dhash_near2_match_in_train": 47,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 6,
+      "adjacent_leakage_ratio": 0.015
+    },
+    "J": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 101,
+      "test_dhash_exact_match_in_train": 102,
+      "test_dhash_near2_match_in_train": 64,
+      "val_dhash_exact_match_in_train": 25,
+      "val_dhash_near2_match_in_train": 47,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "K": {
+      "train_count": 700,
+      "test_count": 199,
+      "val_count": 75,
+      "test_dhash_exact_match_in_train": 139,
+      "test_dhash_near2_match_in_train": 47,
+      "val_dhash_exact_match_in_train": 29,
+      "val_dhash_near2_match_in_train": 37,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 5,
+      "adjacent_leakage_ratio": 0.0151
+    },
+    "L": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 44,
+      "test_dhash_near2_match_in_train": 89,
+      "val_dhash_exact_match_in_train": 20,
+      "val_dhash_near2_match_in_train": 40,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "M": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 52,
+      "test_dhash_near2_match_in_train": 60,
+      "val_dhash_exact_match_in_train": 28,
+      "val_dhash_near2_match_in_train": 15,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "N": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 70,
+      "test_dhash_near2_match_in_train": 68,
+      "val_dhash_exact_match_in_train": 43,
+      "val_dhash_near2_match_in_train": 32,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "O": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 39,
+      "test_dhash_near2_match_in_train": 92,
+      "val_dhash_exact_match_in_train": 13,
+      "val_dhash_near2_match_in_train": 38,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "P": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 70,
+      "test_dhash_near2_match_in_train": 72,
+      "val_dhash_exact_match_in_train": 36,
+      "val_dhash_near2_match_in_train": 39,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "Q": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 101,
+      "test_dhash_exact_match_in_train": 72,
+      "test_dhash_near2_match_in_train": 31,
+      "val_dhash_exact_match_in_train": 20,
+      "val_dhash_near2_match_in_train": 17,
+      "test_frames_adjacent_to_train": 2,
+      "test_frames_within_2_of_train": 4,
+      "adjacent_leakage_ratio": 0.01
+    },
+    "R": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 78,
+      "test_dhash_near2_match_in_train": 96,
+      "val_dhash_exact_match_in_train": 50,
+      "val_dhash_near2_match_in_train": 47,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "S": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 7,
+      "test_dhash_near2_match_in_train": 40,
+      "val_dhash_exact_match_in_train": 9,
+      "val_dhash_near2_match_in_train": 14,
+      "test_frames_adjacent_to_train": 1,
+      "test_frames_within_2_of_train": 2,
+      "adjacent_leakage_ratio": 0.005
+    },
+    "T": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 136,
+      "test_dhash_near2_match_in_train": 63,
+      "val_dhash_exact_match_in_train": 67,
+      "val_dhash_near2_match_in_train": 32,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 7,
+      "adjacent_leakage_ratio": 0.0152
+    },
+    "U": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 101,
+      "test_dhash_exact_match_in_train": 53,
+      "test_dhash_near2_match_in_train": 106,
+      "val_dhash_exact_match_in_train": 18,
+      "val_dhash_near2_match_in_train": 51,
+      "test_frames_adjacent_to_train": 4,
+      "test_frames_within_2_of_train": 8,
+      "adjacent_leakage_ratio": 0.02
+    },
+    "V": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 26,
+      "test_dhash_near2_match_in_train": 44,
+      "val_dhash_exact_match_in_train": 17,
+      "val_dhash_near2_match_in_train": 23,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 6,
+      "adjacent_leakage_ratio": 0.015
+    },
+    "W": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 0,
+      "test_dhash_near2_match_in_train": 0,
+      "val_dhash_exact_match_in_train": 0,
+      "val_dhash_near2_match_in_train": 0,
+      "test_frames_adjacent_to_train": 0,
+      "test_frames_within_2_of_train": 0,
+      "adjacent_leakage_ratio": 0.0
+    },
+    "X": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 77,
+      "test_dhash_near2_match_in_train": 65,
+      "val_dhash_exact_match_in_train": 42,
+      "val_dhash_near2_match_in_train": 29,
+      "test_frames_adjacent_to_train": 3,
+      "test_frames_within_2_of_train": 6,
+      "adjacent_leakage_ratio": 0.015
+    },
+    "Y": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 101,
+      "test_dhash_exact_match_in_train": 144,
+      "test_dhash_near2_match_in_train": 50,
+      "val_dhash_exact_match_in_train": 29,
+      "val_dhash_near2_match_in_train": 19,
+      "test_frames_adjacent_to_train": 43,
+      "test_frames_within_2_of_train": 47,
+      "adjacent_leakage_ratio": 0.215
+    },
+    "Z": {
+      "train_count": 700,
+      "test_count": 200,
+      "val_count": 100,
+      "test_dhash_exact_match_in_train": 50,
+      "test_dhash_near2_match_in_train": 0,
+      "val_dhash_exact_match_in_train": 0,
+      "val_dhash_near2_match_in_train": 0,
+      "test_frames_adjacent_to_train": 0,
+      "test_frames_within_2_of_train": 0,
+      "adjacent_leakage_ratio": 0.0
+    }
+  }
+}

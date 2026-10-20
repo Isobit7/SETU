@@ -49,10 +49,17 @@ MIDDLE_TIP_INDEX: Final[int] = 12
 RING_TIP_INDEX: Final[int] = 16
 PINKY_TIP_INDEX: Final[int] = 20
 
+# 6-D Facial Expression & Non-Manual Marker (NMM) Ratios
+FACIAL_RATIO_DIM: Final[int] = 6
+EXPANDED_FEATURE_DIM: Final[int] = 164  # 158 base + 6 facial ratios
+FACIAL_RATIOS_SLICE: Final[slice] = slice(158, 164)
+VELOCITY_FEATURE_DIM_316: Final[int] = 316
+VELOCITY_FEATURE_DIM_328: Final[int] = 328  # 164 base + 164 frame velocities
+
 def validate_schema_vector(vec: np.ndarray) -> bool:
     """
-    Validates that a NumPy vector matches the 158-feature schema contract:
-    - 1D array of length 158 (or 2D (T, 158))
+    Validates that a NumPy vector matches the feature schema contract:
+    - 1D array of length 158 or 164 (or 2D (T, 158) or (T, 164))
     - Correct data type (floating point)
     - No NaN or Inf values
     - Presence flags in {0.0, 1.0}
@@ -62,11 +69,11 @@ def validate_schema_vector(vec: np.ndarray) -> bool:
         raise TypeError(f"Expected numpy.ndarray, got {type(vec)}")
         
     if vec.ndim == 1:
-        if vec.shape[0] != FEATURE_DIM:
-            raise FeatureValidationError(f"Feature vector must have length {FEATURE_DIM}, got {vec.shape[0]}")
+        if vec.shape[0] not in (FEATURE_DIM, EXPANDED_FEATURE_DIM):
+            raise FeatureValidationError(f"Feature vector must have length {FEATURE_DIM} or {EXPANDED_FEATURE_DIM}, got {vec.shape[0]}")
     elif vec.ndim == 2:
-        if vec.shape[1] != FEATURE_DIM:
-            raise FeatureValidationError(f"Feature sequence must have feature dimension {FEATURE_DIM}, got {vec.shape[1]}")
+        if vec.shape[1] not in (FEATURE_DIM, EXPANDED_FEATURE_DIM):
+            raise FeatureValidationError(f"Feature sequence must have feature dimension {FEATURE_DIM} or {EXPANDED_FEATURE_DIM}, got {vec.shape[1]}")
     else:
         raise FeatureValidationError(f"Vector must be 1D or 2D, got shape {vec.shape}")
         

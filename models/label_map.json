@@ -1,0 +1,42 @@
+{
+  "class_names": [
+    "hello",
+    "thank_you",
+    "good_morning",
+    "i",
+    "you",
+    "namaste",
+    "no_sign"
+  ],
+  "label_to_idx": {
+    "hello": 0,
+    "thank_you": 1,
+    "good_morning": 2,
+    "i": 3,
+    "you": 4,
+    "namaste": 5,
+    "no_sign": 6
+  },
+  "idx_to_label": {
+    "0": "hello",
+    "1": "thank_you",
+    "2": "good_morning",
+    "3": "i",
+    "4": "you",
+    "5": "namaste",
+    "6": "no_sign"
+  },
+  "num_classes": 7,
+  "base_classes": [
+    "hello",
+    "thank_you",
+    "good_morning",
+    "i",
+    "you",
+    "no_sign"
+  ],
+  "custom_classes": [
+    "namaste"
+  ],
+  "updated_at": "2026-10-20T07:20:01.498907+00:00"
+}

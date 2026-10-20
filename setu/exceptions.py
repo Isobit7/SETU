@@ -27,3 +27,7 @@ class ModelArtifactError(SETUError):
 class ConfigurationError(SETUError):
     """Raised when invalid or conflicting configuration options are provided."""
     pass
+
+class InferenceError(SETUError):
+    """Raised when model inference fails due to invalid inputs, shapes, or runtime faults."""
+    pass

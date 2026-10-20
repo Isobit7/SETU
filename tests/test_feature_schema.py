@@ -244,5 +244,116 @@ def test_validation_rejects_corrupted_vectors():
     with pytest.raises(ValueError, match="presence flag must be 0.0 or 1.0"):
         validate_schema_vector(bad_presence)
 
+
+def test_facial_expression_feature_fallback():
+    """Missing or empty face landmarks must safely return [0.0] * 6."""
+    from setu.features.extractor import extract_facial_expression_features
+
+    assert extract_facial_expression_features(None) == [0.0] * 6
+    assert extract_facial_expression_features([]) == [0.0] * 6
+    assert extract_facial_expression_features([{"x": 0.5, "y": 0.5}] * 10) == [0.0] * 6
+
+
+def test_facial_expression_ratio_math():
+    """Verifies that the 6 scale-invariant facial ratios compute accurately."""
+    from setu.features.extractor import extract_facial_expression_features
+
+    # Create synthetic 468 face mesh landmarks
+    synthetic_mesh = [{"x": 0.5, "y": 0.5, "z": 0.0} for _ in range(468)]
+
+    # 1. Mouth Aspect Ratio: ||P_13 - P_14|| / ||P_61 - P_291||
+    synthetic_mesh[13] = {"x": 0.5, "y": 0.65, "z": 0.0}   # Upper inner lip
+    synthetic_mesh[14] = {"x": 0.5, "y": 0.70, "z": 0.0}   # Lower inner lip (dy = 0.05)
+    synthetic_mesh[61] = {"x": 0.45, "y": 0.675, "z": 0.0} # Mouth corner left
+    synthetic_mesh[291] = {"x": 0.55, "y": 0.675, "z": 0.0} # Mouth corner right (dx = 0.10)
+    # Expected MAR = 0.05 / 0.10 = 0.50
+
+    # Face height normalization: ||P_10 - P_152|| (Forehead top to chin)
+    synthetic_mesh[10] = {"x": 0.5, "y": 0.1, "z": 0.0}
+    synthetic_mesh[152] = {"x": 0.5, "y": 0.9, "z": 0.0} # dy = 0.80
+
+    # 2. Left Eyebrow: ||P_105 - P_159||
+    synthetic_mesh[105] = {"x": 0.4, "y": 0.22, "z": 0.0}
+    synthetic_mesh[159] = {"x": 0.4, "y": 0.30, "z": 0.0} # dy = 0.08 -> left_eer = 0.08 / 0.80 = 0.10
+
+    # 3. Right Eyebrow: ||P_334 - P_386||
+    synthetic_mesh[334] = {"x": 0.6, "y": 0.22, "z": 0.0}
+    synthetic_mesh[386] = {"x": 0.6, "y": 0.30, "z": 0.0} # dy = 0.08 -> right_eer = 0.08 / 0.80 = 0.10
+
+    # 5. Left Eye Aspect Ratio (EAR)
+    synthetic_mesh[33] = {"x": 0.35, "y": 0.35, "z": 0.0}
+    synthetic_mesh[133] = {"x": 0.45, "y": 0.35, "z": 0.0} # width = 0.10
+    synthetic_mesh[160] = {"x": 0.40, "y": 0.33, "z": 0.0}
+    synthetic_mesh[144] = {"x": 0.40, "y": 0.37, "z": 0.0} # height1 = 0.04
+    synthetic_mesh[158] = {"x": 0.40, "y": 0.33, "z": 0.0}
+    synthetic_mesh[153] = {"x": 0.40, "y": 0.37, "z": 0.0} # height2 = 0.04
+    # Expected Left EAR = (0.04 + 0.04) / (2 * 0.10) = 0.08 / 0.20 = 0.40
+
+    # 6. Right Eye Aspect Ratio (EAR)
+    synthetic_mesh[362] = {"x": 0.55, "y": 0.35, "z": 0.0}
+    synthetic_mesh[263] = {"x": 0.65, "y": 0.35, "z": 0.0} # width = 0.10
+    synthetic_mesh[385] = {"x": 0.60, "y": 0.33, "z": 0.0}
+    synthetic_mesh[380] = {"x": 0.60, "y": 0.37, "z": 0.0} # height1 = 0.04
+    synthetic_mesh[387] = {"x": 0.60, "y": 0.33, "z": 0.0}
+    synthetic_mesh[373] = {"x": 0.60, "y": 0.37, "z": 0.0} # height2 = 0.04
+    # Expected Right EAR = 0.40
+
+    ratios = extract_facial_expression_features(synthetic_mesh)
+    assert len(ratios) == 6
+    mar, left_eer, right_eer, mean_eer, left_ear, right_ear = ratios
+
+    assert np.isclose(mar, 0.50, atol=1e-3)
+    assert np.isclose(left_eer, 0.10, atol=1e-3)
+    assert np.isclose(right_eer, 0.10, atol=1e-3)
+    assert np.isclose(mean_eer, 0.10, atol=1e-3)
+    assert np.isclose(left_ear, 0.40, atol=1e-3)
+    assert np.isclose(right_ear, 0.40, atol=1e-3)
+
+
+def test_expanded_164_feature_vector_validation():
+    """Schema must validate 164-D vectors (158 Holistic + 6 Facial Ratios)."""
+    from setu.features.schema import EXPANDED_FEATURE_DIM
+
+    vec_164 = np.zeros(EXPANDED_FEATURE_DIM, dtype=np.float32)
+    vec_164[RIGHT_PRESENCE_INDEX] = 1.0
+    vec_164[LEFT_PRESENCE_INDEX] = 0.0
+    vec_164[CONTACT_SCORE_INDEX] = 0.5
+    # Set facial ratios at slots 158:164
+    vec_164[158:164] = [0.25, 0.12, 0.12, 0.12, 0.30, 0.30]
+
+    assert validate_schema_vector(vec_164) is True
+
+    # 2D batch/sequence of 164-D features
+    seq_164 = np.zeros((30, EXPANDED_FEATURE_DIM), dtype=np.float32)
+    assert validate_schema_vector(seq_164) is True
+
+
+def test_velocity_features_328_computation():
+    """compute_velocity_features must produce exact 328-D vectors across all input shapes."""
+    from setu.features.extractor import compute_velocity_features
+
+    # (30, 164) -> (30, 328)
+    seq_164 = np.ones((30, 164), dtype=np.float32)
+    res_328_from_164 = compute_velocity_features(seq_164, target_dim=328)
+    assert res_328_from_164.shape == (30, 328)
+    # First frame velocity should be 0.0
+    assert np.all(res_328_from_164[0, 164:] == 0.0)
+
+    # (30, 158) -> zero-padded to 164 -> (30, 328)
+    seq_158 = np.ones((30, 158), dtype=np.float32)
+    res_328_from_158 = compute_velocity_features(seq_158, target_dim=328)
+    assert res_328_from_158.shape == (30, 328)
+
+    # (30, 316) -> (30, 328)
+    seq_316 = np.ones((30, 316), dtype=np.float32)
+    res_328_from_316 = compute_velocity_features(seq_316, target_dim=328)
+    assert res_328_from_316.shape == (30, 328)
+
+    # (30, 328) -> (30, 328)
+    seq_328 = np.ones((30, 328), dtype=np.float32)
+    res_328_from_328 = compute_velocity_features(seq_328, target_dim=328)
+    assert res_328_from_328.shape == (30, 328)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, "-v"])

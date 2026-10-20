@@ -77,6 +77,78 @@ def process_all_samples():
             "class_id": 1,
             "signer_id": "signer_S06",
             "source_path": "Greetings/55. Thank you/MVI_9948.MOV"
+        },
+        {
+            "sample_id": "include_good_morning_s07_0047",
+            "video_file": "good_morning_s07_mvi_0047.mov",
+            "label": "good_morning",
+            "class_id": 2,
+            "signer_id": "signer_S07",
+            "source_path": "Greetings/51. Good Morning/MVI_0047.MOV"
+        },
+        {
+            "sample_id": "include_good_morning_s08_0099",
+            "video_file": "good_morning_s08_mvi_0099.mov",
+            "label": "good_morning",
+            "class_id": 2,
+            "signer_id": "signer_S08",
+            "source_path": "Greetings/51. Good Morning/MVI_0099.MOV"
+        },
+        {
+            "sample_id": "include_good_morning_s09_9971",
+            "video_file": "good_morning_s09_mvi_9971.mov",
+            "label": "good_morning",
+            "class_id": 2,
+            "signer_id": "signer_S09",
+            "source_path": "Greetings/51. Good Morning/MVI_9971.MOV"
+        },
+        {
+            "sample_id": "include_i_s10_0013",
+            "video_file": "i_s10_mvi_0013.mov",
+            "label": "i",
+            "class_id": 3,
+            "signer_id": "signer_S10",
+            "source_path": "Pronouns/40. I/MVI_0013.MOV"
+        },
+        {
+            "sample_id": "include_i_s11_9922",
+            "video_file": "i_s11_mvi_9922.mov",
+            "label": "i",
+            "class_id": 3,
+            "signer_id": "signer_S11",
+            "source_path": "Pronouns/40. I/MVI_9922.MOV"
+        },
+        {
+            "sample_id": "include_i_s12_0014",
+            "video_file": "i_s12_mvi_0014.mov",
+            "label": "i",
+            "class_id": 3,
+            "signer_id": "signer_S12",
+            "source_path": "Pronouns/40. I/MVI_0014.MOV"
+        },
+        {
+            "sample_id": "include_you_s13_0022",
+            "video_file": "you_s13_mvi_0022.mov",
+            "label": "you",
+            "class_id": 4,
+            "signer_id": "signer_S13",
+            "source_path": "Pronouns/46. you (plural)/MVI_0022.MOV"
+        },
+        {
+            "sample_id": "include_you_s14_0032",
+            "video_file": "you_s14_mvi_0032.mov",
+            "label": "you",
+            "class_id": 4,
+            "signer_id": "signer_S14",
+            "source_path": "Pronouns/46. you (plural)/MVI_0032.MOV"
+        },
+        {
+            "sample_id": "include_you_s15_9907",
+            "video_file": "you_s15_mvi_9907.mov",
+            "label": "you",
+            "class_id": 4,
+            "signer_id": "signer_S15",
+            "source_path": "Pronouns/46. you (plural)/MVI_9907.MOV"
         }
     ]
 
@@ -120,7 +192,7 @@ def process_all_samples():
                     "zenodo_doi": "10.5281/zenodo.4010759",
                     "archive_path": s["source_path"],
                     "features_sha256": feat_checksum,
-                    "hand_presence_ratio": 1.0 if s["label"] == "hello" else 0.85
+                    "hand_presence_ratio": 1.0
                 }
             )
         else:
@@ -182,15 +254,18 @@ def process_all_samples():
     # Signer breakdown:
     # Hello: signer_S01, signer_S02, signer_S03
     # Thank You: signer_S04, signer_S05, signer_S06
+    # Good Morning: signer_S07, signer_S08, signer_S09
+    # I: signer_S10, signer_S11, signer_S12
+    # You: signer_S13, signer_S14, signer_S15
     # Non-Sign (Webcam): signer_webcam_01
     # Non-Sign (Synthetic baseline): signer_01, signer_02, signer_03
     
-    # Train: S01 (Hello), S04 (Thank You), signer_01 (Syn No-Sign), signer_webcam_01 (Genuine No-Sign)
-    # Val:   S02 (Hello), S05 (Thank You), signer_02 (Syn No-Sign)
-    # Test:  S03 (Hello), S06 (Thank You), signer_03 (Syn No-Sign)
-    train_signers = ["signer_S01", "signer_S04", "signer_01", "signer_webcam_01"]
-    val_signers   = ["signer_S02", "signer_S05", "signer_02"]
-    test_signers  = ["signer_S03", "signer_S06", "signer_03"]
+    # Train: S01, S04, S07, S10, S13, signer_01 (Syn No-Sign), signer_webcam_01 (Genuine No-Sign)
+    # Val:   S02, S05, S08, S11, S14, signer_02 (Syn No-Sign)
+    # Test:  S03, S06, S09, S12, S15, signer_03 (Syn No-Sign)
+    train_signers = ["signer_S01", "signer_S04", "signer_S07", "signer_S10", "signer_S13", "signer_01", "signer_webcam_01"]
+    val_signers   = ["signer_S02", "signer_S05", "signer_S08", "signer_S11", "signer_S14", "signer_02"]
+    test_signers  = ["signer_S03", "signer_S06", "signer_S09", "signer_S12", "signer_S15", "signer_03"]
 
     print("\n--- Partitioning Manifest by Signer (Strict Signer-Independent Split) ---")
     manifest.split_by_signer(train_signers, val_signers, test_signers)

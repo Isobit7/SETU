@@ -2,17 +2,20 @@
   "name": "SETU-ISL-MVP-Controlled",
   "version": "1.0.0",
   "summary": {
-    "total_samples": 24,
-    "classes_count": 3,
+    "total_samples": 33,
+    "classes_count": 6,
     "samples_per_class": {
       "no_sign": 18,
       "hello": 3,
-      "thank_you": 3
+      "thank_you": 3,
+      "good_morning": 3,
+      "i": 3,
+      "you": 3
     },
     "samples_per_split": {
-      "train": 10,
-      "val": 7,
-      "test": 7,
+      "train": 13,
+      "val": 10,
+      "test": 10,
       "unassigned": 0
     },
     "samples_per_signer": {
@@ -25,7 +28,16 @@
       "signer_S04": 1,
       "signer_S05": 1,
       "signer_S06": 1,
-      "signer_webcam_01": 3
+      "signer_webcam_01": 3,
+      "signer_S07": 1,
+      "signer_S08": 1,
+      "signer_S09": 1,
+      "signer_S10": 1,
+      "signer_S11": 1,
+      "signer_S12": 1,
+      "signer_S13": 1,
+      "signer_S14": 1,
+      "signer_S15": 1
     },
     "low_hand_presence_samples": {
       "no_sign": 3
@@ -364,7 +376,7 @@
         "zenodo_doi": "10.5281/zenodo.4010759",
         "archive_path": "Greetings/55. Thank you/MVI_0006.MOV",
         "features_sha256": "da85921c25cc1b3bbccdf8bd2c14896b790ae040317fea6797dbc7f77298b4b5",
-        "hand_presence_ratio": 0.85
+        "hand_presence_ratio": 1.0
       }
     },
     {
@@ -384,7 +396,7 @@
         "zenodo_doi": "10.5281/zenodo.4010759",
         "archive_path": "Greetings/55. Thank you/MVI_0058.MOV",
         "features_sha256": "c5c6949b48f27573d512257d388e4b4d124b3a04388344611f5c97d546fa189d",
-        "hand_presence_ratio": 0.85
+        "hand_presence_ratio": 1.0
       }
     },
     {
@@ -404,7 +416,7 @@
         "zenodo_doi": "10.5281/zenodo.4010759",
         "archive_path": "Greetings/55. Thank you/MVI_9948.MOV",
         "features_sha256": "0686e87a7daaa2aba032bdfd059586c37fdda6ca1231c693c78c354f17b3c4e9",
-        "hand_presence_ratio": 0.85
+        "hand_presence_ratio": 1.0
       }
     },
     {
@@ -459,6 +471,240 @@
         "is_synthetic": false,
         "scenario": "lap_resting",
         "features_sha256": "27f91c4de6c0de97221732f3a8f7f41b91c38985dab85266018f722460a12c24"
+      }
+    },
+    {
+      "sample_id": "include_good_morning_s07_0047",
+      "label": "good_morning",
+      "class_id": 2,
+      "signer_id": "signer_S07",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\good_morning_s07_mvi_0047.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_good_morning_s07_0047.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "fe16322b28617ba1080f31ab40eeadb19a6487ed6e36e836a059ce6eb6af7561",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 59,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 59,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "9545c8ed2b144a291e76e56d85ff286690df7965e1475b137e07beab5ab800d3",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/51. Good Morning/MVI_0047.MOV"
+      }
+    },
+    {
+      "sample_id": "include_good_morning_s08_0099",
+      "label": "good_morning",
+      "class_id": 2,
+      "signer_id": "signer_S08",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\good_morning_s08_mvi_0099.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_good_morning_s08_0099.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "9cd42c2723c21302802b3c87a71e6e050ed86fc4cb03b9db166a2ef832a401b4",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 66,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 66,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "2619371092921ca920c159d8dfacf2a66d2c1a9336cd8410a63590ef3cf69917",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/51. Good Morning/MVI_0099.MOV"
+      }
+    },
+    {
+      "sample_id": "include_good_morning_s09_9971",
+      "label": "good_morning",
+      "class_id": 2,
+      "signer_id": "signer_S09",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\good_morning_s09_mvi_9971.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_good_morning_s09_9971.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "7de324af4448dd28d08e7e58e8b223166674b29a47dc779bc98c2ac57b5108c2",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 75,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 75,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "3f328f1eae6f42809bd82bd85da8aa9880f74b75c4f563fb4ea4d26cf3c6c29f",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Greetings/51. Good Morning/MVI_9971.MOV"
+      }
+    },
+    {
+      "sample_id": "include_i_s10_0013",
+      "label": "i",
+      "class_id": 3,
+      "signer_id": "signer_S10",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\i_s10_mvi_0013.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_i_s10_0013.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "fc3c74801eee604bf8521379831f4eef2ed9eb53a31d43d1d330592175b8a29c",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 43,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 43,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "48a483b25a87845238ed6460b870e43eb6e6c9635aed09762defeb528cf9c46a",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Pronouns/40. I/MVI_0013.MOV"
+      }
+    },
+    {
+      "sample_id": "include_i_s11_9922",
+      "label": "i",
+      "class_id": 3,
+      "signer_id": "signer_S11",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\i_s11_mvi_9922.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_i_s11_9922.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "cd5dbeb5c352a429918788095f086fc6599d994f1abcf216d886dbff5f1ba06f",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 68,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 68,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "86e0ac2354d00aa1470009887a14ac658965e9ca96acab715f4c53a7a3817ea2",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Pronouns/40. I/MVI_9922.MOV"
+      }
+    },
+    {
+      "sample_id": "include_i_s12_0014",
+      "label": "i",
+      "class_id": 3,
+      "signer_id": "signer_S12",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\i_s12_mvi_0014.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_i_s12_0014.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "4c6c5fe705d917c48ead12482da460381f205789e3f6f3e34769c04c2cba7799",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 45,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 45,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "1d9b961a54bfc16966659e79b731c788cddc7554590034c46207800d88e4e05c",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Pronouns/40. I/MVI_0014.MOV"
+      }
+    },
+    {
+      "sample_id": "include_you_s13_0022",
+      "label": "you",
+      "class_id": 4,
+      "signer_id": "signer_S13",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\you_s13_mvi_0022.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_you_s13_0022.npz",
+      "num_frames": 30,
+      "split": "train",
+      "sha256_checksum": "097ef1ead1480a598b0dfd20f350cd52fa4daf49c65c17a9ac059f57bea0b8d0",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 84,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 84,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "f6f59bd1894382d1ddf6ed30db78705baebb1b4d3b15925592919916f5eaac70",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Pronouns/46. you (plural)/MVI_0022.MOV"
+      }
+    },
+    {
+      "sample_id": "include_you_s14_0032",
+      "label": "you",
+      "class_id": 4,
+      "signer_id": "signer_S14",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\you_s14_mvi_0032.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_you_s14_0032.npz",
+      "num_frames": 30,
+      "split": "val",
+      "sha256_checksum": "a336e2167d1d267167d7dff15c167f3a0be7d0d3c2cf1bfe5174e47616814285",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 56,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 56,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "aa0b3b09dc853fd7e2351c044f33f4c5c8c2d118d25b8bbbf3f0a9ca9830c5da",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Pronouns/46. you (plural)/MVI_0032.MOV"
+      }
+    },
+    {
+      "sample_id": "include_you_s15_9907",
+      "label": "you",
+      "class_id": 4,
+      "signer_id": "signer_S15",
+      "raw_path": "C:\\MINI PROJ-SETU\\data\\raw\\include\\you_s15_mvi_9907.mov",
+      "features_path": "C:\\MINI PROJ-SETU\\data\\processed\\include_you_s15_9907.npz",
+      "num_frames": 30,
+      "split": "test",
+      "sha256_checksum": "55ac6a8afd5f51eb8b559aa8b433a717e3fab221c3a2f2b8c5a621643ad0887b",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "license": "CC BY 4.0",
+      "metadata": {
+        "source_frames": 53,
+        "resampled_frames": 30,
+        "fps": 25.0,
+        "width": 1920,
+        "height": 1080,
+        "frames_with_hands": 53,
+        "hand_presence_ratio": 1.0,
+        "features_sha256": "286cc983ef996d794f9da1cbf232c47bb74161ad08a6a7937557bc0b579478fb",
+        "is_synthetic": false,
+        "zenodo_doi": "10.5281/zenodo.4010759",
+        "archive_path": "Pronouns/46. you (plural)/MVI_9907.MOV"
       }
     }
   ]

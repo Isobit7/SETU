@@ -6,10 +6,21 @@ ENV/
 env.bak/
 venv.bak/
 
-# Bytecode and Cache
+# Node & Frontend Build Caches
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+frontend/.vite/
+
+# Python Bytecode and Cache
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
 .pytest_cache/
 .coverage
 htmlcov/
@@ -20,7 +31,37 @@ htmlcov/
 build/
 dist/
 
-# Large Model Weights and Task Bundles (Keep manifests/READMEs only)
+# Logs & Temporary Files
+*.log
+scratch/
+*.tmp
+temp/
+tmp/
+pytest-cache-files-*
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# Large Datasets and Media
+data/raw/
+data/processed/
+*.mp4
+*.avi
+*.mov
+*.npy
+
+# Model weights: ignore large reference/pretrained binaries
 *.h5
 *.keras
 *.tflite
@@ -32,36 +73,10 @@ dist/
 *.weights
 models/tasks/*.task
 models/reference/*.h5
+models/pretrained/*.pth
 
-# Datasets and Large Media Files
-data/raw/
-data/processed/
-*.mp4
-*.avi
-*.mov
-*.npy
-*.npz
-*.jpg
-*.jpeg
-*.png
-
-# Temporary Scratch Files and Logs
-scratch/
-*.log
-*.tmp
-temp/
-tmp/
-
-# Secrets and Local Configurations
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-
-# IDE and Operating System Files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-Desktop.ini
+# Whitelist essential SETU models and configurations
+!models/realsign_26class_mlp.pth
+!models/isl_sequence_lstm.pth
+!models/isl_mvp_model.npz
+!models/label_map.json

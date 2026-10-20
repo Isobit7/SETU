@@ -83,14 +83,34 @@ def extract_member_direct(url: str, info: zipfile.ZipInfo, dest_path: Path) -> P
     sig, ver, flag, method, time_, date_, crc, csize, usize, fn_len, extra_len = struct.unpack('<IHHHHHIIIHH', hdr_bytes)
     data_offset = info.header_offset + 30 + fn_len + extra_len
     
-    # 2. Download compressed stream in one shot
+    # 2. Download compressed stream with retry on transient socket drops
     csize_to_read = csize if csize > 0 else info.compress_size
-    req_data = urllib.request.Request(url, headers={
-        "Range": f"bytes={data_offset}-{data_offset + csize_to_read - 1}",
-        "User-Agent": "SETU-ISL-DataAcquisition/1.0"
-    })
-    with urllib.request.urlopen(req_data, timeout=120) as resp:
-        compressed_bytes = resp.read()
+    max_retries = 3
+    compressed_bytes = None
+    for attempt in range(max_retries):
+        try:
+            req_data = urllib.request.Request(url, headers={
+                "Range": f"bytes={data_offset}-{data_offset + csize_to_read - 1}",
+                "User-Agent": "SETU-ISL-DataAcquisition/1.0"
+            })
+            with urllib.request.urlopen(req_data, timeout=120) as resp:
+                buf = bytearray()
+                while len(buf) < csize_to_read:
+                    chunk = resp.read(min(1024 * 1024, csize_to_read - len(buf)))
+                    if not chunk:
+                        break
+                    buf.extend(chunk)
+                if len(buf) == csize_to_read:
+                    compressed_bytes = bytes(buf)
+                    break
+                print(f"      [Retry {attempt+1}/{max_retries}] Read {len(buf)}/{csize_to_read} bytes, retrying...")
+        except Exception as ex:
+            print(f"      [Retry {attempt+1}/{max_retries}] Network exception {ex}, retrying in 3s...")
+            import time
+            time.sleep(3)
+            
+    if compressed_bytes is None or len(compressed_bytes) != csize_to_read:
+        raise IOError(f"Failed to fully read {csize_to_read} bytes after {max_retries} attempts.")
         
     # 3. Decompress
     if method == 8:
@@ -169,6 +189,87 @@ TARGETS = [
         "internal_path": "Greetings/55. Thank you/MVI_9948.MOV",
         "signer_session": "signer_S06",
         "dest_filename": "thank_you_s06_mvi_9948.mov"
+    },
+    {
+        "class": "good_morning",
+        "class_id": 2,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Greetings_1of2.zip/content",
+        "archive_name": "Greetings_1of2.zip",
+        "internal_path": "Greetings/51. Good Morning/MVI_0047.MOV",
+        "signer_session": "signer_S07",
+        "dest_filename": "good_morning_s07_mvi_0047.mov"
+    },
+    {
+        "class": "good_morning",
+        "class_id": 2,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Greetings_1of2.zip/content",
+        "archive_name": "Greetings_1of2.zip",
+        "internal_path": "Greetings/51. Good Morning/MVI_0099.MOV",
+        "signer_session": "signer_S08",
+        "dest_filename": "good_morning_s08_mvi_0099.mov"
+    },
+    {
+        "class": "good_morning",
+        "class_id": 2,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Greetings_1of2.zip/content",
+        "archive_name": "Greetings_1of2.zip",
+        "internal_path": "Greetings/51. Good Morning/MVI_9971.MOV",
+        "signer_session": "signer_S09",
+        "dest_filename": "good_morning_s09_mvi_9971.mov"
+    },
+    {
+        "class": "i",
+        "class_id": 3,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Pronouns_1of2.zip/content",
+        "archive_name": "Pronouns_1of2.zip",
+        "internal_path": "Pronouns/40. I/MVI_0013.MOV",
+        "signer_session": "signer_S10",
+        "dest_filename": "i_s10_mvi_0013.mov"
+    },
+    {
+        "class": "i",
+        "class_id": 3,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Pronouns_1of2.zip/content",
+        "archive_name": "Pronouns_1of2.zip",
+        "internal_path": "Pronouns/40. I/MVI_9922.MOV",
+        "signer_session": "signer_S11",
+        "dest_filename": "i_s11_mvi_9922.mov"
+    },
+    {
+        "class": "i",
+        "class_id": 3,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Pronouns_1of2.zip/content",
+        "archive_name": "Pronouns_1of2.zip",
+        "internal_path": "Pronouns/40. I/MVI_0014.MOV",
+        "signer_session": "signer_S12",
+        "dest_filename": "i_s12_mvi_0014.mov"
+    },
+    {
+        "class": "you",
+        "class_id": 4,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Pronouns_2of2.zip/content",
+        "archive_name": "Pronouns_2of2.zip",
+        "internal_path": "Pronouns/46. you (plural)/MVI_0022.MOV",
+        "signer_session": "signer_S13",
+        "dest_filename": "you_s13_mvi_0022.mov"
+    },
+    {
+        "class": "you",
+        "class_id": 4,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Pronouns_2of2.zip/content",
+        "archive_name": "Pronouns_2of2.zip",
+        "internal_path": "Pronouns/46. you (plural)/MVI_0032.MOV",
+        "signer_session": "signer_S14",
+        "dest_filename": "you_s14_mvi_0032.mov"
+    },
+    {
+        "class": "you",
+        "class_id": 4,
+        "archive_url": "https://zenodo.org/api/records/4010759/files/Pronouns_2of2.zip/content",
+        "archive_name": "Pronouns_2of2.zip",
+        "internal_path": "Pronouns/46. you (plural)/MVI_9907.MOV",
+        "signer_session": "signer_S15",
+        "dest_filename": "you_s15_mvi_9907.mov"
     }
 ]
 

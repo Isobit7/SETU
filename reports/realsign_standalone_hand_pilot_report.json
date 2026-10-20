@@ -1,0 +1,7202 @@
+{
+  "model_evaluated": "MediaPipe Tasks Hand Landmarker (hand_landmarker.task)",
+  "model_origin": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+  "license": "Apache License 2.0",
+  "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+  "size_bytes": 7819105,
+  "input_resolution": "384x384 (letterbox padding)",
+  "training_pilot": {
+    "total_tested": 260,
+    "any_hand_detected": 254,
+    "any_hand_rate": 0.9769,
+    "dual_hand_detected": 129,
+    "dual_hand_rate": 0.4962,
+    "single_hand_detected": 125,
+    "single_hand_rate": 0.4808,
+    "zero_hands_detected": 6,
+    "zero_hand_rate": 0.0231,
+    "schema_valid_count": 260,
+    "schema_valid_rate": 1.0,
+    "landmarks_valid_count": 260,
+    "avg_latency_ms": 41.46
+  },
+  "reference_pilot": {
+    "total_tested": 26,
+    "any_hand_detected": 26,
+    "any_hand_rate": 1.0,
+    "dual_hand_detected": 15,
+    "dual_hand_rate": 0.5769,
+    "single_hand_detected": 11,
+    "single_hand_rate": 0.4231,
+    "zero_hands_detected": 0,
+    "zero_hand_rate": 0.0,
+    "schema_valid_count": 26,
+    "schema_valid_rate": 1.0,
+    "avg_latency_ms": 42.05
+  },
+  "comparison_holistic_vs_standalone": {
+    "training_any_hand_rate": {
+      "holistic": "12.69% (33/260)",
+      "standalone_hand": "97.69% (254/260)"
+    },
+    "training_dual_hand_rate": {
+      "holistic": "1.54% (4/260)",
+      "standalone_hand": "49.62% (129/260)"
+    },
+    "training_zero_hands_rate": {
+      "holistic": "87.31% (227/260)",
+      "standalone_hand": "2.31% (6/260)"
+    },
+    "reference_any_hand_rate": {
+      "holistic": "42.31% (11/26)",
+      "standalone_hand": "100.00% (26/26)"
+    },
+    "reference_dual_hand_rate": {
+      "holistic": "3.85% (1/26)",
+      "standalone_hand": "57.69% (15/26)"
+    }
+  },
+  "per_letter_stats": {
+    "A": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 49.33,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    },
+    "B": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 9,
+      "dual_hand_rate": 0.9,
+      "single_hand_detected": 1,
+      "single_hand_rate": 0.1,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 9,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 48.61,
+      "handedness_distribution": {
+        "Left+Right": 9,
+        "Right": 1
+      }
+    },
+    "C": {
+      "tested_images": 10,
+      "expected_type": "Single-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 35.42,
+      "handedness_distribution": {
+        "Left": 10
+      }
+    },
+    "D": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 49.1,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    },
+    "E": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 48.78,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    },
+    "F": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 8,
+      "dual_hand_rate": 0.8,
+      "single_hand_detected": 2,
+      "single_hand_rate": 0.2,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 8,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 45.45,
+      "handedness_distribution": {
+        "Left+Right": 8,
+        "Right": 2
+      }
+    },
+    "G": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 8,
+      "dual_hand_rate": 0.8,
+      "single_hand_detected": 2,
+      "single_hand_rate": 0.2,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 8,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 49.33,
+      "handedness_distribution": {
+        "Left+Right": 8,
+        "Right": 2
+      }
+    },
+    "H": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 48.11,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    },
+    "I": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 4,
+      "any_hand_rate": 0.4,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 4,
+      "single_hand_rate": 0.4,
+      "zero_hands_detected": 6,
+      "zero_hand_rate": 0.6,
+      "left_hand_labels": 4,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 33.14,
+      "handedness_distribution": {
+        "None": 6,
+        "Left": 4
+      }
+    },
+    "J": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 2,
+      "dual_hand_rate": 0.2,
+      "single_hand_detected": 8,
+      "single_hand_rate": 0.8,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 2,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 37.54,
+      "handedness_distribution": {
+        "Left+Right": 2,
+        "Right": 8
+      }
+    },
+    "K": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 35.34,
+      "handedness_distribution": {
+        "Left": 10
+      }
+    },
+    "L": {
+      "tested_images": 10,
+      "expected_type": "Single-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 35.44,
+      "handedness_distribution": {
+        "Left": 10
+      }
+    },
+    "M": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 5,
+      "dual_hand_rate": 0.5,
+      "single_hand_detected": 5,
+      "single_hand_rate": 0.5,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 15,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 43.57,
+      "handedness_distribution": {
+        "Left+Left": 5,
+        "Left": 5
+      }
+    },
+    "N": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 4,
+      "dual_hand_rate": 0.4,
+      "single_hand_detected": 6,
+      "single_hand_rate": 0.6,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 4,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 40.07,
+      "handedness_distribution": {
+        "Left+Right": 4,
+        "Right": 6
+      }
+    },
+    "O": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 35.91,
+      "handedness_distribution": {
+        "Left": 10
+      }
+    },
+    "P": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 52.43,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    },
+    "Q": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 6,
+      "dual_hand_rate": 0.6,
+      "single_hand_detected": 4,
+      "single_hand_rate": 0.4,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 6,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 41.43,
+      "handedness_distribution": {
+        "Left+Right": 6,
+        "Right": 4
+      }
+    },
+    "R": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 0,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 32.67,
+      "handedness_distribution": {
+        "Right": 10
+      }
+    },
+    "S": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 45.93,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    },
+    "T": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 0,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 32.72,
+      "handedness_distribution": {
+        "Right": 10
+      }
+    },
+    "U": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 5,
+      "right_hand_labels": 5,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 32.43,
+      "handedness_distribution": {
+        "Right": 5,
+        "Left": 5
+      }
+    },
+    "V": {
+      "tested_images": 10,
+      "expected_type": "Single/Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 31.38,
+      "handedness_distribution": {
+        "Left": 10
+      }
+    },
+    "W": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 8,
+      "dual_hand_rate": 0.8,
+      "single_hand_detected": 2,
+      "single_hand_rate": 0.2,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 4,
+      "right_hand_labels": 14,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 43.75,
+      "handedness_distribution": {
+        "Left+Right": 3,
+        "Right": 1,
+        "Right+Right": 5,
+        "Left": 1
+      }
+    },
+    "X": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 9,
+      "dual_hand_rate": 0.9,
+      "single_hand_detected": 1,
+      "single_hand_rate": 0.1,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 9,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 47.5,
+      "handedness_distribution": {
+        "Left+Right": 9,
+        "Left": 1
+      }
+    },
+    "Y": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 0,
+      "dual_hand_rate": 0.0,
+      "single_hand_detected": 10,
+      "single_hand_rate": 1.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 0,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 36.55,
+      "handedness_distribution": {
+        "Left": 10
+      }
+    },
+    "Z": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 10,
+      "any_hand_rate": 1.0,
+      "dual_hand_detected": 10,
+      "dual_hand_rate": 1.0,
+      "single_hand_detected": 0,
+      "single_hand_rate": 0.0,
+      "zero_hands_detected": 0,
+      "zero_hand_rate": 0.0,
+      "left_hand_labels": 10,
+      "right_hand_labels": 10,
+      "schema_valid_count": 10,
+      "avg_latency_ms": 45.96,
+      "handedness_distribution": {
+        "Left+Right": 10
+      }
+    }
+  },
+  "reference_details": {
+    "A": {
+      "file": "Letters/A.jpg",
+      "original_dims": [
+        331,
+        253
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9879
+        },
+        {
+          "label": "Right",
+          "score": 0.9961
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.2306,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 45.68
+    },
+    "B": {
+      "file": "Letters/B.jpg",
+      "original_dims": [
+        311,
+        245
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9937
+        },
+        {
+          "label": "Right",
+          "score": 0.9941
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.6452,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 47.06
+    },
+    "C": {
+      "file": "Letters/C.jpg",
+      "original_dims": [
+        304,
+        249
+      ],
+      "expected_type": "Single-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9989
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 35.35
+    },
+    "D": {
+      "file": "Letters/D.jpg",
+      "original_dims": [
+        332,
+        298
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9839
+        },
+        {
+          "label": "Right",
+          "score": 0.9971
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.1129,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.25
+    },
+    "E": {
+      "file": "Letters/E.jpg",
+      "original_dims": [
+        324,
+        355
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9737
+        }
+      ],
+      "handedness_combo": "Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 0.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 32.23
+    },
+    "F": {
+      "file": "Letters/F.jpg",
+      "original_dims": [
+        343,
+        302
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9987
+        },
+        {
+          "label": "Left",
+          "score": 0.9995
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0825,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.57
+    },
+    "G": {
+      "file": "Letters/G.jpg",
+      "original_dims": [
+        332,
+        293
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.8938
+        },
+        {
+          "label": "Right",
+          "score": 0.9836
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.15
+    },
+    "H": {
+      "file": "Letters/H.jpg",
+      "original_dims": [
+        338,
+        251
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9928
+        },
+        {
+          "label": "Right",
+          "score": 0.9677
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 44.5
+    },
+    "I": {
+      "file": "Letters/I.jpg",
+      "original_dims": [
+        199,
+        224
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9917
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 31.25
+    },
+    "J": {
+      "file": "Letters/J.jpg",
+      "original_dims": [
+        315,
+        242
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9955
+        },
+        {
+          "label": "Left",
+          "score": 0.9971
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0002,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.05
+    },
+    "K": {
+      "file": "Letters/K.jpg",
+      "original_dims": [
+        296,
+        272
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9817
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 37.64
+    },
+    "L": {
+      "file": "Letters/L.jpg",
+      "original_dims": [
+        236,
+        276
+      ],
+      "expected_type": "Single-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9952
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 34.77
+    },
+    "M": {
+      "file": "Letters/M.jpg",
+      "original_dims": [
+        297,
+        296
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.7746
+        },
+        {
+          "label": "Left",
+          "score": 0.9954
+        }
+      ],
+      "handedness_combo": "Left+Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 48.58
+    },
+    "N": {
+      "file": "Letters/N.jpg",
+      "original_dims": [
+        264,
+        261
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.993
+        }
+      ],
+      "handedness_combo": "Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 0.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 35.04
+    },
+    "O": {
+      "file": "Letters/O.jpg",
+      "original_dims": [
+        195,
+        233
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.999
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 35.51
+    },
+    "P": {
+      "file": "Letters/P.jpg",
+      "original_dims": [
+        294,
+        291
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9997
+        },
+        {
+          "label": "Right",
+          "score": 0.9979
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.7818,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.91
+    },
+    "Q": {
+      "file": "Letters/Q.jpg",
+      "original_dims": [
+        290,
+        223
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9933
+        },
+        {
+          "label": "Left",
+          "score": 0.9745
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0017,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 47.18
+    },
+    "R": {
+      "file": "Letters/R.jpg",
+      "original_dims": [
+        270,
+        310
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9769
+        },
+        {
+          "label": "Left",
+          "score": 0.9292
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.81
+    },
+    "S": {
+      "file": "Letters/S.jpg",
+      "original_dims": [
+        182,
+        309
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9994
+        },
+        {
+          "label": "Left",
+          "score": 0.9301
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 47.75
+    },
+    "T": {
+      "file": "Letters/T.jpg",
+      "original_dims": [
+        280,
+        311
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9965
+        }
+      ],
+      "handedness_combo": "Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 0.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 35.28
+    },
+    "U": {
+      "file": "Letters/U.jpg",
+      "original_dims": [
+        149,
+        227
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.5717
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 30.94
+    },
+    "V": {
+      "file": "Letters/V.jpg",
+      "original_dims": [
+        190,
+        333
+      ],
+      "expected_type": "Single/Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.998
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 35.75
+    },
+    "W": {
+      "file": "Letters/W.jpg",
+      "original_dims": [
+        348,
+        327
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 1,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9661
+        }
+      ],
+      "handedness_combo": "Left",
+      "rh_presence_flag": 0.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.7
+    },
+    "X": {
+      "file": "Letters/X.jpg",
+      "original_dims": [
+        388,
+        236
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.9976
+        },
+        {
+          "label": "Left",
+          "score": 0.9936
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0079,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 47.32
+    },
+    "Y": {
+      "file": "Letters/Y.jpg",
+      "original_dims": [
+        273,
+        301
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Left",
+          "score": 0.9625
+        },
+        {
+          "label": "Right",
+          "score": 0.9807
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 49.46
+    },
+    "Z": {
+      "file": "Letters/Z.jpg",
+      "original_dims": [
+        311,
+        190
+      ],
+      "expected_type": "Two-handed",
+      "hands_detected": 2,
+      "handedness": [
+        {
+          "label": "Right",
+          "score": 0.956
+        },
+        {
+          "label": "Left",
+          "score": 0.9907
+        }
+      ],
+      "handedness_combo": "Left+Right",
+      "rh_presence_flag": 1.0,
+      "lh_presence_flag": 1.0,
+      "contact_score": 0.0015,
+      "schema_valid": true,
+      "landmarks_valid": true,
+      "latency_ms": 46.67
+    }
+  },
+  "training_details": {
+    "A": [
+      {
+        "file": "Training/A/0.jpg",
+        "original_dims": [
+          349,
+          265
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9944
+          },
+          {
+            "label": "Right",
+            "score": 0.9963
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4263,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.53
+      },
+      {
+        "file": "Training/A/1.jpg",
+        "original_dims": [
+          344,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9957
+          },
+          {
+            "label": "Right",
+            "score": 0.9971
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4276,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.19
+      },
+      {
+        "file": "Training/A/2.jpg",
+        "original_dims": [
+          347,
+          265
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9953
+          },
+          {
+            "label": "Right",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.3425,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.77
+      },
+      {
+        "file": "Training/A/3.jpg",
+        "original_dims": [
+          346,
+          263
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9945
+          },
+          {
+            "label": "Right",
+            "score": 0.997
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.3718,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.68
+      },
+      {
+        "file": "Training/A/4.jpg",
+        "original_dims": [
+          347,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9938
+          },
+          {
+            "label": "Right",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4148,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.07
+      },
+      {
+        "file": "Training/A/5.jpg",
+        "original_dims": [
+          344,
+          261
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9935
+          },
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4319,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.52
+      },
+      {
+        "file": "Training/A/6.jpg",
+        "original_dims": [
+          343,
+          260
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9944
+          },
+          {
+            "label": "Right",
+            "score": 0.9981
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.3375,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 54.84
+      },
+      {
+        "file": "Training/A/7.jpg",
+        "original_dims": [
+          347,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9933
+          },
+          {
+            "label": "Right",
+            "score": 0.9984
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.5433,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.33
+      },
+      {
+        "file": "Training/A/8.jpg",
+        "original_dims": [
+          342,
+          259
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9944
+          },
+          {
+            "label": "Right",
+            "score": 0.998
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.14
+      },
+      {
+        "file": "Training/A/9.jpg",
+        "original_dims": [
+          345,
+          257
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9947
+          },
+          {
+            "label": "Right",
+            "score": 0.9982
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.5615,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.19
+      }
+    ],
+    "B": [
+      {
+        "file": "Training/B/0.jpg",
+        "original_dims": [
+          336,
+          256
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9974
+          },
+          {
+            "label": "Left",
+            "score": 1.0
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.3608,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 56.27
+      },
+      {
+        "file": "Training/B/1.jpg",
+        "original_dims": [
+          340,
+          260
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9976
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0905,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.43
+      },
+      {
+        "file": "Training/B/2.jpg",
+        "original_dims": [
+          342,
+          260
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9979
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.353,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.05
+      },
+      {
+        "file": "Training/B/3.jpg",
+        "original_dims": [
+          339,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9961
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0917,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.03
+      },
+      {
+        "file": "Training/B/4.jpg",
+        "original_dims": [
+          341,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.2824,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 53.42
+      },
+      {
+        "file": "Training/B/5.jpg",
+        "original_dims": [
+          340,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1964,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.48
+      },
+      {
+        "file": "Training/B/6.jpg",
+        "original_dims": [
+          341,
+          263
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.95
+      },
+      {
+        "file": "Training/B/7.jpg",
+        "original_dims": [
+          340,
+          263
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1581,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.52
+      },
+      {
+        "file": "Training/B/8.jpg",
+        "original_dims": [
+          340,
+          262
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          },
+          {
+            "label": "Left",
+            "score": 0.9999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.2485,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.26
+      },
+      {
+        "file": "Training/B/9.jpg",
+        "original_dims": [
+          339,
+          261
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9976
+          },
+          {
+            "label": "Left",
+            "score": 0.9997
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.3841,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.69
+      }
+    ],
+    "C": [
+      {
+        "file": "Training/C/0.jpg",
+        "original_dims": [
+          277,
+          255
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9965
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 42.04
+      },
+      {
+        "file": "Training/C/1.jpg",
+        "original_dims": [
+          285,
+          256
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9962
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.32
+      },
+      {
+        "file": "Training/C/2.jpg",
+        "original_dims": [
+          293,
+          254
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.11
+      },
+      {
+        "file": "Training/C/3.jpg",
+        "original_dims": [
+          294,
+          253
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9972
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.78
+      },
+      {
+        "file": "Training/C/4.jpg",
+        "original_dims": [
+          296,
+          254
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9979
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.69
+      },
+      {
+        "file": "Training/C/5.jpg",
+        "original_dims": [
+          296,
+          253
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9983
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.58
+      },
+      {
+        "file": "Training/C/6.jpg",
+        "original_dims": [
+          297,
+          252
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9986
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.76
+      },
+      {
+        "file": "Training/C/7.jpg",
+        "original_dims": [
+          297,
+          252
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9986
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 36.75
+      },
+      {
+        "file": "Training/C/8.jpg",
+        "original_dims": [
+          300,
+          252
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9984
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.37
+      },
+      {
+        "file": "Training/C/9.jpg",
+        "original_dims": [
+          299,
+          252
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9985
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.81
+      }
+    ],
+    "D": [
+      {
+        "file": "Training/D/0.jpg",
+        "original_dims": [
+          299,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9973
+          },
+          {
+            "label": "Left",
+            "score": 0.983
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0954,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.81
+      },
+      {
+        "file": "Training/D/1.jpg",
+        "original_dims": [
+          320,
+          304
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9829
+          },
+          {
+            "label": "Right",
+            "score": 0.9977
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0385,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.69
+      },
+      {
+        "file": "Training/D/2.jpg",
+        "original_dims": [
+          328,
+          303
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9804
+          },
+          {
+            "label": "Right",
+            "score": 0.9984
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0863,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.05
+      },
+      {
+        "file": "Training/D/3.jpg",
+        "original_dims": [
+          333,
+          303
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9826
+          },
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.3
+      },
+      {
+        "file": "Training/D/4.jpg",
+        "original_dims": [
+          334,
+          303
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9862
+          },
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1468,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.77
+      },
+      {
+        "file": "Training/D/5.jpg",
+        "original_dims": [
+          335,
+          304
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9863
+          },
+          {
+            "label": "Right",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1577,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 54.33
+      },
+      {
+        "file": "Training/D/6.jpg",
+        "original_dims": [
+          335,
+          304
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9846
+          },
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.2192,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 52.29
+      },
+      {
+        "file": "Training/D/7.jpg",
+        "original_dims": [
+          337,
+          304
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9855
+          },
+          {
+            "label": "Right",
+            "score": 0.9983
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1885,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.96
+      },
+      {
+        "file": "Training/D/8.jpg",
+        "original_dims": [
+          337,
+          304
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9979
+          },
+          {
+            "label": "Left",
+            "score": 0.9861
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.208,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.54
+      },
+      {
+        "file": "Training/D/9.jpg",
+        "original_dims": [
+          338,
+          304
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9975
+          },
+          {
+            "label": "Left",
+            "score": 0.9839
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1756,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.32
+      }
+    ],
+    "E": [
+      {
+        "file": "Training/E/0.jpg",
+        "original_dims": [
+          311,
+          274
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9992
+          },
+          {
+            "label": "Right",
+            "score": 0.999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0472,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.15
+      },
+      {
+        "file": "Training/E/1.jpg",
+        "original_dims": [
+          313,
+          287
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9988
+          },
+          {
+            "label": "Right",
+            "score": 0.9982
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0236,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.84
+      },
+      {
+        "file": "Training/E/2.jpg",
+        "original_dims": [
+          315,
+          286
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.999
+          },
+          {
+            "label": "Right",
+            "score": 0.9985
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0324,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.98
+      },
+      {
+        "file": "Training/E/3.jpg",
+        "original_dims": [
+          315,
+          288
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9992
+          },
+          {
+            "label": "Right",
+            "score": 0.9992
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0569,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.79
+      },
+      {
+        "file": "Training/E/4.jpg",
+        "original_dims": [
+          314,
+          288
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9991
+          },
+          {
+            "label": "Right",
+            "score": 0.999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0334,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 51.33
+      },
+      {
+        "file": "Training/E/5.jpg",
+        "original_dims": [
+          313,
+          287
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9992
+          },
+          {
+            "label": "Left",
+            "score": 0.9993
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0429,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 51.51
+      },
+      {
+        "file": "Training/E/6.jpg",
+        "original_dims": [
+          314,
+          287
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9993
+          },
+          {
+            "label": "Left",
+            "score": 0.9993
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0444,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.81
+      },
+      {
+        "file": "Training/E/7.jpg",
+        "original_dims": [
+          314,
+          288
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9993
+          },
+          {
+            "label": "Left",
+            "score": 0.9994
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.058,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.57
+      },
+      {
+        "file": "Training/E/8.jpg",
+        "original_dims": [
+          315,
+          287
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9993
+          },
+          {
+            "label": "Left",
+            "score": 0.9994
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0604,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.7
+      },
+      {
+        "file": "Training/E/9.jpg",
+        "original_dims": [
+          315,
+          287
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9993
+          },
+          {
+            "label": "Left",
+            "score": 0.9992
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0724,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.08
+      }
+    ],
+    "F": [
+      {
+        "file": "Training/F/1.jpg",
+        "original_dims": [
+          322,
+          261
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9938
+          },
+          {
+            "label": "Left",
+            "score": 0.999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0103,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.19
+      },
+      {
+        "file": "Training/F/2.jpg",
+        "original_dims": [
+          322,
+          264
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9926
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.71
+      },
+      {
+        "file": "Training/F/3.jpg",
+        "original_dims": [
+          322,
+          269
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9942
+          },
+          {
+            "label": "Left",
+            "score": 0.9989
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0112,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.43
+      },
+      {
+        "file": "Training/F/4.jpg",
+        "original_dims": [
+          320,
+          269
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9927
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.39
+      },
+      {
+        "file": "Training/F/5.jpg",
+        "original_dims": [
+          319,
+          272
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9932
+          },
+          {
+            "label": "Left",
+            "score": 0.9988
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0287,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.0
+      },
+      {
+        "file": "Training/F/6.jpg",
+        "original_dims": [
+          319,
+          274
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9943
+          },
+          {
+            "label": "Left",
+            "score": 0.9987
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0734,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.59
+      },
+      {
+        "file": "Training/F/7.jpg",
+        "original_dims": [
+          316,
+          274
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9928
+          },
+          {
+            "label": "Left",
+            "score": 0.9988
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0926,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.46
+      },
+      {
+        "file": "Training/F/8.jpg",
+        "original_dims": [
+          317,
+          275
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.993
+          },
+          {
+            "label": "Left",
+            "score": 0.9989
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1098,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.02
+      },
+      {
+        "file": "Training/F/9.jpg",
+        "original_dims": [
+          313,
+          275
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9929
+          },
+          {
+            "label": "Left",
+            "score": 0.9987
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0589,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.9
+      },
+      {
+        "file": "Training/F/10.jpg",
+        "original_dims": [
+          315,
+          275
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9938
+          },
+          {
+            "label": "Left",
+            "score": 0.9988
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.147,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.77
+      }
+    ],
+    "G": [
+      {
+        "file": "Training/G/0.jpg",
+        "original_dims": [
+          255,
+          310
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9951
+          },
+          {
+            "label": "Left",
+            "score": 0.9229
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.0
+      },
+      {
+        "file": "Training/G/1.jpg",
+        "original_dims": [
+          250,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9942
+          },
+          {
+            "label": "Left",
+            "score": 0.9739
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.77
+      },
+      {
+        "file": "Training/G/2.jpg",
+        "original_dims": [
+          251,
+          308
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9939
+          },
+          {
+            "label": "Left",
+            "score": 0.9271
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 62.42
+      },
+      {
+        "file": "Training/G/3.jpg",
+        "original_dims": [
+          251,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9939
+          },
+          {
+            "label": "Left",
+            "score": 0.7418
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.74
+      },
+      {
+        "file": "Training/G/4.jpg",
+        "original_dims": [
+          251,
+          311
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9925
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.69
+      },
+      {
+        "file": "Training/G/5.jpg",
+        "original_dims": [
+          253,
+          311
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9913
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.07
+      },
+      {
+        "file": "Training/G/6.jpg",
+        "original_dims": [
+          252,
+          310
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9217
+          },
+          {
+            "label": "Right",
+            "score": 0.994
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.97
+      },
+      {
+        "file": "Training/G/7.jpg",
+        "original_dims": [
+          253,
+          311
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.7851
+          },
+          {
+            "label": "Right",
+            "score": 0.9939
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.0
+      },
+      {
+        "file": "Training/G/8.jpg",
+        "original_dims": [
+          253,
+          310
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9437
+          },
+          {
+            "label": "Right",
+            "score": 0.9944
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.55
+      },
+      {
+        "file": "Training/G/9.jpg",
+        "original_dims": [
+          251,
+          313
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9953
+          },
+          {
+            "label": "Left",
+            "score": 0.8955
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.1
+      }
+    ],
+    "H": [
+      {
+        "file": "Training/H/0.jpg",
+        "original_dims": [
+          314,
+          244
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9888
+          },
+          {
+            "label": "Left",
+            "score": 0.993
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0003,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.19
+      },
+      {
+        "file": "Training/H/1.jpg",
+        "original_dims": [
+          317,
+          241
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9915
+          },
+          {
+            "label": "Left",
+            "score": 0.9918
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.43
+      },
+      {
+        "file": "Training/H/2.jpg",
+        "original_dims": [
+          315,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9894
+          },
+          {
+            "label": "Left",
+            "score": 0.9904
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0002,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.76
+      },
+      {
+        "file": "Training/H/3.jpg",
+        "original_dims": [
+          313,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9889
+          },
+          {
+            "label": "Left",
+            "score": 0.9909
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 51.62
+      },
+      {
+        "file": "Training/H/4.jpg",
+        "original_dims": [
+          311,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9912
+          },
+          {
+            "label": "Left",
+            "score": 0.9932
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 42.65
+      },
+      {
+        "file": "Training/H/5.jpg",
+        "original_dims": [
+          309,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9912
+          },
+          {
+            "label": "Left",
+            "score": 0.9928
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.23
+      },
+      {
+        "file": "Training/H/6.jpg",
+        "original_dims": [
+          312,
+          239
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9904
+          },
+          {
+            "label": "Left",
+            "score": 0.9911
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.91
+      },
+      {
+        "file": "Training/H/7.jpg",
+        "original_dims": [
+          311,
+          239
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9916
+          },
+          {
+            "label": "Left",
+            "score": 0.9922
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.89
+      },
+      {
+        "file": "Training/H/8.jpg",
+        "original_dims": [
+          311,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9929
+          },
+          {
+            "label": "Left",
+            "score": 0.9933
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.8
+      },
+      {
+        "file": "Training/H/9.jpg",
+        "original_dims": [
+          309,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9936
+          },
+          {
+            "label": "Left",
+            "score": 0.9922
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0001,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.63
+      }
+    ],
+    "I": [
+      {
+        "file": "Training/I/251.jpg",
+        "original_dims": [
+          420,
+          352
+        ],
+        "hands_detected": 0,
+        "handedness": [],
+        "handedness_combo": "None",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 23.15
+      },
+      {
+        "file": "Training/I/252.jpg",
+        "original_dims": [
+          238,
+          259
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.984
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.93
+      },
+      {
+        "file": "Training/I/253.jpg",
+        "original_dims": [
+          226,
+          259
+        ],
+        "hands_detected": 0,
+        "handedness": [],
+        "handedness_combo": "None",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 29.92
+      },
+      {
+        "file": "Training/I/254.jpg",
+        "original_dims": [
+          241,
+          264
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9535
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.28
+      },
+      {
+        "file": "Training/I/255.jpg",
+        "original_dims": [
+          435,
+          363
+        ],
+        "hands_detected": 0,
+        "handedness": [],
+        "handedness_combo": "None",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 19.33
+      },
+      {
+        "file": "Training/I/256.jpg",
+        "original_dims": [
+          229,
+          263
+        ],
+        "hands_detected": 0,
+        "handedness": [],
+        "handedness_combo": "None",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.39
+      },
+      {
+        "file": "Training/I/257.jpg",
+        "original_dims": [
+          433,
+          359
+        ],
+        "hands_detected": 0,
+        "handedness": [],
+        "handedness_combo": "None",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 19.43
+      },
+      {
+        "file": "Training/I/258.jpg",
+        "original_dims": [
+          237,
+          259
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9654
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.7
+      },
+      {
+        "file": "Training/I/259.jpg",
+        "original_dims": [
+          235,
+          258
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9299
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.37
+      },
+      {
+        "file": "Training/I/260.jpg",
+        "original_dims": [
+          432,
+          357
+        ],
+        "hands_detected": 0,
+        "handedness": [],
+        "handedness_combo": "None",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 20.94
+      }
+    ],
+    "J": [
+      {
+        "file": "Training/J/0.jpg",
+        "original_dims": [
+          239,
+          266
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9958
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.76
+      },
+      {
+        "file": "Training/J/1.jpg",
+        "original_dims": [
+          239,
+          273
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.997
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.06
+      },
+      {
+        "file": "Training/J/2.jpg",
+        "original_dims": [
+          237,
+          273
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9966
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.6
+      },
+      {
+        "file": "Training/J/3.jpg",
+        "original_dims": [
+          237,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.63
+      },
+      {
+        "file": "Training/J/4.jpg",
+        "original_dims": [
+          239,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.996
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.17
+      },
+      {
+        "file": "Training/J/5.jpg",
+        "original_dims": [
+          239,
+          275
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9975
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.99
+      },
+      {
+        "file": "Training/J/6.jpg",
+        "original_dims": [
+          443,
+          285
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9987
+          },
+          {
+            "label": "Right",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0026,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.47
+      },
+      {
+        "file": "Training/J/7.jpg",
+        "original_dims": [
+          238,
+          275
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9975
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.03
+      },
+      {
+        "file": "Training/J/8.jpg",
+        "original_dims": [
+          446,
+          285
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9985
+          },
+          {
+            "label": "Right",
+            "score": 0.998
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0015,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.44
+      },
+      {
+        "file": "Training/J/9.jpg",
+        "original_dims": [
+          244,
+          275
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.24
+      }
+    ],
+    "K": [
+      {
+        "file": "Training/K/500.jpg",
+        "original_dims": [
+          293,
+          273
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9859
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.11
+      },
+      {
+        "file": "Training/K/501.jpg",
+        "original_dims": [
+          285,
+          273
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9902
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.87
+      },
+      {
+        "file": "Training/K/502.jpg",
+        "original_dims": [
+          285,
+          273
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9902
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.56
+      },
+      {
+        "file": "Training/K/503.jpg",
+        "original_dims": [
+          285,
+          275
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.986
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 36.08
+      },
+      {
+        "file": "Training/K/504.jpg",
+        "original_dims": [
+          294,
+          270
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9859
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.62
+      },
+      {
+        "file": "Training/K/505.jpg",
+        "original_dims": [
+          293,
+          273
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9867
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.84
+      },
+      {
+        "file": "Training/K/506.jpg",
+        "original_dims": [
+          293,
+          274
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9868
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.68
+      },
+      {
+        "file": "Training/K/507.jpg",
+        "original_dims": [
+          291,
+          271
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9874
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 37.33
+      },
+      {
+        "file": "Training/K/508.jpg",
+        "original_dims": [
+          292,
+          274
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9856
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.31
+      },
+      {
+        "file": "Training/K/509.jpg",
+        "original_dims": [
+          290,
+          271
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9885
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.98
+      }
+    ],
+    "L": [
+      {
+        "file": "Training/L/0.jpg",
+        "original_dims": [
+          262,
+          304
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9981
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.41
+      },
+      {
+        "file": "Training/L/1.jpg",
+        "original_dims": [
+          262,
+          308
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9933
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.43
+      },
+      {
+        "file": "Training/L/2.jpg",
+        "original_dims": [
+          263,
+          307
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9972
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 37.47
+      },
+      {
+        "file": "Training/L/3.jpg",
+        "original_dims": [
+          263,
+          307
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9958
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.74
+      },
+      {
+        "file": "Training/L/4.jpg",
+        "original_dims": [
+          263,
+          306
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.997
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.13
+      },
+      {
+        "file": "Training/L/5.jpg",
+        "original_dims": [
+          263,
+          306
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9979
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.56
+      },
+      {
+        "file": "Training/L/6.jpg",
+        "original_dims": [
+          264,
+          307
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9981
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.87
+      },
+      {
+        "file": "Training/L/7.jpg",
+        "original_dims": [
+          262,
+          308
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9982
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.07
+      },
+      {
+        "file": "Training/L/8.jpg",
+        "original_dims": [
+          262,
+          309
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 36.33
+      },
+      {
+        "file": "Training/L/9.jpg",
+        "original_dims": [
+          261,
+          310
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 39.38
+      }
+    ],
+    "M": [
+      {
+        "file": "Training/M/0.jpg",
+        "original_dims": [
+          184,
+          272
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.785
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.9
+      },
+      {
+        "file": "Training/M/1.jpg",
+        "original_dims": [
+          187,
+          280
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9398
+          },
+          {
+            "label": "Left",
+            "score": 0.9821
+          }
+        ],
+        "handedness_combo": "Left+Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.11
+      },
+      {
+        "file": "Training/M/2.jpg",
+        "original_dims": [
+          186,
+          281
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9106
+          },
+          {
+            "label": "Left",
+            "score": 0.9815
+          }
+        ],
+        "handedness_combo": "Left+Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.65
+      },
+      {
+        "file": "Training/M/3.jpg",
+        "original_dims": [
+          184,
+          283
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9321
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 37.37
+      },
+      {
+        "file": "Training/M/4.jpg",
+        "original_dims": [
+          188,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.7751
+          },
+          {
+            "label": "Left",
+            "score": 0.9679
+          }
+        ],
+        "handedness_combo": "Left+Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 50.27
+      },
+      {
+        "file": "Training/M/5.jpg",
+        "original_dims": [
+          187,
+          283
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.7309
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.16
+      },
+      {
+        "file": "Training/M/6.jpg",
+        "original_dims": [
+          188,
+          283
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.8283
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.4
+      },
+      {
+        "file": "Training/M/7.jpg",
+        "original_dims": [
+          188,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.8504
+          },
+          {
+            "label": "Left",
+            "score": 0.9743
+          }
+        ],
+        "handedness_combo": "Left+Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.88
+      },
+      {
+        "file": "Training/M/8.jpg",
+        "original_dims": [
+          189,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.7289
+          },
+          {
+            "label": "Left",
+            "score": 0.9868
+          }
+        ],
+        "handedness_combo": "Left+Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 53.57
+      },
+      {
+        "file": "Training/M/9.jpg",
+        "original_dims": [
+          189,
+          282
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.8978
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.43
+      }
+    ],
+    "N": [
+      {
+        "file": "Training/N/0.jpg",
+        "original_dims": [
+          320,
+          244
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9903
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.83
+      },
+      {
+        "file": "Training/N/1.jpg",
+        "original_dims": [
+          331,
+          248
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9894
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.92
+      },
+      {
+        "file": "Training/N/2.jpg",
+        "original_dims": [
+          337,
+          243
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9788
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.78
+      },
+      {
+        "file": "Training/N/3.jpg",
+        "original_dims": [
+          341,
+          244
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.938
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.23
+      },
+      {
+        "file": "Training/N/4.jpg",
+        "original_dims": [
+          342,
+          243
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9848
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.05
+      },
+      {
+        "file": "Training/N/5.jpg",
+        "original_dims": [
+          342,
+          246
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9464
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.27
+      },
+      {
+        "file": "Training/N/6.jpg",
+        "original_dims": [
+          341,
+          247
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.977
+          },
+          {
+            "label": "Left",
+            "score": 0.999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 52.83
+      },
+      {
+        "file": "Training/N/7.jpg",
+        "original_dims": [
+          340,
+          246
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9761
+          },
+          {
+            "label": "Left",
+            "score": 0.999
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.7
+      },
+      {
+        "file": "Training/N/8.jpg",
+        "original_dims": [
+          338,
+          244
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.982
+          },
+          {
+            "label": "Left",
+            "score": 0.9989
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.75
+      },
+      {
+        "file": "Training/N/9.jpg",
+        "original_dims": [
+          336,
+          247
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9802
+          },
+          {
+            "label": "Left",
+            "score": 0.9988
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.29
+      }
+    ],
+    "O": [
+      {
+        "file": "Training/O/0.jpg",
+        "original_dims": [
+          204,
+          198
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9921
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.97
+      },
+      {
+        "file": "Training/O/1.jpg",
+        "original_dims": [
+          210,
+          201
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.991
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.06
+      },
+      {
+        "file": "Training/O/2.jpg",
+        "original_dims": [
+          211,
+          202
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9927
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.13
+      },
+      {
+        "file": "Training/O/3.jpg",
+        "original_dims": [
+          211,
+          204
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9855
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 38.27
+      },
+      {
+        "file": "Training/O/4.jpg",
+        "original_dims": [
+          210,
+          206
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9845
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.34
+      },
+      {
+        "file": "Training/O/5.jpg",
+        "original_dims": [
+          210,
+          207
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9795
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.46
+      },
+      {
+        "file": "Training/O/6.jpg",
+        "original_dims": [
+          209,
+          208
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.989
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 38.26
+      },
+      {
+        "file": "Training/O/7.jpg",
+        "original_dims": [
+          207,
+          208
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.985
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.28
+      },
+      {
+        "file": "Training/O/8.jpg",
+        "original_dims": [
+          207,
+          209
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9877
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 40.03
+      },
+      {
+        "file": "Training/O/9.jpg",
+        "original_dims": [
+          208,
+          208
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9914
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 39.27
+      }
+    ],
+    "P": [
+      {
+        "file": "Training/P/0.jpg",
+        "original_dims": [
+          274,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9938
+          },
+          {
+            "label": "Left",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4807,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 54.42
+      },
+      {
+        "file": "Training/P/1.jpg",
+        "original_dims": [
+          281,
+          282
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.996
+          },
+          {
+            "label": "Left",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.4765,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 52.69
+      },
+      {
+        "file": "Training/P/2.jpg",
+        "original_dims": [
+          283,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9968
+          },
+          {
+            "label": "Left",
+            "score": 0.9972
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.535,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 53.22
+      },
+      {
+        "file": "Training/P/3.jpg",
+        "original_dims": [
+          285,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9965
+          },
+          {
+            "label": "Left",
+            "score": 0.9971
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.6169,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 56.09
+      },
+      {
+        "file": "Training/P/4.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9965
+          },
+          {
+            "label": "Left",
+            "score": 0.9977
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.472,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 52.48
+      },
+      {
+        "file": "Training/P/5.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9966
+          },
+          {
+            "label": "Left",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.5912,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.69
+      },
+      {
+        "file": "Training/P/6.jpg",
+        "original_dims": [
+          283,
+          282
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9971
+          },
+          {
+            "label": "Left",
+            "score": 0.9973
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.56,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.49
+      },
+      {
+        "file": "Training/P/7.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9968
+          },
+          {
+            "label": "Left",
+            "score": 0.9983
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.6207,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 51.33
+      },
+      {
+        "file": "Training/P/8.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9966
+          },
+          {
+            "label": "Left",
+            "score": 0.9982
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.5946,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 60.05
+      },
+      {
+        "file": "Training/P/9.jpg",
+        "original_dims": [
+          285,
+          283
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.996
+          },
+          {
+            "label": "Left",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.6725,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.88
+      }
+    ],
+    "Q": [
+      {
+        "file": "Training/Q/500.jpg",
+        "original_dims": [
+          288,
+          217
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.959
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.96
+      },
+      {
+        "file": "Training/Q/501.jpg",
+        "original_dims": [
+          288,
+          217
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.959
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.96
+      },
+      {
+        "file": "Training/Q/502.jpg",
+        "original_dims": [
+          303,
+          224
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9615
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.26
+      },
+      {
+        "file": "Training/Q/503.jpg",
+        "original_dims": [
+          307,
+          226
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9775
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.6
+      },
+      {
+        "file": "Training/Q/504.jpg",
+        "original_dims": [
+          292,
+          219
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9856
+          },
+          {
+            "label": "Left",
+            "score": 0.9941
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0119,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.27
+      },
+      {
+        "file": "Training/Q/505.jpg",
+        "original_dims": [
+          291,
+          219
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.985
+          },
+          {
+            "label": "Left",
+            "score": 0.9926
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0037,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.1
+      },
+      {
+        "file": "Training/Q/506.jpg",
+        "original_dims": [
+          291,
+          221
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.985
+          },
+          {
+            "label": "Left",
+            "score": 0.9942
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0077,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.88
+      },
+      {
+        "file": "Training/Q/507.jpg",
+        "original_dims": [
+          292,
+          221
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9826
+          },
+          {
+            "label": "Left",
+            "score": 0.9909
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0064,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.37
+      },
+      {
+        "file": "Training/Q/508.jpg",
+        "original_dims": [
+          288,
+          219
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9867
+          },
+          {
+            "label": "Left",
+            "score": 0.9873
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0053,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.41
+      },
+      {
+        "file": "Training/Q/509.jpg",
+        "original_dims": [
+          292,
+          220
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9834
+          },
+          {
+            "label": "Left",
+            "score": 0.9917
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0032,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.49
+      }
+    ],
+    "R": [
+      {
+        "file": "Training/R/0.jpg",
+        "original_dims": [
+          217,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.896
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.85
+      },
+      {
+        "file": "Training/R/1.jpg",
+        "original_dims": [
+          216,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8534
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.87
+      },
+      {
+        "file": "Training/R/2.jpg",
+        "original_dims": [
+          216,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8944
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.28
+      },
+      {
+        "file": "Training/R/3.jpg",
+        "original_dims": [
+          215,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8948
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.25
+      },
+      {
+        "file": "Training/R/4.jpg",
+        "original_dims": [
+          215,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.89
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.37
+      },
+      {
+        "file": "Training/R/5.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8787
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.6
+      },
+      {
+        "file": "Training/R/6.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8967
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 40.17
+      },
+      {
+        "file": "Training/R/7.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8681
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.92
+      },
+      {
+        "file": "Training/R/8.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8814
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.99
+      },
+      {
+        "file": "Training/R/9.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.8834
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 29.43
+      }
+    ],
+    "S": [
+      {
+        "file": "Training/S/501.jpg",
+        "original_dims": [
+          183,
+          319
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9996
+          },
+          {
+            "label": "Left",
+            "score": 0.997
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.75
+      },
+      {
+        "file": "Training/S/502.jpg",
+        "original_dims": [
+          180,
+          362
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9996
+          },
+          {
+            "label": "Left",
+            "score": 0.9834
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.78
+      },
+      {
+        "file": "Training/S/503.jpg",
+        "original_dims": [
+          180,
+          344
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9996
+          },
+          {
+            "label": "Left",
+            "score": 0.9889
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.44
+      },
+      {
+        "file": "Training/S/504.jpg",
+        "original_dims": [
+          181,
+          310
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9995
+          },
+          {
+            "label": "Left",
+            "score": 0.985
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.94
+      },
+      {
+        "file": "Training/S/505.jpg",
+        "original_dims": [
+          180,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9997
+          },
+          {
+            "label": "Left",
+            "score": 0.9907
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.13
+      },
+      {
+        "file": "Training/S/506.jpg",
+        "original_dims": [
+          181,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9997
+          },
+          {
+            "label": "Left",
+            "score": 0.9815
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.91
+      },
+      {
+        "file": "Training/S/507.jpg",
+        "original_dims": [
+          182,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9997
+          },
+          {
+            "label": "Left",
+            "score": 0.9924
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.02
+      },
+      {
+        "file": "Training/S/508.jpg",
+        "original_dims": [
+          182,
+          310
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9996
+          },
+          {
+            "label": "Left",
+            "score": 0.9945
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.4
+      },
+      {
+        "file": "Training/S/509.jpg",
+        "original_dims": [
+          182,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9995
+          },
+          {
+            "label": "Left",
+            "score": 0.9862
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.5
+      },
+      {
+        "file": "Training/S/510.jpg",
+        "original_dims": [
+          181,
+          312
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9995
+          },
+          {
+            "label": "Left",
+            "score": 0.9971
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.41
+      }
+    ],
+    "T": [
+      {
+        "file": "Training/T/0.jpg",
+        "original_dims": [
+          271,
+          311
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9976
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.23
+      },
+      {
+        "file": "Training/T/1.jpg",
+        "original_dims": [
+          276,
+          313
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.88
+      },
+      {
+        "file": "Training/T/2.jpg",
+        "original_dims": [
+          277,
+          315
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9979
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.33
+      },
+      {
+        "file": "Training/T/3.jpg",
+        "original_dims": [
+          281,
+          315
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9982
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.17
+      },
+      {
+        "file": "Training/T/4.jpg",
+        "original_dims": [
+          282,
+          317
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.27
+      },
+      {
+        "file": "Training/T/5.jpg",
+        "original_dims": [
+          282,
+          317
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9977
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.34
+      },
+      {
+        "file": "Training/T/6.jpg",
+        "original_dims": [
+          283,
+          317
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9975
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.17
+      },
+      {
+        "file": "Training/T/7.jpg",
+        "original_dims": [
+          284,
+          317
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9974
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.98
+      },
+      {
+        "file": "Training/T/8.jpg",
+        "original_dims": [
+          283,
+          316
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.44
+      },
+      {
+        "file": "Training/T/9.jpg",
+        "original_dims": [
+          283,
+          315
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9975
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.42
+      }
+    ],
+    "U": [
+      {
+        "file": "Training/U/0.jpg",
+        "original_dims": [
+          165,
+          244
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.6788
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.13
+      },
+      {
+        "file": "Training/U/1.jpg",
+        "original_dims": [
+          165,
+          249
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.6583
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.13
+      },
+      {
+        "file": "Training/U/2.jpg",
+        "original_dims": [
+          165,
+          253
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.5006
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.81
+      },
+      {
+        "file": "Training/U/3.jpg",
+        "original_dims": [
+          166,
+          254
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.5936
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.83
+      },
+      {
+        "file": "Training/U/4.jpg",
+        "original_dims": [
+          166,
+          254
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.7187
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.96
+      },
+      {
+        "file": "Training/U/5.jpg",
+        "original_dims": [
+          165,
+          255
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.509
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.91
+      },
+      {
+        "file": "Training/U/6.jpg",
+        "original_dims": [
+          165,
+          254
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.6263
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.13
+      },
+      {
+        "file": "Training/U/7.jpg",
+        "original_dims": [
+          165,
+          254
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.7787
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.21
+      },
+      {
+        "file": "Training/U/8.jpg",
+        "original_dims": [
+          165,
+          255
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.8326
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.49
+      },
+      {
+        "file": "Training/U/9.jpg",
+        "original_dims": [
+          165,
+          255
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.5589
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.74
+      }
+    ],
+    "V": [
+      {
+        "file": "Training/V/0.jpg",
+        "original_dims": [
+          172,
+          278
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9997
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.32
+      },
+      {
+        "file": "Training/V/1.jpg",
+        "original_dims": [
+          170,
+          283
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9997
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.13
+      },
+      {
+        "file": "Training/V/2.jpg",
+        "original_dims": [
+          171,
+          287
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9996
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.66
+      },
+      {
+        "file": "Training/V/3.jpg",
+        "original_dims": [
+          171,
+          289
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9997
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.45
+      },
+      {
+        "file": "Training/V/4.jpg",
+        "original_dims": [
+          170,
+          290
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9997
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.25
+      },
+      {
+        "file": "Training/V/5.jpg",
+        "original_dims": [
+          171,
+          291
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9996
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.84
+      },
+      {
+        "file": "Training/V/6.jpg",
+        "original_dims": [
+          172,
+          290
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9996
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.15
+      },
+      {
+        "file": "Training/V/7.jpg",
+        "original_dims": [
+          172,
+          290
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9994
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 30.75
+      },
+      {
+        "file": "Training/V/8.jpg",
+        "original_dims": [
+          174,
+          292
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9994
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.76
+      },
+      {
+        "file": "Training/V/9.jpg",
+        "original_dims": [
+          173,
+          293
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9995
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 32.46
+      }
+    ],
+    "W": [
+      {
+        "file": "Training/W/W_aap_1.jpg",
+        "original_dims": [
+          209,
+          170
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.7261
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.17
+      },
+      {
+        "file": "Training/W/W_aap_10.jpg",
+        "original_dims": [
+          304,
+          142
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9359
+          },
+          {
+            "label": "Right",
+            "score": 0.8702
+          }
+        ],
+        "handedness_combo": "Right+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.05
+      },
+      {
+        "file": "Training/W/W_aap_100.jpg",
+        "original_dims": [
+          292,
+          161
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.7245
+          },
+          {
+            "label": "Right",
+            "score": 0.9854
+          }
+        ],
+        "handedness_combo": "Right+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.04
+      },
+      {
+        "file": "Training/W/W_aap_101.jpg",
+        "original_dims": [
+          290,
+          162
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.5596
+          },
+          {
+            "label": "Right",
+            "score": 0.9818
+          }
+        ],
+        "handedness_combo": "Right+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.05
+      },
+      {
+        "file": "Training/W/W_aap_102.jpg",
+        "original_dims": [
+          291,
+          159
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9907
+          },
+          {
+            "label": "Right",
+            "score": 0.7988
+          }
+        ],
+        "handedness_combo": "Right+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.77
+      },
+      {
+        "file": "Training/W/W_aap_103.jpg",
+        "original_dims": [
+          289,
+          158
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9837
+          },
+          {
+            "label": "Right",
+            "score": 0.6591
+          }
+        ],
+        "handedness_combo": "Right+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 49.4
+      },
+      {
+        "file": "Training/W/W_aap_104.jpg",
+        "original_dims": [
+          291,
+          155
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9914
+          },
+          {
+            "label": "Left",
+            "score": 0.5573
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.61
+      },
+      {
+        "file": "Training/W/W_aap_105.jpg",
+        "original_dims": [
+          291,
+          155
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9936
+          }
+        ],
+        "handedness_combo": "Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 0.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.0
+      },
+      {
+        "file": "Training/W/W_aap_106.jpg",
+        "original_dims": [
+          291,
+          154
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9953
+          },
+          {
+            "label": "Left",
+            "score": 0.9983
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0555,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.55
+      },
+      {
+        "file": "Training/W/W_aap_107.jpg",
+        "original_dims": [
+          291,
+          154
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9955
+          },
+          {
+            "label": "Left",
+            "score": 0.998
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0366,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.89
+      }
+    ],
+    "X": [
+      {
+        "file": "Training/X/0.jpg",
+        "original_dims": [
+          331,
+          228
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9928
+          },
+          {
+            "label": "Right",
+            "score": 0.9986
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0187,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.07
+      },
+      {
+        "file": "Training/X/1.jpg",
+        "original_dims": [
+          342,
+          235
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.983
+          },
+          {
+            "label": "Right",
+            "score": 0.9991
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0273,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 64.07
+      },
+      {
+        "file": "Training/X/2.jpg",
+        "original_dims": [
+          355,
+          236
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Right",
+            "score": 0.9987
+          },
+          {
+            "label": "Left",
+            "score": 0.9881
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0818,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 57.01
+      },
+      {
+        "file": "Training/X/3.jpg",
+        "original_dims": [
+          364,
+          247
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9855
+          },
+          {
+            "label": "Right",
+            "score": 0.9975
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1572,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.64
+      },
+      {
+        "file": "Training/X/4.jpg",
+        "original_dims": [
+          238,
+          238
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 31.44
+      },
+      {
+        "file": "Training/X/5.jpg",
+        "original_dims": [
+          371,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9917
+          },
+          {
+            "label": "Right",
+            "score": 0.9981
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.2381,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.02
+      },
+      {
+        "file": "Training/X/6.jpg",
+        "original_dims": [
+          371,
+          242
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9947
+          },
+          {
+            "label": "Right",
+            "score": 0.9983
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.1053,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.86
+      },
+      {
+        "file": "Training/X/7.jpg",
+        "original_dims": [
+          370,
+          240
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9946
+          },
+          {
+            "label": "Right",
+            "score": 0.998
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0387,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.22
+      },
+      {
+        "file": "Training/X/8.jpg",
+        "original_dims": [
+          370,
+          243
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9934
+          },
+          {
+            "label": "Right",
+            "score": 0.9973
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0213,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.24
+      },
+      {
+        "file": "Training/X/9.jpg",
+        "original_dims": [
+          371,
+          239
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9919
+          },
+          {
+            "label": "Right",
+            "score": 0.9978
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0121,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.4
+      }
+    ],
+    "Y": [
+      {
+        "file": "Training/Y/0.jpg",
+        "original_dims": [
+          252,
+          262
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9911
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 39.07
+      },
+      {
+        "file": "Training/Y/1.jpg",
+        "original_dims": [
+          270,
+          277
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9923
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 38.61
+      },
+      {
+        "file": "Training/Y/2.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9912
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 40.79
+      },
+      {
+        "file": "Training/Y/3.jpg",
+        "original_dims": [
+          270,
+          275
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9924
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.97
+      },
+      {
+        "file": "Training/Y/4.jpg",
+        "original_dims": [
+          270,
+          275
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9904
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 36.18
+      },
+      {
+        "file": "Training/Y/5.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9894
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 35.37
+      },
+      {
+        "file": "Training/Y/6.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9907
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.27
+      },
+      {
+        "file": "Training/Y/7.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.992
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 38.22
+      },
+      {
+        "file": "Training/Y/8.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9906
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 34.84
+      },
+      {
+        "file": "Training/Y/9.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "hands_detected": 1,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9912
+          }
+        ],
+        "handedness_combo": "Left",
+        "rh_presence_flag": 0.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 33.15
+      }
+    ],
+    "Z": [
+      {
+        "file": "Training/Z/Z_aap_1.jpg",
+        "original_dims": [
+          373,
+          291
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9912
+          },
+          {
+            "label": "Right",
+            "score": 0.883
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.44
+      },
+      {
+        "file": "Training/Z/Z_aap_10.jpg",
+        "original_dims": [
+          389,
+          309
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9949
+          },
+          {
+            "label": "Right",
+            "score": 0.8876
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 45.03
+      },
+      {
+        "file": "Training/Z/Z_aap_100.jpg",
+        "original_dims": [
+          368,
+          302
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.997
+          },
+          {
+            "label": "Right",
+            "score": 0.9008
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.48
+      },
+      {
+        "file": "Training/Z/Z_aap_101.jpg",
+        "original_dims": [
+          369,
+          299
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9971
+          },
+          {
+            "label": "Right",
+            "score": 0.5877
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.1
+      },
+      {
+        "file": "Training/Z/Z_aap_102.jpg",
+        "original_dims": [
+          370,
+          303
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9974
+          },
+          {
+            "label": "Right",
+            "score": 0.8527
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 44.71
+      },
+      {
+        "file": "Training/Z/Z_aap_103.jpg",
+        "original_dims": [
+          369,
+          301
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9975
+          },
+          {
+            "label": "Right",
+            "score": 0.6217
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 46.22
+      },
+      {
+        "file": "Training/Z/Z_aap_104.jpg",
+        "original_dims": [
+          371,
+          301
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9976
+          },
+          {
+            "label": "Right",
+            "score": 0.8617
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.68
+      },
+      {
+        "file": "Training/Z/Z_aap_105.jpg",
+        "original_dims": [
+          369,
+          300
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9972
+          },
+          {
+            "label": "Right",
+            "score": 0.7481
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 47.92
+      },
+      {
+        "file": "Training/Z/Z_aap_106.jpg",
+        "original_dims": [
+          370,
+          299
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.998
+          },
+          {
+            "label": "Right",
+            "score": 0.593
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 43.25
+      },
+      {
+        "file": "Training/Z/Z_aap_107.jpg",
+        "original_dims": [
+          367,
+          300
+        ],
+        "hands_detected": 2,
+        "handedness": [
+          {
+            "label": "Left",
+            "score": 0.9979
+          },
+          {
+            "label": "Right",
+            "score": 0.6389
+          }
+        ],
+        "handedness_combo": "Left+Right",
+        "rh_presence_flag": 1.0,
+        "lh_presence_flag": 1.0,
+        "contact_score": 0.0,
+        "schema_valid": true,
+        "landmarks_valid": true,
+        "latency_ms": 48.81
+      }
+    ]
+  }
+}

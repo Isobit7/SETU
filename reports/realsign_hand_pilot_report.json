@@ -1,0 +1,4465 @@
+{
+  "dataset_archive": "data\\raw\\realsign\\Dataset.zip",
+  "model_used": "models\\tasks\\holistic_landmarker.task",
+  "detector_type": "MediaPipe Tasks HolisticLandmarker (integrated via HolisticLandmarkerWrapper)",
+  "preprocessing": {
+    "strategy": "Square letterbox with aspect ratio preservation",
+    "target_resolution": [
+      384,
+      384
+    ],
+    "padding_fill": [
+      0,
+      0,
+      0
+    ]
+  },
+  "training_pilot_summary": {
+    "total_images_tested": 260,
+    "any_hand_detected_count": 33,
+    "any_hand_detection_rate": 0.1269,
+    "dual_hands_detected_count": 4,
+    "dual_hands_detection_rate": 0.0154,
+    "zero_hands_detected_count": 227,
+    "zero_hands_rate": 0.8731,
+    "schema_valid_rate": 1.0,
+    "avg_latency_ms": 32.43
+  },
+  "reference_pilot_summary": {
+    "total_images_tested": 26,
+    "any_hand_detected_count": 3,
+    "any_hand_detection_rate": 0.1154,
+    "dual_hands_detected_count": 0,
+    "dual_hands_detection_rate": 0.0,
+    "zero_hands_detected_count": 23,
+    "zero_hands_rate": 0.8846
+  },
+  "per_letter_breakdown": {
+    "A": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "B": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "C": {
+      "tested_images": 10,
+      "expected_type": "Single-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "D": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 1,
+      "any_hand_rate": 0.1,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 9,
+      "schema_valid_count": 10
+    },
+    "E": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 2,
+      "any_hand_rate": 0.2,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 1,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 8,
+      "schema_valid_count": 10
+    },
+    "F": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 3,
+      "any_hand_rate": 0.3,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 3,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 7,
+      "schema_valid_count": 10
+    },
+    "G": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 8,
+      "any_hand_rate": 0.8,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 8,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 2,
+      "schema_valid_count": 10
+    },
+    "H": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "I": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 1,
+      "any_hand_rate": 0.1,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 1,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 9,
+      "schema_valid_count": 10
+    },
+    "J": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 9,
+      "any_hand_rate": 0.9,
+      "both_hands_detected": 4,
+      "both_hands_rate": 0.4,
+      "left_hand_detected": 5,
+      "right_hand_detected": 8,
+      "zero_hands_detected": 1,
+      "schema_valid_count": 10
+    },
+    "K": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "L": {
+      "tested_images": 10,
+      "expected_type": "Single-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "M": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "N": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 1,
+      "any_hand_rate": 0.1,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 9,
+      "schema_valid_count": 10
+    },
+    "O": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 1,
+      "any_hand_rate": 0.1,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 9,
+      "schema_valid_count": 10
+    },
+    "P": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "Q": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 1,
+      "any_hand_rate": 0.1,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 9,
+      "schema_valid_count": 10
+    },
+    "R": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "S": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "T": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "U": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "V": {
+      "tested_images": 10,
+      "expected_type": "Single/Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "W": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "X": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 3,
+      "any_hand_rate": 0.3,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 2,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 7,
+      "schema_valid_count": 10
+    },
+    "Y": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 0,
+      "any_hand_rate": 0.0,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 0,
+      "right_hand_detected": 0,
+      "zero_hands_detected": 10,
+      "schema_valid_count": 10
+    },
+    "Z": {
+      "tested_images": 10,
+      "expected_type": "Two-handed",
+      "any_hand_detected": 3,
+      "any_hand_rate": 0.3,
+      "both_hands_detected": 0,
+      "both_hands_rate": 0.0,
+      "left_hand_detected": 2,
+      "right_hand_detected": 1,
+      "zero_hands_detected": 7,
+      "schema_valid_count": 10
+    }
+  },
+  "reference_letter_results": {
+    "A": {
+      "file": "Letters/A.jpg",
+      "original_dims": [
+        331,
+        253
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 38.19
+    },
+    "B": {
+      "file": "Letters/B.jpg",
+      "original_dims": [
+        311,
+        245
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 40.08
+    },
+    "C": {
+      "file": "Letters/C.jpg",
+      "original_dims": [
+        304,
+        249
+      ],
+      "expected_type": "Single-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 46.06
+    },
+    "D": {
+      "file": "Letters/D.jpg",
+      "original_dims": [
+        332,
+        298
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 37.68
+    },
+    "E": {
+      "file": "Letters/E.jpg",
+      "original_dims": [
+        324,
+        355
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 44.1
+    },
+    "F": {
+      "file": "Letters/F.jpg",
+      "original_dims": [
+        343,
+        302
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": true,
+      "hands_detected": 1,
+      "schema_valid": true,
+      "latency_ms": 39.26
+    },
+    "G": {
+      "file": "Letters/G.jpg",
+      "original_dims": [
+        332,
+        293
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 41.99
+    },
+    "H": {
+      "file": "Letters/H.jpg",
+      "original_dims": [
+        338,
+        251
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 38.29
+    },
+    "I": {
+      "file": "Letters/I.jpg",
+      "original_dims": [
+        199,
+        224
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": true,
+      "hands_detected": 1,
+      "schema_valid": true,
+      "latency_ms": 40.16
+    },
+    "J": {
+      "file": "Letters/J.jpg",
+      "original_dims": [
+        315,
+        242
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": true,
+      "hands_detected": 1,
+      "schema_valid": true,
+      "latency_ms": 36.69
+    },
+    "K": {
+      "file": "Letters/K.jpg",
+      "original_dims": [
+        296,
+        272
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 35.65
+    },
+    "L": {
+      "file": "Letters/L.jpg",
+      "original_dims": [
+        236,
+        276
+      ],
+      "expected_type": "Single-handed",
+      "pose_detected": false,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 18.67
+    },
+    "M": {
+      "file": "Letters/M.jpg",
+      "original_dims": [
+        297,
+        296
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": false,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 17.01
+    },
+    "N": {
+      "file": "Letters/N.jpg",
+      "original_dims": [
+        264,
+        261
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 58.81
+    },
+    "O": {
+      "file": "Letters/O.jpg",
+      "original_dims": [
+        195,
+        233
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 40.76
+    },
+    "P": {
+      "file": "Letters/P.jpg",
+      "original_dims": [
+        294,
+        291
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 41.5
+    },
+    "Q": {
+      "file": "Letters/Q.jpg",
+      "original_dims": [
+        290,
+        223
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 42.74
+    },
+    "R": {
+      "file": "Letters/R.jpg",
+      "original_dims": [
+        270,
+        310
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 43.8
+    },
+    "S": {
+      "file": "Letters/S.jpg",
+      "original_dims": [
+        182,
+        309
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 40.65
+    },
+    "T": {
+      "file": "Letters/T.jpg",
+      "original_dims": [
+        280,
+        311
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 39.14
+    },
+    "U": {
+      "file": "Letters/U.jpg",
+      "original_dims": [
+        149,
+        227
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": false,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 19.68
+    },
+    "V": {
+      "file": "Letters/V.jpg",
+      "original_dims": [
+        190,
+        333
+      ],
+      "expected_type": "Single/Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 53.22
+    },
+    "W": {
+      "file": "Letters/W.jpg",
+      "original_dims": [
+        348,
+        327
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": false,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 17.7
+    },
+    "X": {
+      "file": "Letters/X.jpg",
+      "original_dims": [
+        388,
+        236
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": false,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 17.12
+    },
+    "Y": {
+      "file": "Letters/Y.jpg",
+      "original_dims": [
+        273,
+        301
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": true,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 54.61
+    },
+    "Z": {
+      "file": "Letters/Z.jpg",
+      "original_dims": [
+        311,
+        190
+      ],
+      "expected_type": "Two-handed",
+      "pose_detected": false,
+      "lh_detected": false,
+      "rh_detected": false,
+      "hands_detected": 0,
+      "schema_valid": true,
+      "latency_ms": 19.3
+    }
+  },
+  "sample_manifest": {
+    "A": [
+      "Training/A/0.jpg",
+      "Training/A/1.jpg",
+      "Training/A/2.jpg",
+      "Training/A/3.jpg",
+      "Training/A/4.jpg",
+      "Training/A/5.jpg",
+      "Training/A/6.jpg",
+      "Training/A/7.jpg",
+      "Training/A/8.jpg",
+      "Training/A/9.jpg"
+    ],
+    "B": [
+      "Training/B/0.jpg",
+      "Training/B/1.jpg",
+      "Training/B/2.jpg",
+      "Training/B/3.jpg",
+      "Training/B/4.jpg",
+      "Training/B/5.jpg",
+      "Training/B/6.jpg",
+      "Training/B/7.jpg",
+      "Training/B/8.jpg",
+      "Training/B/9.jpg"
+    ],
+    "C": [
+      "Training/C/0.jpg",
+      "Training/C/1.jpg",
+      "Training/C/2.jpg",
+      "Training/C/3.jpg",
+      "Training/C/4.jpg",
+      "Training/C/5.jpg",
+      "Training/C/6.jpg",
+      "Training/C/7.jpg",
+      "Training/C/8.jpg",
+      "Training/C/9.jpg"
+    ],
+    "D": [
+      "Training/D/0.jpg",
+      "Training/D/1.jpg",
+      "Training/D/2.jpg",
+      "Training/D/3.jpg",
+      "Training/D/4.jpg",
+      "Training/D/5.jpg",
+      "Training/D/6.jpg",
+      "Training/D/7.jpg",
+      "Training/D/8.jpg",
+      "Training/D/9.jpg"
+    ],
+    "E": [
+      "Training/E/0.jpg",
+      "Training/E/1.jpg",
+      "Training/E/2.jpg",
+      "Training/E/3.jpg",
+      "Training/E/4.jpg",
+      "Training/E/5.jpg",
+      "Training/E/6.jpg",
+      "Training/E/7.jpg",
+      "Training/E/8.jpg",
+      "Training/E/9.jpg"
+    ],
+    "F": [
+      "Training/F/1.jpg",
+      "Training/F/2.jpg",
+      "Training/F/3.jpg",
+      "Training/F/4.jpg",
+      "Training/F/5.jpg",
+      "Training/F/6.jpg",
+      "Training/F/7.jpg",
+      "Training/F/8.jpg",
+      "Training/F/9.jpg",
+      "Training/F/10.jpg"
+    ],
+    "G": [
+      "Training/G/0.jpg",
+      "Training/G/1.jpg",
+      "Training/G/2.jpg",
+      "Training/G/3.jpg",
+      "Training/G/4.jpg",
+      "Training/G/5.jpg",
+      "Training/G/6.jpg",
+      "Training/G/7.jpg",
+      "Training/G/8.jpg",
+      "Training/G/9.jpg"
+    ],
+    "H": [
+      "Training/H/0.jpg",
+      "Training/H/1.jpg",
+      "Training/H/2.jpg",
+      "Training/H/3.jpg",
+      "Training/H/4.jpg",
+      "Training/H/5.jpg",
+      "Training/H/6.jpg",
+      "Training/H/7.jpg",
+      "Training/H/8.jpg",
+      "Training/H/9.jpg"
+    ],
+    "I": [
+      "Training/I/251.jpg",
+      "Training/I/252.jpg",
+      "Training/I/253.jpg",
+      "Training/I/254.jpg",
+      "Training/I/255.jpg",
+      "Training/I/256.jpg",
+      "Training/I/257.jpg",
+      "Training/I/258.jpg",
+      "Training/I/259.jpg",
+      "Training/I/260.jpg"
+    ],
+    "J": [
+      "Training/J/0.jpg",
+      "Training/J/1.jpg",
+      "Training/J/2.jpg",
+      "Training/J/3.jpg",
+      "Training/J/4.jpg",
+      "Training/J/5.jpg",
+      "Training/J/6.jpg",
+      "Training/J/7.jpg",
+      "Training/J/8.jpg",
+      "Training/J/9.jpg"
+    ],
+    "K": [
+      "Training/K/500.jpg",
+      "Training/K/501.jpg",
+      "Training/K/502.jpg",
+      "Training/K/503.jpg",
+      "Training/K/504.jpg",
+      "Training/K/505.jpg",
+      "Training/K/506.jpg",
+      "Training/K/507.jpg",
+      "Training/K/508.jpg",
+      "Training/K/509.jpg"
+    ],
+    "L": [
+      "Training/L/0.jpg",
+      "Training/L/1.jpg",
+      "Training/L/2.jpg",
+      "Training/L/3.jpg",
+      "Training/L/4.jpg",
+      "Training/L/5.jpg",
+      "Training/L/6.jpg",
+      "Training/L/7.jpg",
+      "Training/L/8.jpg",
+      "Training/L/9.jpg"
+    ],
+    "M": [
+      "Training/M/0.jpg",
+      "Training/M/1.jpg",
+      "Training/M/2.jpg",
+      "Training/M/3.jpg",
+      "Training/M/4.jpg",
+      "Training/M/5.jpg",
+      "Training/M/6.jpg",
+      "Training/M/7.jpg",
+      "Training/M/8.jpg",
+      "Training/M/9.jpg"
+    ],
+    "N": [
+      "Training/N/0.jpg",
+      "Training/N/1.jpg",
+      "Training/N/2.jpg",
+      "Training/N/3.jpg",
+      "Training/N/4.jpg",
+      "Training/N/5.jpg",
+      "Training/N/6.jpg",
+      "Training/N/7.jpg",
+      "Training/N/8.jpg",
+      "Training/N/9.jpg"
+    ],
+    "O": [
+      "Training/O/0.jpg",
+      "Training/O/1.jpg",
+      "Training/O/2.jpg",
+      "Training/O/3.jpg",
+      "Training/O/4.jpg",
+      "Training/O/5.jpg",
+      "Training/O/6.jpg",
+      "Training/O/7.jpg",
+      "Training/O/8.jpg",
+      "Training/O/9.jpg"
+    ],
+    "P": [
+      "Training/P/0.jpg",
+      "Training/P/1.jpg",
+      "Training/P/2.jpg",
+      "Training/P/3.jpg",
+      "Training/P/4.jpg",
+      "Training/P/5.jpg",
+      "Training/P/6.jpg",
+      "Training/P/7.jpg",
+      "Training/P/8.jpg",
+      "Training/P/9.jpg"
+    ],
+    "Q": [
+      "Training/Q/500.jpg",
+      "Training/Q/501.jpg",
+      "Training/Q/502.jpg",
+      "Training/Q/503.jpg",
+      "Training/Q/504.jpg",
+      "Training/Q/505.jpg",
+      "Training/Q/506.jpg",
+      "Training/Q/507.jpg",
+      "Training/Q/508.jpg",
+      "Training/Q/509.jpg"
+    ],
+    "R": [
+      "Training/R/0.jpg",
+      "Training/R/1.jpg",
+      "Training/R/2.jpg",
+      "Training/R/3.jpg",
+      "Training/R/4.jpg",
+      "Training/R/5.jpg",
+      "Training/R/6.jpg",
+      "Training/R/7.jpg",
+      "Training/R/8.jpg",
+      "Training/R/9.jpg"
+    ],
+    "S": [
+      "Training/S/501.jpg",
+      "Training/S/502.jpg",
+      "Training/S/503.jpg",
+      "Training/S/504.jpg",
+      "Training/S/505.jpg",
+      "Training/S/506.jpg",
+      "Training/S/507.jpg",
+      "Training/S/508.jpg",
+      "Training/S/509.jpg",
+      "Training/S/510.jpg"
+    ],
+    "T": [
+      "Training/T/0.jpg",
+      "Training/T/1.jpg",
+      "Training/T/2.jpg",
+      "Training/T/3.jpg",
+      "Training/T/4.jpg",
+      "Training/T/5.jpg",
+      "Training/T/6.jpg",
+      "Training/T/7.jpg",
+      "Training/T/8.jpg",
+      "Training/T/9.jpg"
+    ],
+    "U": [
+      "Training/U/0.jpg",
+      "Training/U/1.jpg",
+      "Training/U/2.jpg",
+      "Training/U/3.jpg",
+      "Training/U/4.jpg",
+      "Training/U/5.jpg",
+      "Training/U/6.jpg",
+      "Training/U/7.jpg",
+      "Training/U/8.jpg",
+      "Training/U/9.jpg"
+    ],
+    "V": [
+      "Training/V/0.jpg",
+      "Training/V/1.jpg",
+      "Training/V/2.jpg",
+      "Training/V/3.jpg",
+      "Training/V/4.jpg",
+      "Training/V/5.jpg",
+      "Training/V/6.jpg",
+      "Training/V/7.jpg",
+      "Training/V/8.jpg",
+      "Training/V/9.jpg"
+    ],
+    "W": [
+      "Training/W/W_aap_1.jpg",
+      "Training/W/W_aap_10.jpg",
+      "Training/W/W_aap_100.jpg",
+      "Training/W/W_aap_101.jpg",
+      "Training/W/W_aap_102.jpg",
+      "Training/W/W_aap_103.jpg",
+      "Training/W/W_aap_104.jpg",
+      "Training/W/W_aap_105.jpg",
+      "Training/W/W_aap_106.jpg",
+      "Training/W/W_aap_107.jpg"
+    ],
+    "X": [
+      "Training/X/0.jpg",
+      "Training/X/1.jpg",
+      "Training/X/2.jpg",
+      "Training/X/3.jpg",
+      "Training/X/4.jpg",
+      "Training/X/5.jpg",
+      "Training/X/6.jpg",
+      "Training/X/7.jpg",
+      "Training/X/8.jpg",
+      "Training/X/9.jpg"
+    ],
+    "Y": [
+      "Training/Y/0.jpg",
+      "Training/Y/1.jpg",
+      "Training/Y/2.jpg",
+      "Training/Y/3.jpg",
+      "Training/Y/4.jpg",
+      "Training/Y/5.jpg",
+      "Training/Y/6.jpg",
+      "Training/Y/7.jpg",
+      "Training/Y/8.jpg",
+      "Training/Y/9.jpg"
+    ],
+    "Z": [
+      "Training/Z/Z_aap_1.jpg",
+      "Training/Z/Z_aap_10.jpg",
+      "Training/Z/Z_aap_100.jpg",
+      "Training/Z/Z_aap_101.jpg",
+      "Training/Z/Z_aap_102.jpg",
+      "Training/Z/Z_aap_103.jpg",
+      "Training/Z/Z_aap_104.jpg",
+      "Training/Z/Z_aap_105.jpg",
+      "Training/Z/Z_aap_106.jpg",
+      "Training/Z/Z_aap_107.jpg"
+    ]
+  },
+  "detailed_training_results": {
+    "A": [
+      {
+        "file": "Training/A/0.jpg",
+        "original_dims": [
+          349,
+          265
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.35,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/1.jpg",
+        "original_dims": [
+          344,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.8,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/2.jpg",
+        "original_dims": [
+          347,
+          265
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.28,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/3.jpg",
+        "original_dims": [
+          346,
+          263
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.11,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/4.jpg",
+        "original_dims": [
+          347,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.9,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/5.jpg",
+        "original_dims": [
+          344,
+          261
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.89,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/6.jpg",
+        "original_dims": [
+          343,
+          260
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.77,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/7.jpg",
+        "original_dims": [
+          347,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.06,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/8.jpg",
+        "original_dims": [
+          342,
+          259
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.3,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/A/9.jpg",
+        "original_dims": [
+          345,
+          257
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.36,
+        "schema_valid": true
+      }
+    ],
+    "B": [
+      {
+        "file": "Training/B/0.jpg",
+        "original_dims": [
+          336,
+          256
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.55,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/1.jpg",
+        "original_dims": [
+          340,
+          260
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.96,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/2.jpg",
+        "original_dims": [
+          342,
+          260
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.4,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/3.jpg",
+        "original_dims": [
+          339,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.2,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/4.jpg",
+        "original_dims": [
+          341,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.2,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/5.jpg",
+        "original_dims": [
+          340,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.91,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/6.jpg",
+        "original_dims": [
+          341,
+          263
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/7.jpg",
+        "original_dims": [
+          340,
+          263
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.08,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/8.jpg",
+        "original_dims": [
+          340,
+          262
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.09,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/B/9.jpg",
+        "original_dims": [
+          339,
+          261
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.06,
+        "schema_valid": true
+      }
+    ],
+    "C": [
+      {
+        "file": "Training/C/0.jpg",
+        "original_dims": [
+          277,
+          255
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 53.53,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/1.jpg",
+        "original_dims": [
+          285,
+          256
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.72,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/2.jpg",
+        "original_dims": [
+          293,
+          254
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.31,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/3.jpg",
+        "original_dims": [
+          294,
+          253
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.3,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/4.jpg",
+        "original_dims": [
+          296,
+          254
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.28,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/5.jpg",
+        "original_dims": [
+          296,
+          253
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.0,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/6.jpg",
+        "original_dims": [
+          297,
+          252
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.4,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/7.jpg",
+        "original_dims": [
+          297,
+          252
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.22,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/8.jpg",
+        "original_dims": [
+          300,
+          252
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.74,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/C/9.jpg",
+        "original_dims": [
+          299,
+          252
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.68,
+        "schema_valid": true
+      }
+    ],
+    "D": [
+      {
+        "file": "Training/D/0.jpg",
+        "original_dims": [
+          299,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.51,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/1.jpg",
+        "original_dims": [
+          320,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/2.jpg",
+        "original_dims": [
+          328,
+          303
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.15,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/3.jpg",
+        "original_dims": [
+          333,
+          303
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.08,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/4.jpg",
+        "original_dims": [
+          334,
+          303
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.82,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/5.jpg",
+        "original_dims": [
+          335,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.59,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/6.jpg",
+        "original_dims": [
+          335,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 36.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/7.jpg",
+        "original_dims": [
+          337,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 38.28,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/8.jpg",
+        "original_dims": [
+          337,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.59,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/D/9.jpg",
+        "original_dims": [
+          338,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.51,
+        "schema_valid": true
+      }
+    ],
+    "E": [
+      {
+        "file": "Training/E/0.jpg",
+        "original_dims": [
+          311,
+          274
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.38,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/1.jpg",
+        "original_dims": [
+          313,
+          287
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.76,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/2.jpg",
+        "original_dims": [
+          315,
+          286
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 46.01,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/3.jpg",
+        "original_dims": [
+          315,
+          288
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.39,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/4.jpg",
+        "original_dims": [
+          314,
+          288
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 39.71,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/5.jpg",
+        "original_dims": [
+          313,
+          287
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.61,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/6.jpg",
+        "original_dims": [
+          314,
+          287
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.31,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/7.jpg",
+        "original_dims": [
+          314,
+          288
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.68,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/8.jpg",
+        "original_dims": [
+          315,
+          287
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 44.58,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/E/9.jpg",
+        "original_dims": [
+          315,
+          287
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 46.76,
+        "schema_valid": true
+      }
+    ],
+    "F": [
+      {
+        "file": "Training/F/1.jpg",
+        "original_dims": [
+          322,
+          261
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.23,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/2.jpg",
+        "original_dims": [
+          322,
+          264
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 39.05,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/3.jpg",
+        "original_dims": [
+          322,
+          269
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.38,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/4.jpg",
+        "original_dims": [
+          320,
+          269
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 38.42,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/5.jpg",
+        "original_dims": [
+          319,
+          272
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 39.11,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/6.jpg",
+        "original_dims": [
+          319,
+          274
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.74,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/7.jpg",
+        "original_dims": [
+          316,
+          274
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.67,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/8.jpg",
+        "original_dims": [
+          317,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.02,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/9.jpg",
+        "original_dims": [
+          313,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.52,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/F/10.jpg",
+        "original_dims": [
+          315,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.2,
+        "schema_valid": true
+      }
+    ],
+    "G": [
+      {
+        "file": "Training/G/0.jpg",
+        "original_dims": [
+          255,
+          310
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.74,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/1.jpg",
+        "original_dims": [
+          250,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 51.86,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/2.jpg",
+        "original_dims": [
+          251,
+          308
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 36.56,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/3.jpg",
+        "original_dims": [
+          251,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 37.91,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/4.jpg",
+        "original_dims": [
+          251,
+          311
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 37.17,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/5.jpg",
+        "original_dims": [
+          253,
+          311
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 36.56,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/6.jpg",
+        "original_dims": [
+          252,
+          310
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 43.28,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/7.jpg",
+        "original_dims": [
+          253,
+          311
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 41.83,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/8.jpg",
+        "original_dims": [
+          253,
+          310
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 39.09,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/G/9.jpg",
+        "original_dims": [
+          251,
+          313
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.78,
+        "schema_valid": true
+      }
+    ],
+    "H": [
+      {
+        "file": "Training/H/0.jpg",
+        "original_dims": [
+          314,
+          244
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.02,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/1.jpg",
+        "original_dims": [
+          317,
+          241
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.14,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/2.jpg",
+        "original_dims": [
+          315,
+          240
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.36,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/3.jpg",
+        "original_dims": [
+          313,
+          240
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.54,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/4.jpg",
+        "original_dims": [
+          311,
+          240
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/5.jpg",
+        "original_dims": [
+          309,
+          240
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/6.jpg",
+        "original_dims": [
+          312,
+          239
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.54,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/7.jpg",
+        "original_dims": [
+          311,
+          239
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.88,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/8.jpg",
+        "original_dims": [
+          311,
+          240
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.71,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/H/9.jpg",
+        "original_dims": [
+          309,
+          240
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.87,
+        "schema_valid": true
+      }
+    ],
+    "I": [
+      {
+        "file": "Training/I/251.jpg",
+        "original_dims": [
+          420,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.08,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/252.jpg",
+        "original_dims": [
+          238,
+          259
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.48,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/253.jpg",
+        "original_dims": [
+          226,
+          259
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.51,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/254.jpg",
+        "original_dims": [
+          241,
+          264
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.58,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/255.jpg",
+        "original_dims": [
+          435,
+          363
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 53.92,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/256.jpg",
+        "original_dims": [
+          229,
+          263
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 38.09,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/257.jpg",
+        "original_dims": [
+          433,
+          359
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.9,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/258.jpg",
+        "original_dims": [
+          237,
+          259
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.04,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/259.jpg",
+        "original_dims": [
+          235,
+          258
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.54,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/I/260.jpg",
+        "original_dims": [
+          432,
+          357
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 53.52,
+        "schema_valid": true
+      }
+    ],
+    "J": [
+      {
+        "file": "Training/J/0.jpg",
+        "original_dims": [
+          239,
+          266
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 37.11,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/1.jpg",
+        "original_dims": [
+          239,
+          273
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": true,
+        "hands_detected": 2,
+        "latency_ms": 37.04,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/2.jpg",
+        "original_dims": [
+          237,
+          273
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 36.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/3.jpg",
+        "original_dims": [
+          237,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": true,
+        "hands_detected": 2,
+        "latency_ms": 37.54,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/4.jpg",
+        "original_dims": [
+          239,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 40.35,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/5.jpg",
+        "original_dims": [
+          239,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 37.4,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/6.jpg",
+        "original_dims": [
+          443,
+          285
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": true,
+        "hands_detected": 2,
+        "latency_ms": 37.13,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/7.jpg",
+        "original_dims": [
+          238,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 37.22,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/8.jpg",
+        "original_dims": [
+          446,
+          285
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": true,
+        "hands_detected": 2,
+        "latency_ms": 35.76,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/J/9.jpg",
+        "original_dims": [
+          244,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.75,
+        "schema_valid": true
+      }
+    ],
+    "K": [
+      {
+        "file": "Training/K/500.jpg",
+        "original_dims": [
+          293,
+          273
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/501.jpg",
+        "original_dims": [
+          285,
+          273
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.48,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/502.jpg",
+        "original_dims": [
+          285,
+          273
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.37,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/503.jpg",
+        "original_dims": [
+          285,
+          275
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.2,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/504.jpg",
+        "original_dims": [
+          294,
+          270
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.34,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/505.jpg",
+        "original_dims": [
+          293,
+          273
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.73,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/506.jpg",
+        "original_dims": [
+          293,
+          274
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.9,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/507.jpg",
+        "original_dims": [
+          291,
+          271
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.49,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/508.jpg",
+        "original_dims": [
+          292,
+          274
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.81,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/K/509.jpg",
+        "original_dims": [
+          290,
+          271
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.4,
+        "schema_valid": true
+      }
+    ],
+    "L": [
+      {
+        "file": "Training/L/0.jpg",
+        "original_dims": [
+          262,
+          304
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 57.16,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/1.jpg",
+        "original_dims": [
+          262,
+          308
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.87,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/2.jpg",
+        "original_dims": [
+          263,
+          307
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.65,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/3.jpg",
+        "original_dims": [
+          263,
+          307
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 23.35,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/4.jpg",
+        "original_dims": [
+          263,
+          306
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 68.16,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/5.jpg",
+        "original_dims": [
+          263,
+          306
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 21.83,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/6.jpg",
+        "original_dims": [
+          264,
+          307
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.47,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/7.jpg",
+        "original_dims": [
+          262,
+          308
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 62.18,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/8.jpg",
+        "original_dims": [
+          262,
+          309
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 21.04,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/L/9.jpg",
+        "original_dims": [
+          261,
+          310
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.05,
+        "schema_valid": true
+      }
+    ],
+    "M": [
+      {
+        "file": "Training/M/0.jpg",
+        "original_dims": [
+          184,
+          272
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.03,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/1.jpg",
+        "original_dims": [
+          187,
+          280
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 21.32,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/2.jpg",
+        "original_dims": [
+          186,
+          281
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.08,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/3.jpg",
+        "original_dims": [
+          184,
+          283
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.65,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/4.jpg",
+        "original_dims": [
+          188,
+          283
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.83,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/5.jpg",
+        "original_dims": [
+          187,
+          283
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 21.44,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/6.jpg",
+        "original_dims": [
+          188,
+          283
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.23,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/7.jpg",
+        "original_dims": [
+          188,
+          283
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.1,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/8.jpg",
+        "original_dims": [
+          189,
+          283
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.41,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/M/9.jpg",
+        "original_dims": [
+          189,
+          282
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.22,
+        "schema_valid": true
+      }
+    ],
+    "N": [
+      {
+        "file": "Training/N/0.jpg",
+        "original_dims": [
+          320,
+          244
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 63.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/1.jpg",
+        "original_dims": [
+          331,
+          248
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 45.16,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/2.jpg",
+        "original_dims": [
+          337,
+          243
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.13,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/3.jpg",
+        "original_dims": [
+          341,
+          244
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 51.06,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/4.jpg",
+        "original_dims": [
+          342,
+          243
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 45.65,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/5.jpg",
+        "original_dims": [
+          342,
+          246
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 42.0,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/6.jpg",
+        "original_dims": [
+          341,
+          247
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 45.36,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/7.jpg",
+        "original_dims": [
+          340,
+          246
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 48.68,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/8.jpg",
+        "original_dims": [
+          338,
+          244
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.47,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/N/9.jpg",
+        "original_dims": [
+          336,
+          247
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.9,
+        "schema_valid": true
+      }
+    ],
+    "O": [
+      {
+        "file": "Training/O/0.jpg",
+        "original_dims": [
+          204,
+          198
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.69,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/1.jpg",
+        "original_dims": [
+          210,
+          201
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.47,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/2.jpg",
+        "original_dims": [
+          211,
+          202
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.22,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/3.jpg",
+        "original_dims": [
+          211,
+          204
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 43.36,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/4.jpg",
+        "original_dims": [
+          210,
+          206
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.72,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/5.jpg",
+        "original_dims": [
+          210,
+          207
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.28,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/6.jpg",
+        "original_dims": [
+          209,
+          208
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.59,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/7.jpg",
+        "original_dims": [
+          207,
+          208
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.23,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/8.jpg",
+        "original_dims": [
+          207,
+          209
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 49.2,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/O/9.jpg",
+        "original_dims": [
+          208,
+          208
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.61,
+        "schema_valid": true
+      }
+    ],
+    "P": [
+      {
+        "file": "Training/P/0.jpg",
+        "original_dims": [
+          274,
+          283
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 48.52,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/1.jpg",
+        "original_dims": [
+          281,
+          282
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.45,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/2.jpg",
+        "original_dims": [
+          283,
+          283
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.09,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/3.jpg",
+        "original_dims": [
+          285,
+          283
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.86,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/4.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.3,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/5.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.97,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/6.jpg",
+        "original_dims": [
+          283,
+          282
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.57,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/7.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.71,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/8.jpg",
+        "original_dims": [
+          284,
+          282
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.62,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/P/9.jpg",
+        "original_dims": [
+          285,
+          283
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.51,
+        "schema_valid": true
+      }
+    ],
+    "Q": [
+      {
+        "file": "Training/Q/500.jpg",
+        "original_dims": [
+          288,
+          217
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.05,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/501.jpg",
+        "original_dims": [
+          288,
+          217
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.85,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/502.jpg",
+        "original_dims": [
+          303,
+          224
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.49,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/503.jpg",
+        "original_dims": [
+          307,
+          226
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/504.jpg",
+        "original_dims": [
+          292,
+          219
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 52.37,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/505.jpg",
+        "original_dims": [
+          291,
+          219
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.66,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/506.jpg",
+        "original_dims": [
+          291,
+          221
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.08,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/507.jpg",
+        "original_dims": [
+          292,
+          221
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.53,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/508.jpg",
+        "original_dims": [
+          288,
+          219
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.53,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Q/509.jpg",
+        "original_dims": [
+          292,
+          220
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.73,
+        "schema_valid": true
+      }
+    ],
+    "R": [
+      {
+        "file": "Training/R/0.jpg",
+        "original_dims": [
+          217,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.6,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/1.jpg",
+        "original_dims": [
+          216,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.61,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/2.jpg",
+        "original_dims": [
+          216,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.24,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/3.jpg",
+        "original_dims": [
+          215,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 20.22,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/4.jpg",
+        "original_dims": [
+          215,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.38,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/5.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.73,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/6.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.92,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/7.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.53,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/8.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/R/9.jpg",
+        "original_dims": [
+          214,
+          352
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 20.06,
+        "schema_valid": true
+      }
+    ],
+    "S": [
+      {
+        "file": "Training/S/501.jpg",
+        "original_dims": [
+          183,
+          319
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 56.48,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/502.jpg",
+        "original_dims": [
+          180,
+          362
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 34.89,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/503.jpg",
+        "original_dims": [
+          180,
+          344
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.56,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/504.jpg",
+        "original_dims": [
+          181,
+          310
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.45,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/505.jpg",
+        "original_dims": [
+          180,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.05,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/506.jpg",
+        "original_dims": [
+          181,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.62,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/507.jpg",
+        "original_dims": [
+          182,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.7,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/508.jpg",
+        "original_dims": [
+          182,
+          310
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.95,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/509.jpg",
+        "original_dims": [
+          182,
+          309
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.05,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/S/510.jpg",
+        "original_dims": [
+          181,
+          312
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.59,
+        "schema_valid": true
+      }
+    ],
+    "T": [
+      {
+        "file": "Training/T/0.jpg",
+        "original_dims": [
+          271,
+          311
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 38.88,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/1.jpg",
+        "original_dims": [
+          276,
+          313
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.07,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/2.jpg",
+        "original_dims": [
+          277,
+          315
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.27,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/3.jpg",
+        "original_dims": [
+          281,
+          315
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.41,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/4.jpg",
+        "original_dims": [
+          282,
+          317
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.18,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/5.jpg",
+        "original_dims": [
+          282,
+          317
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.41,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/6.jpg",
+        "original_dims": [
+          283,
+          317
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.63,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/7.jpg",
+        "original_dims": [
+          284,
+          317
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.12,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/8.jpg",
+        "original_dims": [
+          283,
+          316
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.84,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/T/9.jpg",
+        "original_dims": [
+          283,
+          315
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.39,
+        "schema_valid": true
+      }
+    ],
+    "U": [
+      {
+        "file": "Training/U/0.jpg",
+        "original_dims": [
+          165,
+          244
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.09,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/1.jpg",
+        "original_dims": [
+          165,
+          249
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 53.23,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/2.jpg",
+        "original_dims": [
+          165,
+          253
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.79,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/3.jpg",
+        "original_dims": [
+          166,
+          254
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.1,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/4.jpg",
+        "original_dims": [
+          166,
+          254
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.82,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/5.jpg",
+        "original_dims": [
+          165,
+          255
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.2,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/6.jpg",
+        "original_dims": [
+          165,
+          254
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 40.1,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/7.jpg",
+        "original_dims": [
+          165,
+          254
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.41,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/8.jpg",
+        "original_dims": [
+          165,
+          255
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.69,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/U/9.jpg",
+        "original_dims": [
+          165,
+          255
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.81,
+        "schema_valid": true
+      }
+    ],
+    "V": [
+      {
+        "file": "Training/V/0.jpg",
+        "original_dims": [
+          172,
+          278
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.77,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/1.jpg",
+        "original_dims": [
+          170,
+          283
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.18,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/2.jpg",
+        "original_dims": [
+          171,
+          287
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/3.jpg",
+        "original_dims": [
+          171,
+          289
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 38.25,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/4.jpg",
+        "original_dims": [
+          170,
+          290
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.75,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/5.jpg",
+        "original_dims": [
+          171,
+          291
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.91,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/6.jpg",
+        "original_dims": [
+          172,
+          290
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.65,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/7.jpg",
+        "original_dims": [
+          172,
+          290
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.92,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/8.jpg",
+        "original_dims": [
+          174,
+          292
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.96,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/V/9.jpg",
+        "original_dims": [
+          173,
+          293
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 38.4,
+        "schema_valid": true
+      }
+    ],
+    "W": [
+      {
+        "file": "Training/W/W_aap_1.jpg",
+        "original_dims": [
+          209,
+          170
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.32,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_10.jpg",
+        "original_dims": [
+          304,
+          142
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.0,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_100.jpg",
+        "original_dims": [
+          292,
+          161
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.31,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_101.jpg",
+        "original_dims": [
+          290,
+          162
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.43,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_102.jpg",
+        "original_dims": [
+          291,
+          159
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.87,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_103.jpg",
+        "original_dims": [
+          289,
+          158
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.12,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_104.jpg",
+        "original_dims": [
+          291,
+          155
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.66,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_105.jpg",
+        "original_dims": [
+          291,
+          155
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.85,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_106.jpg",
+        "original_dims": [
+          291,
+          154
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.73,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/W/W_aap_107.jpg",
+        "original_dims": [
+          291,
+          154
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.2,
+        "schema_valid": true
+      }
+    ],
+    "X": [
+      {
+        "file": "Training/X/0.jpg",
+        "original_dims": [
+          331,
+          228
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.95,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/1.jpg",
+        "original_dims": [
+          342,
+          235
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 16.75,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/2.jpg",
+        "original_dims": [
+          355,
+          236
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 52.73,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/3.jpg",
+        "original_dims": [
+          364,
+          247
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 37.04,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/4.jpg",
+        "original_dims": [
+          238,
+          238
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.18,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/5.jpg",
+        "original_dims": [
+          371,
+          240
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 38.22,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/6.jpg",
+        "original_dims": [
+          371,
+          242
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 38.81,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/7.jpg",
+        "original_dims": [
+          370,
+          240
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 38.75,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/8.jpg",
+        "original_dims": [
+          370,
+          243
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.67,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/X/9.jpg",
+        "original_dims": [
+          371,
+          239
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 36.86,
+        "schema_valid": true
+      }
+    ],
+    "Y": [
+      {
+        "file": "Training/Y/0.jpg",
+        "original_dims": [
+          252,
+          262
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.88,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/1.jpg",
+        "original_dims": [
+          270,
+          277
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.11,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/2.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 35.94,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/3.jpg",
+        "original_dims": [
+          270,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 39.66,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/4.jpg",
+        "original_dims": [
+          270,
+          275
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 52.97,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/5.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 46.66,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/6.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.72,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/7.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 42.68,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/8.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 43.36,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Y/9.jpg",
+        "original_dims": [
+          270,
+          276
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 41.5,
+        "schema_valid": true
+      }
+    ],
+    "Z": [
+      {
+        "file": "Training/Z/Z_aap_1.jpg",
+        "original_dims": [
+          373,
+          291
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 41.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_10.jpg",
+        "original_dims": [
+          389,
+          309
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 22.86,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_100.jpg",
+        "original_dims": [
+          368,
+          302
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.84,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_101.jpg",
+        "original_dims": [
+          369,
+          299
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.82,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_102.jpg",
+        "original_dims": [
+          370,
+          303
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.56,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_103.jpg",
+        "original_dims": [
+          369,
+          301
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 18.46,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_104.jpg",
+        "original_dims": [
+          371,
+          301
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 19.72,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_105.jpg",
+        "original_dims": [
+          369,
+          300
+        ],
+        "pose_detected": false,
+        "lh_detected": false,
+        "rh_detected": false,
+        "hands_detected": 0,
+        "latency_ms": 17.83,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_106.jpg",
+        "original_dims": [
+          370,
+          299
+        ],
+        "pose_detected": true,
+        "lh_detected": true,
+        "rh_detected": false,
+        "hands_detected": 1,
+        "latency_ms": 55.74,
+        "schema_valid": true
+      },
+      {
+        "file": "Training/Z/Z_aap_107.jpg",
+        "original_dims": [
+          367,
+          300
+        ],
+        "pose_detected": true,
+        "lh_detected": false,
+        "rh_detected": true,
+        "hands_detected": 1,
+        "latency_ms": 37.24,
+        "schema_valid": true
+      }
+    ]
+  }
+}

@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from configs.settings import PROJECT_ROOT, config
-from setu.features.schema import FEATURE_DIM, validate_schema_vector
+from setu.features.schema import FEATURE_DIM, EXPANDED_FEATURE_DIM, validate_schema_vector
 from training.dataset_manifest import DatasetManifest, SampleRecord
 
 def test_mvp_manifest_structure_and_integrity():
@@ -80,7 +80,10 @@ def test_all_processed_features_tensors_invariants():
         with np.load(npz_path) as data:
             assert "features" in data, f"'features' key missing in {npz_path.name}"
             arr = data["features"]
-            assert arr.shape == (30, FEATURE_DIM), f"Invalid shape {arr.shape} in {npz_path.name}"
+            assert arr.shape in (
+                (30, FEATURE_DIM),
+                (30, EXPANDED_FEATURE_DIM),
+            ), f"Invalid shape {arr.shape} in {npz_path.name}"
             assert arr.dtype == np.float32
             assert np.all(np.isfinite(arr)), f"NaN or Inf in {npz_path.name}"
             validate_schema_vector(arr)

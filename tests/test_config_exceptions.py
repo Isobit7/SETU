@@ -30,6 +30,11 @@ def test_config_reexport_equality():
     assert setu.config.config.features.feature_dim == 158
     assert setu.config.config.features.contact_sigma == 0.05
     assert setu.config.config.vision.mirror_user_preview is True
+    assert setu.config.CONFIDENCE_THRESHOLD_ALPHABET == 0.35
+    assert setu.config.CONFIDENCE_THRESHOLD_SEQUENCE == 0.35
+    assert setu.config.STREAK_ALPHABET == 2
+    assert setu.config.STREAK_SEQUENCE == 3
+    assert setu.config.COOLDOWN_MS == 350
 
 def test_exception_hierarchy():
     """Verify all custom exceptions inherit from SETUError base."""

@@ -4,17 +4,20 @@
   "schema_version": "1.0.0",
   "feature_dim": 158,
   "summary": {
-    "total_samples": 24,
-    "classes_count": 3,
+    "total_samples": 33,
+    "classes_count": 6,
     "samples_per_class": {
       "no_sign": 18,
       "hello": 3,
-      "thank_you": 3
+      "thank_you": 3,
+      "good_morning": 3,
+      "i": 3,
+      "you": 3
     },
     "samples_per_split": {
-      "train": 10,
-      "val": 7,
-      "test": 7,
+      "train": 13,
+      "val": 10,
+      "test": 10,
       "unassigned": 0
     },
     "samples_per_signer": {
@@ -27,13 +30,22 @@
       "signer_S04": 1,
       "signer_S05": 1,
       "signer_S06": 1,
-      "signer_webcam_01": 3
+      "signer_webcam_01": 3,
+      "signer_S07": 1,
+      "signer_S08": 1,
+      "signer_S09": 1,
+      "signer_S10": 1,
+      "signer_S11": 1,
+      "signer_S12": 1,
+      "signer_S13": 1,
+      "signer_S14": 1,
+      "signer_S15": 1
     },
     "low_hand_presence_samples": {
       "no_sign": 3
     }
   },
-  "genuine_samples_count": 9,
+  "genuine_samples_count": 18,
   "synthetic_samples_count": 15,
   "signer_independent_feasible": true,
   "extraction_failure_rate": 0.0,
@@ -207,7 +219,7 @@
       "split": "train",
       "source_dataset": "AI4Bharat-INCLUDE",
       "is_synthetic": false,
-      "hand_presence_ratio": 0.85
+      "hand_presence_ratio": 1.0
     },
     {
       "sample_id": "include_thank_you_s05_0058",
@@ -216,7 +228,7 @@
       "split": "val",
       "source_dataset": "AI4Bharat-INCLUDE",
       "is_synthetic": false,
-      "hand_presence_ratio": 0.85
+      "hand_presence_ratio": 1.0
     },
     {
       "sample_id": "include_thank_you_s06_9948",
@@ -225,7 +237,7 @@
       "split": "test",
       "source_dataset": "AI4Bharat-INCLUDE",
       "is_synthetic": false,
-      "hand_presence_ratio": 0.85
+      "hand_presence_ratio": 1.0
     },
     {
       "sample_id": "real_no_sign_webcam_face_touch_adjust_003",
@@ -251,6 +263,87 @@
       "signer_id": "signer_webcam_01",
       "split": "train",
       "source_dataset": "SETU-Webcam-Genuine",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_good_morning_s07_0047",
+      "label": "good_morning",
+      "signer_id": "signer_S07",
+      "split": "train",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_good_morning_s08_0099",
+      "label": "good_morning",
+      "signer_id": "signer_S08",
+      "split": "val",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_good_morning_s09_9971",
+      "label": "good_morning",
+      "signer_id": "signer_S09",
+      "split": "test",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_i_s10_0013",
+      "label": "i",
+      "signer_id": "signer_S10",
+      "split": "train",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_i_s11_9922",
+      "label": "i",
+      "signer_id": "signer_S11",
+      "split": "val",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_i_s12_0014",
+      "label": "i",
+      "signer_id": "signer_S12",
+      "split": "test",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_you_s13_0022",
+      "label": "you",
+      "signer_id": "signer_S13",
+      "split": "train",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_you_s14_0032",
+      "label": "you",
+      "signer_id": "signer_S14",
+      "split": "val",
+      "source_dataset": "AI4Bharat-INCLUDE",
+      "is_synthetic": false,
+      "hand_presence_ratio": 1.0
+    },
+    {
+      "sample_id": "include_you_s15_9907",
+      "label": "you",
+      "signer_id": "signer_S15",
+      "split": "test",
+      "source_dataset": "AI4Bharat-INCLUDE",
       "is_synthetic": false,
       "hand_presence_ratio": 1.0
     }

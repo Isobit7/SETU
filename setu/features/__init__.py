@@ -23,9 +23,18 @@ from setu.features.schema import (
     INTER_INDEX_DISTANCE_INDEX,
     INTER_THUMB_DISTANCE_INDEX,
     CONTACT_SCORE_INDEX,
-    validate_schema_vector
+    validate_schema_vector,
+    FACIAL_RATIO_DIM,
+    EXPANDED_FEATURE_DIM,
+    FACIAL_RATIOS_SLICE,
+    VELOCITY_FEATURE_DIM_316,
+    VELOCITY_FEATURE_DIM_328,
 )
-from setu.features.extractor import FeatureExtractor158
+from setu.features.extractor import (
+    FeatureExtractor158,
+    extract_facial_expression_features,
+    compute_velocity_features,
+)
 
 __all__ = [
     "FEATURE_DIM",
@@ -50,5 +59,12 @@ __all__ = [
     "INTER_THUMB_DISTANCE_INDEX",
     "CONTACT_SCORE_INDEX",
     "validate_schema_vector",
-    "FeatureExtractor158"
+    "FACIAL_RATIO_DIM",
+    "EXPANDED_FEATURE_DIM",
+    "FACIAL_RATIOS_SLICE",
+    "VELOCITY_FEATURE_DIM_316",
+    "VELOCITY_FEATURE_DIM_328",
+    "FeatureExtractor158",
+    "extract_facial_expression_features",
+    "compute_velocity_features",
 ]
