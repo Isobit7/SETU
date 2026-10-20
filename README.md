@@ -14,73 +14,46 @@
 
 # SETU
 
-SETU is an AI-powered Indian Sign Language (ISL) translation platform that turns live webcam input into readable text and speech. The project combines real-time gesture recognition, deep learning inference, and a browser-based interface to help bridge communication gaps for deaf and hard-of-hearing users.
+SETU is an AI-powered Indian Sign Language (ISL) translation system that turns live webcam input into understandable text and speech. It combines machine learning, computer vision, and a modern web interface to bridge communication between sign language users and spoken/written communication.
 
-The name "SETU" means "bridge" in Sanskrit, reflecting the project goal: connecting sign-language communication with spoken and written language.
+The project is designed for real-time fingerspelling, phrase recognition, facial expression-aware parsing, and accessible translation workflows.
 
-## What SETU does
+## Why SETU
 
-SETU is designed to:
+- Real-time recognition from a webcam
+- Built for Indian Sign Language workflows
+- FastAPI backend + React frontend
+- MediaPipe-based landmark processing
+- Temporal filtering for stable predictions
+- Easy custom-sign recording and retraining pipeline
 
-- Detect and classify static alphabet signs (A–Z) in real time
-- Recognize phrase-level ISL gestures using sequence-based models
-- Monitor facial non-manual markers such as eyebrow and mouth movement
-- Process webcam frames through a lightweight MediaPipe-based pipeline
-- Display translated output in a live subtitle-style interface
-- Speak translated text aloud using browser speech synthesis
-- Record custom signs and retrain models using user-collected samples
+## What it does
 
-## Core system overview
+SETU helps interpret:
 
-SETU uses a Python backend with FastAPI and a React + TypeScript frontend.
+- Static alphabet signs (A–Z)
+- Phrase-level ISL gestures
+- Facial non-manual markers and expression cues
+- Live subtitle-style translation output
+- Spoken text feedback through browser speech synthesis
+
+## Architecture at a glance
 
 ```text
-Webcam feed
-    ↓
-Frontend captures and downsamples frames
-    ↓
-FastAPI WebSocket server receives video frames
-    ↓
+Webcam input
+  ↓
+Frontend captures and downsamples video frames
+  ↓
+FastAPI WebSocket server receives frames
+  ↓
 MediaPipe Holistic + Hand landmark extraction
-    ↓
+  ↓
 Feature engineering + model inference
-    ↓
-Temporal filtering + confidence checks
-    ↓
-Live translation output + voice synthesis
+  ↓
+Temporal smoothing + confidence filtering
+  ↓
+Live translation output + speech synthesis
 ```
-
-The system includes both:
-
-- Alphabet mode: immediate static finger-spelling recognition
-- Sequence mode: phrase and word recognition using temporal models
-
-## Features
-
-### Real-time recognition
-- Webcam-based live inference
-- Low-latency model pipeline
-- Frame downsampling for smoother streaming
-- Temporal stabilization to reduce flickering and duplicate outputs
-
-### ISL-focused modeling
-- Hand landmark normalization
-- Facial non-manual feature tracking
-- Sequence modeling for phrase representation
-- Post-processing filters for confidence and stability
-
-### Frontend experience
-- Movie-style subtitle overlay
-- Landmark visualization on live camera feed
-- Camera guidance and framing hints
-- Adjustable model and threshold settings
-- Real-time text-to-speech feedback
-
-### Custom data pipeline
-- Record custom signs from the webcam
-- Save processed samples in `.npz` format
-- Load recorded samples into the training pipeline
-- Retrain models with custom dataset additions
 
 ## Tech stack
 
@@ -95,48 +68,71 @@ The system includes both:
 - Vite
 - Tailwind CSS
 
+## Key capabilities
+
+### Real-time classification
+- Static sign recognition for alphabet fingerspelling
+- Phrase recognition for common ISL gestures
+- Low-latency streaming pipeline for live interaction
+
+### Robust vision processing
+- Hand normalization and landmark extraction
+- Facial feature tracking for NMM-inspired cues
+- Confidence thresholds and duplicate suppression
+- Framing/guidance feedback for better camera setup
+
+### Data and model experimentation
+- Custom sign recording from webcam samples
+- `.npz` dataset generation for feature-based learning
+- Training utilities for extending model behavior
+
+### Frontend experience
+- Movie-style subtitle HUD
+- Landmark overlays on camera feed
+- Adjustable threshold and model switching
+- Speech output for translations
+
 ## Repository layout
 
 ```text
 SETU/
-├── .agent/                      # Agent/project support files
-├── configs/                     # configuration and app constants
+├── .agent/                     # project support files
+├── configs/                    # configuration and constants
 ├── data/
-│   ├── manifests/               # signer-isolated train/val/test manifests
-│   └── processed/               # processed feature arrays (.npz)
-├── docs/                        # project documentation and notes
-├── frontend/                    # Vite + React + TypeScript frontend
-│   ├── src/                    # app source
-│   ├── package.json            # frontend dependencies/scripts
-│   └── README.md               # frontend-specific notes
-├── models/                      # trained model weights and label mappings
-├── Project Main Files/          # canonical product/design docs and specs
-├── scripts/                     # recording and demo scripts
-├── setu/                        # core backend package
-│   ├── api/                    # FastAPI API and websocket handlers
-│   ├── features/               # feature extraction logic
-│   ├── models/                 # model definitions and classifiers
-│   ├── utils/                  # geometry and helper utilities
-│   ├── vision/                 # MediaPipe and camera wrappers
-│   ├── config.py               # project config
-│   └── __init__.py             # package marker
-├── tests/                       # automated pytest suite
-├── training/                    # training scripts and utilities
-├── .env.example                 # environment example file
-├── .gitignore                  # git ignore rules
-├── logo.png                     # project logo
-├── pyproject.toml               # Python package configuration
-├── README.md                    # project overview and setup guide
-├── Start_SETU.bat               # Windows launcher for the full app
-├── Start_Alphabet_Demo.bat      # Windows launcher for alphabet demo
-└── SETU_Sign_Language_Translator_Build_Handbook.docx
+│   ├── manifests/              # signer-isolated train/val/test manifests
+│   └── processed/              # processed feature arrays (.npz)
+├── docs/                       # documentation and notes
+├── frontend/                   # React + TypeScript + Vite app
+│   ├── src/                   # frontend source files
+│   ├── package.json           # frontend scripts and deps
+│   └── README.md              # frontend notes
+├── models/                     # trained weights and labels
+├── Project Main Files/         # core product/design/architecture documentation
+├── scripts/                    # custom recording and demo scripts
+├── setu/                       # backend Python package
+│   ├── api/                   # FastAPI API + WebSocket server
+│   ├── features/              # feature engineering logic
+│   ├── models/                # classifiers and ML logic
+│   ├── utils/                 # helper and geometry utilities
+│   ├── vision/                # MediaPipe wrappers and vision utilities
+│   ├── config.py              # config values
+│   └── __init__.py            # package marker
+├── tests/                      # automated test suite
+├── training/                   # training and model scripts
+├── .env.example                # environment example
+├── .gitignore                  # repository ignore rules
+├── logo.png                    # SETU logo
+├── pyproject.toml              # Python package metadata
+├── README.md                   # project overview
+├── Start_SETU.bat              # Windows launcher for full app
+├── Start_Alphabet_Demo.bat     # Windows alphabet demo launcher
+├── SETU_Sign_Language_Translator_Build_Handbook.docx
+└── SETU_Foundation_Documents_2026-10-17_Updated.zip
 ```
 
 ## Quick start
 
 ### Windows one-click launch
-
-From the repository root:
 
 ```powershell
 ./Start_SETU.bat
@@ -148,9 +144,9 @@ For the standalone alphabet demo:
 ./Start_Alphabet_Demo.bat
 ```
 
-## Manual setup
+### Manual setup
 
-### 1) Backend
+#### 1) Backend
 
 ```powershell
 cd <path-to-SETU>
@@ -161,9 +157,7 @@ pytest -v
 uvicorn setu.api.server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 2) Frontend
-
-Open a second terminal:
+#### 2) Frontend
 
 ```powershell
 cd frontend
@@ -177,7 +171,7 @@ Then open:
 http://localhost:5173
 ```
 
-Backend API is typically served on:
+The backend is expected to run at:
 
 ```text
 http://localhost:8000
@@ -185,37 +179,34 @@ http://localhost:8000
 
 ## API overview
 
-The backend exposes a FastAPI service with both REST and WebSocket capabilities.
+The backend exposes REST and WebSocket endpoints for recognition.
 
-### WebSocket streaming
+### WebSocket stream
 
 ```text
 ws://localhost:8000/api/v1/ws/recognize?model=realsign&threshold=0.35
 ```
 
-This endpoint receives webcam frames from the client and returns prediction payloads containing:
+This endpoint receives webcam frames and responds with prediction payloads containing details like:
 
-- active model
-- predicted label
-- confidence score
-- stabilization metadata
-- guidance messages
-- landmark information
-- speech-ready output payloads
+- label and confidence
+- recognition stability state
+- model selection
+- camera guidance feedback
+- landmark data
+- speech-ready translation output
 
-### REST endpoints
+### Common REST routes
 
-Examples include:
-
-- `GET /api/v1/models` — model catalog
-- `GET /api/v1/models/realsign/classes` — alphabet class information
-- `GET /api/v1/vocabulary` — phrase vocabulary metadata
-- `POST /api/v1/dataset/record_sample` — custom sample upload
-- `GET /api/v1/dataset/custom_samples` — custom recorded samples
+- `GET /api/v1/models`
+- `GET /api/v1/models/realsign/classes`
+- `GET /api/v1/vocabulary`
+- `POST /api/v1/dataset/record_sample`
+- `GET /api/v1/dataset/custom_samples`
 
 ## Training and custom sign recording
 
-SETU supports custom sign recording for extending the dataset.
+SETU supports user-recorded sign sample collection.
 
 Example:
 
@@ -223,19 +214,25 @@ Example:
 .\.venv\Scripts\python scripts/record_custom_signs.py --label namaste --takes 10
 ```
 
-This captures multiple labeled samples from the webcam and stores processed feature vectors for later training.
-
-A training command example:
+Example training run:
 
 ```powershell
 .\.venv\Scripts\python training/train_sequence_lstm.py --epochs 60 --lr 0.001
 ```
 
+This makes it easier to extend recognition with domain-specific or user-specific signs.
+
 ## Project documentation
 
-The repository includes deep project documentation in the `Project Main Files/` directory. This is the best place to understand the product requirements, architecture, design goals, and phased roadmap.
+The `Project Main Files/` directory contains deeper product and system documentation for the project. It is the best place to understand:
 
-Key documents include:
+- product requirements and goals
+- architecture and module boundaries
+- design decisions and workspace direction
+- phased roadmap and delivery plan
+- operating principles and engineering rules
+
+Recommended starting documents:
 
 - `Project Main Files/README.md`
 - `Project Main Files/PRD.md`
@@ -243,46 +240,37 @@ Key documents include:
 - `Project Main Files/design.md`
 - `Project Main Files/phase.md`
 - `Project Main Files/rules.md`
-- `Project Main Files/memory.md`
 
 ## Testing
 
-SETU includes automated test coverage for API behavior, feature extraction, sequence modeling, and vision pipeline logic.
+The repo includes automated tests for API behavior, feature extraction, model logic, and vision processing.
 
 ```powershell
 .\.venv\Scripts\pytest.exe -v
 ```
 
-The project reports a passing test suite in the current repository state.
-
-## Important notes
-
-- SETU is a research/prototype-style system with a strong technical foundation and live demo workflow.
-- Some files in the project documentation describe future UI/UX targets and design phases.
-- The runtime behavior depends on webcam input quality, lighting, and model availability.
-
 ## Troubleshooting
 
-Common checks:
+Common issues:
 
-- Ensure your webcam is available and active
-- Confirm MediaPipe and OpenCV dependencies are installed
-- Check the backend is running on port 8000
-- Use a clear background and visible hand/face region
-- Increase confidence thresholds if predictions flicker or appear unstable
+- webcam not detected or blocked by browser
+- backend not running on port 8000
+- low light or poor hand visibility
+- unstable predictions caused by low confidence thresholds
+- dependency issues during first-time setup
 
 ## License
 
-This project is distributed under the MIT license unless otherwise noted in project files.
+This project is distributed under the MIT license unless otherwise stated in the repository files.
 
 ## Contributing
 
-This repository is structured to support backend, frontend, data, and model experimentation. If you want to extend the project, the most natural areas to work in are:
+Key areas to explore:
 
-- `setu/features/` for new feature extraction logic
-- `setu/models/` for classifiers and model definitions
-- `training/` for retraining scripts
-- `frontend/src/` for UI and webcam integration
-- `Project Main Files/` for architecture and product documentation updates
+- `setu/features/` for feature extraction improvements
+- `setu/models/` for model architecture and inference logic
+- `training/` for retraining and dataset experimentation
+- `frontend/src/` for UI and interaction improvements
+- `Project Main Files/` for architecture and roadmap updates
 
-For deeper technical context, start with the documentation in `Project Main Files/` and then inspect the backend/frontend entry points.
+For a deeper technical understanding, start with `Project Main Files/` and then move into the backend and frontend entry points.
