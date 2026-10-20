@@ -14,45 +14,86 @@
 
 # SETU
 
-SETU is an AI-powered Indian Sign Language (ISL) translation system that turns live webcam input into understandable text and speech. It combines machine learning, computer vision, and a modern web interface to bridge communication between sign language users and spoken/written communication.
+SETU is a real-time Indian Sign Language (ISL) translation system designed to bridge communication gaps between sign language users and people who do not understand sign language.
 
-The project is designed for real-time fingerspelling, phrase recognition, facial expression-aware parsing, and accessible translation workflows.
+It captures live webcam input, extracts hand and face landmarks, infers signs using machine learning, and converts the output into readable text and spoken feedback. In short, SETU turns sign gestures into real-time communication.
 
-## Why SETU
+## Why this matters
 
-- Real-time recognition from a webcam
-- Built for Indian Sign Language workflows
-- FastAPI backend + React frontend
-- MediaPipe-based landmark processing
-- Temporal filtering for stable predictions
-- Easy custom-sign recording and retraining pipeline
+Communication is a basic human need. For many Deaf and hard-of-hearing users, sign language is a natural and expressive way to communicate, but it is still not widely supported in everyday digital tools.
 
-## What it does
+SETU addresses that gap by creating an accessible translation experience that can help in:
 
-SETU helps interpret:
+- classrooms and learning environments
+- public communication support
+- daily conversation assistance
+- assistive technology and accessibility research
+- custom sign vocabulary for specific communities or teams
 
-- Static alphabet signs (A–Z)
-- Phrase-level ISL gestures
-- Facial non-manual markers and expression cues
-- Live subtitle-style translation output
-- Spoken text feedback through browser speech synthesis
+## The problem SETU solves
 
-## Architecture at a glance
+Many sign-language recognition systems are limited to static alphabets, require expensive hardware, or work only in controlled lab conditions. Others are too slow, too inaccurate, or too rigid for real-life communication.
+
+SETU was built to solve a more practical challenge:
+
+- detect signs in real time from a normal webcam
+- support alphabets and phrase-like gestures
+- reduce noisy predictions with confidence filtering and temporal smoothing
+- display understandable output as text and subtitles
+- speak the result aloud using browser-based speech synthesis
+- allow users to extend the system with custom recorded signs
+
+## How it works
+
+SETU follows a simple pipeline:
+
+1. A webcam captures the signer
+2. MediaPipe extracts face and hand landmarks
+3. Important gesture features are engineered from those landmarks
+4. A trained model predicts the sign or phrase
+5. Temporal smoothing and confidence checks reduce flicker and false results
+6. The output is shown as live text and can be spoken aloud
+
+![SETU system overview](docs/SETU_system_overview.svg)
+
+## What makes SETU useful
+
+### Real-time recognition
+- live webcam-based sign recognition
+- support for static alphabet signs and phrase-level gestures
+- low-latency workflow for interactive use
+
+### Accessibility-first design
+- subtitle-style translation output
+- browser speech synthesis for spoken feedback
+- visual guidance to help with camera setup and hand visibility
+
+### Practical ML workflow
+- custom sign recording from webcam samples
+- `.npz` dataset generation for feature-based learning
+- retraining support for domain-specific or user-specific signs
+
+### Modern architecture
+- FastAPI backend for streaming, inference, and APIs
+- React + TypeScript frontend for user interaction
+- MediaPipe + PyTorch stack for computer vision and machine learning
+
+## System architecture at a glance
 
 ```text
-Webcam input
+User webcam
   ↓
-Frontend captures and downsamples video frames
+Frontend captures frames
   ↓
-FastAPI WebSocket server receives frames
+FastAPI WebSocket server receives them
   ↓
-MediaPipe Holistic + Hand landmark extraction
+MediaPipe Holistic analyzes hands and face
   ↓
-Feature engineering + model inference
+Feature extraction + model inference
   ↓
-Temporal smoothing + confidence filtering
+Temporal filtering + confidence validation
   ↓
-Live translation output + speech synthesis
+Text output + subtitle HUD + speech synthesis
 ```
 
 ## Tech stack
@@ -68,31 +109,7 @@ Live translation output + speech synthesis
 - Vite
 - Tailwind CSS
 
-## Key capabilities
-
-### Real-time classification
-- Static sign recognition for alphabet fingerspelling
-- Phrase recognition for common ISL gestures
-- Low-latency streaming pipeline for live interaction
-
-### Robust vision processing
-- Hand normalization and landmark extraction
-- Facial feature tracking for NMM-inspired cues
-- Confidence thresholds and duplicate suppression
-- Framing/guidance feedback for better camera setup
-
-### Data and model experimentation
-- Custom sign recording from webcam samples
-- `.npz` dataset generation for feature-based learning
-- Training utilities for extending model behavior
-
-### Frontend experience
-- Movie-style subtitle HUD
-- Landmark overlays on camera feed
-- Adjustable threshold and model switching
-- Speech output for translations
-
-## Repository layout
+## Repository structure
 
 ```text
 SETU/
@@ -103,21 +120,19 @@ SETU/
 │   └── processed/              # processed feature arrays (.npz)
 ├── docs/                       # documentation and notes
 ├── frontend/                   # React + TypeScript + Vite app
-│   ├── src/                   # frontend source files
-│   ├── package.json           # frontend scripts and deps
-│   └── README.md              # frontend notes
 ├── models/                     # trained weights and labels
-├── Project Main Files/         # core product/design/architecture documentation
-├── scripts/                    # custom recording and demo scripts
+├── Project Main Files/         # strategy, architecture, and product docs
+├── reports/                    # analysis and evaluation reports
+├── scripts/                    # recording and demo scripts
 ├── setu/                       # backend Python package
-│   ├── api/                   # FastAPI API + WebSocket server
-│   ├── features/              # feature engineering logic
-│   ├── models/                # classifiers and ML logic
-│   ├── utils/                 # helper and geometry utilities
-│   ├── vision/                # MediaPipe wrappers and vision utilities
-│   ├── config.py              # config values
-│   └── __init__.py            # package marker
-├── tests/                      # automated test suite
+│   ├── api/                    # FastAPI API + WebSocket server
+│   ├── features/               # feature engineering logic
+│   ├── models/                 # classifiers and ML logic
+│   ├── utils/                  # helper and geometry utilities
+│   ├── vision/                 # MediaPipe wrappers and vision utilities
+│   ├── config.py               # configuration values
+│   └── __init__.py             # package marker
+├── tests/                      # automated tests
 ├── training/                   # training and model scripts
 ├── .env.example                # environment example
 ├── .gitignore                  # repository ignore rules
@@ -127,7 +142,8 @@ SETU/
 ├── Start_SETU.bat              # Windows launcher for full app
 ├── Start_Alphabet_Demo.bat     # Windows alphabet demo launcher
 ├── SETU_Sign_Language_Translator_Build_Handbook.docx
-└── SETU_Foundation_Documents_2026-10-17_Updated.zip
+├── SETU_Foundation_Documents_2026-10-17_Updated.zip
+└── ...
 ```
 
 ## Quick start
@@ -171,7 +187,7 @@ Then open:
 http://localhost:5173
 ```
 
-The backend is expected to run at:
+The backend is expected to run on:
 
 ```text
 http://localhost:8000
@@ -187,13 +203,13 @@ The backend exposes REST and WebSocket endpoints for recognition.
 ws://localhost:8000/api/v1/ws/recognize?model=realsign&threshold=0.35
 ```
 
-This endpoint receives webcam frames and responds with prediction payloads containing details like:
+This endpoint receives webcam frames and responds with prediction payloads that may include:
 
 - label and confidence
 - recognition stability state
 - model selection
 - camera guidance feedback
-- landmark data
+- landmark metadata
 - speech-ready translation output
 
 ### Common REST routes
@@ -206,7 +222,7 @@ This endpoint receives webcam frames and responds with prediction payloads conta
 
 ## Training and custom sign recording
 
-SETU supports user-recorded sign sample collection.
+SETU supports user-recorded sign collection to extend recognition for specific communities or vocabularies.
 
 Example:
 
@@ -220,19 +236,13 @@ Example training run:
 .\.venv\Scripts\python training/train_sequence_lstm.py --epochs 60 --lr 0.001
 ```
 
-This makes it easier to extend recognition with domain-specific or user-specific signs.
+This makes it easier to personalize the system and add domain-specific signs without redesigning the whole pipeline.
 
-## Project documentation
+## Documentation
 
-The `Project Main Files/` directory contains deeper product and system documentation for the project. It is the best place to understand:
+The `Project Main Files/` directory contains the deepest project documentation, including product requirements, architecture, design intent, and roadmap.
 
-- product requirements and goals
-- architecture and module boundaries
-- design decisions and workspace direction
-- phased roadmap and delivery plan
-- operating principles and engineering rules
-
-Recommended starting documents:
+Recommended documents:
 
 - `Project Main Files/README.md`
 - `Project Main Files/PRD.md`
@@ -243,8 +253,6 @@ Recommended starting documents:
 
 ## Testing
 
-The repo includes automated tests for API behavior, feature extraction, model logic, and vision processing.
-
 ```powershell
 .\.venv\Scripts\pytest.exe -v
 ```
@@ -253,10 +261,10 @@ The repo includes automated tests for API behavior, feature extraction, model lo
 
 Common issues:
 
-- webcam not detected or blocked by browser
+- webcam blocked or not detected by the browser
 - backend not running on port 8000
-- low light or poor hand visibility
-- unstable predictions caused by low confidence thresholds
+- poor lighting or low visibility of hands
+- unstable predictions due to low confidence thresholds
 - dependency issues during first-time setup
 
 ## License
@@ -273,4 +281,8 @@ Key areas to explore:
 - `frontend/src/` for UI and interaction improvements
 - `Project Main Files/` for architecture and roadmap updates
 
-For a deeper technical understanding, start with `Project Main Files/` and then move into the backend and frontend entry points.
+If you want to understand the project deeply, start with `Project Main Files/` and then move into the backend and frontend entry points.
+
+---
+
+SETU is a step toward making sign language more accessible through practical, real-time AI.
