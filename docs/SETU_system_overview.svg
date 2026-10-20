@@ -1,0 +1,67 @@
+<svg width="1400" height="720" viewBox="0 0 1400 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1120"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1400" height="720" rx="30" fill="url(#bg)"/>
+
+  <text x="700" y="60" text-anchor="middle" fill="#E5E7EB" font-size="38" font-family="Arial, sans-serif" font-weight="700">SETU: Sign Language Translation Pipeline</text>
+  <text x="700" y="96" text-anchor="middle" fill="#9CA3AF" font-size="20" font-family="Arial, sans-serif">From webcam gestures to live text and speech</text>
+
+  <rect x="70" y="160" width="220" height="150" rx="22" fill="#0F172A" stroke="#60A5FA" stroke-width="2"/>
+  <text x="180" y="215" text-anchor="middle" fill="#E2E8F0" font-size="28" font-family="Arial, sans-serif" font-weight="700">Webcam</text>
+  <text x="180" y="255" text-anchor="middle" fill="#94A3B8" font-size="20" font-family="Arial, sans-serif">Live signer input</text>
+  <text x="180" y="285" text-anchor="middle" fill="#94A3B8" font-size="18" font-family="Arial, sans-serif">camera + frame capture</text>
+
+  <rect x="370" y="160" width="250" height="150" rx="22" fill="#0F172A" stroke="#34D399" stroke-width="2"/>
+  <text x="495" y="220" text-anchor="middle" fill="#E2E8F0" font-size="26" font-family="Arial, sans-serif" font-weight="700">Frontend</text>
+  <text x="495" y="255" text-anchor="middle" fill="#94A3B8" font-size="20" font-family="Arial, sans-serif">Video + overlay</text>
+  <text x="495" y="285" text-anchor="middle" fill="#94A3B8" font-size="18" font-family="Arial, sans-serif">UI, subtitles, stream</text>
+
+  <rect x="700" y="160" width="300" height="150" rx="22" fill="#0F172A" stroke="#A78BFA" stroke-width="2"/>
+  <text x="850" y="220" text-anchor="middle" fill="#E2E8F0" font-size="26" font-family="Arial, sans-serif" font-weight="700">MediaPipe + ML</text>
+  <text x="850" y="255" text-anchor="middle" fill="#94A3B8" font-size="20" font-family="Arial, sans-serif">Landmarks + features</text>
+  <text x="850" y="285" text-anchor="middle" fill="#94A3B8" font-size="18" font-family="Arial, sans-serif">classification + smoothing</text>
+
+  <rect x="1080" y="160" width="250" height="150" rx="22" fill="#0F172A" stroke="#FBBF24" stroke-width="2"/>
+  <text x="1205" y="220" text-anchor="middle" fill="#E2E8F0" font-size="26" font-family="Arial, sans-serif" font-weight="700">Output</text>
+  <text x="1205" y="255" text-anchor="middle" fill="#94A3B8" font-size="20" font-family="Arial, sans-serif">Text + speech</text>
+  <text x="1205" y="285" text-anchor="middle" fill="#94A3B8" font-size="18" font-family="Arial, sans-serif">accessibility layer</text>
+
+  <path d="M290 235H370" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M620 235H700" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M1000 235H1080" stroke="url(#amber)" stroke-width="8" stroke-linecap="round"/>
+
+  <g fill="#E5E7EB" font-family="Arial, sans-serif" font-size="18">
+    <text x="315" y="210">capture</text>
+    <text x="660" y="210">stream</text>
+    <text x="1030" y="210">translate</text>
+  </g>
+
+  <rect x="180" y="430" width="1040" height="200" rx="26" fill="#111827" stroke="#374151" stroke-width="2"/>
+
+  <text x="700" y="475" text-anchor="middle" fill="#F3F4F6" font-size="28" font-family="Arial, sans-serif" font-weight="700">Why SETU matters</text>
+  <text x="700" y="520" text-anchor="middle" fill="#94A3B8" font-size="22" font-family="Arial, sans-serif">Helps reduce communication barriers between sign language users and wider communities.</text>
+
+  <g fill="#E5E7EB" font-size="18" font-family="Arial, sans-serif">
+    <rect x="240" y="545" width="260" height="55" rx="16" fill="#0F172A" stroke="#4ADE80" stroke-width="2"/>
+    <text x="370" y="580" text-anchor="middle">Accessible communication</text>
+
+    <rect x="560" y="545" width="270" height="55" rx="16" fill="#0F172A" stroke="#60A5FA" stroke-width="2"/>
+    <text x="695" y="580" text-anchor="middle">Real-time interpretation</text>
+
+    <rect x="890" y="545" width="270" height="55" rx="16" fill="#0F172A" stroke="#FBBF24" stroke-width="2"/>
+    <text x="1025" y="580" text-anchor="middle">Customizable for local needs</text>
+  </g>
+</svg>
