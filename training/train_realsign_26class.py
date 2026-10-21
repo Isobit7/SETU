@@ -137,18 +137,21 @@ def save_dataset_archive(
     Also synchronizes to the companion dataset path if requested.
     """
     save_path.parent.mkdir(parents=True, exist_ok=True)
-    save_payload: Dict[str, Any] = {
-        "X": X,
-        "y": y,
-        "splits": np.array(splits, dtype=str),
-        "classes": np.array(classes, dtype=str),
+    save_splits = np.array(splits, dtype=str)
+    save_classes = np.array(classes, dtype=str)
+    extra_kwargs = {
+        k: v for k, v in (extra_meta or {}).items()
+        if k not in ("X", "y", "splits", "classes")
     }
-    if extra_meta:
-        for k, v in extra_meta.items():
-            if k not in save_payload:
-                save_payload[k] = v
 
-    np.savez_compressed(save_path, **save_payload)
+    np.savez_compressed(
+        save_path,
+        X=X,
+        y=y,
+        splits=save_splits,
+        classes=save_classes,
+        **extra_kwargs,
+    )
     print(f"Saved transformed invariant dataset to: {save_path}")
 
     if sync_to_alt:
@@ -159,7 +162,14 @@ def save_dataset_archive(
         )
         try:
             alt_path.parent.mkdir(parents=True, exist_ok=True)
-            np.savez_compressed(alt_path, **save_payload)
+            np.savez_compressed(
+                alt_path,
+                X=X,
+                y=y,
+                splits=save_splits,
+                classes=save_classes,
+                **extra_kwargs,
+            )
             print(f"Synchronized transformed invariant dataset to: {alt_path}")
         except Exception as e:
             print(f"Note: Could not sync to companion path {alt_path}: {e}")
