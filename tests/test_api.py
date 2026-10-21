@@ -198,3 +198,58 @@ def test_record_sample_validation_errors(client):
     assert res.status_code == 400
     assert "nan" in res.json()["detail"].lower()
 
+
+def test_api_predict_features(client):
+    res = client.post("/api/predict", json={"features": [0.05] * 63})
+    assert res.status_code == 200
+    data = res.json()
+    assert "letter" in data
+    assert "confidence" in data
+    assert "top_3" in data
+    assert len(data["top_3"]) == 3
+    for candidate in data["top_3"]:
+        assert "letter" in candidate
+        assert "confidence" in candidate
+        assert isinstance(candidate["letter"], str)
+        assert isinstance(candidate["confidence"], float)
+
+
+def test_api_predict_landmarks(client):
+    mock_landmarks = [{"x": 0.5, "y": 0.5 + i * 0.01, "z": 0.0} for i in range(21)]
+    res = client.post("/api/predict", json={"landmarks": mock_landmarks, "dominant_hand": "right"})
+    assert res.status_code == 200
+    data = res.json()
+    assert "letter" in data
+    assert "confidence" in data
+    assert "top_3" in data
+    assert len(data["top_3"]) == 3
+
+
+def test_api_predict_validation_errors(client):
+    # Bad features dimension
+    res = client.post("/api/predict", json={"features": [0.1] * 10})
+    assert res.status_code == 400
+
+    # Bad landmarks count
+    res = client.post("/api/predict", json={"landmarks": [{"x": 0.1, "y": 0.2}] * 10})
+    assert res.status_code == 400
+
+    # Empty payload
+    res = client.post("/api/predict", json={})
+    assert res.status_code == 400
+
+
+def test_backend_main_standalone_app():
+    from backend.main import app as standalone_app
+    with TestClient(standalone_app) as client:
+        res = client.get("/health")
+        assert res.status_code == 200
+        assert res.json()["status"] == "healthy"
+
+        pred_res = client.post("/api/predict", json={"features": [0.1] * 63})
+        assert pred_res.status_code == 200
+        pred_data = pred_res.json()
+        assert "letter" in pred_data
+        assert "confidence" in pred_data
+        assert "top_3" in pred_data
+

@@ -1,5 +1,6 @@
-import React from 'react';
-import { X, Check, Type, Cpu } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Check, Type, Cpu, Camera, BookOpen } from 'lucide-react';
+import { WebcamAlphabetRecognition } from './WebcamAlphabetRecognition';
 
 interface AlphabetModalProps {
   isOpen: boolean;
@@ -7,6 +8,8 @@ interface AlphabetModalProps {
 }
 
 export const AlphabetModal: React.FC<AlphabetModalProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState<'live' | 'reference'>('live');
+
   // Dismiss on Escape key
   React.useEffect(() => {
     if (!isOpen) return;
@@ -23,19 +26,75 @@ export const AlphabetModal: React.FC<AlphabetModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-container alphabet-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
+      <div
+        className="modal-container alphabet-modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: activeTab === 'live' ? '920px' : '780px', transition: 'max-width 0.2s ease' }}
+      >
         <div className="modal-header">
           <div className="modal-title-wrap">
             <Type size={20} className="text-primary" />
-            <h2>ISL Alphabet Reference (26 Letters A–Z)</h2>
+            <h2>ISL 26-Class Alphabet Recognition</h2>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close dialog">
             <X size={20} />
           </button>
         </div>
 
+        {/* Tab Switcher */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          padding: '8px 20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(0, 0, 0, 0.2)',
+        }}>
+          <button
+            onClick={() => setActiveTab('live')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: activeTab === 'live' ? '1px solid #38BDF8' : '1px solid transparent',
+              background: activeTab === 'live' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+              color: activeTab === 'live' ? '#38BDF8' : '#94A3B8',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            <Camera size={14} />
+            <span>Live Camera Recognition</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('reference')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: activeTab === 'reference' ? '1px solid #38BDF8' : '1px solid transparent',
+              background: activeTab === 'reference' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+              color: activeTab === 'reference' ? '#38BDF8' : '#94A3B8',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            <BookOpen size={14} />
+            <span>Alphabet Reference Chart</span>
+          </button>
+        </div>
+
         <div className="modal-body">
-          {/* Model Metrics Callout */}
+          {activeTab === 'live' ? (
+            <WebcamAlphabetRecognition apiBaseUrl="http://localhost:8000" />
+          ) : (
+            <>
+              {/* Model Metrics Callout */}
           <div style={{
             display: 'flex',
             gap: '1rem',
@@ -101,13 +160,15 @@ export const AlphabetModal: React.FC<AlphabetModalProps> = ({ isOpen, onClose })
             ))}
           </div>
 
-          <div className="vocab-notice-box">
-            <h4>Real-Time Signing Tips</h4>
-            <p>
-              Keep your fingers facing the camera lens. You can toggle between <strong>Alphabet (A–Z)</strong> and <strong>Phrases (5 Signs)</strong> using the toggle bar below the video stream. Subtitles will show <strong>LETTER [X]</strong> along with real-time confidence scores and landmark skeleton overlays.
-            </p>
-          </div>
-        </div>
+            <div className="vocab-notice-box">
+              <h4>Real-Time Signing Tips</h4>
+              <p>
+                Keep your fingers facing the camera lens. You can toggle between <strong>Alphabet (A–Z)</strong> and <strong>Phrases (5 Signs)</strong> using the toggle bar below the video stream. Subtitles will show <strong>LETTER [X]</strong> along with real-time confidence scores and landmark skeleton overlays.
+              </p>
+            </div>
+          </>
+        )}
+      </div>
 
         <div className="modal-footer">
           <button className="primary-btn" onClick={onClose}>

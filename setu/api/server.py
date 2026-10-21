@@ -382,6 +382,88 @@ async def get_realsign_classes():
     }
 
 
+class PredictAlphabetRequest(BaseModel):
+    features: Optional[List[float]] = None
+    landmarks: Optional[List[Dict[str, float]]] = None
+    dominant_hand: Optional[str] = "right"
+
+
+class AlphabetCandidate(BaseModel):
+    letter: str
+    confidence: float
+
+
+class PredictAlphabetResponse(BaseModel):
+    letter: str
+    confidence: float
+    top_3: List[AlphabetCandidate]
+
+
+@app.post("/api/predict", response_model=PredictAlphabetResponse)
+def predict_alphabet(payload: PredictAlphabetRequest):
+    """
+    Accepts 63-D normalized feature array or 21 3D hand landmarks
+    and returns predicted letter, confidence, and top 3 candidates.
+    """
+    from backend.main import normalize_landmarks_to_63d
+
+    # Determine input feature vector
+    if payload.features is not None:
+        if len(payload.features) != 63:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Feature vector must have exactly 63 elements, received {len(payload.features)}",
+            )
+        feat_array = np.array(payload.features, dtype=np.float32)
+    elif payload.landmarks is not None:
+        if len(payload.landmarks) != 21:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Landmarks list must have exactly 21 landmarks, received {len(payload.landmarks)}",
+            )
+        try:
+            is_left = (payload.dominant_hand or "right").lower() == "left"
+            feat_array = normalize_landmarks_to_63d(payload.landmarks, is_left_hand=is_left)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to normalize landmarks: {e}",
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either 'features' (63-D float array) or 'landmarks' (21 3D points) must be provided.",
+        )
+
+    # Ensure RealSign classifier is initialized
+    if pipeline.realsign_classifier is None:
+        pipeline.load()
+    if pipeline.realsign_classifier is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="RealSign 26-class PyTorch model is not loaded.",
+        )
+
+    pred = pipeline.realsign_classifier.predict_vector(feat_array, confidence_threshold=0.0, apply_smoothing=False)
+    
+    top_3: List[AlphabetCandidate] = []
+    if pred.top_3:
+        for cand, conf in pred.top_3[:3]:
+            top_3.append(AlphabetCandidate(letter=str(cand), confidence=round(float(conf), 4)))
+    
+    # Fallback to top candidate if letter is special string
+    letter = pred.letter
+    if not letter or letter in ("no_sign", "Awaiting Sign Input", "unknown"):
+        letter = top_3[0].letter if top_3 else "A"
+    conf = round(float(pred.confidence), 4) if pred.confidence > 0 else (top_3[0].confidence if top_3 else 0.0)
+
+    return PredictAlphabetResponse(
+        letter=letter,
+        confidence=conf,
+        top_3=top_3,
+    )
+
+
 @app.get("/api/v1/vocabulary")
 async def get_vocabulary():
     """Returns supported signs with display titles and description."""
