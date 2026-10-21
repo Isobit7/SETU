@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check, Sliders, Type, Layers, ShieldCheck } from 'lucide-react';
+import { X, Check, Sliders, Type, Layers, ShieldCheck, Volume2, VolumeX } from 'lucide-react';
 import type { LandmarkStyles, SubtitleSize } from '../types';
 
 interface SettingsModalProps {
@@ -11,6 +11,12 @@ interface SettingsModalProps {
   setSubtitleSize: (size: SubtitleSize) => void;
   confidenceThreshold: number;
   setConfidenceThreshold: (val: number) => void;
+  autoSpeakEnabled?: boolean;
+  onToggleAutoSpeak?: () => void;
+  availableVoices?: SpeechSynthesisVoice[];
+  selectedVoice?: SpeechSynthesisVoice | null;
+  onSelectVoice?: (voice: SpeechSynthesisVoice | null) => void;
+  isSpeaking?: boolean;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -22,6 +28,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   setSubtitleSize,
   confidenceThreshold,
   setConfidenceThreshold,
+  autoSpeakEnabled = true,
+  onToggleAutoSpeak,
+  availableVoices = [],
+  selectedVoice = null,
+  onSelectVoice,
+  isSpeaking: _isSpeaking = false,
 }) => {
   // Dismiss on Escape key
   React.useEffect(() => {
@@ -49,6 +61,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="modal-body">
+          {/* Text-to-Speech (TTS) Voice Settings */}
+          <div className="settings-section">
+            <div className="section-title">
+              <Volume2 size={16} className="text-primary" />
+              <h3>Text-to-Speech (TTS) Voice Settings</h3>
+            </div>
+
+            {/* Auto-Speak Toggle Switch */}
+            <div className="setting-row">
+              <div className="setting-label-block">
+                <label>Auto-Speak Sentences</label>
+                <span className="setting-desc">
+                  Automatically voice English translations aloud when a sentence completes.
+                </span>
+              </div>
+              {onToggleAutoSpeak && (
+                <button
+                  type="button"
+                  className={`toggle-option-btn ${autoSpeakEnabled ? 'selected' : ''}`}
+                  onClick={onToggleAutoSpeak}
+                  aria-pressed={autoSpeakEnabled}
+                >
+                  {autoSpeakEnabled ? (
+                    <>
+                      <Volume2 size={14} className="text-primary" />
+                      <span>Enabled</span>
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX size={14} />
+                      <span>Muted</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Voice Control Dropdown */}
+            {availableVoices && availableVoices.length > 0 && (
+              <div className="setting-row">
+                <div className="setting-label-block">
+                  <label>Speech Voice</label>
+                  <span className="setting-desc">
+                    Prioritizes Indian English (en-IN), US English (en-US), or UK English (en-GB).
+                  </span>
+                </div>
+                <select
+                  className="camera-compact-select tts-voice-select"
+                  value={selectedVoice?.voiceURI || ''}
+                  onChange={(e) => {
+                    const chosen = availableVoices.find((v) => v.voiceURI === e.target.value);
+                    if (onSelectVoice && chosen) {
+                      onSelectVoice(chosen);
+                    }
+                  }}
+                  aria-label="Select Text-to-Speech Voice"
+                >
+                  {availableVoices
+                    .filter((v) => v.lang.toLowerCase().startsWith('en'))
+                    .concat(availableVoices.filter((v) => !v.lang.toLowerCase().startsWith('en')))
+                    .map((voice) => (
+                      <option key={voice.voiceURI} value={voice.voiceURI}>
+                        {voice.name} ({voice.lang}) {voice.default ? '— Default' : ''}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+          </div>
           {/* Subtitle Preferences */}
           <div className="settings-section">
             <div className="section-title">

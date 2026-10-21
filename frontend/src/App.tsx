@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { TopNavbar } from './components/TopNavbar';
 import { CameraWorkspace } from './components/CameraWorkspace';
 import { CameraControls } from './components/CameraControls';
@@ -11,6 +11,7 @@ import { SavedModal } from './components/SavedModal';
 import { HelpModal } from './components/HelpModal';
 import { IncludeVideoModal } from './components/IncludeVideoModal';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
+import { useTTS } from './hooks/useTTS';
 import type { LandmarkStyles, SubtitleSize } from './types';
 import './index.css';
 
@@ -34,19 +35,50 @@ export const App: React.FC = () => {
   const [subtitleSize, setSubtitleSize] = useState<SubtitleSize>('medium');
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.35);
 
-  // Sentence Builder & Auto-Speak State
+  // Sentence Builder State
   const [sentence, setSentence] = useState<string>('');
-  const [autoSpeak, setAutoSpeak] = useState<boolean>(false);
+
+  // Browser-Native Text-to-Speech (TTS) Hook
+  const {
+    isSpeaking,
+    autoSpeakEnabled,
+    availableVoices,
+    selectedVoice,
+    speak,
+    stop,
+    toggleAutoSpeak,
+    setSelectedVoice,
+  } = useTTS();
 
   // Stability Gate & Cooldown Refs
   const candidateStreakRef = useRef<{ sign: string; count: number }>({ sign: '', count: 0 });
   const lastAppendedSignRef = useRef<string>('');
   const lastAppendedTimeRef = useRef<number>(0);
   const hadHandDropRef = useRef<boolean>(false);
+  const lastSpokenSentenceRef = useRef<string>('');
 
   // Callback when a new prediction arrives from WebSocket
   const handlePredictionChange = (data: any) => {
     if (!data) return;
+
+    // Directly synchronize sentence buffer from backend SentenceAccumulator
+    if (data.sentence_buffer !== undefined) {
+      setSentence(data.sentence_buffer);
+    }
+
+    // Auto-Speak trigger on sentence completion:
+    // When translated_text updates and differs from lastSpokenSentenceRef.current
+    if (data.translated_text && typeof data.translated_text === 'string') {
+      const translated = data.translated_text.trim();
+      if (translated && translated !== lastSpokenSentenceRef.current) {
+        lastSpokenSentenceRef.current = translated;
+        if (autoSpeakEnabled) {
+          speak(translated);
+        }
+      }
+    } else if (!data.sentence_buffer && !data.translated_text) {
+      lastSpokenSentenceRef.current = '';
+    }
 
     const isHand = data.hand_detected ?? false;
     const isKnown = data.is_known_sign ?? false;
@@ -72,7 +104,7 @@ export const App: React.FC = () => {
     // Determine the sign/character to append
     let signText = '';
     if (data.active_model === 'realsign') {
-      signText = (data.realsign_prediction?.letter || label).toUpperCase();
+      signText = (data.label || '').toUpperCase();
     } else {
       signText = (data.display_name || label.replace('_', ' ')).toUpperCase();
     }
@@ -120,19 +152,6 @@ export const App: React.FC = () => {
       }
       return prev.endsWith(' ') ? `${prev}${signText} ` : `${prev} ${signText} `;
     });
-
-    // Auto-Speak if enabled
-    if (autoSpeak && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(signText);
-        utterance.lang = 'en-US';
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
-      } catch (e) {
-        console.warn('Auto-speak failed:', e);
-      }
-    }
   };
 
   // Hand-only landmark layer styles (Pose and Face permanently excluded)
@@ -159,6 +178,8 @@ export const App: React.FC = () => {
     pauseDetection,
     resumeDetection,
     resetSession,
+    clearSentence,
+    backspaceSentence,
     clearHistory,
   } = useRecognitionStream({
     videoRef,
@@ -203,14 +224,37 @@ export const App: React.FC = () => {
     }
   };
 
+  // Auto-speak completed sentences when translated_text arrives or updates in currentResult
+  useEffect(() => {
+    const textToSpeak = currentResult?.translated_text?.trim();
+    if (textToSpeak && textToSpeak !== lastSpokenSentenceRef.current) {
+      lastSpokenSentenceRef.current = textToSpeak;
+      if (autoSpeakEnabled) {
+        speak(textToSpeak);
+      }
+    } else if (!currentResult?.sentence_buffer && !textToSpeak) {
+      lastSpokenSentenceRef.current = '';
+    }
+  }, [currentResult?.translated_text, currentResult?.sentence_buffer, autoSpeakEnabled, speak]);
+
   const handleClearSentence = () => {
     setSentence('');
     lastAppendedSignRef.current = '';
     candidateStreakRef.current = { sign: '', count: 0 };
+    lastSpokenSentenceRef.current = '';
+    stop();
+    clearSentence();
+  };
+
+  const handleResetSession = () => {
+    lastSpokenSentenceRef.current = '';
+    stop();
+    resetSession();
   };
 
   const handleBackspaceSentence = () => {
     setSentence((prev) => (prev.length > 0 ? prev.slice(0, -1) : ''));
+    backspaceSentence();
   };
 
   const handleAddSpaceSentence = () => {
@@ -234,6 +278,9 @@ export const App: React.FC = () => {
         onOpenHelp={() => setIsHelpModalOpen(true)}
         onOpenIncludeModal={() => setIsIncludeModalOpen(true)}
         historyCount={history.length}
+        autoSpeakEnabled={autoSpeakEnabled}
+        onToggleAutoSpeak={toggleAutoSpeak}
+        isSpeaking={isSpeaking}
       />
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
@@ -261,15 +308,15 @@ export const App: React.FC = () => {
             onSwitchModel={switchModel}
             confidenceThreshold={confidenceThreshold}
             onThresholdChange={setConfidenceThreshold}
-            autoSpeak={autoSpeak}
-            onToggleAutoSpeak={() => setAutoSpeak((prev) => !prev)}
+            autoSpeak={autoSpeakEnabled}
+            onToggleAutoSpeak={toggleAutoSpeak}
             landmarkStyles={landmarkStyles}
             subtitleVisible={subtitleVisible}
             onStart={startCamera}
             onPause={pauseDetection}
             onResume={resumeDetection}
             onStop={stopCamera}
-            onReset={resetSession}
+            onReset={handleResetSession}
             onSwitchCamera={(id) => setSelectedCameraId(id)}
             onToggleLandmarks={handleToggleLandmarks}
             onToggleMirror={handleToggleMirror}
@@ -282,13 +329,17 @@ export const App: React.FC = () => {
         <aside className="workspace-side-section" aria-label="Translation Output and Candidates">
           <TranslationPanel
             currentResult={currentResult}
-            onClearCurrent={resetSession}
+            onClearCurrent={handleResetSession}
             onOpenHistory={() => setIsHistoryModalOpen(true)}
             historyCount={history.length}
             sentence={sentence}
+            translatedText={currentResult?.translated_text}
             onClearSentence={handleClearSentence}
             onBackspaceSentence={handleBackspaceSentence}
             onAddSpaceSentence={handleAddSpaceSentence}
+            isSpeaking={isSpeaking}
+            onSpeak={speak}
+            onStopSpeak={stop}
           />
         </aside>
       </main>
@@ -313,6 +364,12 @@ export const App: React.FC = () => {
         setSubtitleSize={setSubtitleSize}
         confidenceThreshold={confidenceThreshold}
         setConfidenceThreshold={setConfidenceThreshold}
+        autoSpeakEnabled={autoSpeakEnabled}
+        onToggleAutoSpeak={toggleAutoSpeak}
+        availableVoices={availableVoices}
+        selectedVoice={selectedVoice}
+        onSelectVoice={setSelectedVoice}
+        isSpeaking={isSpeaking}
       />
 
       <HistoryModal

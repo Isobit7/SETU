@@ -206,6 +206,12 @@ class ISLSequenceLSTMClassifier:
             raw_class_idx=no_sign_idx,
         )
 
+    def warmup(self) -> None:
+        """Executes a dummy forward pass with pre-allocated zero tensors to prime CUDA/CPU kernels."""
+        dummy = np.zeros((30, self.input_size), dtype=np.float32)
+        self.predict_sequence(dummy)
+
+    @torch.inference_mode()
     def predict_sequence(
         self,
         features: np.ndarray,
@@ -251,7 +257,7 @@ class ISLSequenceLSTMClassifier:
         if not np.all(np.isfinite(seq_proc)):
             raise ValueError("Feature sequence contains NaN or Inf values")
 
-        with torch.no_grad():
+        with torch.inference_mode():
             tensor = torch.from_numpy(seq_proc.astype(np.float32)).unsqueeze(0).to(self.device)
             logits = self.model(tensor)
             probs = torch.softmax(logits, dim=1).cpu().numpy()[0]

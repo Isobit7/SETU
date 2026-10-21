@@ -13,12 +13,18 @@ export interface LandmarkGroups {
 
 export type ActiveModelType = 'realsign' | 'isl_mvp' | 'isl_sequence_lstm';
 
+export interface Candidate {
+  label: string;
+  confidence: number;
+}
+
 export interface RecognitionPayload {
   type: 'prediction' | 'error' | 'info';
   active_model?: ActiveModelType | string;
   label?: string;
   display_name?: string;
   confidence?: number;
+  candidates?: Candidate[];
   is_known_sign?: boolean;
   is_stable?: boolean;
   streak_count?: number;
@@ -43,6 +49,9 @@ export interface RecognitionPayload {
   fps?: number;
   latency_ms?: number;
   landmarks?: LandmarkGroups;
+  sentence_buffer?: string;
+  translated_text?: string;
+  sentence_tokens?: string[];
   message?: string;
 }
 
@@ -72,4 +81,18 @@ export interface LandmarkStyles {
   showLeftHand: boolean;
   showRightHand: boolean;
   mirrored: boolean;
+}
+
+export interface TTSState {
+  isSpeaking: boolean;
+  autoSpeakEnabled: boolean;
+  availableVoices: SpeechSynthesisVoice[];
+  selectedVoice: SpeechSynthesisVoice | null;
+}
+
+export interface TTSControls {
+  speak: (text: string) => void;
+  stop: () => void;
+  toggleAutoSpeak: () => void;
+  setSelectedVoice: (voice: SpeechSynthesisVoice | null) => void;
 }

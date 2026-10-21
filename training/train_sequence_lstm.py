@@ -221,13 +221,21 @@ class ISLSequenceDataset(Dataset):
         balance_classes: bool = True,
         target_samples_per_class: Optional[int] = None,
         no_sign_class_idx: Optional[int] = None,
+        dt: Optional[float] = None,
+        fps: Optional[float] = 30.0,
     ) -> None:
         self.data: List[Tuple[np.ndarray, int, str]] = []
+        if dt is not None:
+            self.dt = dt
+        elif fps is not None and fps > 0:
+            self.dt = 1.0 / fps
+        else:
+            self.dt = 1.0
 
         if not augment:
             # Validation and test: exact samples with velocity features
             for feat, label, sid in samples:
-                base_328 = compute_velocity_features(feat, target_dim=328)
+                base_328 = compute_velocity_features(feat, target_dim=328, dt=self.dt)
                 self.data.append((base_328, label, sid))
             return
 
@@ -252,7 +260,7 @@ class ISLSequenceDataset(Dataset):
 
                 # Add all base samples
                 for feat, label, sid in grp:
-                    base_328 = compute_velocity_features(feat, target_dim=328)
+                    base_328 = compute_velocity_features(feat, target_dim=328, dt=self.dt)
                     self.data.append((base_328, label, sid))
 
                 # Augment to reach c_target
@@ -260,11 +268,11 @@ class ISLSequenceDataset(Dataset):
                 for i in range(needed):
                     src_feat, label, sid = grp[i % len(grp)]
                     aug_feat = augment_sequence(src_feat)
-                    aug_328 = compute_velocity_features(aug_feat, target_dim=328)
+                    aug_328 = compute_velocity_features(aug_feat, target_dim=328, dt=self.dt)
                     self.data.append((aug_328, label, f"{sid}_bal_aug_{i}"))
         else:
             for feat, label, sid in samples:
-                base_328 = compute_velocity_features(feat, target_dim=328)
+                base_328 = compute_velocity_features(feat, target_dim=328, dt=self.dt)
                 self.data.append((base_328, label, sid))
 
                 count = (
@@ -274,7 +282,7 @@ class ISLSequenceDataset(Dataset):
                 )
                 for i in range(count):
                     aug_feat = augment_sequence(feat)
-                    aug_328 = compute_velocity_features(aug_feat, target_dim=328)
+                    aug_328 = compute_velocity_features(aug_feat, target_dim=328, dt=self.dt)
                     self.data.append((aug_328, label, f"{sid}_aug_{i}"))
 
     def __len__(self) -> int:
@@ -535,6 +543,7 @@ def train_sequence_lstm(
     weight_decay: float = 1e-3,
     device_name: str = "cuda",
     seed: int = 123,
+    fps: float = 30.0,
 ) -> Dict[str, Any]:
     """Builds, trains, and evaluates the ISL Sequence LSTM on GPU."""
     start_time = time.time()
@@ -573,9 +582,10 @@ def train_sequence_lstm(
         augment_factor=30,
         balance_classes=True,
         no_sign_class_idx=no_sign_idx,
+        fps=fps,
     )
-    val_dataset = ISLSequenceDataset(splits["val"], augment=False)
-    test_dataset = ISLSequenceDataset(splits["test"], augment=False)
+    val_dataset = ISLSequenceDataset(splits["val"], augment=False, fps=fps)
+    test_dataset = ISLSequenceDataset(splits["test"], augment=False, fps=fps)
 
     logger.info(
         f"Dataset counts: Train={len(train_dataset)} (with augmentations and class balancing), "
@@ -831,6 +841,7 @@ def main() -> None:
     parser.add_argument("--model-out", type=str, default=str(DEFAULT_MODEL_SAVE_PATH), help="Path to save model checkpoint")
     parser.add_argument("--report-out", type=str, default=str(DEFAULT_REPORT_SAVE_PATH), help="Path to save evaluation report")
     parser.add_argument("--seed", type=int, default=123, help="Random seed for reproducibility")
+    parser.add_argument("--fps", type=float, default=30.0, help="Frame rate for time-normalized velocity computation")
     args = parser.parse_args()
 
     train_sequence_lstm(
@@ -842,6 +853,7 @@ def main() -> None:
         learning_rate=args.lr,
         device_name=args.device,
         seed=args.seed,
+        fps=args.fps,
     )
 
 

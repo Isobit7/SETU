@@ -14,6 +14,8 @@ import {
   Film,
   Type,
   ChevronDown,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -30,6 +32,9 @@ interface TopNavbarProps {
   onOpenHelp: () => void;
   onOpenIncludeModal?: () => void;
   historyCount?: number;
+  autoSpeakEnabled?: boolean;
+  onToggleAutoSpeak?: () => void;
+  isSpeaking?: boolean;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -46,6 +51,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   onOpenHelp,
   onOpenIncludeModal,
   historyCount = 0,
+  autoSpeakEnabled = true,
+  onToggleAutoSpeak,
+  isSpeaking = false,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -264,8 +272,36 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </button>
       </nav>
 
-      {/* 7. Right: Status Badges */}
+      {/* 7. Right: Status Badges & Quick Toggles */}
       <div className="navbar-actions">
+        {/* Auto-Speak TTS Toggle */}
+        {onToggleAutoSpeak && (
+          <button
+            className={`nav-tts-toggle ${autoSpeakEnabled ? 'active' : 'muted'} ${isSpeaking ? 'speaking' : ''}`}
+            onClick={onToggleAutoSpeak}
+            title={
+              autoSpeakEnabled
+                ? 'Auto-Speak (TTS) is Active. Click to mute.'
+                : 'Auto-Speak (TTS) is Muted. Click to enable.'
+            }
+            aria-label="Toggle Auto-Speak TTS"
+            aria-pressed={autoSpeakEnabled}
+          >
+            {isSpeaking ? (
+              <div className="soundwave-bars" aria-hidden="true">
+                <span className="soundwave-bar" />
+                <span className="soundwave-bar" />
+                <span className="soundwave-bar" />
+              </div>
+            ) : autoSpeakEnabled ? (
+              <Volume2 size={13} className="tts-active-icon" />
+            ) : (
+              <VolumeX size={13} className="tts-muted-icon" />
+            )}
+            <span className="tts-pill-label">Auto-TTS</span>
+          </button>
+        )}
+
         {/* Connection status pill */}
         <div
           className={`connection-pill ${isBackendConnected ? 'connected' : 'disconnected'}`}
@@ -308,6 +344,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       {/* Mobile Nav Drawer */}
       {mobileMenuOpen && (
         <div className="mobile-nav-drawer" role="navigation">
+          {onToggleAutoSpeak && (
+            <button
+              className={`mobile-nav-item ${autoSpeakEnabled ? 'active' : ''}`}
+              onClick={() => {
+                onToggleAutoSpeak();
+                setMobileMenuOpen(false);
+              }}
+            >
+              {autoSpeakEnabled ? <Volume2 size={16} className="text-primary" /> : <VolumeX size={16} />}
+              <span>Auto-Speak: {autoSpeakEnabled ? 'Enabled' : 'Muted'}</span>
+            </button>
+          )}
           <button
             className={`mobile-nav-item ${activeTab === 'translator' ? 'active' : ''}`}
             onClick={() => {

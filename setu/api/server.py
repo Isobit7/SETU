@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional
 
 import cv2
 import numpy as np
+import torch
 from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -32,6 +33,7 @@ from setu.models.isl_mvp_classifier import ISLMVPClassifier, ISLPrediction
 from setu.models.realsign_classifier import RealSignClassifier, RealSignPrediction
 from setu.models.isl_sequence_lstm_classifier import ISLSequenceLSTMClassifier, ISLSequencePrediction
 from setu.vision.landmarks import HolisticLandmarkerWrapper, HandLandmarkerWrapper
+from setu.nlp import SentenceAccumulator
 from setu.config import (
     CONFIDENCE_THRESHOLD_ALPHABET,
     CONFIDENCE_THRESHOLD_SEQUENCE,
@@ -152,8 +154,28 @@ class PipelineManager:
         except Exception as e:
             logger.warning("Could not pre-load INCLUDE model on startup: %s", e)
 
+        # Startup Model Warmup: eliminate 2-second CUDA/CPU initialization penalty on first user frame
+        self.warmup_models()
+
         self.is_ready = True
         logger.info("SETU ML Pipeline loaded successfully. Supported ISL phrases: %s", self.classifier.class_names)
+
+    def warmup_models(self) -> None:
+        """Runs dummy forward passes through neural network models with zero tensors to eliminate initial CUDA/CPU warmup penalty."""
+        if self.realsign_classifier is not None:
+            try:
+                dummy_63 = np.zeros(63, dtype=np.float32)
+                self.realsign_classifier.predict(dummy_63, apply_smoothing=False)
+                logger.info("RealSign 26-class PyTorch model warmed up successfully.")
+            except Exception as e:
+                logger.warning("RealSign warmup encountered error: %s", e)
+
+        if self.sequence_lstm_classifier is not None:
+            try:
+                self.sequence_lstm_classifier.warmup()
+                logger.info("ISL Sequence LSTM PyTorch model warmed up successfully.")
+            except Exception as e:
+                logger.warning("ISL Sequence LSTM warmup encountered error: %s", e)
 
     def close(self) -> None:
         """Releases C++ resources and ML models."""
@@ -700,8 +722,110 @@ async def websocket_recognize(
     last_committed_time: float = 0.0
     had_idle_baseline: bool = True
 
+    # RealSign Alphabet 4-Frame Streak Debouncer State
+    alphabet_streak_candidate: str = ""
+    alphabet_streak_count: int = 0
+    alphabet_last_committed: str = ""
+
+    # Motion-Based Kinetic Energy & Active Gesture Segmentation State
+    prev_hand_pts: Optional[np.ndarray] = None
+    prev_frame_perf_time: float = time.perf_counter()
+    gesture_sequence_buffer: List[np.ndarray] = []
+    is_actively_signing: bool = False
+    settled_frames_count: int = 0
+    KINETIC_ENERGY_THRESHOLD: float = 0.05
+
+    # Real-Time Sentence Accumulator & ISL Gloss Parser
+    accumulator = SentenceAccumulator()
+
     logger.info("Client connected to SETU recognition WebSocket. Active model: %s", active_model)
     loop = asyncio.get_running_loop()
+
+    async def _process_control_text(text_str: str) -> None:
+        nonlocal active_model, client_threshold, is_actively_signing, settled_frames_count
+        nonlocal prev_hand_pts, candidate_label, candidate_streak, last_committed_sign
+        nonlocal last_committed_time, had_idle_baseline
+        nonlocal alphabet_streak_candidate, alphabet_streak_count, alphabet_last_committed
+        try:
+            payload = json.loads(text_str)
+            action = payload.get("action")
+            if action == "reset":
+                rolling_features.clear()
+                gesture_sequence_buffer.clear()
+                accumulator.reset()
+                is_actively_signing = False
+                settled_frames_count = 0
+                prev_hand_pts = None
+                candidate_label = ""
+                candidate_streak = 0
+                last_committed_sign = ""
+                last_committed_time = 0.0
+                had_idle_baseline = True
+                alphabet_streak_candidate = ""
+                alphabet_streak_count = 0
+                alphabet_last_committed = ""
+                if pipeline.landmarker is not None:
+                    pipeline.landmarker.reset_smoothing()
+                if pipeline.hand_landmarker is not None:
+                    pipeline.hand_landmarker.reset_smoothing()
+                if pipeline.realsign_classifier is not None:
+                    pipeline.realsign_classifier.reset_smoothing()
+                await websocket.send_json({"type": "info", "message": "Buffer reset"})
+            elif action == "clear_sentence":
+                accumulator.reset()
+                await websocket.send_json({
+                    "type": "info",
+                    "message": "Sentence buffer cleared",
+                    "sentence_buffer": accumulator.sentence_buffer,
+                    "translated_text": accumulator.translated_text,
+                })
+            elif action == "backspace":
+                accumulator.backspace()
+                await websocket.send_json({
+                    "type": "info",
+                    "message": "Backspace applied",
+                    "sentence_buffer": accumulator.sentence_buffer,
+                    "translated_text": accumulator.translated_text,
+                })
+            elif action == "set_model":
+                req_model = str(payload.get("model", "realsign")).lower()
+                if req_model in ("realsign", "isl_mvp", "isl_sequence_lstm"):
+                    active_model = req_model
+                    rolling_features.clear()
+                    gesture_sequence_buffer.clear()
+                    accumulator.reset()
+                    is_actively_signing = False
+                    settled_frames_count = 0
+                    prev_hand_pts = None
+                    candidate_label = ""
+                    candidate_streak = 0
+                    last_committed_sign = ""
+                    last_committed_time = 0.0
+                    had_idle_baseline = True
+                    alphabet_streak_candidate = ""
+                    alphabet_streak_count = 0
+                    alphabet_last_committed = ""
+                    if pipeline.landmarker is not None:
+                        pipeline.landmarker.reset_smoothing()
+                    if pipeline.hand_landmarker is not None:
+                        pipeline.hand_landmarker.reset_smoothing()
+                    if pipeline.realsign_classifier is not None:
+                        pipeline.realsign_classifier.reset_smoothing()
+                    await websocket.send_json({
+                        "type": "info",
+                        "message": f"Active classifier model switched to {active_model}",
+                        "active_model": active_model,
+                    })
+            elif action == "set_threshold":
+                val = float(payload.get("threshold", CONFIDENCE_THRESHOLD_ALPHABET))
+                client_threshold = max(0.10, min(0.95, val))
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Confidence threshold set to {client_threshold}",
+                    "threshold": client_threshold,
+                })
+        except Exception as e:
+            logger.warning("Error processing text command: %s", e)
 
     try:
         while True:
@@ -709,6 +833,19 @@ async def websocket_recognize(
             message = await websocket.receive()
 
             if "bytes" in message and message["bytes"]:
+                # WebSocket Backpressure Guard: Drain any queued stale frames so server processes only freshest frame
+                while True:
+                    try:
+                        next_msg = await asyncio.wait_for(websocket.receive(), timeout=0.0002)
+                        if "bytes" in next_msg and next_msg["bytes"]:
+                            # Discard older frame, keep freshest
+                            message = next_msg
+                        elif "text" in next_msg and next_msg["text"]:
+                            # Process control message immediately without dropping
+                            await _process_control_text(next_msg["text"])
+                    except (asyncio.TimeoutError, TimeoutError):
+                        break
+
                 t0 = time.perf_counter()
                 frame_bytes = message["bytes"]
 
@@ -739,7 +876,7 @@ async def websocket_recognize(
                         try:
                             hld_res = pipeline.hand_landmarker.detect(img)
                             if hld_res and hld_res.hand_landmarks and len(hld_res.hand_landmarks) > 0:
-                                h_raw = hld_res.hand_landmarks[0]
+                                h_raw = hld_res
                         except Exception as e:
                             logger.debug("HandLandmarker error: %s", e)
 
@@ -767,11 +904,24 @@ async def websocket_recognize(
                 pose = serialize_landmarks(hl_result.pose_landmarks)
                 face = serialize_landmarks(hl_result.face_landmarks, FACE_KEYPOINT_INDICES)
 
-                # If HandLandmarker found a hand, serialize it so frontend canvas draws it
+                # If HandLandmarker found hands, serialize them so frontend canvas draws them
                 if hand_landmarks_raw is not None:
-                    hand_pts_serialized = serialize_landmarks(hand_landmarks_raw)
-                    if len(right_hand) == 0:
-                        right_hand = hand_pts_serialized
+                    if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
+                        for i, h_lm in enumerate(hand_landmarks_raw.hand_landmarks):
+                            h_lbl = "right"
+                            if hasattr(hand_landmarks_raw, "handedness") and i < len(hand_landmarks_raw.handedness) and hand_landmarks_raw.handedness[i]:
+                                h_lbl = getattr(hand_landmarks_raw.handedness[i][0], "category_name", "right").lower()
+                            s_lm = serialize_landmarks(h_lm)
+                            if h_lbl == "left":
+                                if len(left_hand) == 0:
+                                    left_hand = s_lm
+                            else:
+                                if len(right_hand) == 0:
+                                    right_hand = s_lm
+                    else:
+                        hand_pts_serialized = serialize_landmarks(hand_landmarks_raw)
+                        if len(right_hand) == 0:
+                            right_hand = hand_pts_serialized
 
                 has_left = len(left_hand) > 0
                 has_right = len(right_hand) > 0
@@ -781,256 +931,292 @@ async def websocket_recognize(
                 hands_in_subtitle_zone = check_subtitle_collision(left_hand, right_hand)
                 guidance_text = get_positioning_guidance(pose, hand_detected)
 
-                # 6. RealSign 26-Class Alphabet PyTorch Prediction (offloaded to thread executor)
-                realsign_pred: Optional[RealSignPrediction] = None
-                realsign_feat_63d: Optional[np.ndarray] = None
+                # 6. Motion-Based Kinetic Energy & Active Gesture Segmentation
+                curr_time_perf = time.perf_counter()
+                dt_frame = max(curr_time_perf - prev_frame_perf_time, 0.001)
+                prev_frame_perf_time = curr_time_perf
+
+                # Collect hand landmark positions for kinetic energy computation
+                current_hand_pts_list = []
+                if hand_landmarks_raw is not None:
+                    if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
+                        for h_lm in hand_landmarks_raw.hand_landmarks[:1]:
+                            current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in h_lm])
+                    else:
+                        current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in hand_landmarks_raw])
+                elif hl_result and getattr(hl_result, "right_hand_landmarks", None):
+                    current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in hl_result.right_hand_landmarks])
+                if hl_result and getattr(hl_result, "left_hand_landmarks", None) and not current_hand_pts_list:
+                    current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in hl_result.left_hand_landmarks])
+
+                kinetic_energy = 0.0
+                if current_hand_pts_list:
+                    curr_pts_arr = np.array(current_hand_pts_list, dtype=np.float32)
+                    if prev_hand_pts is not None and prev_hand_pts.shape == curr_pts_arr.shape:
+                        # Time-normalized velocity magnitude: (curr - prev) / dt * (1/30)
+                        time_scale = (1.0 / 30.0) / dt_frame
+                        diff_vecs = (curr_pts_arr - prev_hand_pts) * time_scale
+                        kinetic_energy = float(np.sum(np.linalg.norm(diff_vecs, axis=-1)))
+                    prev_hand_pts = curr_pts_arr
+                else:
+                    prev_hand_pts = None
+
+                # Hand landmark extraction for RealSign
                 hand_source = None
                 if hand_landmarks_raw is not None:
                     hand_source = hand_landmarks_raw
-                elif hl_result and getattr(hl_result, "right_hand_landmarks", None):
-                    hand_source = hl_result.right_hand_landmarks
-                elif hl_result and getattr(hl_result, "left_hand_landmarks", None):
-                    hand_source = hl_result.left_hand_landmarks
+                elif hl_result and (getattr(hl_result, "right_hand_landmarks", None) or getattr(hl_result, "left_hand_landmarks", None)):
+                    hand_source = hl_result
                 elif len(right_hand) > 0:
                     hand_source = right_hand
                 elif len(left_hand) > 0:
                     hand_source = left_hand
 
+                realsign_feat_63d: Optional[np.ndarray] = None
                 if hand_source is not None:
-                    realsign_feat_63d = extract_realsign_hand_features(hand_source)
+                    realsign_feat_63d = extract_realsign_hand_features(hand_source, dominant_hand="right")
 
-                if pipeline.realsign_classifier is not None:
-                    if realsign_feat_63d is not None:
-                        realsign_pred = await loop.run_in_executor(
-                            None,
-                            pipeline.realsign_classifier.predict,
-                            realsign_feat_63d,
-                            confidence_threshold,
-                        )
-                    else:
-                        realsign_pred = pipeline.realsign_classifier._empty_prediction()
+                should_run_inference = False
+                motion_settled_now = False
 
-                # 7. Dynamic ISL Sequence LSTM Prediction (GPU) (offloaded to thread executor)
-                seq_pred: Optional[ISLSequencePrediction] = None
-                if active_model == "isl_sequence_lstm" and pipeline.sequence_lstm_classifier is not None:
-                    if len(rolling_features) >= 5:
-                        feat_array = np.array(rolling_features, dtype=np.float32)
-                        seq_pred = await loop.run_in_executor(
-                            None,
-                            pipeline.sequence_lstm_classifier.predict_sequence,
-                            feat_array,
-                            confidence_threshold,
-                        )
-                    else:
-                        seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
-
-                # 8. ISL MVP 5-Sign Sequence Prediction (offloaded to thread executor)
-                if len(rolling_features) >= 5:
-                    feat_array = np.array(rolling_features, dtype=np.float32)
-                    if feat_array.shape[0] < 30:
-                        pad = np.repeat(feat_array[-1:], 30 - feat_array.shape[0], axis=0)
-                        feat_array = np.concatenate([feat_array, pad], axis=0)
-
-                    isl_pred = await loop.run_in_executor(
-                        None,
-                        pipeline.classifier.predict_features,
-                        feat_array[:, :158],
-                        confidence_threshold,
-                    )
+                if active_model == "realsign":
+                    # Static Alphabet mode: classify continuously while hand is in view
+                    should_run_inference = (realsign_feat_63d is not None)
                 else:
-                    isl_pred = ISLPrediction(
-                        label="no_sign",
-                        confidence=1.0,
-                        is_known_sign=False,
-                        probabilities={c: 0.0 for c in pipeline.classifier.class_names},
-                        raw_class_idx=pipeline.classifier.class_names.index("no_sign"),
-                    )
+                    if kinetic_energy >= KINETIC_ENERGY_THRESHOLD:
+                        # Active Signing (Ek >= 0.05): accumulate into gesture sequence buffer
+                        is_actively_signing = True
+                        settled_frames_count = 0
+                        gesture_sequence_buffer.append(feat_164)
+                        if len(gesture_sequence_buffer) > 60:
+                            gesture_sequence_buffer.pop(0)
+                    elif is_actively_signing:
+                        # Motion settling after signing (Ek < 0.05 while previously active)
+                        settled_frames_count += 1
+                        gesture_sequence_buffer.append(feat_164)
+                        if settled_frames_count >= 1:
+                            # Motion has settled after signing -> trigger single-shot classification
+                            should_run_inference = True
+                            motion_settled_now = True
+                    else:
+                        # Hand Idle / Resting (Ek < 0.05): return "Awaiting Sign Input" without inference
+                        should_run_inference = False
+
+                # 7. Model Inference (Single-shot when motion settles, skipped when idle)
+                realsign_pred: Optional[RealSignPrediction] = None
+                seq_pred: Optional[ISLSequencePrediction] = None
+                isl_pred: Optional[ISLPrediction] = None
+
+                if should_run_inference:
+                    segment_to_classify = list(gesture_sequence_buffer) if len(gesture_sequence_buffer) >= 5 else list(rolling_features)
+                    feat_array = np.array(segment_to_classify, dtype=np.float32)
+
+                    if active_model == "realsign" and pipeline.realsign_classifier is not None:
+                        if realsign_feat_63d is not None:
+                            realsign_pred = await loop.run_in_executor(
+                                None,
+                                lambda: pipeline.realsign_classifier.predict(
+                                    realsign_feat_63d,
+                                    confidence_threshold=confidence_threshold,
+                                    apply_smoothing=True,
+                                ),
+                            )
+                        else:
+                            realsign_pred = pipeline.realsign_classifier._empty_prediction()
+                            pipeline.realsign_classifier.reset_smoothing()
+
+                    elif active_model == "isl_sequence_lstm" and pipeline.sequence_lstm_classifier is not None:
+                        if len(segment_to_classify) >= 5:
+                            seq_pred = await loop.run_in_executor(
+                                None,
+                                pipeline.sequence_lstm_classifier.predict_sequence,
+                                feat_array,
+                                confidence_threshold,
+                            )
+                        else:
+                            seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
+
+                    elif pipeline.classifier is not None:
+                        # isl_mvp
+                        if len(segment_to_classify) >= 5:
+                            arr_mvp = feat_array
+                            if arr_mvp.shape[0] < 30:
+                                pad = np.repeat(arr_mvp[-1:], 30 - arr_mvp.shape[0], axis=0)
+                                arr_mvp = np.concatenate([arr_mvp, pad], axis=0)
+                            isl_pred = await loop.run_in_executor(
+                                None,
+                                pipeline.classifier.predict_features,
+                                arr_mvp[:, :158],
+                                confidence_threshold,
+                            )
+                        else:
+                            isl_pred = ISLPrediction(
+                                label="no_sign",
+                                confidence=1.0,
+                                is_known_sign=False,
+                                probabilities={c: 0.0 for c in pipeline.classifier.class_names},
+                                raw_class_idx=pipeline.classifier.class_names.index("no_sign"),
+                            )
+
+                    if active_model != "realsign":
+                        # Reset gesture segment buffer after single-shot classification
+                        is_actively_signing = False
+                        settled_frames_count = 0
+                        gesture_sequence_buffer.clear()
+                else:
+                    if pipeline.realsign_classifier is not None:
+                        realsign_pred = pipeline.realsign_classifier._empty_prediction()
+                    if pipeline.sequence_lstm_classifier is not None:
+                        seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
+                    if pipeline.classifier is not None:
+                        isl_pred = ISLPrediction(
+                            label="no_sign",
+                            confidence=1.0,
+                            is_known_sign=False,
+                            probabilities={c: 0.0 for c in pipeline.classifier.class_names},
+                            raw_class_idx=pipeline.classifier.class_names.index("no_sign"),
+                        )
 
                 t1 = time.perf_counter()
                 latency_ms = round((t1 - t0) * 1000.0, 1)
 
-                # Extract landmark coordinate min/max ranges for debug logging
-                all_hand_coords = []
-                if hand_landmarks_raw is not None:
-                    all_hand_coords.extend([[float(lm.x), float(lm.y), float(lm.z)] for lm in hand_landmarks_raw])
-                elif len(right_hand) > 0:
-                    all_hand_coords.extend([[pt["x"], pt["y"], pt["z"]] for pt in right_hand])
-                elif len(left_hand) > 0:
-                    all_hand_coords.extend([[pt["x"], pt["y"], pt["z"]] for pt in left_hand])
+                # 8. Post-Processing & Filtering
+                active_threshold = client_threshold if client_threshold is not None else (
+                    CONFIDENCE_THRESHOLD_ALPHABET if active_model == "realsign" else CONFIDENCE_THRESHOLD_SEQUENCE
+                )
+                required_streak = STREAK_ALPHABET if active_model == "realsign" else STREAK_SEQUENCE
 
-                if all_hand_coords:
-                    arr_coords = np.array(all_hand_coords, dtype=np.float32)
-                    coords_summary = (
-                        f"X: [{arr_coords[:, 0].min():.3f}, {arr_coords[:, 0].max():.3f}], "
-                        f"Y: [{arr_coords[:, 1].min():.3f}, {arr_coords[:, 1].max():.3f}], "
-                        f"Z: [{arr_coords[:, 2].min():.3f}, {arr_coords[:, 2].max():.3f}]"
-                    )
-                else:
-                    coords_summary = "None (no hands detected)"
-
-                # 9. Confidence Hysteresis Gate, Temporal Streak Counter & Refractory Cooldown
-                if active_model == "realsign" and realsign_pred is not None:
-                    active_threshold = client_threshold if client_threshold is not None else CONFIDENCE_THRESHOLD_ALPHABET
-                    required_streak = STREAK_ALPHABET
-                    raw_conf = round(realsign_pred.confidence, 4)
-                    raw_top_class = realsign_pred.top_3[0][0] if realsign_pred.top_3 else ("no_hand" if not hand_detected else "unknown")
-                    raw_top_conf = float(realsign_pred.top_3[0][1]) if realsign_pred.top_3 else 0.0
-                    raw_top_3 = realsign_pred.top_3
-                    res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()}
+                if active_model == "realsign":
+                    res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
+                    raw_conf = round(realsign_pred.confidence, 4) if realsign_pred else 0.0
+                    raw_top_class = realsign_pred.top_3[0][0] if (realsign_pred and realsign_pred.top_3) else ("no_hand" if not hand_detected else "unknown")
+                    raw_top_conf = float(realsign_pred.top_3[0][1]) if (realsign_pred and realsign_pred.top_3) else 0.0
+                    raw_top_3 = realsign_pred.top_3 if realsign_pred else []
                     buffer_fill = 1.0 if (hand_detected and realsign_feat_63d is not None) else 0.0
-                    no_sign_prob = res_probs.get("no_sign", 0.0)
-
-                    if not hand_detected or realsign_feat_63d is None:
-                        raw_label = "Awaiting Sign Input"
-                        is_candidate_valid = False
-                    elif realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign:
-                        raw_label = realsign_pred.letter
-                        is_candidate_valid = True
-                    else:
-                        raw_label = "Awaiting Sign Input"
-                        is_candidate_valid = False
-
-                elif active_model == "isl_sequence_lstm" and seq_pred is not None:
-                    active_threshold = client_threshold if client_threshold is not None else CONFIDENCE_THRESHOLD_SEQUENCE
-                    required_streak = STREAK_SEQUENCE
-                    raw_conf = round(seq_pred.confidence, 4)
-                    raw_top_class = seq_pred.top_3[0][0] if seq_pred.top_3 else ("no_hand" if not hand_detected else "no_sign")
-                    raw_top_conf = float(seq_pred.top_3[0][1]) if seq_pred.top_3 else 0.0
-                    raw_top_3 = seq_pred.top_3
-                    res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()}
-                    buffer_fill = round(len(rolling_features) / 15.0, 2)
-                    no_sign_prob = res_probs.get("no_sign", 0.0)
-
-                    if not hand_detected or seq_pred.label == "no_sign":
-                        raw_label = "no_sign"
-                        is_candidate_valid = False
-                    elif seq_pred.confidence >= active_threshold and seq_pred.is_known_sign:
-                        raw_label = seq_pred.label
-                        is_candidate_valid = True
-                    else:
-                        raw_label = "Awaiting Sign Input"
-                        is_candidate_valid = False
-
+                    is_pred_valid = bool(realsign_pred and realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign)
+                    pred_label = realsign_pred.letter if realsign_pred else ""
+                elif active_model == "isl_sequence_lstm":
+                    res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()} if seq_pred else {}
+                    raw_conf = round(seq_pred.confidence, 4) if seq_pred else 0.0
+                    raw_top_class = seq_pred.top_3[0][0] if (seq_pred and seq_pred.top_3) else ("no_hand" if not hand_detected else "no_sign")
+                    raw_top_conf = float(seq_pred.top_3[0][1]) if (seq_pred and seq_pred.top_3) else 0.0
+                    raw_top_3 = seq_pred.top_3 if seq_pred else []
+                    buffer_fill = round(len(gesture_sequence_buffer) / 15.0, 2) if is_actively_signing else round(len(rolling_features) / 15.0, 2)
+                    is_pred_valid = bool(seq_pred and seq_pred.confidence >= active_threshold and seq_pred.is_known_sign and seq_pred.label != "no_sign")
+                    pred_label = seq_pred.label if seq_pred else ""
                 else:
                     # isl_mvp
-                    active_threshold = client_threshold if client_threshold is not None else CONFIDENCE_THRESHOLD_SEQUENCE
-                    required_streak = STREAK_SEQUENCE
-                    raw_conf = round(isl_pred.confidence, 4)
+                    res_probs = {k: round(v, 4) for k, v in isl_pred.probabilities.items()} if isl_pred else {}
+                    raw_conf = round(isl_pred.confidence, 4) if isl_pred else 0.0
                     sorted_isl = sorted(isl_pred.probabilities.items(), key=lambda x: x[1], reverse=True)[:3] if isl_pred else []
                     raw_top_class = sorted_isl[0][0] if sorted_isl else ("no_hand" if not hand_detected else "no_sign")
                     raw_top_conf = float(sorted_isl[0][1]) if sorted_isl else 0.0
                     raw_top_3 = [(k, round(v, 4)) for k, v in sorted_isl]
-                    res_probs = {k: round(v, 4) for k, v in isl_pred.probabilities.items()}
-                    buffer_fill = round(len(rolling_features) / 15.0, 2)
-                    no_sign_prob = res_probs.get("no_sign", 0.0)
+                    buffer_fill = round(len(gesture_sequence_buffer) / 15.0, 2) if is_actively_signing else round(len(rolling_features) / 15.0, 2)
+                    is_pred_valid = bool(isl_pred and isl_pred.confidence >= active_threshold and isl_pred.is_known_sign and isl_pred.label != "no_sign")
+                    pred_label = isl_pred.label if isl_pred else ""
 
-                    if not hand_detected or isl_pred.label == "no_sign":
-                        raw_label = "no_sign"
-                        is_candidate_valid = False
-                    elif isl_pred.confidence >= active_threshold and isl_pred.is_known_sign:
-                        raw_label = isl_pred.label
-                        is_candidate_valid = True
+                if active_model == "realsign":
+                    # Determine current frame prediction: requires valid hand and gate pass
+                    if not hand_detected or realsign_feat_63d is None or not is_pred_valid:
+                        current_prediction = "Awaiting Sign Input"
                     else:
-                        raw_label = "Awaiting Sign Input"
-                        is_candidate_valid = False
+                        current_prediction = pred_label
 
-                # Process Idle Baseline Transitions and Filter Rejection Status
-                filter_status = ""
-                if active_model == "realsign" and (not hand_detected or realsign_feat_63d is None):
-                    filter_status = "REJECTED (No hand detected in MediaPipe)"
-                    had_idle_baseline = True
-                    candidate_label = ""
-                    candidate_streak = 0
-                    res_is_known = False
-                    is_stable = False
-                    res_label = "Awaiting Sign Input"
-                    res_display = "Waiting for a hand..."
-                    res_conf = 1.0
-                elif (not hand_detected) or (raw_label == "no_sign") or (no_sign_prob > 0.70):
-                    filter_status = "REJECTED (Idle baseline / No hand)"
-                    had_idle_baseline = True
-                    candidate_label = ""
-                    candidate_streak = 0
-                    res_is_known = False
-                    is_stable = False
-                    if not hand_detected:
-                        res_label = "no_sign"
-                        res_display = "Waiting for a hand..." if active_model == "realsign" else "Waiting for a sign..."
-                        res_conf = 1.0
+                    # 4-Frame Consecutive Prediction Streak Debouncer
+                    if current_prediction == alphabet_streak_candidate:
+                        alphabet_streak_count += 1
                     else:
-                        res_label = "no_sign"
-                        res_display = "Waiting for a sign..."
-                        res_conf = raw_conf
+                        alphabet_streak_candidate = current_prediction
+                        alphabet_streak_count = 1
 
-                elif not is_candidate_valid:
-                    # Below confidence threshold
-                    filter_status = f"REJECTED: Hysteresis (raw_conf {raw_conf:.2f} < threshold {active_threshold:.2f})"
-                    candidate_label = ""
-                    candidate_streak = 0
-                    res_label = "Awaiting Sign Input"
-                    res_display = "Awaiting Sign Input"
-                    res_is_known = False
-                    is_stable = False
-                    res_conf = raw_conf
-
-                else:
-                    # Candidate meets confidence hysteresis gate -> Track temporal streak
-                    if raw_label == candidate_label:
-                        candidate_streak += 1
-                    else:
-                        candidate_label = raw_label
-                        candidate_streak = 1
-
-                    is_stable = (candidate_streak >= required_streak)
-
-                    if is_stable:
-                        # Refractory Cooldown & Duplicate Prevention
-                        current_time = time.time()
-                        is_duplicate_sign = (candidate_label == last_committed_sign)
-                        cooldown_sec = COOLDOWN_MS / 1000.0  # 350 ms = 0.35 s
-                        cooldown_passed = (current_time - last_committed_time >= cooldown_sec)
-
-                        if is_duplicate_sign:
-                            # Duplicate requires 350ms cooldown AND transition through idle baseline
-                            if cooldown_passed and had_idle_baseline:
-                                res_is_known = True
-                                last_committed_sign = candidate_label
-                                last_committed_time = current_time
-                                had_idle_baseline = False
-                                filter_status = f"ACCEPTED: Committed '{candidate_label}' (duplicate cooldown passed)"
-                            else:
-                                res_is_known = False
-                                filter_status = f"REJECTED: Refractory cooldown / duplicate lock ({candidate_label})"
-                        else:
-                            # Distinct new sign commits immediately once consecutive streak is met
+                    # ONLY emit label = alphabet_streak_candidate to the UI when alphabet_streak_count >= 4
+                    if alphabet_streak_count >= 4:
+                        if alphabet_streak_candidate != "Awaiting Sign Input":
+                            alphabet_last_committed = alphabet_streak_candidate
+                            res_label = alphabet_streak_candidate
+                            res_display = f"LETTER {alphabet_streak_candidate}"
+                            res_conf = raw_conf
                             res_is_known = True
-                            last_committed_sign = candidate_label
-                            last_committed_time = current_time
-                            had_idle_baseline = False
-                            filter_status = f"ACCEPTED: Committed '{candidate_label}' (new sign, streak {candidate_streak})"
-
-                        res_label = candidate_label
-                        if active_model == "realsign":
-                            res_display = f"LETTER {candidate_label}"
-                        elif active_model == "isl_sequence_lstm":
-                            res_display = DISPLAY_NAMES.get(candidate_label, candidate_label.upper().replace("_", " "))
+                            is_stable = True
+                            if alphabet_streak_count == 4 and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
+                                accumulator.add_token(alphabet_streak_candidate, token_type="letter", timestamp=now)
                         else:
-                            res_display = DISPLAY_NAMES.get(candidate_label, candidate_label.upper())
-                        res_conf = raw_conf
-
+                            alphabet_last_committed = ""
+                            res_label = "Awaiting Sign Input"
+                            res_display = "Awaiting Sign Input"
+                            res_conf = 0.0
+                            res_is_known = False
+                            is_stable = False
                     else:
-                        filter_status = f"REJECTED: Streak filter ({candidate_label}: {candidate_streak}/{required_streak})"
-                        # Transient spike or movement noise discarded while accumulating streak
+                        # If alphabet_streak_count < 4, maintain previous committed sign or return "Awaiting Sign Input"
+                        if alphabet_last_committed and hand_detected and realsign_feat_63d is not None:
+                            res_label = alphabet_last_committed
+                            res_display = f"LETTER {alphabet_last_committed}"
+                            res_conf = raw_conf
+                            res_is_known = True
+                            is_stable = False
+                        else:
+                            res_label = "Awaiting Sign Input"
+                            res_display = "Awaiting Sign Input"
+                            res_conf = 0.0
+                            res_is_known = False
+                            is_stable = False
+
+                    candidate_streak = alphabet_streak_count
+                    required_streak = 4
+                else:
+                    if not should_run_inference:
+                        # Inference skipped: Hand Idle or currently Active Signing
                         res_label = "Awaiting Sign Input"
-                        res_display = f"Detecting... ({candidate_label}: {candidate_streak}/{required_streak})"
+                        res_display = "Signing in progress..." if is_actively_signing else ("Waiting for a hand..." if not hand_detected else "Awaiting Sign Input")
+                        res_conf = 0.0 if hand_detected else 1.0
                         res_is_known = False
-                        res_conf = raw_conf
+                        is_stable = False
+                        candidate_streak = 0
+                        candidate_label = ""
+                    else:
+                        # Single-shot classification completed upon motion settling
+                        if is_pred_valid:
+                            res_label = pred_label
+                            if active_model == "isl_sequence_lstm":
+                                res_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
+                            else:
+                                res_display = DISPLAY_NAMES.get(pred_label, pred_label.upper())
+                            res_conf = raw_conf
+                            res_is_known = True
+                            is_stable = True
+                            candidate_streak = required_streak
+                            candidate_label = pred_label
+                            if pred_label not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
+                                accumulator.add_token(pred_label, token_type="phrase", timestamp=now)
+                        else:
+                            res_label = "Awaiting Sign Input"
+                            res_display = "Awaiting Sign Input"
+                            res_conf = raw_conf
+                            res_is_known = False
+                            is_stable = False
+                            candidate_streak = 0
+                            candidate_label = ""
+
+                # Real-Time Sentence Accumulator & Word Timeout Processing
+                accumulator.check_timeouts(current_time=now)
+
+                # Build candidate confidence ranking payload for frontend candidate row
+                candidates_payload = []
+                if raw_top_3:
+                    candidates_payload = [
+                        {"label": str(item[0]), "confidence": round(float(item[1]), 4)}
+                        for item in raw_top_3
+                        if item[0] not in ("no_sign", "no_hand", "unknown", "Awaiting Sign Input")
+                    ]
 
                 # Print live diagnostic logs to terminal on every 3rd frame
                 if total_stream_frames % 3 == 0:
                     print(
                         f"[LIVE DEBUG] Mode: {active_model} | Hand Present: {hand_detected} | "
-                        f"Raw Top Class: {raw_top_class} ({raw_top_conf:.2f}) | Output: {res_label}",
+                        f"Ek: {kinetic_energy:.3f} | Output: {res_label} | "
+                        f"Sentence: '{accumulator.sentence_buffer}' | Translated: '{accumulator.translated_text}'",
                         flush=True,
                     )
 
@@ -1046,12 +1232,19 @@ async def websocket_recognize(
                     "streak_count": candidate_streak,
                     "required_streak": required_streak,
                     "probabilities": res_probs,
+                    "candidates": candidates_payload,
                     "buffer_fill": buffer_fill,
                     "hand_detected": hand_detected,
                     "hands_in_subtitle_zone": hands_in_subtitle_zone,
                     "guidance": guidance_text,
                     "fps": fps,
                     "latency_ms": latency_ms,
+                    "kinetic_energy": round(float(kinetic_energy), 4),
+                    "is_actively_signing": bool(is_actively_signing),
+                    "motion_state": "signing" if is_actively_signing else ("settled" if motion_settled_now else "idle"),
+                    "sentence_buffer": accumulator.sentence_buffer,
+                    "translated_text": accumulator.translated_text,
+                    "sentence_tokens": list(accumulator.sentence_tokens),
                     "landmarks": {
                         "left_hand": left_hand,
                         "right_hand": right_hand,
@@ -1076,50 +1269,7 @@ async def websocket_recognize(
                 await websocket.send_json(response)
 
             elif "text" in message and message["text"]:
-                try:
-                    payload = json.loads(message["text"])
-                    action = payload.get("action")
-                    if action == "reset":
-                        rolling_features.clear()
-                        candidate_label = ""
-                        candidate_streak = 0
-                        last_committed_sign = ""
-                        last_committed_time = 0.0
-                        had_idle_baseline = True
-                        if pipeline.landmarker is not None:
-                            pipeline.landmarker.reset_smoothing()
-                        if pipeline.hand_landmarker is not None:
-                            pipeline.hand_landmarker.reset_smoothing()
-                        await websocket.send_json({"type": "info", "message": "Buffer reset"})
-                    elif action == "set_model":
-                        req_model = str(payload.get("model", "realsign")).lower()
-                        if req_model in ("realsign", "isl_mvp", "isl_sequence_lstm"):
-                            active_model = req_model
-                            rolling_features.clear()
-                            candidate_label = ""
-                            candidate_streak = 0
-                            last_committed_sign = ""
-                            last_committed_time = 0.0
-                            had_idle_baseline = True
-                            if pipeline.landmarker is not None:
-                                pipeline.landmarker.reset_smoothing()
-                            if pipeline.hand_landmarker is not None:
-                                pipeline.hand_landmarker.reset_smoothing()
-                            await websocket.send_json({
-                                "type": "info",
-                                "message": f"Active classifier model switched to {active_model}",
-                                "active_model": active_model,
-                            })
-                    elif action == "set_threshold":
-                        val = float(payload.get("threshold", CONFIDENCE_THRESHOLD_ALPHABET))
-                        client_threshold = max(0.10, min(0.95, val))
-                        await websocket.send_json({
-                            "type": "info",
-                            "message": f"Confidence threshold set to {client_threshold}",
-                            "threshold": client_threshold,
-                        })
-                except Exception as e:
-                    logger.warning("Error processing text command: %s", e)
+                await _process_control_text(message["text"])
 
     except (WebSocketDisconnect, RuntimeError):
         logger.info("WebSocket disconnected normally.")
@@ -1127,3 +1277,5 @@ async def websocket_recognize(
         logger.error(f"WebSocket session error: {e}")
     finally:
         rolling_features.clear()
+        gesture_sequence_buffer.clear()
+        accumulator.reset()

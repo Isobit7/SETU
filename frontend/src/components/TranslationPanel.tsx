@@ -11,12 +11,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
-
-interface TopCandidate {
-  name: string;
-  pct: number;
-  rank: number;
-}
+import { LiveDetectionOutput } from './LiveDetectionOutput';
 
 interface TranslationPanelProps {
   currentResult: RecognitionPayload | null;
@@ -24,10 +19,14 @@ interface TranslationPanelProps {
   onOpenHistory?: () => void;
   historyCount: number;
   sentence?: string;
+  translatedText?: string;
   onClearSentence?: () => void;
   onBackspaceSentence?: () => void;
   onAddSpaceSentence?: () => void;
   onSpeakSentence?: (text: string) => void;
+  isSpeaking?: boolean;
+  onSpeak?: (text: string) => void;
+  onStopSpeak?: () => void;
 }
 
 export const TranslationPanel: React.FC<TranslationPanelProps> = ({
@@ -35,58 +34,80 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   onClearCurrent,
   historyCount: _historyCount = 0,
   sentence = '',
+  translatedText = '',
   onClearSentence,
   onBackspaceSentence,
   onSpeakSentence,
+  isSpeaking: propIsSpeaking,
+  onSpeak,
+  onStopSpeak,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState<boolean>(false);
 
-  const isKnown = currentResult?.is_known_sign || false;
-  const isHandDetected = currentResult?.hand_detected || false;
-  const label = currentResult?.label || 'no_sign';
-  const confidence = currentResult?.confidence || 0;
-  const confidencePct = Math.round(confidence * 100);
+  const speaking = propIsSpeaking !== undefined ? propIsSpeaking : localIsSpeaking;
 
-  const isUncertain = (label === 'unknown' || (!isKnown && isHandDetected && label !== 'no_sign')) && label !== 'Awaiting Sign Input';
+  const isKnown = currentResult?.is_known_sign || false;
+  const label = currentResult?.label || 'no_sign';
 
   const displayText = isKnown && label !== 'Awaiting Sign Input' && label !== 'no_sign'
-    ? currentResult?.display_name || label.toUpperCase()
+    ? currentResult?.display_name || (currentResult?.active_model === 'realsign' && label.length === 1 ? `LETTER ${label.toUpperCase()}` : label.toUpperCase())
     : null;
 
-  // Unified Text-to-Speech
+  // Active sentence buffer (prefers server accumulator stream, falls back to local prop)
+  const activeSentence = (currentResult?.sentence_buffer !== undefined && currentResult.sentence_buffer !== '')
+    ? currentResult.sentence_buffer
+    : sentence;
+
+  // English grammar translation produced by ISLGlossParser
+  const activeTranslation = translatedText || currentResult?.translated_text || '';
+
+  // Unified Text-to-Speech (speaks translated_text || sentence_buffer)
   const handleSpeak = () => {
-    const textToSpeak = sentence.trim() || displayText || '';
-    if (!textToSpeak || !('speechSynthesis' in window)) return;
+    const textToSpeak = (activeTranslation.trim() || activeSentence.trim() || displayText || '').trim();
+    if (!textToSpeak) return;
 
-    if (isSpeaking) {
+    if (speaking) {
+      if (onStopSpeak) {
+        onStopSpeak();
+      } else if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        setLocalIsSpeaking(false);
+      }
+      return;
+    }
+
+    if (onSpeak) {
+      onSpeak(textToSpeak);
+      return;
+    }
+
+    if (onSpeakSentence) {
+      onSpeakSentence(textToSpeak);
+      return;
+    }
+
+    if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'en-US';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      utterance.onstart = () => setLocalIsSpeaking(true);
+      utterance.onend = () => setLocalIsSpeaking(false);
+      utterance.onerror = () => setLocalIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
     }
-
-    if (onSpeakSentence && sentence.trim()) {
-      onSpeakSentence(sentence);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
   };
 
   // Unified Clipboard copy
   const handleCopy = async () => {
-    const textToCopy = sentence.trim() || displayText || '';
+    const textToCopy = activeTranslation.trim()
+      ? (activeSentence.trim() ? `${activeTranslation.trim()} (${activeSentence.trim()})` : activeTranslation.trim())
+      : (activeSentence.trim() || displayText || '');
     if (!textToCopy) return;
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -101,133 +122,39 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   const handleClear = () => {
     if (onClearSentence) onClearSentence();
     if (onClearCurrent) onClearCurrent();
-    if ('speechSynthesis' in window) {
+    if (onStopSpeak) {
+      onStopSpeak();
+    } else if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      setLocalIsSpeaking(false);
     }
   };
 
-  // Extract Top-3 Candidates with percentage
-  let top3Candidates: TopCandidate[] = [];
-  if (currentResult?.active_model === 'isl_sequence_lstm' && currentResult.sequence_lstm_prediction?.top_3) {
-    top3Candidates = currentResult.sequence_lstm_prediction.top_3
-      .filter(([cand]) => cand !== 'no_sign' && cand !== 'Awaiting Sign Input')
-      .slice(0, 3)
-      .map(([cand, prob], idx) => ({
-        name: cand.replace('_', ' ').toUpperCase(),
-        pct: Math.round(prob * 100),
-        rank: idx + 1,
-      }));
-  } else if (currentResult?.realsign_prediction?.top_3 && currentResult.realsign_prediction.top_3.length > 0) {
-    top3Candidates = currentResult.realsign_prediction.top_3
-      .filter(([cand]) => cand !== 'no_sign' && cand !== 'Awaiting Sign Input')
-      .map(([cand, prob], idx) => ({
-        name: cand.toUpperCase(),
-        pct: Math.round(prob * 100),
-        rank: idx + 1,
-      }));
-  } else if (currentResult?.probabilities) {
-    const sorted = Object.entries(currentResult.probabilities).sort((a, b) => b[1] - a[1]);
-    top3Candidates = sorted
-      .filter(([cand]) => cand !== 'no_sign' && cand !== 'Awaiting Sign Input')
-      .slice(0, 3)
-      .map(([cand, prob], idx) => ({
-        name: cand.replace('_', ' ').toUpperCase(),
-        pct: Math.round(prob * 100),
-        rank: idx + 1,
-      }));
-  } else if (isKnown && displayText) {
-    top3Candidates = [
-      { name: displayText, pct: confidencePct, rank: 1 }
-    ];
-  }
-
   // Word and character stats
-  const wordCount = sentence.trim() ? sentence.trim().split(/\s+/).filter(Boolean).length : 0;
-  const charCount = sentence.length;
-  const hasTextToOperate = Boolean(sentence.trim() || displayText);
+  const wordCount = activeSentence.trim() ? activeSentence.trim().split(/\s+/).filter(Boolean).length : 0;
+  const charCount = activeSentence.length;
+  const hasSentenceContent = Boolean(activeTranslation.trim() || activeSentence.trim());
+  const hasTextToOperate = Boolean(hasSentenceContent || displayText);
 
   return (
     <div className="unified-translation-container">
       {/* SINGLE UNIFIED TRANSLATION CARD */}
       <div className="unified-card" id="unified-translation-card">
-        {/* Card Header */}
-        <div className="unified-header">
-          <div className="unified-header-left">
-            <Activity size={14} className="unified-header-icon" />
-            <h3 className="unified-title font-semibold">Live Detection Output</h3>
-          </div>
-          <div className="unified-header-right">
-            {isKnown && (
-              <span className="unified-conf-pill font-semibold" title="Model confidence score">
-                {confidencePct}% Match
-              </span>
-            )}
-            {isUncertain && (
-              <span className="unified-uncertain-pill font-semibold" title="Low confidence detection">
-                Uncertain
-              </span>
-            )}
-            <span className="unified-model-badge font-semibold">
-              {currentResult?.active_model === 'realsign'
-                ? 'Alphabet'
-                : currentResult?.active_model === 'isl_sequence_lstm'
-                ? 'Sequence'
-                : 'Phrases'}
-            </span>
-          </div>
-        </div>
+        {/* Live Detection Output & Candidate Scores Component */}
+        <LiveDetectionOutput currentResult={currentResult} />
 
-        {/* 1. Live Output Box: Large Bold Typography */}
-        <div className="live-output-box" aria-live="polite" aria-atomic="true">
-          {isKnown && displayText ? (
-            <div className="live-sign-display">
-              <span className="live-sign-text">{displayText}</span>
-              <span className="live-sign-meta">
-                {currentResult?.active_model === 'realsign'
-                  ? 'RealSign ISL Letter'
-                  : currentResult?.active_model === 'isl_sequence_lstm'
-                  ? 'Dynamic ISL Gesture'
-                  : 'Common ISL Phrase'}
-              </span>
+        {/* English Grammar Translation Box (ISL Gloss -> English SVO) */}
+        {activeTranslation ? (
+          <div className="english-translation-section">
+            <div className="translation-section-header">
+              <span className="translation-section-badge">English Translation</span>
+              <span className="translation-rule-tag">Grammar Parsed</span>
             </div>
-          ) : isUncertain ? (
-            <div className="live-sign-uncertain">
-              <span className="uncertain-sign-text">
-                {top3Candidates.length > 0 ? `${top3Candidates[0].name}?` : 'Detecting...'}
-              </span>
-              <span className="uncertain-sign-hint">Hold sign steady in camera view</span>
+            <div className="english-translation-box">
+              <p className="english-translation-text">"{activeTranslation}"</p>
             </div>
-          ) : (
-            <div className="live-sign-waiting">
-              <span className="waiting-dots-pulse"></span>
-              <span className="waiting-sign-text">Awaiting Sign Input</span>
-              <span className="waiting-sign-hint">Position hands clearly in camera view</span>
-            </div>
-          )}
-        </div>
-
-        {/* 2. Top-3 Candidates: Clean Horizontal Inline Pill Row */}
-        <div className="top3-inline-container" aria-label="Candidate recognition scores">
-          <span className="top3-inline-label">Candidate Scores:</span>
-          {top3Candidates.length > 0 ? (
-            <div className="top3-pills-row">
-              {top3Candidates.map((c) => (
-                <span
-                  key={`${c.name}-${c.rank}`}
-                  className={`candidate-pill rank-${c.rank}`}
-                  title={`Candidate rank #${c.rank}: ${c.name} (${c.pct}%)`}
-                >
-                  <span className="pill-rank">Rank {c.rank}:</span>
-                  <span className="pill-name">{c.name}</span>
-                  <span className="pill-pct">({c.pct}%)</span>
-                </span>
-              ))}
-            </div>
-          ) : (
-            <span className="top3-pills-empty">No active candidate scores</span>
-          )}
-        </div>
+          </div>
+        ) : null}
 
         {/* 3. Sentence Builder Text Area */}
         <div className="sentence-integrated-section">
@@ -247,9 +174,9 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             aria-label="Accumulated sentence text"
             aria-multiline="true"
           >
-            {sentence && sentence.length > 0 ? (
+            {activeSentence && activeSentence.length > 0 ? (
               <div className="sentence-content-wrap">
-                <span className="sentence-text-string">{sentence}</span>
+                <span className="sentence-text-string">{activeSentence}</span>
                 <span className="sentence-cursor" aria-hidden="true">|</span>
               </div>
             ) : (
@@ -264,14 +191,29 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
         <div className="unified-actions-row" role="toolbar" aria-label="Translation Actions">
           {/* Button 1: Speak */}
           <button
-            className={`action-btn speak-action-btn ${isSpeaking ? 'active-speaking' : ''}`}
-            disabled={!hasTextToOperate}
+            className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
+            disabled={!hasSentenceContent}
             onClick={handleSpeak}
-            title={isSpeaking ? 'Stop audio playback' : 'Speak text aloud (TTS)'}
-            aria-label={isSpeaking ? 'Stop speech' : 'Speak text'}
+            title={speaking ? 'Stop audio playback' : 'Speak text aloud (TTS)'}
+            aria-label={speaking ? 'Stop speech' : 'Speak text'}
           >
-            {isSpeaking ? <VolumeX size={15} /> : <Volume2 size={15} />}
-            <span>{isSpeaking ? 'Stop' : 'Speak'}</span>
+            {speaking ? (
+              <>
+                <div className="soundwave-bars" aria-hidden="true">
+                  <span className="soundwave-bar" />
+                  <span className="soundwave-bar" />
+                  <span className="soundwave-bar" />
+                  <span className="soundwave-bar" />
+                </div>
+                <VolumeX size={15} />
+                <span>Stop</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={15} />
+                <span>Speak</span>
+              </>
+            )}
           </button>
 
           {/* Button 2: Copy */}
@@ -289,7 +231,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
           {/* Button 3: Backspace */}
           <button
             className="action-btn backspace-action-btn"
-            disabled={!sentence}
+            disabled={!activeSentence}
             onClick={onBackspaceSentence}
             title="Delete last letter"
             aria-label="Backspace last character"

@@ -8,12 +8,19 @@ from typing import Optional, Union, List, Any
 import numpy as np
 
 from setu.exceptions import LandmarkExtractionError
-from setu.utils.geometry import (
+from setu.features.geometry import (
+    normalize_wrist_coordinates,
     normalize_hand_landmarks,
-    compute_finger_distances,
+    compute_joint_angles_15,
+    compute_15_joint_angles,
     compute_finger_angles,
+    compute_finger_distances,
+    compute_fingertip_to_wrist_distances,
+    compute_fingertip_to_thumb_distances,
+    compute_pairwise_distances,
+    extract_invariant_hand_features,
     compute_euclidean_distance,
-    compute_contact_score
+    compute_contact_score,
 )
 from setu.features.schema import (
     FEATURE_DIM,
@@ -81,22 +88,35 @@ def _to_numpy_21x3(landmarks: Optional[Union[np.ndarray, List[Any]]]) -> Optiona
 class FeatureExtractor158:
     """
     State-free, thread-safe extractor producing the immutable 158-feature representation.
+    Provides pre-allocated fixed memory buffers to minimize per-frame garbage collection.
     """
+
+    def __init__(self) -> None:
+        self._feature_buffer_158 = np.zeros(FEATURE_DIM, dtype=np.float32)
+        self._feature_buffer_164 = np.zeros(EXPANDED_FEATURE_DIM, dtype=np.float32)
+        self._realsign_buffer_63 = np.zeros(63, dtype=np.float32)
     
-    @staticmethod
+    @classmethod
     def extract_from_hands(
+        cls,
         right_hand: Optional[Union[np.ndarray, List[Any]]] = None,
-        left_hand: Optional[Union[np.ndarray, List[Any]]] = None
+        left_hand: Optional[Union[np.ndarray, List[Any]]] = None,
+        out: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """
         Extracts the 158-dimensional feature vector from two hand landmark sets.
         Args:
             right_hand: 21 landmarks for Right Hand (user's right hand), or None if undetected.
             left_hand: 21 landmarks for Left Hand (user's left hand), or None if undetected.
+            out: Optional pre-allocated (158,) float32 buffer to write into in-place.
         Returns:
             np.ndarray of shape (158,) and dtype np.float32.
         """
-        feature_vector = np.zeros(FEATURE_DIM, dtype=np.float32)
+        if out is not None and out.shape == (FEATURE_DIM,) and out.dtype == np.float32:
+            feature_vector = out
+            feature_vector.fill(0.0)
+        else:
+            feature_vector = np.zeros(FEATURE_DIM, dtype=np.float32)
         
         raw_rh = _to_numpy_21x3(right_hand)
         raw_lh = _to_numpy_21x3(left_hand)
@@ -106,7 +126,7 @@ class FeatureExtractor158:
         
         # 1. Right Hand Features (Slots [0:73])
         if is_rh_present:
-            norm_rh, _ = normalize_hand_landmarks(raw_rh)
+            norm_rh, _ = normalize_wrist_coordinates(raw_rh)
             rh_distances = compute_finger_distances(norm_rh)
             rh_angles = compute_finger_angles(norm_rh)
             
@@ -119,7 +139,7 @@ class FeatureExtractor158:
             
         # 2. Left Hand Features (Slots [73:146])
         if is_lh_present:
-            norm_lh, _ = normalize_hand_landmarks(raw_lh)
+            norm_lh, _ = normalize_wrist_coordinates(raw_lh)
             lh_distances = compute_finger_distances(norm_lh)
             lh_angles = compute_finger_angles(norm_lh)
             
@@ -167,6 +187,7 @@ class FeatureExtractor158:
         cls,
         mp_result: Any,
         include_facial: bool = False,
+        out: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """
         Direct adapter for MediaPipe Tasks HolisticLandmarkerResult or HandLandmarkerResult.
@@ -216,16 +237,32 @@ class FeatureExtractor158:
             if len(hands) > 1:
                 lh = hands[1]
 
-        base_vec = cls.extract_from_hands(right_hand=rh, left_hand=lh)
-
         if not include_facial:
-            return base_vec
+            return cls.extract_from_hands(right_hand=rh, left_hand=lh, out=out)
 
         face_lms = getattr(mp_result, 'face_landmarks', None)
         facial_ratios = extract_facial_expression_features(face_lms)
-        expanded_vec = np.concatenate([base_vec, np.array(facial_ratios, dtype=np.float32)])
+
+        if out is not None and out.shape == (EXPANDED_FEATURE_DIM,) and out.dtype == np.float32:
+            cls.extract_from_hands(right_hand=rh, left_hand=lh, out=out[:FEATURE_DIM])
+            out[FACIAL_RATIOS_SLICE] = facial_ratios
+            validate_schema_vector(out)
+            return out
+
+        expanded_vec = np.zeros(EXPANDED_FEATURE_DIM, dtype=np.float32)
+        cls.extract_from_hands(right_hand=rh, left_hand=lh, out=expanded_vec[:FEATURE_DIM])
+        expanded_vec[FACIAL_RATIOS_SLICE] = facial_ratios
         validate_schema_vector(expanded_vec)
         return expanded_vec
+
+    def extract_mediapipe_fast(self, mp_result: Any, include_facial: bool = False) -> np.ndarray:
+        """Extracts features into the pre-allocated instance buffer (158-D or 164-D)."""
+        buf = self._feature_buffer_164 if include_facial else self._feature_buffer_158
+        return self.extract_from_mediapipe_result(mp_result, include_facial=include_facial, out=buf)
+
+    def extract_realsign_fast(self, hand_landmarks_or_result: Any, dominant_hand: str = "right") -> Optional[np.ndarray]:
+        """Extracts 63-D features into the pre-allocated instance buffer."""
+        return extract_realsign_hand_features(hand_landmarks_or_result, dominant_hand=dominant_hand, out=self._realsign_buffer_63)
 
     @classmethod
     def extract_holistic_with_facial(cls, mp_result: Any) -> np.ndarray:
@@ -299,11 +336,25 @@ def extract_facial_expression_features(face_landmarks: Any) -> List[float]:
 
 
 FeatureExtractor158.extract_facial_expression_features = staticmethod(extract_facial_expression_features)
+FeatureExtractor158.normalize_wrist_coordinates = staticmethod(normalize_wrist_coordinates)
+FeatureExtractor158.compute_joint_angles_15 = staticmethod(compute_joint_angles_15)
+FeatureExtractor158.compute_fingertip_to_wrist_distances = staticmethod(compute_fingertip_to_wrist_distances)
+FeatureExtractor158.compute_fingertip_to_thumb_distances = staticmethod(compute_fingertip_to_thumb_distances)
+FeatureExtractor158.compute_pairwise_distances = staticmethod(compute_pairwise_distances)
+FeatureExtractor158.extract_invariant_hand_features = staticmethod(extract_invariant_hand_features)
 
 
-def compute_velocity_features(seq: np.ndarray, target_dim: int = 328) -> np.ndarray:
+def compute_velocity_features(
+    seq: np.ndarray,
+    target_dim: int = 328,
+    timestamps: Optional[Union[np.ndarray, List[float]]] = None,
+    dt: Optional[Union[float, np.ndarray, List[float]]] = None,
+) -> np.ndarray:
     """
-    Computes frame-to-frame velocity vectors (x_t - x_{t-1}) across the sequence window.
+    Computes time-normalized frame-to-frame velocity vectors:
+        V_t = (F_t - F_{t-1}) / max(dt, 0.001)
+    across the sequence window.
+    
     Supports:
     - (T, 164) -> compute velocities -> (T, 328) [164 coords/ratios + 164 velocities]
     - (T, 158) -> pad 6 zero facial ratios to (T, 164) -> compute velocities -> (T, 328)
@@ -318,24 +369,46 @@ def compute_velocity_features(seq: np.ndarray, target_dim: int = 328) -> np.ndar
     if D == 328:
         return seq.astype(np.float32)
 
+    # Determine per-frame dt values for T - 1 intervals
+    if timestamps is not None and len(timestamps) == T:
+        ts = np.asarray(timestamps, dtype=np.float32)
+        diff_t = np.diff(ts)
+        # If timestamps are in milliseconds (e.g. diff_t > 5.0 ms), convert to seconds
+        if np.all(diff_t > 5.0):
+            diff_t = diff_t / 1000.0
+        dt_vals = np.maximum(diff_t, 0.001)[:, None]
+    elif dt is not None:
+        if isinstance(dt, (int, float)):
+            dt_vals = max(float(dt), 0.001)
+        else:
+            dt_arr = np.asarray(dt, dtype=np.float32)
+            if dt_arr.size == T - 1:
+                dt_vals = np.maximum(dt_arr, 0.001)[:, None]
+            elif dt_arr.size == 1:
+                dt_vals = max(float(dt_arr.item()), 0.001)
+            else:
+                dt_vals = 1.0
+    else:
+        dt_vals = 1.0
+
     if D == 164:
         vel = np.zeros_like(seq, dtype=np.float32)
         if T > 1:
-            vel[1:] = seq[1:] - seq[:-1]
+            vel[1:] = (seq[1:] - seq[:-1]) / dt_vals
         return np.concatenate([seq.astype(np.float32), vel], axis=-1)
 
     if D == 158:
         if target_dim == 316:
             vel = np.zeros_like(seq, dtype=np.float32)
             if T > 1:
-                vel[1:] = seq[1:] - seq[:-1]
+                vel[1:] = (seq[1:] - seq[:-1]) / dt_vals
             return np.concatenate([seq.astype(np.float32), vel], axis=-1)
         else:
             facial_pad = np.zeros((T, 6), dtype=np.float32)
             seq_164 = np.concatenate([seq.astype(np.float32), facial_pad], axis=-1)
             vel = np.zeros_like(seq_164, dtype=np.float32)
             if T > 1:
-                vel[1:] = seq_164[1:] - seq_164[:-1]
+                vel[1:] = (seq_164[1:] - seq_164[:-1]) / dt_vals
             return np.concatenate([seq_164, vel], axis=-1)
 
     if D == 316 and target_dim == 328:
@@ -347,22 +420,148 @@ def compute_velocity_features(seq: np.ndarray, target_dim: int = 328) -> np.ndar
     raise ValueError(f"Cannot compute velocity features for unexpected shape {seq.shape}")
 
 
+FeatureExtractor158.compute_velocity_features = staticmethod(compute_velocity_features)
+
+
 def extract_realsign_hand_features(
-    hand_landmarks: Optional[Union[np.ndarray, List[Any]]]
+    hand_landmarks_or_result: Optional[Union[np.ndarray, List[Any], Any]],
+    dominant_hand: str = "right",
+    out: Optional[np.ndarray] = None,
 ) -> Optional[np.ndarray]:
     """
-    Dedicated wrist-centered feature extraction for RealSign 26-class alphabet model:
-    1. Checks if hand landmarks (21 points) are present. If missing, returns None.
-    2. Retrieves wrist position: wrist = hand_landmarks[0].
-    3. Calculates palm scale: palm_size = max(distance(wrist, hand_landmarks[9]), 1e-6).
-    4. Normalizes each landmark point: p_norm = (p - wrist) / palm_size.
-    5. Flattens all 21 normalized 3D points into a 63-D float32 array (21 x 3).
+    Dedicated wrist-centered scale and rotation invariant feature extraction
+    for RealSign 26-class alphabet model with dominant hand isolation:
+    1. Inspects mediapipe_result.hand_landmarks and mediapipe_result.handedness:
+       - When BOTH hands are detected: inspects handedness to identify Right vs Left.
+       - Always prioritizes the primary dominant hand (Default: 'right').
+       - Prevents cross-frame alternating between hands.
+       - If only a Left hand is present, mirrors/flips its X coordinates (1.0 - x)
+         so it matches canonical right-hand landmark geometry before passing to RealSign.
+    2. Centers on wrist (0), scales by palm length, and rotates palm vector strictly to vertical Y-axis.
+    3. Flattens all 21 normalized 3D points into a 63-D float32 array (21 x 3).
+    4. Reuses pre-allocated out buffer if provided to minimize GC.
     """
-    if hand_landmarks is None or len(hand_landmarks) == 0:
+    if hand_landmarks_or_result is None:
         return None
 
-    # Handle wrapped hand list if a list of hands was provided
-    target = hand_landmarks
+    # Handle case where caller passes out buffer as second positional argument
+    if isinstance(dominant_hand, np.ndarray) and out is None:
+        out = dominant_hand
+        dominant_hand = "right"
+
+    target = hand_landmarks_or_result
+    is_left_hand = False
+    dom_target = (dominant_hand or "right").lower()
+
+    # Case 1: MediaPipe HandLandmarkerResult (has hand_landmarks and handedness)
+    if hasattr(target, "hand_landmarks") and hasattr(target, "handedness"):
+        hands = target.hand_landmarks
+        cats = target.handedness
+        if not hands or len(hands) == 0:
+            return None
+
+        # Build list of (handedness_label, hand_landmarks)
+        hand_entries = []
+        for i, h in enumerate(hands):
+            label = "right"
+            if cats and i < len(cats) and len(cats[i]) > 0:
+                c = cats[i][0]
+                label = getattr(c, "category_name", getattr(c, "displayName", "right")).lower()
+            elif isinstance(cats, list) and i < len(cats) and isinstance(cats[i], dict):
+                label = cats[i].get("category_name", cats[i].get("displayName", "right")).lower()
+            hand_entries.append((label, h))
+
+        # Always prioritize dominant hand (default: 'right')
+        dom_match = next((h for lbl, h in hand_entries if lbl == dom_target), None)
+        if dom_match is not None:
+            target = dom_match
+            is_left_hand = (dom_target == "left")
+        else:
+            first_lbl, first_h = hand_entries[0]
+            target = first_h
+            is_left_hand = (first_lbl == "left")
+
+    # Case 2: Dictionary format with hand_landmarks and handedness
+    elif isinstance(target, dict) and "hand_landmarks" in target:
+        hands = target.get("hand_landmarks", [])
+        cats = target.get("handedness", [])
+        if not hands or len(hands) == 0:
+            return None
+        hand_entries = []
+        for i, h in enumerate(hands):
+            label = "right"
+            if cats and i < len(cats):
+                c = cats[i]
+                if isinstance(c, (list, tuple)) and len(c) > 0:
+                    c = c[0]
+                if hasattr(c, "category_name"):
+                    label = c.category_name.lower()
+                elif isinstance(c, dict):
+                    label = c.get("category_name", c.get("displayName", "right")).lower()
+                elif isinstance(c, str):
+                    label = c.lower()
+            hand_entries.append((label, h))
+
+        dom_match = next((h for lbl, h in hand_entries if lbl == dom_target), None)
+        if dom_match is not None:
+            target = dom_match
+            is_left_hand = (dom_target == "left")
+        else:
+            first_lbl, first_h = hand_entries[0]
+            target = first_h
+            is_left_hand = (first_lbl == "left")
+
+    # Case 3: HolisticLandmarkerResult (has right_hand_landmarks and left_hand_landmarks)
+    elif hasattr(target, "right_hand_landmarks") or hasattr(target, "left_hand_landmarks"):
+        rh = getattr(target, "right_hand_landmarks", None)
+        lh = getattr(target, "left_hand_landmarks", None)
+        has_rh = rh is not None and len(rh) >= 21
+        has_lh = lh is not None and len(lh) >= 21
+        if dom_target == "right":
+            if has_rh:
+                target = rh
+                is_left_hand = False
+            elif has_lh:
+                target = lh
+                is_left_hand = True
+            else:
+                return None
+        else:
+            if has_lh:
+                target = lh
+                is_left_hand = True
+            elif has_rh:
+                target = rh
+                is_left_hand = False
+            else:
+                return None
+
+    # Case 4: Dict with right_hand / left_hand
+    elif isinstance(target, dict) and ("right_hand" in target or "left_hand" in target):
+        rh = target.get("right_hand")
+        lh = target.get("left_hand")
+        has_rh = rh is not None and len(rh) >= 21
+        has_lh = lh is not None and len(lh) >= 21
+        if dom_target == "right":
+            if has_rh:
+                target = rh
+                is_left_hand = False
+            elif has_lh:
+                target = lh
+                is_left_hand = True
+            else:
+                return None
+        else:
+            if has_lh:
+                target = lh
+                is_left_hand = True
+            elif has_rh:
+                target = rh
+                is_left_hand = False
+            else:
+                return None
+
+    # Case 5: Direct landmark or landmark list
     if hasattr(target, "landmark"):
         target = target.landmark
 
@@ -370,8 +569,7 @@ def extract_realsign_hand_features(
         first_elem = target[0]
         if hasattr(first_elem, "landmark"):
             target = first_elem.landmark
-        # If target[0] is itself a list/tuple/array of 21 landmarks, unwrap the first hand
-        elif isinstance(first_elem, (list, tuple, np.ndarray)) and len(first_elem) == 21:
+        elif isinstance(first_elem, (list, tuple, np.ndarray)) and len(first_elem) == 21 and len(target) <= 2:
             target = first_elem
 
     try:
@@ -385,12 +583,20 @@ def extract_realsign_hand_features(
     if not np.all(np.isfinite(pts)):
         return None
 
-    wrist = pts[0]
-    palm_size = float(np.linalg.norm(pts[9] - wrist))
-    palm_size = max(palm_size, 1e-6)
+    # If only a Left hand is present, mirror/flip its X coordinates (1.0 - x)
+    # so it matches canonical right-hand landmark geometry before passing to RealSign
+    if is_left_hand:
+        pts[:, 0] = 1.0 - pts[:, 0]
 
-    normalized = (pts - wrist) / palm_size
-    return normalized.flatten().astype(np.float32)
+    norm_pts, scale = normalize_wrist_coordinates(pts)
+    if scale < 1e-6:
+        return None
+
+    if out is not None and out.shape == (63,) and out.dtype == np.float32:
+        out[:] = norm_pts.ravel()
+        return out
+
+    return norm_pts.flatten().astype(np.float32)
 
 
 # Attach to FeatureExtractor158 for convenience

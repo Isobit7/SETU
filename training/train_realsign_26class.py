@@ -33,9 +33,45 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-DEFAULT_FEATURES_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
+from setu.features.geometry import normalize_wrist_coordinates
+from setu.features.extractor import extract_realsign_hand_features
+
+DEFAULT_FEATURES_PATH = (
+    ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz"
+    if (ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz").exists()
+    else ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
+)
 DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
 DEFAULT_REPORT_SAVE_PATH = ROOT_DIR / "reports" / "realsign_26class_evaluation_report.json"
+
+
+def transform_landmarks_to_canonical_invariants(X: np.ndarray) -> np.ndarray:
+    """
+    Transforms raw or wrist-centered 63-D hand landmark coordinates into the strictly
+    canonical 3D rotation-aligned, palm-scale normalized invariant feature representation
+    matching extract_realsign_hand_features and normalize_wrist_coordinates.
+
+    Canonical landmarks:
+    - Origin at wrist: pts[0] = (0, 0, 0)
+    - Palm reference length = 1.0: ||pts[9] - pts[0]|| = 1.0
+    - Middle MCP (index 9) aligned strictly with -Y axis: pts[9] = (0, -1, 0)
+    """
+    num_samples = len(X)
+    X_canonical = np.empty_like(X, dtype=np.float32)
+    print(f"Re-extracting 63-D rotation-invariant features across {num_samples:,} samples...")
+    t0 = time.time()
+    for i in range(num_samples):
+        pts_21x3 = X[i].reshape(21, 3)
+        feat = extract_realsign_hand_features(pts_21x3)
+        if feat is not None and feat.shape == (63,):
+            X_canonical[i] = feat
+        else:
+            norm_pts, _ = normalize_wrist_coordinates(pts_21x3)
+            X_canonical[i] = norm_pts.ravel().astype(np.float32)
+    t1 = time.time()
+    print(f"Invariant feature transformation completed in {t1 - t0:.2f}s.")
+    return X_canonical
+
 
 
 class RealSignMLP(nn.Module):
@@ -264,10 +300,11 @@ def main():
     parser.add_argument("--features", type=Path, default=DEFAULT_FEATURES_PATH, help="Input NPZ features file")
     parser.add_argument("--model-out", type=Path, default=DEFAULT_MODEL_SAVE_PATH, help="Output .pth path")
     parser.add_argument("--report-out", type=Path, default=DEFAULT_REPORT_SAVE_PATH, help="Output report JSON path")
-    parser.add_argument("--epochs", type=int, default=30, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size for training")
     parser.add_argument("--lr", type=float, default=0.001, help="Learning rate")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
+    parser.add_argument("--save-transformed-npz", action="store_true", default=True, help="Save transformed invariant dataset back to NPZ")
     args = parser.parse_args()
 
     # Reproducibility
@@ -283,12 +320,22 @@ def main():
 
     print(f"Loading features from: {args.features}...")
     npz_data = np.load(args.features, allow_pickle=True)
-    X = npz_data["X"]
+    X_raw = npz_data["X"]
     y = npz_data["y"]
     splits = npz_data["splits"]
     classes = list(npz_data["classes"])
     stats_json_str = str(npz_data["stats_json"]) if "stats_json" in npz_data else "{}"
     stats_meta = json.loads(stats_json_str)
+
+    # Re-extract canonical 63-D rotation-invariant features
+    X = transform_landmarks_to_canonical_invariants(X_raw)
+
+    if args.save_transformed_npz:
+        save_kwargs = {k: npz_data[k] for k in npz_data.files if k != "X"}
+        save_kwargs["X"] = X
+        np.savez_compressed(args.features, **save_kwargs)
+        print(f"Saved transformed invariant dataset to: {args.features}")
+
 
     print(f"Total dataset vectors: {len(X):,}, Feature Dimension: {X.shape[1]}, Classes: {len(classes)}")
 

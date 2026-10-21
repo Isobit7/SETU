@@ -63,20 +63,32 @@ export const IncludeVideoModal: React.FC<IncludeVideoModalProps> = ({ isOpen, on
   // Fetch model status on open
   useEffect(() => {
     if (!isOpen) return;
-    setIsLoadingStatus(true);
+    let isCancelled = false;
+    queueMicrotask(() => {
+      if (!isCancelled) setIsLoadingStatus(true);
+    });
+
     fetch('/api/v1/models/include/status')
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch model status');
         return res.json();
       })
       .then((data: ModelStatus) => {
-        setModelStatus(data);
-        setIsLoadingStatus(false);
+        if (!isCancelled) {
+          setModelStatus(data);
+          setIsLoadingStatus(false);
+        }
       })
       .catch((err) => {
-        console.error('Error fetching model status:', err);
-        setIsLoadingStatus(false);
+        if (!isCancelled) {
+          console.error('Error fetching model status:', err);
+          setIsLoadingStatus(false);
+        }
       });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [isOpen]);
 
   // Handle escape key

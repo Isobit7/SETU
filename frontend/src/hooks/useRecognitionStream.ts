@@ -42,6 +42,9 @@ export function useRecognitionStream({
   const confidenceThresholdRef = useRef<number>(confidenceThreshold);
   const onPredictionChangeRef = useRef<((pred: RecognitionPayload) => void) | undefined>(onPredictionChange);
 
+  // Latest raw prediction ref
+  const latestResultRef = useRef<RecognitionPayload | null>(null);
+
   useEffect(() => {
     confidenceThresholdRef.current = confidenceThreshold;
   }, [confidenceThreshold]);
@@ -80,7 +83,9 @@ export function useRecognitionStream({
     }
   }, [selectedCameraId]);
 
-  // Connect WebSocket to FastAPI backend with bounded exponential backoff
+  const connectWebSocketRef = useRef<() => void>(() => {});
+
+  // Connect WebSocket to FastAPI backend with bounded exponential backoff auto-reconnect
   const connectWebSocket = useCallback(() => {
     if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
       return;
@@ -99,6 +104,23 @@ export function useRecognitionStream({
       ws.binaryType = 'arraybuffer';
       wsRef.current = ws;
 
+      const scheduleReconnect = () => {
+        if (!isMountedRef.current || isStoppedManuallyRef.current) return;
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+        // Exponential backoff: starting at 1000ms, doubling up to 10000ms max
+        const attempt = reconnectAttemptsRef.current;
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+        reconnectAttemptsRef.current += 1;
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          if (isMountedRef.current && !isStoppedManuallyRef.current) {
+            connectWebSocketRef.current();
+          }
+        }, delay);
+      };
+
       ws.onopen = () => {
         if (!isMountedRef.current) {
           ws.close();
@@ -107,6 +129,10 @@ export function useRecognitionStream({
         setIsBackendConnected(true);
         setErrorMessage(null);
         reconnectAttemptsRef.current = 0;
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
         // Sync active model and confidence threshold
         ws.send(JSON.stringify({ action: 'set_model', model: activeModel }));
         ws.send(JSON.stringify({ action: 'set_threshold', threshold: confidenceThresholdRef.current }));
@@ -117,10 +143,14 @@ export function useRecognitionStream({
         try {
           const data: RecognitionPayload = JSON.parse(event.data);
           if (data.type === 'prediction') {
-            setCurrentResult(data);
+            // Process packet at 30 FPS inside ref and notification callback
+            latestResultRef.current = data;
             if (onPredictionChangeRef.current) {
               onPredictionChangeRef.current(data);
             }
+
+            // Immediately synchronize UI state with raw stream predictions
+            setCurrentResult(data);
 
             // Temporal Debouncing, Confidence Hysteresis & Refractory Cooldown for Session History
             const isHand = data.hand_detected ?? false;
@@ -193,24 +223,17 @@ export function useRecognitionStream({
         setIsBackendConnected(false);
         waitingForResponseRef.current = false;
         wsRef.current = null;
-
-        // Bounded exponential backoff: max 5 retries (1s, 2s, 4s, 8s, 16s)
-        if (!isStoppedManuallyRef.current && reconnectAttemptsRef.current < 5) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 16000);
-          reconnectAttemptsRef.current += 1;
-          reconnectTimeoutRef.current = window.setTimeout(() => {
-            if (isMountedRef.current && !isStoppedManuallyRef.current) {
-              connectWebSocket();
-            }
-          }, delay);
-        }
+        scheduleReconnect();
       };
 
       ws.onerror = () => {
         if (!isMountedRef.current) return;
         setIsBackendConnected(false);
         waitingForResponseRef.current = false;
-        setErrorMessage('Cannot connect to SETU Recognition Backend at ws://localhost:8000. Please start the backend service.');
+        setErrorMessage('Cannot connect to SETU Recognition Backend at ws://localhost:8000. Reconnecting...');
+        if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+          scheduleReconnect();
+        }
       };
     } catch (e) {
       if (isMountedRef.current) {
@@ -224,6 +247,8 @@ export function useRecognitionStream({
   const startCamera = useCallback(async () => {
     setErrorMessage(null);
     setCameraStatus('requesting');
+    isStoppedManuallyRef.current = false;
+    reconnectAttemptsRef.current = 0;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setCameraStatus('no_camera');
@@ -291,6 +316,7 @@ export function useRecognitionStream({
       animFrameIdRef.current = null;
     }
     setCameraStatus('stopped');
+    latestResultRef.current = null;
     setCurrentResult(null);
     waitingForResponseRef.current = false;
   }, [videoRef]);
@@ -316,7 +342,22 @@ export function useRecognitionStream({
     lastCommittedSignRef.current = '';
     lastCommittedTimeRef.current = 0;
     hadIdleBaselineRef.current = true;
+    latestResultRef.current = null;
     setCurrentResult(null);
+  }, []);
+
+  // Clear sentence buffer on server
+  const clearSentence = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'clear_sentence' }));
+    }
+  }, []);
+
+  // Backspace last token/character on server
+  const backspaceSentence = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'backspace' }));
+    }
   }, []);
 
   // Clear translation history
@@ -388,12 +429,18 @@ export function useRecognitionStream({
     }
   }, []);
 
-  // Lifecycle cleanup
+  const initRef = useRef({ connectWebSocket, refreshDevices, stopCamera });
+  useEffect(() => {
+    initRef.current = { connectWebSocket, refreshDevices, stopCamera };
+    connectWebSocketRef.current = connectWebSocket;
+  }, [connectWebSocket, refreshDevices, stopCamera]);
+
+  // Lifecycle initialization & cleanup
   useEffect(() => {
     isMountedRef.current = true;
     isStoppedManuallyRef.current = false;
-    connectWebSocket();
-    refreshDevices();
+    initRef.current.connectWebSocket();
+    void initRef.current.refreshDevices();
 
     return () => {
       isMountedRef.current = false;
@@ -402,7 +449,7 @@ export function useRecognitionStream({
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
-      stopCamera();
+      initRef.current.stopCamera();
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
@@ -426,6 +473,8 @@ export function useRecognitionStream({
     pauseDetection,
     resumeDetection,
     resetSession,
+    clearSentence,
+    backspaceSentence,
     clearHistory,
     setErrorMessage,
   };
