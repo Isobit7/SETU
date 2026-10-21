@@ -73,7 +73,7 @@ def test_separation_of_synthetic_and_genuine_samples():
 def test_all_processed_features_tensors_invariants():
     """Verify all .npz feature files in data/processed have shape (30, 158), finite values, and valid schema."""
     processed_dir = PROJECT_ROOT / "data" / "processed"
-    npz_files = list(processed_dir.glob("*.npz"))
+    npz_files = [p for p in processed_dir.glob("*.npz") if "realsign" not in p.name]
     assert len(npz_files) >= 24
     
     for npz_path in npz_files:

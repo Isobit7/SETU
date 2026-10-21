@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 
 # Root directory
@@ -43,6 +44,125 @@ DEFAULT_FEATURES_PATH = (
 )
 DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
 DEFAULT_REPORT_SAVE_PATH = ROOT_DIR / "reports" / "realsign_26class_evaluation_report.json"
+
+
+def generate_stratified_splits(y: np.ndarray, seed: int = 42) -> np.ndarray:
+    """Auto-generates a stratified 80% Train / 10% Validation / 10% Test split across y."""
+    n = len(y)
+    indices = np.arange(n)
+    train_idx, rest_idx = train_test_split(
+        indices, test_size=0.20, stratify=y, random_state=seed
+    )
+    val_idx, test_idx = train_test_split(
+        rest_idx, test_size=0.50, stratify=y[rest_idx], random_state=seed
+    )
+
+    splits = np.empty(n, dtype="<U10")
+    splits[train_idx] = "train"
+    splits[val_idx] = "val"
+    splits[test_idx] = "test"
+    return splits
+
+
+def load_and_validate_dataset(
+    features_path: Path,
+    seed: int = 42,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[str], Dict[str, Any]]:
+    """
+    Loads RealSign dataset from NPZ, ensuring X, y, splits, and classes exist and are valid.
+    Auto-generates stratified splits or classes if missing, empty, or mismatched.
+    Returns (X_raw, y, splits, classes, extra_metadata).
+    """
+    if not features_path.exists():
+        raise FileNotFoundError(f"Extracted landmark features not found: {features_path}")
+
+    print(f"Loading features from: {features_path}...")
+    with np.load(features_path, allow_pickle=True) as npz_data:
+        if "X" not in npz_data or "y" not in npz_data:
+            raise KeyError(f"Expected keys 'X' and 'y' in {features_path}, found {npz_data.files}")
+
+        X_raw = npz_data["X"]
+        y = npz_data["y"]
+        n_samples = len(y)
+
+        # Classes validation & auto-generation
+        if "classes" in npz_data and len(npz_data["classes"]) == 26:
+            classes = [str(c) for c in npz_data["classes"]]
+        else:
+            print("Auto-generating classes (A-Z, 26 classes)...")
+            classes = [chr(ord("A") + i) for i in range(26)]
+
+        # Extra metadata preservation (e.g. stats_json)
+        extra_meta = {
+            k: npz_data[k]
+            for k in npz_data.files
+            if k not in ("X", "y", "splits", "classes")
+        }
+
+        # Splits validation & auto-generation
+        splits = None
+        if "splits" in npz_data and len(npz_data["splits"]) == n_samples:
+            raw_splits = npz_data["splits"]
+            cleaned = np.array([
+                (s.decode("utf-8", errors="ignore") if isinstance(s, (bytes, bytearray)) else str(s)).strip().lower()
+                for s in raw_splits
+            ], dtype=str)
+
+            unique_splits = set(cleaned)
+            has_train = bool(unique_splits & {"train", "training"})
+            has_val = bool(unique_splits & {"val", "validation", "valid"})
+            has_test = bool(unique_splits & {"test", "testing"})
+
+            if has_train and has_val and has_test:
+                splits = cleaned
+
+        if splits is None:
+            print(f"Splits missing, invalid, or mismatched for {n_samples:,} samples. Generating stratified 80/10/10 splits...")
+            splits = generate_stratified_splits(y, seed=seed)
+
+    return X_raw, y, splits, classes, extra_meta
+
+
+def save_dataset_archive(
+    save_path: Path,
+    X: np.ndarray,
+    y: np.ndarray,
+    splits: np.ndarray,
+    classes: List[str],
+    extra_meta: Optional[Dict[str, Any]] = None,
+    sync_to_alt: bool = True,
+) -> None:
+    """
+    Saves the dataset archive retaining X, y, splits, classes, and any extra metadata.
+    Also synchronizes to the companion dataset path if requested.
+    """
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    save_payload: Dict[str, Any] = {
+        "X": X,
+        "y": y,
+        "splits": np.array(splits, dtype=str),
+        "classes": np.array(classes, dtype=str),
+    }
+    if extra_meta:
+        for k, v in extra_meta.items():
+            if k not in save_payload:
+                save_payload[k] = v
+
+    np.savez_compressed(save_path, **save_payload)
+    print(f"Saved transformed invariant dataset to: {save_path}")
+
+    if sync_to_alt:
+        alt_path = (
+            ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
+            if save_path.resolve() == (ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz").resolve()
+            else ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz"
+        )
+        try:
+            alt_path.parent.mkdir(parents=True, exist_ok=True)
+            np.savez_compressed(alt_path, **save_payload)
+            print(f"Synchronized transformed invariant dataset to: {alt_path}")
+        except Exception as e:
+            print(f"Note: Could not sync to companion path {alt_path}: {e}")
 
 
 def transform_landmarks_to_canonical_invariants(X: np.ndarray) -> np.ndarray:
@@ -318,31 +438,56 @@ def main():
     if not args.features.exists():
         raise FileNotFoundError(f"Extracted landmark features not found: {args.features}")
 
-    print(f"Loading features from: {args.features}...")
-    npz_data = np.load(args.features, allow_pickle=True)
-    X_raw = npz_data["X"]
-    y = npz_data["y"]
-    splits = npz_data["splits"]
-    classes = list(npz_data["classes"])
-    stats_json_str = str(npz_data["stats_json"]) if "stats_json" in npz_data else "{}"
-    stats_meta = json.loads(stats_json_str)
+    X_raw, y, splits, classes, extra_meta = load_and_validate_dataset(args.features, seed=args.seed)
+    stats_json_str = str(extra_meta.get("stats_json", "{}"))
+    try:
+        stats_meta = json.loads(stats_json_str) if isinstance(stats_json_str, str) else {}
+    except Exception:
+        stats_meta = {}
 
     # Re-extract canonical 63-D rotation-invariant features
     X = transform_landmarks_to_canonical_invariants(X_raw)
 
     if args.save_transformed_npz:
-        save_kwargs = {k: npz_data[k] for k in npz_data.files if k != "X"}
-        save_kwargs["X"] = X
-        np.savez_compressed(args.features, **save_kwargs)
-        print(f"Saved transformed invariant dataset to: {args.features}")
-
+        save_dataset_archive(
+            save_path=args.features,
+            X=X,
+            y=y,
+            splits=splits,
+            classes=classes,
+            extra_meta=extra_meta,
+            sync_to_alt=True,
+        )
 
     print(f"Total dataset vectors: {len(X):,}, Feature Dimension: {X.shape[1]}, Classes: {len(classes)}")
 
-    # Split indices
-    train_mask = (splits == "Training")
-    val_mask = (splits == "Validation")
-    test_mask = (splits == "Testing")
+    # Robust String Matching for Splits (supports 'train', 'Training', b'train', etc.)
+    splits_str = np.array([
+        (s.decode("utf-8", errors="ignore") if isinstance(s, (bytes, bytearray)) else str(s)).strip().lower()
+        for s in splits
+    ], dtype=str)
+
+    train_mask = np.isin(splits_str, ["train", "training"])
+    val_mask = np.isin(splits_str, ["val", "validation", "valid"])
+    test_mask = np.isin(splits_str, ["test", "testing"])
+
+    if np.sum(train_mask) == 0 or np.sum(val_mask) == 0 or np.sum(test_mask) == 0:
+        print("Warning: One or more split masks resolved to 0 samples. Re-generating stratified splits...")
+        splits = generate_stratified_splits(y, seed=args.seed)
+        splits_str = np.array([s.strip().lower() for s in splits], dtype=str)
+        train_mask = np.isin(splits_str, ["train", "training"])
+        val_mask = np.isin(splits_str, ["val", "validation", "valid"])
+        test_mask = np.isin(splits_str, ["test", "testing"])
+        if args.save_transformed_npz:
+            save_dataset_archive(
+                save_path=args.features,
+                X=X,
+                y=y,
+                splits=splits,
+                classes=classes,
+                extra_meta=extra_meta,
+                sync_to_alt=True,
+            )
 
     X_train, y_train = X[train_mask], y[train_mask]
     X_val, y_val = X[val_mask], y[val_mask]
