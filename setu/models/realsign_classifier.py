@@ -106,6 +106,7 @@ class RealSignClassifier:
         # Exponential Moving Average (EMA) smoothing state: S_t = alpha * P_t + (1 - alpha) * S_{t-1}
         self.ema_alpha = 0.40
         self._ema_probs: Optional[np.ndarray] = None
+        self._last_mtime: float = self.weights_path.stat().st_mtime if self.weights_path.exists() else 0.0
 
         logger.info(
             "RealSignClassifier loaded from %s. Supported classes: %d (%s..%s). Accuracy: %s",
@@ -115,6 +116,27 @@ class RealSignClassifier:
             self.class_names[-1],
             f"{self.test_accuracy * 100:.2f}%" if self.test_accuracy else "N/A",
         )
+
+    def check_and_reload(self) -> None:
+        """Hot-reloads updated model weights if checkpoint file changed on disk."""
+        try:
+            if not self.weights_path.exists():
+                return
+            current_mtime = self.weights_path.stat().st_mtime
+            if current_mtime > self._last_mtime:
+                logger.info("Detected newly trained RealSign weights at %s. Hot-reloading model in-memory...", self.weights_path)
+                checkpoint = torch.load(str(self.weights_path), map_location="cpu", weights_only=False)
+                self.class_names = checkpoint.get("classes", [chr(ord("A") + i) for i in range(26)])
+                self.num_classes = len(self.class_names)
+                self.test_accuracy = checkpoint.get("test_accuracy", None)
+                self.macro_f1 = checkpoint.get("macro_f1", None)
+                self.model.load_state_dict(checkpoint["model_state_dict"])
+                self.model.eval()
+                self._last_mtime = current_mtime
+                self.reset_smoothing()
+                logger.info("RealSign model successfully hot-reloaded! (Classes: %d, Accuracy: %s)", self.num_classes, f"{self.test_accuracy*100:.2f}%" if self.test_accuracy else "N/A")
+        except Exception as e:
+            logger.warning("Error checking/reloading RealSign weights: %s", e)
 
     def reset_smoothing(self) -> None:
         """Resets the EMA smoothed probability filter state."""
@@ -148,6 +170,8 @@ class RealSignClassifier:
         Uses @torch.inference_mode() to prevent autograd graph memory leaks
         and applies EMA probability smoothing to eliminate 1-frame jitter flickering.
         """
+        self.check_and_reload()
+
         if features_63d.ndim != 1 or features_63d.shape[0] != self.input_dim:
             raise ValueError(f"Expected feature vector shape ({self.input_dim},), got {features_63d.shape}")
 

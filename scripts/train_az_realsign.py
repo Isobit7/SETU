@@ -153,13 +153,24 @@ def capture_letter_samples_from_webcam(
 
     collected: List[np.ndarray] = []
     state = "WAITING"  # "WAITING" -> "RECORDING" -> "DONE"
+    countdown_start = time.time()
+    countdown_secs = 3.0
+    done_start = 0.0
+    done_secs = 3.5
     last_take_time = 0.0
     flash_until = 0.0
     user_quit = False
 
+    window_name = "SETU - Instant A-Z Webcam Calibration"
+    cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
+    try:
+        cv2.setWindowProperty(window_name, cv2.WND_PROP_TOPMOST, 1)
+    except Exception:
+        pass
+
     logger.info(
-        "=== Letter [%s] (%d/%d) === Ready. Press SPACE to start recording %d takes.",
-        letter, current_idx, total_letters, target_samples,
+        "=== Letter [%s] (%d/%d) === Ready. Auto-starting in 3s (or press SPACE).",
+        letter, current_idx, total_letters,
     )
 
     while True:
@@ -205,7 +216,15 @@ def capture_letter_samples_from_webcam(
         now = time.time()
 
         # Handle recording state machine
-        if state == "RECORDING":
+        if state == "WAITING":
+            remain_cd = max(0.0, countdown_secs - (now - countdown_start))
+            if remain_cd <= 0.0:
+                state = "RECORDING"
+                last_take_time = time.time() - gap_seconds + 0.2
+                collected.clear()
+                logger.info("Auto-started takes for Letter [%s]...", letter)
+
+        elif state == "RECORDING":
             elapsed = now - last_take_time
             if elapsed >= gap_seconds:
                 if hand_detected and features_63d is not None:
@@ -215,7 +234,15 @@ def capture_letter_samples_from_webcam(
                     logger.info("Captured Take %d/%d for Letter [%s]", len(collected), target_samples, letter)
                     if len(collected) >= target_samples:
                         state = "DONE"
-                        logger.info("Letter [%s] (10/10) captured! Press SPACE to proceed to next letter.", letter)
+                        done_start = now
+                        logger.info("Letter [%s] (10/10) captured! Next letter in 3s (or press SPACE).", letter)
+
+        elif state == "DONE":
+            if done_start == 0.0:
+                done_start = now
+            remain_done = max(0.0, done_secs - (now - done_start))
+            if remain_done <= 0.0:
+                break
 
         # Draw Top HUD Banner
         overlay = frame.copy()
@@ -235,18 +262,19 @@ def capture_letter_samples_from_webcam(
 
         # State-specific displays
         if state == "WAITING":
+            remain_cd = max(0.0, countdown_secs - (now - countdown_start))
             draw_card(
                 frame,
                 title=f"READY FOR LETTER: [{letter}]",
                 lines=[
                     (f"1. Position your hand for sign '{letter}'.", (240, 240, 240), 0.65),
                     (f"2. Hold pose for {target_samples} takes ({gap_seconds:.1f}s slow gap between takes).", (200, 200, 200), 0.6),
-                    ("-> PRESS [SPACEBAR] TO START RECORDING <-", (0, 255, 255), 0.7),
+                    (f"-> STARTING IN {remain_cd:.1f}s (or press SPACEBAR) <-", (0, 255, 255), 0.7),
                     ("[S] Skip Letter   |   [Q] Finish Early & Retrain", (160, 160, 160), 0.55),
                 ],
                 border_color=(0, 200, 255),
             )
-            cv2.putText(frame, "STATUS: PAUSED | Press SPACE to Start", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 255), 1, cv2.LINE_AA)
+            cv2.putText(frame, f"STARTING IN {remain_cd:.1f}s | Press SPACE to Start Now", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 255), 1, cv2.LINE_AA)
 
         elif state == "RECORDING":
             elapsed = now - last_take_time
@@ -271,8 +299,12 @@ def capture_letter_samples_from_webcam(
                     cv2.putText(frame, f"Show hand to capture take {len(collected) + 1}...", (w // 2 - 180, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.7, (0, 100, 255), 2, cv2.LINE_AA)
 
         elif state == "DONE":
+            remain_done = max(0.0, done_secs - (now - done_start))
             next_info = f"Next Letter: [{next_letter}]" if next_letter else "All 26 letters recorded!"
-            action_info = f"-> PRESS [SPACEBAR] TO PROCEED TO [{next_letter}] <-" if next_letter else "-> PRESS [SPACEBAR] TO FINISH & RETRAIN <-"
+            action_info = (
+                f"-> PROCEEDING TO [{next_letter}] IN {remain_done:.1f}s (or press SPACE) <-"
+                if next_letter else f"-> FINISHING & TRAINING IN {remain_done:.1f}s (or press SPACE) <-"
+            )
             draw_card(
                 frame,
                 title=f"SUCCESS: LETTER [{letter}] COMPLETE! (10/10)",
@@ -284,21 +316,22 @@ def capture_letter_samples_from_webcam(
                 ],
                 border_color=(0, 255, 120),
             )
-            cv2.putText(frame, "COMPLETED | Press SPACE to proceed to next letter", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 120), 1, cv2.LINE_AA)
+            cv2.putText(frame, f"COMPLETED | Next letter in {remain_done:.1f}s (or press SPACE)", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 120), 1, cv2.LINE_AA)
 
-        cv2.imshow("SETU - Instant A-Z Webcam Calibration", frame)
-        key = cv2.waitKey(1) & 0xFF
+        cv2.imshow(window_name, frame)
+        key = cv2.waitKey(20) & 0xFF
 
         if key == ord(" "):
             if state == "WAITING":
                 state = "RECORDING"
-                last_take_time = time.time() - gap_seconds + 0.3  # 0.3s breath before take 1
+                last_take_time = time.time() - gap_seconds + 0.2
                 collected.clear()
             elif state == "DONE":
                 break
         elif key == ord("r"):
             logger.info("Redoing letter [%s].", letter)
             collected.clear()
+            countdown_start = time.time()
             state = "WAITING"
         elif key == ord("s"):
             logger.info("Skipping letter [%s].", letter)
@@ -433,6 +466,78 @@ def retrain_realsign_mlp(
     return elapsed, final_acc
 
 
+def open_camera_interactive(camera_id: int = 0) -> Optional[cv2.VideoCapture]:
+    """
+    Opens the webcam with Windows DirectShow support and exclusive lock diagnostics.
+    If the camera is in use (e.g. by the browser or another application), displays
+    actionable instructions and prompts the user to retry after releasing the camera.
+    """
+    current_id = camera_id
+    while True:
+        logger.info("Opening webcam device (Index %d)...", current_id)
+        cap = None
+        if sys.platform.startswith("win"):
+            cap = cv2.VideoCapture(current_id, cv2.CAP_DSHOW)
+            if not cap.isOpened():
+                cap = cv2.VideoCapture(current_id)
+        else:
+            cap = cv2.VideoCapture(current_id)
+
+        if cap.isOpened():
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            ret, test_frame = cap.read()
+            if ret and test_frame is not None:
+                logger.info(
+                    "Camera connected successfully! Active resolution: %dx%d",
+                    test_frame.shape[1],
+                    test_frame.shape[0],
+                )
+                return cap
+            else:
+                cap.release()
+
+        # If primary index 0 failed, try index 1 before prompting
+        if current_id == 0:
+            alt_cap = cv2.VideoCapture(1, cv2.CAP_DSHOW) if sys.platform.startswith("win") else cv2.VideoCapture(1)
+            if alt_cap.isOpened():
+                alt_cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                alt_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                ret, test_frame = alt_cap.read()
+                if ret and test_frame is not None:
+                    logger.info("Camera connected successfully on alternate Device Index 1!")
+                    return alt_cap
+                alt_cap.release()
+
+        # Print prominent warning banner
+        print("\n" + "=" * 72)
+        print("                 [!] CAMERA ACCESS BLOCKED / BUSY")
+        print("=" * 72)
+        print(f"Windows could not open your camera (Device Index {current_id}).")
+        print("\nWHY THIS HAPPENS ON WINDOWS:")
+        print("  Windows grants EXCLUSIVE access to webcams to only one app at a time.")
+        print("  Most likely: your browser tab (http://127.0.0.1:5173/) currently has")
+        print("  the webcam turned ON, or Zoom / Teams / Windows Camera is open.")
+        print("\nHOW TO PROCEED:")
+        print("  1. Switch to your browser tab and click 'Stop Camera' (or close the tab).")
+        print("  2. Ensure no other apps are using your webcam.")
+        print("  3. Press [ENTER] right here to retry connecting to the camera.")
+        print("     (Or type another device index like '1', or 'q' to abort)")
+        print("=" * 72 + "\n")
+
+        try:
+            user_choice = input("Press ENTER to retry (or 'q' to abort): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            logger.warning("\nCamera connection cancelled.")
+            return None
+
+        if user_choice.lower() in ("q", "quit", "exit"):
+            logger.warning("User cancelled camera connection.")
+            return None
+        elif user_choice.isdigit():
+            current_id = int(user_choice)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="SETU Instant A-Z Webcam Calibration & Training")
     parser.add_argument("--letters", type=str, default="ALL", help="Letters to record (e.g. 'A,B,C' or 'ALL' for A-Z)")
@@ -443,7 +548,7 @@ def main() -> None:
     parser.add_argument("--dataset-path", type=Path, default=DEFAULT_DATASET_PATH, help="Path to base dataset .npz")
     parser.add_argument("--epochs", type=int, default=15, help="Retraining epochs (default: 15)")
     parser.add_argument("--lr", type=float, default=0.001, help="Learning rate (default: 0.001)")
-    parser.add_argument("--no-camera", action="store_true", help="Run without opening camera (generate synthetic calibration frames)")
+    parser.add_argument("--no-camera", action="store_true", help="Explicitly run without camera (generate synthetic calibration frames)")
     args = parser.parse_args()
 
     target_letters = parse_target_letters(args.letters)
@@ -453,87 +558,79 @@ def main() -> None:
     y_collected: List[int] = []
 
     if args.no_camera:
-        logger.info("Headless / synthetic mode enabled: generating %d calibration samples per letter.", args.frames_per_letter)
+        logger.info("Headless / synthetic mode explicitly enabled: generating %d calibration samples per letter.", args.frames_per_letter)
         for letter in target_letters:
             samples = generate_synthetic_samples_for_letter(letter, num_samples=args.frames_per_letter, dataset_path=args.dataset_path)
             X_collected.append(samples)
             y_collected.extend([ord(letter) - ord("A")] * len(samples))
     else:
-        # Check camera (prefer DirectShow on Windows to avoid MSMF camera initialization hangs)
-        cap = cv2.VideoCapture(args.camera_id, cv2.CAP_DSHOW) if sys.platform.startswith("win") else cv2.VideoCapture(args.camera_id)
-        if not cap.isOpened():
-            cap = cv2.VideoCapture(args.camera_id)
-        if not cap.isOpened():
-            logger.warning("Could not open camera ID %d. Falling back to synthetic calibration.", args.camera_id)
-            for letter in target_letters:
-                samples = generate_synthetic_samples_for_letter(letter, num_samples=args.frames_per_letter, dataset_path=args.dataset_path)
-                X_collected.append(samples)
-                y_collected.extend([ord(letter) - ord("A")] * len(samples))
-        else:
+        cap = open_camera_interactive(args.camera_id)
+        if cap is None:
+            print("\n[!] Camera was not opened. Training aborted without modifying model.")
+            print(f"Existing model checkpoint '{args.model_path}' was preserved.")
+            print("Tip: If you ever need synthetic data for testing, run with the --no-camera flag.\n")
+            sys.exit(1)
+
+        try:
+            import mediapipe as mp
             try:
-                import mediapipe as mp
-                try:
-                    detector = mp.solutions.hands.Hands(
-                        static_image_mode=False,
-                        max_num_hands=1,
-                        min_detection_confidence=0.4,
-                        min_tracking_confidence=0.4,
-                    )
-                except Exception:
-                    from mediapipe.tasks import python
-                    from mediapipe.tasks.python import vision
-                    base_options = python.BaseOptions(model_asset_path=os.path.relpath(DEFAULT_TASK_PATH))
-                    options = vision.HandLandmarkerOptions(
-                        base_options=base_options,
-                        running_mode=vision.RunningMode.IMAGE,
-                        num_hands=1,
-                        min_hand_detection_confidence=0.4,
-                    )
-                    detector = vision.HandLandmarker.create_from_options(options)
+                detector = mp.solutions.hands.Hands(
+                    static_image_mode=False,
+                    max_num_hands=1,
+                    min_detection_confidence=0.4,
+                    min_tracking_confidence=0.4,
+                )
+            except Exception:
+                from mediapipe.tasks import python
+                from mediapipe.tasks.python import vision
+                base_options = python.BaseOptions(model_asset_path=os.path.relpath(DEFAULT_TASK_PATH))
+                options = vision.HandLandmarkerOptions(
+                    base_options=base_options,
+                    running_mode=vision.RunningMode.IMAGE,
+                    num_hands=1,
+                    min_hand_detection_confidence=0.4,
+                )
+                detector = vision.HandLandmarker.create_from_options(options)
 
-                for idx, letter in enumerate(target_letters, start=1):
-                    next_letter = target_letters[idx] if idx < len(target_letters) else None
-                    samples, user_quit = capture_letter_samples_from_webcam(
-                        cap=cap,
-                        detector=detector,
-                        letter=letter,
-                        target_samples=args.frames_per_letter,
-                        gap_seconds=args.gap,
-                        current_idx=idx,
-                        total_letters=len(target_letters),
-                        next_letter=next_letter,
-                    )
-                    if len(samples) > 0:
-                        X_collected.append(samples)
-                        y_collected.extend([ord(letter) - ord("A")] * len(samples))
-
-                    if user_quit:
-                        logger.info("Finishing early per user request. Proceeding to retrain.")
-                        break
-
-            except KeyboardInterrupt:
-                logger.info("\nSession stopped via Ctrl+C. Proceeding to train on captured letters...")
-            except Exception as e:
-                logger.error("Error during webcam capture: %s. Using synthetic samples.", e)
-                for letter in target_letters:
-                    samples = generate_synthetic_samples_for_letter(letter, num_samples=args.frames_per_letter, dataset_path=args.dataset_path)
+            for idx, letter in enumerate(target_letters, start=1):
+                next_letter = target_letters[idx] if idx < len(target_letters) else None
+                samples, user_quit = capture_letter_samples_from_webcam(
+                    cap=cap,
+                    detector=detector,
+                    letter=letter,
+                    target_samples=args.frames_per_letter,
+                    gap_seconds=args.gap,
+                    current_idx=idx,
+                    total_letters=len(target_letters),
+                    next_letter=next_letter,
+                )
+                if len(samples) > 0:
                     X_collected.append(samples)
                     y_collected.extend([ord(letter) - ord("A")] * len(samples))
-            finally:
-                cap.release()
-                cv2.destroyAllWindows()
+
+                if user_quit:
+                    logger.info("Finishing early per user request. Proceeding to retrain on captured takes.")
+                    break
+
+        except KeyboardInterrupt:
+            logger.info("\nSession interrupted via Ctrl+C. Proceeding to train on captured letters...")
+        except Exception as e:
+            logger.error("Error during webcam capture: %s", e)
+        finally:
+            cap.release()
+            cv2.destroyAllWindows()
 
     if len(X_collected) == 0:
-        logger.warning("No webcam samples recorded. Generating synthetic samples to maintain calibration.")
-        for letter in target_letters:
-            samples = generate_synthetic_samples_for_letter(letter, num_samples=args.frames_per_letter, dataset_path=args.dataset_path)
-            X_collected.append(samples)
-            y_collected.extend([ord(letter) - ord("A")] * len(samples))
+        print("\n[!] No real webcam takes were recorded (session stopped before any takes).")
+        print(f"Existing model checkpoint '{args.model_path}' was preserved.\n")
+        return
 
     X_all = np.concatenate(X_collected, axis=0).astype(np.float32)
     y_all = np.array(y_collected, dtype=np.int64)
 
-    logger.info("Captured total %d calibration samples across %d letters.", len(X_all), len(target_letters))
+    # Determine unique letters actually captured
+    recorded_letters = sorted(list({chr(ord("A") + val) for val in y_all}))
+    logger.info("Captured total %d REAL webcam takes across %d letters: %s", len(X_all), len(recorded_letters), recorded_letters)
 
     elapsed, final_acc = retrain_realsign_mlp(
         X_new=X_all,
@@ -546,10 +643,10 @@ def main() -> None:
     )
 
     print("\n" + "=" * 60)
-    print("SETU A-Z INSTANT CALIBRATION SUMMARY")
+    print("SETU A-Z INSTANT CAMERA CALIBRATION SUMMARY")
     print("=" * 60)
-    print(f"Letters Calibrated: {', '.join(target_letters)}")
-    print(f"Total Samples:      {len(X_all)}")
+    print(f"Letters Calibrated: {', '.join(recorded_letters)}")
+    print(f"Total Camera Takes: {len(X_all)}")
     print(f"Retraining Time:    {elapsed:.2f} seconds")
     print(f"Model Saved:        {args.model_path}")
     print(f"Accuracy:           {final_acc * 100:.2f}%")
