@@ -335,8 +335,10 @@ def main() -> None:
             X_collected.append(samples)
             y_collected.extend([ord(letter) - ord("A")] * len(samples))
     else:
-        # Check camera
-        cap = cv2.VideoCapture(args.camera_id)
+        # Check camera (prefer DirectShow on Windows to avoid MSMF camera initialization hangs)
+        cap = cv2.VideoCapture(args.camera_id, cv2.CAP_DSHOW) if sys.platform.startswith("win") else cv2.VideoCapture(args.camera_id)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(args.camera_id)
         if not cap.isOpened():
             logger.warning("Could not open camera ID %d. Falling back to synthetic calibration.", args.camera_id)
             for letter in target_letters:

@@ -154,7 +154,9 @@ def record_sign_samples(
 
     cap: Optional[cv2.VideoCapture] = None
     if not mock:
-        cap = cv2.VideoCapture(camera_idx)
+        cap = cv2.VideoCapture(camera_idx, cv2.CAP_DSHOW) if sys.platform.startswith("win") else cv2.VideoCapture(camera_idx)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(camera_idx)
         if not cap.isOpened():
             logger.warning(f"Failed to open camera index {camera_idx}. Falling back to mock generator.")
             mock = True
