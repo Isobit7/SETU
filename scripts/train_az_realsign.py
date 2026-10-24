@@ -102,31 +102,75 @@ def generate_synthetic_samples_for_letter(
     return np.array(samples, dtype=np.float32)
 
 
+def draw_card(
+    frame: np.ndarray,
+    title: str,
+    lines: List[Tuple[str, Tuple[int, int, int], float]],
+    box_color: Tuple[int, int, int] = (20, 22, 30),
+    border_color: Tuple[int, int, int] = (0, 220, 255),
+) -> None:
+    """Renders a semi-transparent card overlay in the center of the frame."""
+    h, w = frame.shape[:2]
+    cx, cy = w // 2, h // 2
+    bw, bh = int(w * 0.88), int(h * 0.58)
+    x1, y1 = max(10, cx - bw // 2), max(65, cy - bh // 2)
+    x2, y2 = min(w - 10, x1 + bw), min(h - 45, y1 + bh)
+
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (x1, y1), (x2, y2), box_color, -1)
+    cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
+    cv2.rectangle(frame, (x1, y1), (x2, y2), border_color, 2)
+
+    cv2.putText(frame, title, (x1 + 20, y1 + 38), cv2.FONT_HERSHEY_DUPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+
+    y_offset = y1 + 80
+    for text, color, scale in lines:
+        cv2.putText(frame, text, (x1 + 20, y_offset), cv2.FONT_HERSHEY_SIMPLEX, scale, color, 1, cv2.LINE_AA)
+        y_offset += int(34 * scale) + 8
+
+
 def capture_letter_samples_from_webcam(
     cap: cv2.VideoCapture,
     detector: Any,
     letter: str,
     target_samples: int = 10,
-) -> np.ndarray:
+    gap_seconds: float = 1.0,
+    current_idx: int = 1,
+    total_letters: int = 26,
+    next_letter: Optional[str] = None,
+) -> Tuple[np.ndarray, bool]:
     """
-    Captures target_samples valid 63-D hand feature vectors for a specific letter via webcam.
+    Captures target_samples (10) takes for a specific letter via webcam:
+    1. Paused start: waits for user to press SPACE to begin recording.
+    2. 1-second gap between takes with visual countdown progress bar.
+    3. Completion screen: waits for SPACE before moving to the next letter.
+    4. Supports 'R' (redo), 'S' (skip), 'Q'/'ESC' (quit).
+
+    Returns:
+        (samples_array, user_quit_flag)
     """
     import mediapipe as mp
 
     collected: List[np.ndarray] = []
-    is_recording = False
-    logger.info("Ready to record sign for letter '%s'. Press SPACE to start capturing.", letter)
+    state = "WAITING"  # "WAITING" -> "RECORDING" -> "DONE"
+    last_take_time = 0.0
+    flash_until = 0.0
+    user_quit = False
 
-    while len(collected) < target_samples:
+    logger.info(
+        "=== Letter [%s] (%d/%d) === Ready. Press SPACE to start recording %d takes.",
+        letter, current_idx, total_letters, target_samples,
+    )
+
+    while True:
         ret, frame = cap.read()
         if not ret or frame is None:
-            time.sleep(0.03)
+            time.sleep(0.02)
             continue
 
         frame = cv2.flip(frame, 1)
         h, w = frame.shape[:2]
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
 
         hand_detected = False
         features_63d = None
@@ -158,37 +202,116 @@ def capture_letter_samples_from_webcam(
         except Exception as e:
             logger.debug("Detector error: %s", e)
 
-        if is_recording and hand_detected and features_63d is not None:
-            collected.append(features_63d)
-            time.sleep(0.08)  # Space out frames slightly for diverse angles
+        now = time.time()
 
-        # Overlay HUD
-        status = f"RECORDING ({len(collected)}/{target_samples})" if is_recording else "PAUSED (Press SPACE)"
-        color = (0, 255, 0) if is_recording else (0, 165, 255)
-        cv2.putText(frame, f"Letter Target: [{letter}]", (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
-        cv2.putText(frame, status, (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
-        cv2.putText(frame, "Space: Start/Pause | S: Skip | Q: Quit", (30, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
+        # Handle recording state machine
+        if state == "RECORDING":
+            elapsed = now - last_take_time
+            if elapsed >= gap_seconds:
+                if hand_detected and features_63d is not None:
+                    collected.append(features_63d)
+                    last_take_time = now
+                    flash_until = now + 0.35
+                    logger.info("Captured Take %d/%d for Letter [%s]", len(collected), target_samples, letter)
+                    if len(collected) >= target_samples:
+                        state = "DONE"
+                        logger.info("Letter [%s] (10/10) captured! Press SPACE to proceed to next letter.", letter)
+
+        # Draw Top HUD Banner
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (0, 0), (w, 55), (15, 18, 25), -1)
+        cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
+
+        title_text = f"LETTER [{letter}]  ({current_idx}/{total_letters})"
+        cv2.putText(frame, title_text, (20, 36), cv2.FONT_HERSHEY_DUPLEX, 0.75, (0, 235, 255), 2, cv2.LINE_AA)
+
+        # Hand status indicator
+        hand_color = (0, 255, 120) if hand_detected else (0, 120, 255)
+        hand_status = "HAND DETECTED" if hand_detected else "NO HAND VISIBLE"
+        cv2.putText(frame, hand_status, (w - 200, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.52, hand_color, 1, cv2.LINE_AA)
+
+        # Bottom Bar Background
+        cv2.rectangle(frame, (0, h - 40), (w, h), (15, 18, 25), -1)
+
+        # State-specific displays
+        if state == "WAITING":
+            draw_card(
+                frame,
+                title=f"READY FOR LETTER: [{letter}]",
+                lines=[
+                    (f"1. Position your hand for sign '{letter}'.", (240, 240, 240), 0.65),
+                    (f"2. Hold pose for {target_samples} takes ({gap_seconds:.1f}s slow gap between takes).", (200, 200, 200), 0.6),
+                    ("-> PRESS [SPACEBAR] TO START RECORDING <-", (0, 255, 255), 0.7),
+                    ("[S] Skip Letter   |   [Q] Finish Early & Retrain", (160, 160, 160), 0.55),
+                ],
+                border_color=(0, 200, 255),
+            )
+            cv2.putText(frame, "STATUS: PAUSED | Press SPACE to Start", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 255), 1, cv2.LINE_AA)
+
+        elif state == "RECORDING":
+            elapsed = now - last_take_time
+            # Draw take circles in bottom bar
+            dots = " ".join(["[X]" if i < len(collected) else "[ ]" for i in range(target_samples)])
+            cv2.putText(frame, f"Takes: {len(collected)}/{target_samples}  {dots}", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+            if now < flash_until:
+                cv2.putText(frame, f"TAKE {len(collected)}/{target_samples} SAVED!", (w // 2 - 160, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.85, (0, 255, 0), 2, cv2.LINE_AA)
+            elif elapsed < gap_seconds:
+                remain = max(0.0, gap_seconds - elapsed)
+                pct = min(1.0, elapsed / gap_seconds)
+                # Countdown bar
+                bar_w = 280
+                bx = w // 2 - bar_w // 2
+                by = h // 2 + 25
+                cv2.rectangle(frame, (bx, by), (bx + bar_w, by + 16), (40, 40, 50), -1)
+                cv2.rectangle(frame, (bx, by), (bx + int(bar_w * pct), by + 16), (0, 220, 255), -1)
+                cv2.putText(frame, f"Next take in {remain:.1f}s... Hold '{letter}' pose", (bx, by - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 220, 255), 1, cv2.LINE_AA)
+            else:
+                if not hand_detected:
+                    cv2.putText(frame, f"Show hand to capture take {len(collected) + 1}...", (w // 2 - 180, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.7, (0, 100, 255), 2, cv2.LINE_AA)
+
+        elif state == "DONE":
+            next_info = f"Next Letter: [{next_letter}]" if next_letter else "All 26 letters recorded!"
+            action_info = f"-> PRESS [SPACEBAR] TO PROCEED TO [{next_letter}] <-" if next_letter else "-> PRESS [SPACEBAR] TO FINISH & RETRAIN <-"
+            draw_card(
+                frame,
+                title=f"SUCCESS: LETTER [{letter}] COMPLETE! (10/10)",
+                lines=[
+                    (f"Captured {len(collected)} clean takes for letter '{letter}'.", (240, 240, 240), 0.65),
+                    (next_info, (0, 255, 200), 0.7),
+                    (action_info, (0, 255, 255), 0.7),
+                    (f"[R] Redo Letter [{letter}]   |   [Q] Finish & Train", (160, 160, 160), 0.55),
+                ],
+                border_color=(0, 255, 120),
+            )
+            cv2.putText(frame, "COMPLETED | Press SPACE to proceed to next letter", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 120), 1, cv2.LINE_AA)
 
         cv2.imshow("SETU - Instant A-Z Webcam Calibration", frame)
         key = cv2.waitKey(1) & 0xFF
+
         if key == ord(" "):
-            is_recording = not is_recording
+            if state == "WAITING":
+                state = "RECORDING"
+                last_take_time = time.time() - gap_seconds + 0.3  # 0.3s breath before take 1
+                collected.clear()
+            elif state == "DONE":
+                break
+        elif key == ord("r"):
+            logger.info("Redoing letter [%s].", letter)
+            collected.clear()
+            state = "WAITING"
         elif key == ord("s"):
-            logger.info("Skipping letter '%s'.", letter)
+            logger.info("Skipping letter [%s].", letter)
             break
         elif key in (ord("q"), 27):
-            logger.info("User quit calibration.")
+            logger.info("User requested early finish.")
+            user_quit = True
             break
 
-    if len(collected) < target_samples:
-        logger.warning("Collected %d/%d for '%s'. Filling remaining with synthetic variations.", len(collected), target_samples, letter)
-        synth = generate_synthetic_samples_for_letter(letter, num_samples=target_samples - len(collected))
-        if len(collected) > 0:
-            collected.extend([synth[i] for i in range(len(synth))])
-        else:
-            return synth
+    if len(collected) == 0:
+        return np.empty((0, 63), dtype=np.float32), user_quit
 
-    return np.array(collected[:target_samples], dtype=np.float32)
+    return np.array(collected, dtype=np.float32), user_quit
 
 
 def retrain_realsign_mlp(
@@ -312,8 +435,9 @@ def retrain_realsign_mlp(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="SETU Instant A-Z Webcam Calibration & Training")
-    parser.add_argument("--letters", type=str, default="A,B,C,L,V,W,Y,I", help="Letters to record (e.g. 'A,B,C' or 'ALL')")
-    parser.add_argument("--frames-per-letter", type=int, default=10, help="Frames to capture per letter (default: 10)")
+    parser.add_argument("--letters", type=str, default="ALL", help="Letters to record (e.g. 'A,B,C' or 'ALL' for A-Z)")
+    parser.add_argument("--frames-per-letter", "--takes", dest="frames_per_letter", type=int, default=10, help="Takes to capture per letter (default: 10)")
+    parser.add_argument("--gap", type=float, default=1.0, help="Slow gap in seconds between takes (default: 1.0s)")
     parser.add_argument("--camera-id", type=int, default=0, help="Webcam device ID (default: 0)")
     parser.add_argument("--model-path", type=Path, default=DEFAULT_MODEL_PATH, help="Path to RealSign MLP weights")
     parser.add_argument("--dataset-path", type=Path, default=DEFAULT_DATASET_PATH, help="Path to base dataset .npz")
@@ -367,15 +491,25 @@ def main() -> None:
                     )
                     detector = vision.HandLandmarker.create_from_options(options)
 
-                for letter in target_letters:
-                    samples = capture_letter_samples_from_webcam(
+                for idx, letter in enumerate(target_letters, start=1):
+                    next_letter = target_letters[idx] if idx < len(target_letters) else None
+                    samples, user_quit = capture_letter_samples_from_webcam(
                         cap=cap,
                         detector=detector,
                         letter=letter,
                         target_samples=args.frames_per_letter,
+                        gap_seconds=args.gap,
+                        current_idx=idx,
+                        total_letters=len(target_letters),
+                        next_letter=next_letter,
                     )
-                    X_collected.append(samples)
-                    y_collected.extend([ord(letter) - ord("A")] * len(samples))
+                    if len(samples) > 0:
+                        X_collected.append(samples)
+                        y_collected.extend([ord(letter) - ord("A")] * len(samples))
+
+                    if user_quit:
+                        logger.info("Finishing early per user request. Proceeding to retrain.")
+                        break
 
             except Exception as e:
                 logger.error("Error during webcam capture: %s. Using synthetic samples.", e)
@@ -386,6 +520,13 @@ def main() -> None:
             finally:
                 cap.release()
                 cv2.destroyAllWindows()
+
+    if len(X_collected) == 0:
+        logger.warning("No webcam samples recorded. Generating synthetic samples to maintain calibration.")
+        for letter in target_letters:
+            samples = generate_synthetic_samples_for_letter(letter, num_samples=args.frames_per_letter, dataset_path=args.dataset_path)
+            X_collected.append(samples)
+            y_collected.extend([ord(letter) - ord("A")] * len(samples))
 
     X_all = np.concatenate(X_collected, axis=0).astype(np.float32)
     y_all = np.array(y_collected, dtype=np.int64)
