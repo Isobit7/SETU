@@ -132,18 +132,29 @@ def capture_letter_samples_from_webcam(
         features_63d = None
 
         try:
-            results = detector.detect(mp_image)
-            if results.hand_landmarks and len(results.hand_landmarks) > 0:
-                hand_detected = True
-                lm_list = results.hand_landmarks[0]
-                pts = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
-                features_63d = extract_realsign_hand_features(pts)
-
-                # Draw simple skeleton
-                for lm in lm_list:
-                    px = int(np.clip(lm.x * w, 0, w - 1))
-                    py = int(np.clip(lm.y * h, 0, h - 1))
-                    cv2.circle(frame, (px, py), 4, (0, 240, 180), -1)
+            if hasattr(detector, "process"):
+                results = detector.process(rgb)
+                if results and results.multi_hand_landmarks:
+                    hand_detected = True
+                    lm_list = results.multi_hand_landmarks[0].landmark
+                    pts = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
+                    features_63d = extract_realsign_hand_features(pts)
+                    for lm in lm_list:
+                        px = int(np.clip(lm.x * w, 0, w - 1))
+                        py = int(np.clip(lm.y * h, 0, h - 1))
+                        cv2.circle(frame, (px, py), 4, (0, 240, 180), -1)
+            else:
+                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+                results = detector.detect(mp_image)
+                if results.hand_landmarks and len(results.hand_landmarks) > 0:
+                    hand_detected = True
+                    lm_list = results.hand_landmarks[0]
+                    pts = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
+                    features_63d = extract_realsign_hand_features(pts)
+                    for lm in lm_list:
+                        px = int(np.clip(lm.x * w, 0, w - 1))
+                        py = int(np.clip(lm.y * h, 0, h - 1))
+                        cv2.circle(frame, (px, py), 4, (0, 240, 180), -1)
         except Exception as e:
             logger.debug("Detector error: %s", e)
 
@@ -335,20 +346,24 @@ def main() -> None:
         else:
             try:
                 import mediapipe as mp
-                from mediapipe.tasks import python
-                from mediapipe.tasks.python import vision
-
-                if not DEFAULT_TASK_PATH.exists():
-                    raise FileNotFoundError(f"MediaPipe task asset not found: {DEFAULT_TASK_PATH}")
-
-                base_options = python.BaseOptions(model_asset_path=str(DEFAULT_TASK_PATH))
-                options = vision.HandLandmarkerOptions(
-                    base_options=base_options,
-                    running_mode=vision.RunningMode.IMAGE,
-                    num_hands=1,
-                    min_hand_detection_confidence=0.4,
-                )
-                detector = vision.HandLandmarker.create_from_options(options)
+                try:
+                    detector = mp.solutions.hands.Hands(
+                        static_image_mode=False,
+                        max_num_hands=1,
+                        min_detection_confidence=0.4,
+                        min_tracking_confidence=0.4,
+                    )
+                except Exception:
+                    from mediapipe.tasks import python
+                    from mediapipe.tasks.python import vision
+                    base_options = python.BaseOptions(model_asset_path=os.path.relpath(DEFAULT_TASK_PATH))
+                    options = vision.HandLandmarkerOptions(
+                        base_options=base_options,
+                        running_mode=vision.RunningMode.IMAGE,
+                        num_hands=1,
+                        min_hand_detection_confidence=0.4,
+                    )
+                    detector = vision.HandLandmarker.create_from_options(options)
 
                 for letter in target_letters:
                     samples = capture_letter_samples_from_webcam(
