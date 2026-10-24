@@ -10,8 +10,16 @@ import {
   FlipHorizontal,
   AlertCircle,
   Sparkles,
+  Type,
+  CornerDownLeft,
+  Delete,
+  Trash2,
+  Copy,
+  Check,
+  Clock,
 } from 'lucide-react';
 import { normalizeHandLandmarks63D } from '../utils/landmarkProcessor';
+import { useTextBuffer } from '../hooks/useTextBuffer';
 
 interface TopCandidate {
   letter: string;
@@ -68,6 +76,34 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
   const [fps, setFps] = useState<number>(0);
   const [latencyMs, setLatencyMs] = useState<number>(0);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+
+  // Text Buffer Hook for continuous sign accumulation
+  const {
+    text: bufferText,
+    currentCandidate,
+    candidateConfidence,
+    holdProgress,
+    isHolding,
+    isLockedOut,
+    processPrediction,
+    resetHold,
+    manualSpace,
+    manualBackspace,
+    clearBuffer,
+  } = useTextBuffer({
+    holdDurationMs: 600,
+    confidenceThreshold: 0.85,
+    lockoutDurationMs: 400,
+  });
+
+  const [copied, setCopied] = useState<boolean>(false);
+
+  const handleCopyText = useCallback(() => {
+    if (!bufferText) return;
+    navigator.clipboard.writeText(bufferText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [bufferText]);
 
   // Runtime references
   const streamRef = useRef<MediaStream | null>(null);
@@ -202,6 +238,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
             if (onLetterDetected && data.letter) {
               onLetterDetected(data.letter, data.confidence);
             }
+            processPrediction(data.letter, data.confidence);
           }
         } else {
           const errData = await res.json().catch(() => ({}));
@@ -215,7 +252,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
         isRequestPendingRef.current = false;
       }
     },
-    [apiBaseUrl, onLetterDetected]
+    [apiBaseUrl, onLetterDetected, processPrediction]
   );
 
   // Handle MediaPipe onResults callback
@@ -262,9 +299,10 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
         setStatusMessage('Position hand clearly inside camera view');
         const ctx = canvas.getContext('2d');
         if (ctx) ctx.clearRect(0, 0, width, height);
+        resetHold();
       }
     },
-    [drawLandmarks, isPaused, sendPredictionRequest]
+    [drawLandmarks, isPaused, sendPredictionRequest, resetHold]
   );
 
   // Initialize MediaPipe Hands
@@ -377,12 +415,19 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
     setIsPaused(false);
     setIsHandDetected(false);
     setPrediction(null);
+    resetHold();
     setStatusMessage('Camera stopped.');
   };
 
   // Pause / Resume
   const togglePause = () => {
-    setIsPaused((prev) => !prev);
+    setIsPaused((prev) => {
+      const next = !prev;
+      if (next) {
+        resetHold();
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -723,6 +768,269 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
           }}>
             {errorMessage ? <AlertCircle size={14} /> : <Activity size={14} />}
             <span>{errorMessage || statusMessage}</span>
+          </div>
+
+          {/* Live Hold Progress Bar */}
+          <div
+            style={{
+              background: 'rgba(2, 6, 23, 0.45)',
+              border: isLockedOut
+                ? '1px solid rgba(245, 158, 11, 0.3)'
+                : isHolding
+                ? '1px solid rgba(56, 189, 248, 0.3)'
+                : '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              transition: 'border-color 0.2s ease',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock
+                  size={13}
+                  color={isLockedOut ? '#F59E0B' : isHolding ? '#38BDF8' : '#94A3B8'}
+                />
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: isLockedOut ? '#FBBF24' : isHolding ? '#38BDF8' : '#CBD5E1',
+                  }}
+                >
+                  {isLockedOut
+                    ? 'Cooldown Lockout (400ms)'
+                    : isHolding && currentCandidate
+                    ? `Holding "${currentCandidate}" (${Math.round(candidateConfidence * 100)}% conf)`
+                    : 'Hold sign for 600ms (≥85% conf) to type'}
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: isLockedOut ? '#F59E0B' : isHolding ? '#38BDF8' : '#64748B',
+                }}
+              >
+                {isLockedOut ? 'LOCKED' : `${Math.round(holdProgress)}%`}
+              </span>
+            </div>
+
+            {/* Progress track */}
+            <div
+              style={{
+                width: '100%',
+                height: '7px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: isLockedOut ? '100%' : `${holdProgress}%`,
+                  height: '100%',
+                  background: isLockedOut
+                    ? 'linear-gradient(90deg, #F59E0B, #D97706)'
+                    : holdProgress >= 100
+                    ? '#10B981'
+                    : 'linear-gradient(90deg, #38BDF8, #818CF8)',
+                  boxShadow: isHolding ? '0 0 10px rgba(56, 189, 248, 0.4)' : 'none',
+                  borderRadius: '4px',
+                  transition: isLockedOut ? 'none' : 'width 0.05s linear',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Recognized Text Buffer Box */}
+          <div
+            style={{
+              background: 'rgba(2, 6, 23, 0.55)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+            }}
+          >
+            {/* Buffer Header with Title and Control Buttons */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Type size={16} color="#38BDF8" />
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#F1F5F9' }}>
+                  Sentence Buffer
+                </span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    color: '#94A3B8',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  {bufferText.length} chars
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={manualSpace}
+                  title="Insert space"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '5px 9px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    color: '#E2E8F0',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <CornerDownLeft size={12} />
+                  <span>Space</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={manualBackspace}
+                  disabled={bufferText.length === 0}
+                  title="Delete last character"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '5px 9px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    color: bufferText.length === 0 ? '#64748B' : '#E2E8F0',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: bufferText.length === 0 ? 'not-allowed' : 'pointer',
+                    opacity: bufferText.length === 0 ? 0.5 : 1,
+                  }}
+                >
+                  <Delete size={12} />
+                  <span>Backspace</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={clearBuffer}
+                  disabled={bufferText.length === 0}
+                  title="Clear text buffer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '5px 9px',
+                    borderRadius: '6px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    color: bufferText.length === 0 ? '#64748B' : '#F87171',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: bufferText.length === 0 ? 'not-allowed' : 'pointer',
+                    opacity: bufferText.length === 0 ? 0.5 : 1,
+                  }}
+                >
+                  <Trash2 size={12} />
+                  <span>Clear</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyText}
+                  disabled={bufferText.length === 0}
+                  title="Copy text to clipboard"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '5px 9px',
+                    borderRadius: '6px',
+                    background: copied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.1)',
+                    color: copied ? '#10B981' : bufferText.length === 0 ? '#64748B' : '#38BDF8',
+                    border: `1px solid ${
+                      copied ? 'rgba(16, 185, 129, 0.3)' : 'rgba(56, 189, 248, 0.2)'
+                    }`,
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: bufferText.length === 0 ? 'not-allowed' : 'pointer',
+                    opacity: bufferText.length === 0 ? 0.5 : 1,
+                  }}
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Display Area */}
+            <div
+              style={{
+                minHeight: '72px',
+                maxHeight: '120px',
+                overflowY: 'auto',
+                background: 'rgba(15, 23, 42, 0.6)',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '10px 12px',
+                fontSize: '16px',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                letterSpacing: '0.5px',
+                color: '#F8FAFC',
+                wordBreak: 'break-word',
+                display: 'flex',
+                alignItems: 'flex-start',
+              }}
+            >
+              {bufferText ? (
+                <span>
+                  {bufferText}
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '2px',
+                      height: '18px',
+                      background: '#38BDF8',
+                      marginLeft: '3px',
+                      verticalAlign: 'text-bottom',
+                    }}
+                  />
+                </span>
+              ) : (
+                <span style={{ color: '#64748B', fontStyle: 'italic', fontSize: '13px' }}>
+                  Hold letter gesture for 600ms (≥85% conf) to accumulate words and sentences...
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

@@ -37,11 +37,7 @@ if str(ROOT_DIR) not in sys.path:
 from setu.features.geometry import normalize_wrist_coordinates
 from setu.features.extractor import extract_realsign_hand_features
 
-DEFAULT_FEATURES_PATH = (
-    ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz"
-    if (ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz").exists()
-    else ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
-)
+DEFAULT_FEATURES_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
 DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
 DEFAULT_REPORT_SAVE_PATH = ROOT_DIR / "reports" / "realsign_26class_evaluation_report.json"
 

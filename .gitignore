@@ -45,6 +45,10 @@ pytest-cache-files-*
 .env.*.local
 *.pem
 *.key
+certs/*.pem
+certs/*.key
+certs/*.crt
+!certs/.gitkeep
 
 # Operating System & IDE Files
 .DS_Store
@@ -60,6 +64,7 @@ data/processed/
 *.avi
 *.mov
 *.npy
+*.zip
 
 # Model weights: ignore large reference/pretrained binaries
 *.h5

@@ -42,7 +42,7 @@ CLASS_SET_26: Set[str] = set(CLASSES_26)
 CLASS_TO_IDX: Dict[str, int] = {c: i for i, c in enumerate(CLASSES_26)}
 
 DEFAULT_RAW_DIR = PROJECT_ROOT / "data" / "raw"
-DEFAULT_OUTPUT_NPZ = PROJECT_ROOT / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz"
+DEFAULT_OUTPUT_NPZ = PROJECT_ROOT / "data" / "processed" / "realsign_landmarks_26class.npz"
 DEFAULT_ALT_OUTPUT_NPZ = PROJECT_ROOT / "data" / "processed" / "realsign_landmarks_26class.npz"
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".bmp", ".webp")

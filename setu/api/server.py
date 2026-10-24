@@ -679,20 +679,26 @@ async def list_custom_samples():
 
 def serialize_landmarks(raw_lms: Any, sample_indices: Optional[List[int]] = None) -> List[Dict[str, float]]:
     """Serializes MediaPipe NormalizedLandmark list into a clean dictionary list."""
-    if not raw_lms or len(raw_lms) == 0:
+    if raw_lms is None:
         return []
-    
-    first_list = raw_lms[0] if isinstance(raw_lms[0], list) else raw_lms
-    
+    if hasattr(raw_lms, "landmark"):
+        first_list = raw_lms.landmark
+    elif isinstance(raw_lms, list) and len(raw_lms) > 0 and isinstance(raw_lms[0], list):
+        first_list = raw_lms[0]
+    elif hasattr(raw_lms, "__len__") and len(raw_lms) == 0:
+        return []
+    else:
+        first_list = raw_lms
+
     out: List[Dict[str, float]] = []
     if sample_indices:
         for idx in sample_indices:
             if idx < len(first_list):
                 lm = first_list[idx]
-                out.append({"x": round(float(lm.x), 4), "y": round(float(lm.y), 4), "z": round(float(lm.z), 4)})
+                out.append({"x": round(float(lm.x), 4), "y": round(float(lm.y), 4), "z": round(float(getattr(lm, "z", 0.0)), 4)})
     else:
         for lm in first_list:
-            out.append({"x": round(float(lm.x), 4), "y": round(float(lm.y), 4), "z": round(float(lm.z), 4)})
+            out.append({"x": round(float(lm.x), 4), "y": round(float(lm.y), 4), "z": round(float(getattr(lm, "z", 0.0)), 4)})
     return out
 
 

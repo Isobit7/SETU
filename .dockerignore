@@ -1,0 +1,48 @@
+# =====================================================================
+# SETU — Docker Ignore Rules
+# =====================================================================
+
+# Virtual environments
+.venv
+venv
+env
+
+# Python bytecode and caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Node and frontend artifacts
+node_modules
+frontend/node_modules
+frontend/dist
+dist
+
+# Raw and bulky dataset files
+data/raw
+*.zip
+*.docx
+*.npz
+
+# Logs, agent and IDE cache
+*.log
+.agent
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# SSL / TLS certificates (mounted at runtime via Docker volume)
+certs/
+*.pem
+*.key
+*.crt

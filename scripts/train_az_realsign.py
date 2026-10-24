@@ -43,7 +43,7 @@ logging.basicConfig(
 logger = logging.getLogger("SETU.TrainAZ")
 
 DEFAULT_MODEL_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
-DEFAULT_DATASET_PATH = ROOT_DIR / "data" / "processed" / "realsign" / "realsign_landmarks_26class.npz"
+DEFAULT_DATASET_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
 DEFAULT_TASK_PATH = ROOT_DIR / "models" / "tasks" / "hand_landmarker.task"
 
 ALL_LETTERS = [chr(ord("A") + i) for i in range(26)]

@@ -13,10 +13,56 @@ import mediapipe as mp
 from setu.exceptions import ModelArtifactError, LandmarkExtractionError
 from configs.settings import config
 
+class NormalizedLandmarkPoint:
+    """Lightweight mutable landmark point compatible with MediaPipe NormalizedLandmark."""
+    __slots__ = ("x", "y", "z")
+
+    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None:
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
+
+    def __repr__(self) -> str:
+        return f"NormalizedLandmark(x={self.x:.4f}, y={self.y:.4f}, z={self.z:.4f})"
+
+
+class HolisticLandmarkerResult:
+    """Standardized result container compatible with MediaPipe Tasks HolisticLandmarkerResult."""
+    __slots__ = (
+        "pose_landmarks",
+        "face_landmarks",
+        "left_hand_landmarks",
+        "right_hand_landmarks",
+        "pose_world_landmarks",
+        "left_hand_world_landmarks",
+        "right_hand_world_landmarks",
+        "face_blendshapes",
+        "segmentation_mask",
+    )
+
+    def __init__(
+        self,
+        pose_landmarks: Optional[list[NormalizedLandmarkPoint]] = None,
+        face_landmarks: Optional[list[NormalizedLandmarkPoint]] = None,
+        left_hand_landmarks: Optional[list[NormalizedLandmarkPoint]] = None,
+        right_hand_landmarks: Optional[list[NormalizedLandmarkPoint]] = None,
+    ) -> None:
+        self.pose_landmarks = pose_landmarks or []
+        self.face_landmarks = face_landmarks or []
+        self.left_hand_landmarks = left_hand_landmarks or []
+        self.right_hand_landmarks = right_hand_landmarks or []
+        self.pose_world_landmarks = []
+        self.left_hand_world_landmarks = []
+        self.right_hand_world_landmarks = []
+        self.face_blendshapes = None
+        self.segmentation_mask = None
+
+
 class HolisticLandmarkerWrapper:
     """
-    Wraps MediaPipe Tasks HolisticLandmarker for robust 3D keypoint detection.
-    Validates model bundle existence and handles BGR to RGB frame transformation.
+    Wraps MediaPipe Holistic for robust 3D keypoint detection across face, pose, and hands.
+    Validates model bundle existence, handles BGR to RGB frame transformation, and isolates
+    underlying C++ runtime resources safely.
     """
     def __init__(
         self,
@@ -38,7 +84,7 @@ class HolisticLandmarkerWrapper:
         )
         self.model_complexity = model_complexity
         self.smooth_landmarks = smooth_landmarks
-        self._landmarker: Optional[mp.tasks.vision.HolisticLandmarker] = None
+        self._landmarker: Optional[Any] = None
         self._prev_landmarks: dict[str, Optional[list[tuple[float, float, float]]]] = {
             "pose": None,
             "face": None,
@@ -47,7 +93,7 @@ class HolisticLandmarkerWrapper:
         }
 
     def initialize(self) -> None:
-        """Initializes the MediaPipe Tasks landmarker after verifying the model asset path."""
+        """Initializes the MediaPipe Holistic landmarker after verifying the model asset path."""
         if self._landmarker is not None:
             return
 
@@ -59,29 +105,16 @@ class HolisticLandmarkerWrapper:
             )
 
         try:
-            # Create landmarker using MediaPipe Tasks API with options
-            from mediapipe.tasks import python
-            from mediapipe.tasks.python import vision
-
-            base_opts = python.BaseOptions(model_asset_path=str(self.task_model_path))
-            opts = vision.HolisticLandmarkerOptions(
-                base_options=base_opts,
-                running_mode=vision.RunningMode.IMAGE,
-                min_face_detection_confidence=float(self.min_detection_confidence),
-                min_pose_detection_confidence=float(self.min_detection_confidence),
-                min_hand_landmarks_confidence=float(self.min_detection_confidence),
+            self._landmarker = mp.solutions.holistic.Holistic(
+                min_detection_confidence=float(self.min_detection_confidence),
+                min_tracking_confidence=float(self.min_tracking_confidence),
+                model_complexity=self.model_complexity,
+                smooth_landmarks=self.smooth_landmarks,
             )
-            self._landmarker = vision.HolisticLandmarker.create_from_options(opts)
-        except Exception:
-            try:
-                # Direct fallback to create_from_model_path
-                self._landmarker = mp.tasks.vision.HolisticLandmarker.create_from_model_path(
-                    str(self.task_model_path)
-                )
-            except Exception as e:
-                raise ModelArtifactError(
-                    f"Failed to initialize MediaPipe HolisticLandmarker from {self.task_model_path}: {e}"
-                ) from e
+        except Exception as e:
+            raise ModelArtifactError(
+                f"Failed to initialize MediaPipe Holistic landmarker: {e}"
+            ) from e
 
     def _smooth_landmark_list(
         self,
@@ -112,12 +145,12 @@ class HolisticLandmarkerWrapper:
             "right_hand": None,
         }
 
-    def detect(self, bgr_image: np.ndarray) -> Any:
+    def detect(self, bgr_image: np.ndarray) -> HolisticLandmarkerResult:
         """
         Executes landmark detection on a BGR image array.
         Returns:
             HolisticLandmarkerResult containing left_hand_landmarks, right_hand_landmarks,
-            pose_landmarks, and face_landmarks.
+            pose_landmarks, and face_landmarks as NormalizedLandmarkPoint lists.
         """
         if self._landmarker is None:
             self.initialize()
@@ -129,19 +162,38 @@ class HolisticLandmarkerWrapper:
 
         try:
             rgb_frame = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-            result = self._landmarker.detect(mp_image)
-            if self.smooth_landmarks and result is not None:
-                self._smooth_landmark_list("pose", getattr(result, "pose_landmarks", None))
-                self._smooth_landmark_list("face", getattr(result, "face_landmarks", None))
-                self._smooth_landmark_list("left_hand", getattr(result, "left_hand_landmarks", None))
-                self._smooth_landmark_list("right_hand", getattr(result, "right_hand_landmarks", None))
-            return result
+            raw = self._landmarker.process(rgb_frame)
+
+            def _to_points(lms_proto) -> list[NormalizedLandmarkPoint]:
+                if not lms_proto or not hasattr(lms_proto, "landmark"):
+                    return []
+                return [
+                    NormalizedLandmarkPoint(lm.x, lm.y, getattr(lm, "z", 0.0))
+                    for lm in lms_proto.landmark
+                ]
+
+            pose = _to_points(raw.pose_landmarks)
+            face = _to_points(raw.face_landmarks)
+            left_hand = _to_points(raw.left_hand_landmarks)
+            right_hand = _to_points(raw.right_hand_landmarks)
+
+            if self.smooth_landmarks:
+                self._smooth_landmark_list("pose", pose)
+                self._smooth_landmark_list("face", face)
+                self._smooth_landmark_list("left_hand", left_hand)
+                self._smooth_landmark_list("right_hand", right_hand)
+
+            return HolisticLandmarkerResult(
+                pose_landmarks=pose,
+                face_landmarks=face,
+                left_hand_landmarks=left_hand,
+                right_hand_landmarks=right_hand,
+            )
         except Exception as e:
             raise LandmarkExtractionError(f"Error during MediaPipe landmark detection: {e}") from e
 
     def close(self) -> None:
-        """Closes landmarker and frees underlying C++ runtime resources."""
+        """Closes landmarker and frees underlying runtime resources."""
         self.reset_smoothing()
         if self._landmarker is not None:
             try:
@@ -194,7 +246,12 @@ class HandLandmarkerWrapper:
             from mediapipe.tasks import python
             from mediapipe.tasks.python import vision
 
-            base_opts = python.BaseOptions(model_asset_path=str(self.task_model_path))
+            import os
+            try:
+                asset_path_str = os.path.relpath(self.task_model_path)
+            except ValueError:
+                asset_path_str = str(self.task_model_path)
+            base_opts = python.BaseOptions(model_asset_path=asset_path_str)
             opts = vision.HandLandmarkerOptions(
                 base_options=base_opts,
                 running_mode=vision.RunningMode.IMAGE,
