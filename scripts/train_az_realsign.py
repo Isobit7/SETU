@@ -5,7 +5,9 @@ Captures static hand poses for letters A–Z directly from a live webcam
 and performs instant transfer retraining of the RealSign 26-Class PyTorch MLP
 in ~3 seconds:
 - Interactive OpenCV window with live guidance and visual progress.
-- Captures 10 clean hand landmark frames per requested letter.
+- Captures 5 clean hand landmark frames per requested letter.
+- Detects and tracks up to 2 hands (essential for Indian Sign Language).
+- Automatically saves raw unannotated frames (.jpg) and 3D landmarks (.npz) into 'data/raw_captured/{letter}/'.
 - Normalizes landmarks into 63-D invariant feature vectors.
 - Fine-tunes PyTorch RealSignMLP checkpoint with CrossEntropyLoss and Adam.
 - Saves updated weights to 'models/realsign_26class_mlp.pth'.
@@ -16,6 +18,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import logging
+import os
 import sys
 import time
 from pathlib import Path
@@ -45,8 +48,19 @@ logger = logging.getLogger("SETU.TrainAZ")
 DEFAULT_MODEL_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
 DEFAULT_DATASET_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
 DEFAULT_TASK_PATH = ROOT_DIR / "models" / "tasks" / "hand_landmarker.task"
+DEFAULT_RAW_CAPTURED_DIR = ROOT_DIR / "data" / "raw_captured"
 
 ALL_LETTERS = [chr(ord("A") + i) for i in range(26)]
+
+# MediaPipe standard 21-landmark skeletal bone connections
+HAND_CONNECTIONS = [
+    (0, 1), (1, 2), (2, 3), (3, 4),        # Thumb
+    (0, 5), (5, 6), (6, 7), (7, 8),        # Index
+    (5, 9), (9, 10), (10, 11), (11, 12),   # Middle
+    (9, 13), (13, 14), (14, 15), (15, 16), # Ring
+    (13, 17), (17, 18), (18, 19), (19, 20),# Pinky
+    (0, 17),                                # Palm base
+]
 
 
 def parse_target_letters(letters_arg: str) -> List[str]:
@@ -61,7 +75,7 @@ def parse_target_letters(letters_arg: str) -> List[str]:
 
 def generate_synthetic_samples_for_letter(
     letter: str,
-    num_samples: int = 10,
+    num_samples: int = 5,
     dataset_path: Optional[Path] = None,
 ) -> np.ndarray:
     """
@@ -133,18 +147,22 @@ def capture_letter_samples_from_webcam(
     cap: cv2.VideoCapture,
     detector: Any,
     letter: str,
-    target_samples: int = 10,
+    target_samples: int = 5,
     gap_seconds: float = 1.0,
     current_idx: int = 1,
     total_letters: int = 26,
     next_letter: Optional[str] = None,
+    raw_captured_dir: Optional[Path] = DEFAULT_RAW_CAPTURED_DIR,
 ) -> Tuple[np.ndarray, bool]:
     """
-    Captures target_samples (10) takes for a specific letter via webcam:
+    Captures target_samples (5) takes for a specific letter via webcam:
     1. Paused start: waits for user to press SPACE to begin recording.
     2. 1-second gap between takes with visual countdown progress bar.
-    3. Completion screen: waits for SPACE before moving to the next letter.
-    4. Supports 'R' (redo), 'S' (skip), 'Q'/'ESC' (quit).
+    3. Detects and tracks up to 2 hands (essential for Indian Sign Language).
+    4. Automatically saves raw unannotated frames (.jpg) and 3D landmarks (.npz)
+       into 'data/raw_captured/{letter}/'.
+    5. Completion screen: waits for SPACE before moving to the next letter.
+    6. Supports 'R' (redo), 'S' (skip), 'Q'/'ESC' (quit).
 
     Returns:
         (samples_array, user_quit_flag)
@@ -169,8 +187,8 @@ def capture_letter_samples_from_webcam(
         pass
 
     logger.info(
-        "=== Letter [%s] (%d/%d) === Ready. Auto-starting in 3s (or press SPACE).",
-        letter, current_idx, total_letters,
+        "=== Letter [%s] (%d/%d) === Ready for %d takes (1 or 2 hands). Auto-starting in 3s (or press SPACE).",
+        letter, current_idx, total_letters, target_samples,
     )
 
     while True:
@@ -180,36 +198,81 @@ def capture_letter_samples_from_webcam(
             continue
 
         frame = cv2.flip(frame, 1)
+        raw_clean_frame = frame.copy()  # Pristine frame for raw saving
         h, w = frame.shape[:2]
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         hand_detected = False
         features_63d = None
+        all_hands_pts: List[np.ndarray] = []
+        all_handedness: List[str] = []
 
         try:
             if hasattr(detector, "process"):
                 results = detector.process(rgb)
                 if results and results.multi_hand_landmarks:
                     hand_detected = True
-                    lm_list = results.multi_hand_landmarks[0].landmark
-                    pts = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
-                    features_63d = extract_realsign_hand_features(pts)
-                    for lm in lm_list:
-                        px = int(np.clip(lm.x * w, 0, w - 1))
-                        py = int(np.clip(lm.y * h, 0, h - 1))
-                        cv2.circle(frame, (px, py), 4, (0, 240, 180), -1)
+                    for i, hand_lms in enumerate(results.multi_hand_landmarks):
+                        lm_list = hand_lms.landmark
+                        pts = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
+                        all_hands_pts.append(pts)
+
+                        h_label = "right"
+                        if results.multi_handedness and i < len(results.multi_handedness):
+                            cls_list = results.multi_handedness[i].classification
+                            if cls_list and len(cls_list) > 0:
+                                h_label = cls_list[0].label.lower()
+                        all_handedness.append(h_label)
             else:
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
                 results = detector.detect(mp_image)
                 if results.hand_landmarks and len(results.hand_landmarks) > 0:
                     hand_detected = True
-                    lm_list = results.hand_landmarks[0]
-                    pts = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
-                    features_63d = extract_realsign_hand_features(pts)
-                    for lm in lm_list:
-                        px = int(np.clip(lm.x * w, 0, w - 1))
-                        py = int(np.clip(lm.y * h, 0, h - 1))
-                        cv2.circle(frame, (px, py), 4, (0, 240, 180), -1)
+                    for i, hand_lms in enumerate(results.hand_landmarks):
+                        pts = np.array([[lm.x, lm.y, lm.z] for lm in hand_lms], dtype=np.float32)
+                        all_hands_pts.append(pts)
+                        h_label = "right"
+                        if hasattr(results, "handedness") and results.handedness and i < len(results.handedness):
+                            cls_list = results.handedness[i]
+                            if cls_list and len(cls_list) > 0:
+                                c = cls_list[0]
+                                h_label = getattr(c, "category_name", getattr(c, "displayName", "right")).lower()
+                        all_handedness.append(h_label)
+
+            if hand_detected and len(all_hands_pts) > 0:
+                features_63d = extract_realsign_hand_features({
+                    "hand_landmarks": all_hands_pts,
+                    "handedness": all_handedness,
+                })
+
+            # Render landmarks and skeleton connections for all detected hands (1 or 2 hands for ISL)
+            for pts, h_label in zip(all_hands_pts, all_handedness):
+                is_rt = (h_label == "right")
+                # Right hand: Mint / Emerald; Left hand: Amber / Cyan
+                pt_color = (0, 240, 180) if is_rt else (255, 200, 0)
+                line_color = (0, 190, 130) if is_rt else (220, 160, 0)
+
+                # Skeleton lines
+                for p1_idx, p2_idx in HAND_CONNECTIONS:
+                    x1 = int(np.clip(pts[p1_idx, 0] * w, 0, w - 1))
+                    y1 = int(np.clip(pts[p1_idx, 1] * h, 0, h - 1))
+                    x2 = int(np.clip(pts[p2_idx, 0] * w, 0, w - 1))
+                    y2 = int(np.clip(pts[p2_idx, 1] * h, 0, h - 1))
+                    cv2.line(frame, (x1, y1), (x2, y2), line_color, 2, cv2.LINE_AA)
+
+                # Landmark points
+                for lx, ly, lz in pts:
+                    px = int(np.clip(lx * w, 0, w - 1))
+                    py = int(np.clip(ly * h, 0, h - 1))
+                    cv2.circle(frame, (px, py), 4, pt_color, -1, cv2.LINE_AA)
+                    cv2.circle(frame, (px, py), 5, (255, 255, 255), 1, cv2.LINE_AA)
+
+                # Wrist tag
+                wx = int(np.clip(pts[0, 0] * w, 0, w - 1))
+                wy = int(np.clip(pts[0, 1] * h, 0, h - 1))
+                tag = f"[{h_label.upper()} HAND]"
+                cv2.putText(frame, tag, (max(10, wx - 45), min(h - 45, wy + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, pt_color, 1, cv2.LINE_AA)
+
         except Exception as e:
             logger.debug("Detector error: %s", e)
 
@@ -231,11 +294,41 @@ def capture_letter_samples_from_webcam(
                     collected.append(features_63d)
                     last_take_time = now
                     flash_until = now + 0.35
-                    logger.info("Captured Take %d/%d for Letter [%s]", len(collected), target_samples, letter)
+                    take_idx = len(collected)
+
+                    # Save pristine raw clean frame and complete 3D landmark array
+                    if raw_captured_dir is not None and raw_clean_frame is not None:
+                        try:
+                            letter_raw_dir = raw_captured_dir / letter
+                            letter_raw_dir.mkdir(parents=True, exist_ok=True)
+                            timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                            img_path = letter_raw_dir / f"take_{take_idx:02d}_{timestamp_str}.jpg"
+                            npz_path = letter_raw_dir / f"take_{take_idx:02d}_{timestamp_str}.npz"
+
+                            cv2.imwrite(str(img_path), raw_clean_frame)
+                            np.savez_compressed(
+                                str(npz_path),
+                                letter=letter,
+                                take_idx=take_idx,
+                                timestamp=timestamp_str,
+                                features_63d=features_63d,
+                                landmarks_3d=np.array(all_hands_pts, dtype=np.float32),
+                                handedness=np.array(all_handedness, dtype=str),
+                                num_hands=len(all_hands_pts),
+                            )
+                            logger.info(
+                                "Captured Take %d/%d for Letter [%s] (%d hand(s)) -> Saved to %s",
+                                take_idx, target_samples, letter, len(all_hands_pts), img_path.name,
+                            )
+                        except Exception as e:
+                            logger.warning("Could not save raw take archive: %s", e)
+                    else:
+                        logger.info("Captured Take %d/%d for Letter [%s] (%d hand(s))", take_idx, target_samples, letter, len(all_hands_pts))
+
                     if len(collected) >= target_samples:
                         state = "DONE"
                         done_start = now
-                        logger.info("Letter [%s] (10/10) captured! Next letter in 3s (or press SPACE).", letter)
+                        logger.info("Letter [%s] (%d/%d) captured! Next letter in %.1fs (or press SPACE).", letter, target_samples, target_samples, done_secs)
 
         elif state == "DONE":
             if done_start == 0.0:
@@ -252,10 +345,17 @@ def capture_letter_samples_from_webcam(
         title_text = f"LETTER [{letter}]  ({current_idx}/{total_letters})"
         cv2.putText(frame, title_text, (20, 36), cv2.FONT_HERSHEY_DUPLEX, 0.75, (0, 235, 255), 2, cv2.LINE_AA)
 
-        # Hand status indicator
-        hand_color = (0, 255, 120) if hand_detected else (0, 120, 255)
-        hand_status = "HAND DETECTED" if hand_detected else "NO HAND VISIBLE"
-        cv2.putText(frame, hand_status, (w - 200, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.52, hand_color, 1, cv2.LINE_AA)
+        # Hand status indicator (supports 1 or 2 hands)
+        if len(all_hands_pts) >= 2:
+            hand_color = (0, 255, 200)
+            hand_status = "2 HANDS (BOTH DETECTED)"
+        elif len(all_hands_pts) == 1:
+            hand_color = (0, 255, 120)
+            hand_status = f"1 HAND ({all_handedness[0].upper()})"
+        else:
+            hand_color = (0, 120, 255)
+            hand_status = "NO HAND VISIBLE"
+        cv2.putText(frame, hand_status, (w - 270, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.52, hand_color, 1, cv2.LINE_AA)
 
         # Bottom Bar Background
         cv2.rectangle(frame, (0, h - 40), (w, h), (15, 18, 25), -1)
@@ -267,8 +367,9 @@ def capture_letter_samples_from_webcam(
                 frame,
                 title=f"READY FOR LETTER: [{letter}]",
                 lines=[
-                    (f"1. Position your hand for sign '{letter}'.", (240, 240, 240), 0.65),
+                    (f"1. Position hand(s) for '{letter}' (ISL 1-hand or 2-hand supported).", (240, 240, 240), 0.62),
                     (f"2. Hold pose for {target_samples} takes ({gap_seconds:.1f}s slow gap between takes).", (200, 200, 200), 0.6),
+                    (f"3. Takes saved directly to: data/raw_captured/{letter}/", (180, 220, 255), 0.58),
                     (f"-> STARTING IN {remain_cd:.1f}s (or press SPACEBAR) <-", (0, 255, 255), 0.7),
                     ("[S] Skip Letter   |   [Q] Finish Early & Retrain", (160, 160, 160), 0.55),
                 ],
@@ -283,7 +384,7 @@ def capture_letter_samples_from_webcam(
             cv2.putText(frame, f"Takes: {len(collected)}/{target_samples}  {dots}", (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
             if now < flash_until:
-                cv2.putText(frame, f"TAKE {len(collected)}/{target_samples} SAVED!", (w // 2 - 160, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.85, (0, 255, 0), 2, cv2.LINE_AA)
+                cv2.putText(frame, f"TAKE {len(collected)}/{target_samples} SAVED (RAW & LANDMARKS)!", (w // 2 - 250, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.72, (0, 255, 0), 2, cv2.LINE_AA)
             elif elapsed < gap_seconds:
                 remain = max(0.0, gap_seconds - elapsed)
                 pct = min(1.0, elapsed / gap_seconds)
@@ -296,20 +397,21 @@ def capture_letter_samples_from_webcam(
                 cv2.putText(frame, f"Next take in {remain:.1f}s... Hold '{letter}' pose", (bx, by - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 220, 255), 1, cv2.LINE_AA)
             else:
                 if not hand_detected:
-                    cv2.putText(frame, f"Show hand to capture take {len(collected) + 1}...", (w // 2 - 180, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.7, (0, 100, 255), 2, cv2.LINE_AA)
+                    cv2.putText(frame, f"Show hand(s) to capture take {len(collected) + 1}...", (w // 2 - 200, h // 2), cv2.FONT_HERSHEY_DUPLEX, 0.7, (0, 100, 255), 2, cv2.LINE_AA)
 
         elif state == "DONE":
             remain_done = max(0.0, done_secs - (now - done_start))
-            next_info = f"Next Letter: [{next_letter}]" if next_letter else "All 26 letters recorded!"
+            next_info = f"Next Letter: [{next_letter}]" if next_letter else "All letters recorded!"
             action_info = (
                 f"-> PROCEEDING TO [{next_letter}] IN {remain_done:.1f}s (or press SPACE) <-"
                 if next_letter else f"-> FINISHING & TRAINING IN {remain_done:.1f}s (or press SPACE) <-"
             )
             draw_card(
                 frame,
-                title=f"SUCCESS: LETTER [{letter}] COMPLETE! (10/10)",
+                title=f"SUCCESS: LETTER [{letter}] COMPLETE! ({len(collected)}/{target_samples})",
                 lines=[
                     (f"Captured {len(collected)} clean takes for letter '{letter}'.", (240, 240, 240), 0.65),
+                    (f"Raw images & landmarks saved to: data/raw_captured/{letter}/", (180, 220, 255), 0.58),
                     (next_info, (0, 255, 200), 0.7),
                     (action_info, (0, 255, 255), 0.7),
                     (f"[R] Redo Letter [{letter}]   |   [Q] Finish & Train", (160, 160, 160), 0.55),
@@ -541,8 +643,9 @@ def open_camera_interactive(camera_id: int = 0) -> Optional[cv2.VideoCapture]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="SETU Instant A-Z Webcam Calibration & Training")
     parser.add_argument("--letters", type=str, default="ALL", help="Letters to record (e.g. 'A,B,C' or 'ALL' for A-Z)")
-    parser.add_argument("--frames-per-letter", "--takes", dest="frames_per_letter", type=int, default=10, help="Takes to capture per letter (default: 10)")
+    parser.add_argument("--frames-per-letter", "--takes", dest="frames_per_letter", type=int, default=5, help="Takes to capture per letter (default: 5)")
     parser.add_argument("--gap", type=float, default=1.0, help="Slow gap in seconds between takes (default: 1.0s)")
+    parser.add_argument("--raw-dir", type=Path, default=DEFAULT_RAW_CAPTURED_DIR, help="Directory to save raw unannotated frames and landmarks (default: data/raw_captured)")
     parser.add_argument("--camera-id", type=int, default=0, help="Webcam device ID (default: 0)")
     parser.add_argument("--model-path", type=Path, default=DEFAULT_MODEL_PATH, help="Path to RealSign MLP weights")
     parser.add_argument("--dataset-path", type=Path, default=DEFAULT_DATASET_PATH, help="Path to base dataset .npz")
@@ -574,9 +677,10 @@ def main() -> None:
         try:
             import mediapipe as mp
             try:
+                # Track up to 2 hands simultaneously for Indian Sign Language (ISL)
                 detector = mp.solutions.hands.Hands(
                     static_image_mode=False,
-                    max_num_hands=1,
+                    max_num_hands=2,
                     min_detection_confidence=0.4,
                     min_tracking_confidence=0.4,
                 )
@@ -587,7 +691,7 @@ def main() -> None:
                 options = vision.HandLandmarkerOptions(
                     base_options=base_options,
                     running_mode=vision.RunningMode.IMAGE,
-                    num_hands=1,
+                    num_hands=2,
                     min_hand_detection_confidence=0.4,
                 )
                 detector = vision.HandLandmarker.create_from_options(options)
@@ -603,6 +707,7 @@ def main() -> None:
                     current_idx=idx,
                     total_letters=len(target_letters),
                     next_letter=next_letter,
+                    raw_captured_dir=args.raw_dir,
                 )
                 if len(samples) > 0:
                     X_collected.append(samples)
@@ -647,6 +752,8 @@ def main() -> None:
     print("=" * 60)
     print(f"Letters Calibrated: {', '.join(recorded_letters)}")
     print(f"Total Camera Takes: {len(X_all)}")
+    if args.raw_dir:
+        print(f"Raw Folder Saved:   {args.raw_dir}")
     print(f"Retraining Time:    {elapsed:.2f} seconds")
     print(f"Model Saved:        {args.model_path}")
     print(f"Accuracy:           {final_acc * 100:.2f}%")
