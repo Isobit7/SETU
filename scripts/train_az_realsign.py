@@ -511,6 +511,8 @@ def main() -> None:
                         logger.info("Finishing early per user request. Proceeding to retrain.")
                         break
 
+            except KeyboardInterrupt:
+                logger.info("\nSession stopped via Ctrl+C. Proceeding to train on captured letters...")
             except Exception as e:
                 logger.error("Error during webcam capture: %s. Using synthetic samples.", e)
                 for letter in target_letters:
