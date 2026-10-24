@@ -337,7 +337,7 @@ def main() -> None:
         description="SETU Custom Sign Dataset Recorder (OpenCV + MediaPipe 164-D Features)"
     )
     parser.add_argument("--label", type=str, default="", help="Sign label (e.g. 'namaste', 'help')")
-    parser.add_argument("--num-samples", type=int, default=10, help="Number of samples/takes to record")
+    parser.add_argument("--num-samples", "--takes", dest="num_samples", type=int, default=10, help="Number of samples/takes to record")
     parser.add_argument("--camera", type=int, default=0, help="Webcam device index (default: 0)")
     parser.add_argument("--countdown", type=int, default=3, help="Countdown seconds before recording")
     parser.add_argument("--output-dir", type=str, default=str(DEFAULT_PROCESSED_DIR), help="Output folder")
