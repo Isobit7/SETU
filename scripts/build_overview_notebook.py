@@ -522,7 +522,7 @@ Let's execute a live CPU benchmark comparing PyTorch vs ONNX Runtime over 200 it
 ONNX_PATH = PROJECT_ROOT / "models" / "realsign_26class_mlp.onnx"
 if not ONNX_PATH.exists():
     # If not yet exported, run export script
-    from ml.export_onnx import export_to_onnx
+    from training.export_onnx import export_to_onnx
     export_to_onnx(model, ONNX_PATH)
 
 # Initialize ONNX session

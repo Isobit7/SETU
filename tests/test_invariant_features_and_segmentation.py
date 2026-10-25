@@ -6,7 +6,7 @@ and Kinetic Energy Gesture Segmentation.
 import numpy as np
 import pytest
 
-from setu.features.geometry import (
+from training.feature_extractor import (
     normalize_wrist_coordinates,
     compute_joint_angles_15,
     compute_fingertip_to_wrist_distances,
@@ -14,7 +14,7 @@ from setu.features.geometry import (
     compute_pairwise_distances,
     extract_invariant_hand_features,
 )
-from setu.features.extractor import (
+from training.feature_extractor import (
     FeatureExtractor158,
     compute_velocity_features,
     extract_realsign_hand_features,

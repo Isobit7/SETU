@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from setu.vision.landmarks import HolisticLandmarkerWrapper
+from backend.app.services.vision import HolisticLandmarkerWrapper
 
 
 @dataclass

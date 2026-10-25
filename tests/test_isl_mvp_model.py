@@ -14,14 +14,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from setu.features.schema import (
+from training.feature_extractor import (
     LEFT_PRESENCE_INDEX,
     RIGHT_PRESENCE_INDEX,
     INTER_THUMB_DISTANCE_INDEX,
     CONTACT_SCORE_INDEX,
     INTER_HAND_TOTAL_SLICE,
 )
-from setu.models.isl_mvp_classifier import (
+from models.adapters.mvp import (
     ISLMVPClassifier,
     ISLPrediction,
     featurize_sequence_1264,

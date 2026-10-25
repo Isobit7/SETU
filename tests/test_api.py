@@ -5,7 +5,9 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from setu.api.server import app, pipeline, serialize_landmarks, check_subtitle_collision, get_positioning_guidance
+from backend.app.main import app
+from backend.app.services.pipeline_manager import pipeline
+from backend.app.websocket.recognize import serialize_landmarks, check_subtitle_collision, get_positioning_guidance
 
 
 @pytest.fixture(scope="module")

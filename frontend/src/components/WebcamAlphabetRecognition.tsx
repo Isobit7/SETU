@@ -73,8 +73,6 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
 
   // Prediction output state
   const [prediction, setPrediction] = useState<PredictResponse | null>(null);
-  const [fps, setFps] = useState<number>(0);
-  const [latencyMs, setLatencyMs] = useState<number>(0);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   // Text Buffer Hook for continuous sign accumulation
@@ -111,8 +109,6 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
   const animFrameIdRef = useRef<number | null>(null);
   const isRequestPendingRef = useRef<boolean>(false);
   const lastRequestTimeRef = useRef<number>(0);
-  const frameCountRef = useRef<number>(0);
-  const lastFpsCalcTimeRef = useRef<number>(0);
   const isMountedRef = useRef<boolean>(true);
 
   // Check backend health
@@ -189,10 +185,10 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = isKeyPoint ? '#10B981' : '#38BDF8';
+        ctx.fillStyle = isKeyPoint ? '#4E9F76' : '#94A3B8';
         ctx.fill();
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.0;
+        ctx.strokeStyle = '#18191D';
         ctx.stroke();
       }
 
@@ -217,7 +213,6 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
         // Preprocess to 63-D normalized vector directly in browser memory
         const features63D = normalizeHandLandmarks63D(landmarks, isLeftHand);
 
-        const startTime = performance.now();
         const res = await fetch(`${apiBaseUrl}/api/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -227,13 +222,10 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
           }),
         });
 
-        const elapsed = Math.round(performance.now() - startTime);
-
         if (res.ok) {
           const data: PredictResponse = await res.json();
           if (isMountedRef.current) {
             setPrediction(data);
-            setLatencyMs(elapsed);
             setErrorMessage(null);
             if (onLetterDetected && data.letter) {
               onLetterDetected(data.letter, data.confidence);
@@ -259,15 +251,6 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
   const onResults = useCallback(
     (results: any) => {
       if (!isMountedRef.current || isPaused) return;
-
-      // Update FPS counter
-      frameCountRef.current += 1;
-      const now = performance.now();
-      if (now - lastFpsCalcTimeRef.current >= 1000) {
-        setFps(Math.round((frameCountRef.current * 1000) / (now - lastFpsCalcTimeRef.current)));
-        frameCountRef.current = 0;
-        lastFpsCalcTimeRef.current = now;
-      }
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -394,7 +377,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
   };
 
   // Stop Camera
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (animFrameIdRef.current) {
       cancelAnimationFrame(animFrameIdRef.current);
       animFrameIdRef.current = null;
@@ -417,7 +400,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
     setPrediction(null);
     resetHold();
     setStatusMessage('Camera stopped.');
-  };
+  }, [resetHold]);
 
   // Pause / Resume
   const togglePause = () => {
@@ -436,7 +419,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
       isMountedRef.current = false;
       stopCamera();
     };
-  }, []);
+  }, [stopCamera]);
 
   const confPercent = prediction ? Math.round(prediction.confidence * 100) : 0;
 
@@ -466,15 +449,16 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            background: 'linear-gradient(135deg, #0284C7 0%, #2563EB 100%)',
+            background: '#24252B',
             borderRadius: '10px',
+            border: '1px solid #3A3B42',
             padding: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)',
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
           }}>
-            <Sparkles size={18} color="#FFFFFF" />
+            <Sparkles size={18} color="#EDEDED" />
           </div>
           <div>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, letterSpacing: '-0.3px' }}>
@@ -496,42 +480,30 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
             fontWeight: 600,
             padding: '4px 10px',
             borderRadius: '20px',
-            background: backendStatus === 'connected' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-            border: `1px solid ${backendStatus === 'connected' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-            color: backendStatus === 'connected' ? '#10B981' : '#EF4444',
+            background: backendStatus === 'connected' ? 'rgba(78, 159, 118, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            border: `1px solid ${backendStatus === 'connected' ? 'rgba(78, 159, 118, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            color: backendStatus === 'connected' ? '#4E9F76' : '#EF4444',
           }}>
             <span style={{
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              backgroundColor: backendStatus === 'connected' ? '#10B981' : '#EF4444',
+              backgroundColor: backendStatus === 'connected' ? '#4E9F76' : '#EF4444',
             }} />
             <span>API: {apiBaseUrl.replace('http://', '')}</span>
           </div>
 
           {isRunning && (
-            <>
-              <div style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                padding: '4px 8px',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: '#38BDF8',
-              }}>
-                {fps} FPS
-              </div>
-              <div style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                padding: '4px 8px',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: latencyMs < 30 ? '#10B981' : '#F59E0B',
-              }}>
-                {latencyMs}ms
-              </div>
-            </>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              padding: '4px 8px',
+              borderRadius: '6px',
+              background: isHandDetected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)',
+              color: isHandDetected ? '#EDEDED' : '#94A3B8',
+            }}>
+              {isHandDetected ? 'Tracking hand' : 'Awaiting hand'}
+            </div>
           )}
         </div>
       </div>
@@ -601,12 +573,12 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                     gap: '8px',
                     padding: '8px 18px',
                     borderRadius: '8px',
-                    background: '#2563EB',
-                    color: '#FFF',
-                    border: 'none',
+                    background: '#EDEDED',
+                    color: '#121316',
+                    border: '1px solid #FFFFFF',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
                   }}
                 >
                   <Play size={16} />
@@ -632,10 +604,10 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                 gap: '8px',
                 pointerEvents: 'none',
               }}>
-                <span style={{ fontSize: '18px', fontWeight: 800, color: '#38BDF8' }}>
+                <span style={{ fontSize: '18px', fontWeight: 800, color: '#EDEDED' }}>
                   LETTER {prediction.letter}
                 </span>
-                <span style={{ fontSize: '12px', color: '#10B981', fontWeight: 600 }}>
+                <span style={{ fontSize: '12px', color: '#CBD5E1', fontWeight: 600 }}>
                   {confPercent}%
                 </span>
               </div>
@@ -701,9 +673,9 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                     gap: '6px',
                     padding: '7px 14px',
                     borderRadius: '8px',
-                    background: '#2563EB',
-                    color: '#FFF',
-                    border: 'none',
+                    background: '#EDEDED',
+                    color: '#121316',
+                    border: '1px solid #FFFFFF',
                     fontWeight: 600,
                     fontSize: '12px',
                     cursor: 'pointer',
@@ -725,9 +697,9 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                   gap: '4px',
                   padding: '6px 10px',
                   borderRadius: '6px',
-                  background: isMirrored ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                  color: isMirrored ? '#38BDF8' : '#94A3B8',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: isMirrored ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)',
+                  color: isMirrored ? '#EDEDED' : '#94A3B8',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                   fontSize: '12px',
                   cursor: 'pointer',
                 }}
@@ -745,9 +717,9 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                   gap: '4px',
                   padding: '6px 10px',
                   borderRadius: '6px',
-                  background: showSkeleton ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                  color: showSkeleton ? '#10B981' : '#94A3B8',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: showSkeleton ? 'rgba(78, 159, 118, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                  color: showSkeleton ? '#4E9F76' : '#94A3B8',
+                  border: `1px solid ${showSkeleton ? 'rgba(78, 159, 118, 0.35)' : 'rgba(255, 255, 255, 0.1)'}`,
                   fontSize: '12px',
                   cursor: 'pointer',
                 }}
@@ -777,7 +749,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
               border: isLockedOut
                 ? '1px solid rgba(245, 158, 11, 0.3)'
                 : isHolding
-                ? '1px solid rgba(56, 189, 248, 0.3)'
+                ? '1px solid rgba(255, 255, 255, 0.25)'
                 : '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '10px',
               padding: '10px 14px',
@@ -798,12 +770,12 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Clock
                   size={13}
-                  color={isLockedOut ? '#F59E0B' : isHolding ? '#38BDF8' : '#94A3B8'}
+                  color={isLockedOut ? '#F59E0B' : isHolding ? '#EDEDED' : '#94A3B8'}
                 />
                 <span
                   style={{
                     fontWeight: 600,
-                    color: isLockedOut ? '#FBBF24' : isHolding ? '#38BDF8' : '#CBD5E1',
+                    color: isLockedOut ? '#FBBF24' : isHolding ? '#EDEDED' : '#CBD5E1',
                   }}
                 >
                   {isLockedOut
@@ -817,7 +789,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                 style={{
                   fontSize: '11px',
                   fontWeight: 700,
-                  color: isLockedOut ? '#F59E0B' : isHolding ? '#38BDF8' : '#64748B',
+                  color: isLockedOut ? '#F59E0B' : isHolding ? '#EDEDED' : '#64748B',
                 }}
               >
                 {isLockedOut ? 'LOCKED' : `${Math.round(holdProgress)}%`}
@@ -841,9 +813,9 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                   background: isLockedOut
                     ? 'linear-gradient(90deg, #F59E0B, #D97706)'
                     : holdProgress >= 100
-                    ? '#10B981'
-                    : 'linear-gradient(90deg, #38BDF8, #818CF8)',
-                  boxShadow: isHolding ? '0 0 10px rgba(56, 189, 248, 0.4)' : 'none',
+                    ? '#4E9F76'
+                    : '#EDEDED',
+                  boxShadow: 'none',
                   borderRadius: '4px',
                   transition: isLockedOut ? 'none' : 'width 0.05s linear',
                 }}
@@ -874,7 +846,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Type size={16} color="#38BDF8" />
+                <Type size={16} color="#CBD5E1" />
                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#F1F5F9' }}>
                   Sentence Buffer
                 </span>
@@ -975,10 +947,10 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                     gap: '4px',
                     padding: '5px 9px',
                     borderRadius: '6px',
-                    background: copied ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.1)',
-                    color: copied ? '#10B981' : bufferText.length === 0 ? '#64748B' : '#38BDF8',
+                    background: copied ? 'rgba(78, 159, 118, 0.18)' : 'rgba(255, 255, 255, 0.06)',
+                    color: copied ? '#4E9F76' : bufferText.length === 0 ? '#64748B' : '#EDEDED',
                     border: `1px solid ${
-                      copied ? 'rgba(16, 185, 129, 0.3)' : 'rgba(56, 189, 248, 0.2)'
+                      copied ? 'rgba(78, 159, 118, 0.35)' : 'rgba(255, 255, 255, 0.12)'
                     }`,
                     fontSize: '11px',
                     fontWeight: 600,
@@ -1019,7 +991,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                       display: 'inline-block',
                       width: '2px',
                       height: '18px',
-                      background: '#38BDF8',
+                      background: '#EDEDED',
                       marginLeft: '3px',
                       verticalAlign: 'text-bottom',
                     }}
@@ -1065,8 +1037,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                 <div style={{
                   fontSize: '64px',
                   fontWeight: 900,
-                  color: '#38BDF8',
-                  textShadow: '0 0 30px rgba(56, 189, 248, 0.4)',
+                  color: '#EDEDED',
                   lineHeight: '1.1',
                   margin: '8px 0',
                 }}>
@@ -1084,9 +1055,9 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                     fontWeight: 700,
                     padding: '3px 10px',
                     borderRadius: '20px',
-                    background: confPercent > 70 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                    color: confPercent > 70 ? '#10B981' : '#F59E0B',
-                    border: `1px solid ${confPercent > 70 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`,
+                    background: confPercent > 70 ? 'rgba(78, 159, 118, 0.2)' : 'rgba(217, 119, 6, 0.2)',
+                    color: confPercent > 70 ? '#4E9F76' : '#D97706',
+                    border: `1px solid ${confPercent > 70 ? 'rgba(78, 159, 118, 0.4)' : 'rgba(217, 119, 6, 0.4)'}`,
                   }}>
                     {confPercent}% Match
                   </span>
@@ -1130,8 +1101,8 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '4px',
-                        background: isTop ? 'rgba(56, 189, 248, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                        border: isTop ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        background: isTop ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                        border: isTop ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)',
                         borderRadius: '8px',
                         padding: '8px 12px',
                       }}
@@ -1141,7 +1112,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                           <span style={{
                             fontSize: '11px',
                             fontWeight: 700,
-                            color: isTop ? '#38BDF8' : '#64748B',
+                            color: isTop ? '#EDEDED' : '#64748B',
                           }}>
                             #{idx + 1}
                           </span>
@@ -1156,7 +1127,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                         <span style={{
                           fontSize: '12px',
                           fontWeight: 700,
-                          color: isTop ? '#10B981' : '#94A3B8',
+                          color: isTop ? '#EDEDED' : '#94A3B8',
                         }}>
                           {pct}%
                         </span>
@@ -1173,7 +1144,7 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
                         <div style={{
                           width: `${pct}%`,
                           height: '100%',
-                          background: isTop ? '#38BDF8' : '#64748B',
+                          background: isTop ? '#EDEDED' : '#64748B',
                           borderRadius: '2px',
                           transition: 'width 0.15s ease',
                         }} />

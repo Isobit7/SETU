@@ -6,9 +6,6 @@ import {
   Trash2,
   Check,
   Delete,
-  Activity,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 import { LiveDetectionOutput } from './LiveDetectionOutput';
@@ -44,7 +41,6 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
-  const [diagnosticsOpen, setDiagnosticsOpen] = useState<boolean>(false);
 
   const speaking = propIsSpeaking !== undefined ? propIsSpeaking : localIsSpeaking;
 
@@ -180,9 +176,21 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                 <span className="sentence-cursor" aria-hidden="true">|</span>
               </div>
             ) : (
-              <p className="sentence-placeholder-text">
-                Sentence buffer is empty. Recognized signs will append here.
-              </p>
+              <div className="sentence-shimmer-state" aria-live="polite">
+                <div className="shimmer-scanner-track" aria-hidden="true">
+                  <div className="shimmer-scanner-beam" />
+                </div>
+                <div className="shimmer-lines-wrap" aria-hidden="true">
+                  <div className="shimmer-line line-wide" />
+                  <div className="shimmer-line line-medium" />
+                </div>
+                <div className="shimmer-status-caption">
+                  <span className="shimmer-status-dot" aria-hidden="true" />
+                  <span className="shimmer-status-text">
+                    Awaiting sign inputs to assemble sentence...
+                  </span>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -251,37 +259,6 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             <Trash2 size={15} />
             <span>Clear</span>
           </button>
-        </div>
-
-        {/* Optional Collapsible Diagnostics Footer (Takes zero space when closed) */}
-        <div className="unified-diagnostics-drawer">
-          <button
-            className="diagnostics-mini-trigger"
-            onClick={() => setDiagnosticsOpen(!diagnosticsOpen)}
-            aria-expanded={diagnosticsOpen}
-            title="Toggle raw candidate probabilities"
-          >
-            <Activity size={13} />
-            <span>Raw Candidate Metrics</span>
-            {diagnosticsOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          </button>
-
-          {diagnosticsOpen && currentResult?.probabilities && (
-            <div className="diagnostics-mini-body">
-              <div className="diagnostics-mini-grid">
-                {Object.entries(currentResult.probabilities)
-                  .filter(([name]) => name !== 'Awaiting Sign Input')
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 8)
-                  .map(([name, prob]) => (
-                    <div key={name} className="diag-chip">
-                      <span className="diag-name">{name.replace('_', ' ').toUpperCase()}</span>
-                      <span className="diag-val">{Math.round(prob * 100)}%</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

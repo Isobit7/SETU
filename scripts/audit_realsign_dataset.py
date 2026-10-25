@@ -27,7 +27,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from setu.vision.landmarks import HolisticLandmarkerWrapper
+from backend.app.services.vision import HolisticLandmarkerWrapper
 
 ZIP_PATH = Path("data/raw/realsign/Dataset.zip")
 REFERENCE_DIR = Path("data/raw/realsign/letters_reference")

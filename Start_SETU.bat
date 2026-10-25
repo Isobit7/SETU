@@ -13,9 +13,9 @@ if not exist "%ROOT%\.venv\Scripts\python.exe" (
     exit /b 1
 )
 
-if not exist "%ROOT%\setu\api\server.py" (
+if not exist "%ROOT%\backend\app\main.py" (
     echo ERROR: SETU backend file was not found:
-    echo   %ROOT%\setu\api\server.py
+    echo   %ROOT%\backend\app\main.py
     echo Check that ROOT points to your SETU project folder.
     pause
     exit /b 1
@@ -50,7 +50,7 @@ if not exist "%ROOT%\frontend\node_modules" (
 )
 
 echo Starting SETU backend and frontend in separate terminal windows...
-start "SETU Backend - FastAPI" /D "%ROOT%" cmd /k ""%ROOT%\.venv\Scripts\python.exe" -m uvicorn setu.api.server:app --host 127.0.0.1 --port 8000 --reload"
+start "SETU Backend - FastAPI" /D "%ROOT%" cmd /k ""%ROOT%\.venv\Scripts\python.exe" -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload"
 start "SETU Frontend - Vite" /D "%ROOT%\frontend" cmd /k "npm run dev -- --host 127.0.0.1"
 
 echo.

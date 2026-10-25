@@ -25,10 +25,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code, model checkpoints, and top-level launcher
+# Copy application code, model checkpoints, and configuration
 COPY backend/ ./backend/
 COPY models/ ./models/
-COPY main.py .
+COPY config/ ./config/
 
 EXPOSE 8000
 

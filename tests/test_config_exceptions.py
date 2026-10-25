@@ -5,9 +5,9 @@ Verifies immutability, default values, hierarchy constraints, and clean error ra
 import pytest
 from dataclasses import FrozenInstanceError
 
-from configs.settings import SETUConfig, FeatureSettings, VisionSettings, SequenceSettings, config
-import setu.config
-from setu.exceptions import (
+from config.settings import SETUConfig, FeatureSettings, VisionSettings, SequenceSettings, config
+import config as config_pkg
+from config.exceptions import (
     SETUError,
     FeatureValidationError,
     LandmarkExtractionError,
@@ -25,16 +25,16 @@ def test_config_immutability():
         config.vision.target_fps = 60
 
 def test_config_reexport_equality():
-    """Verify setu.config re-exports the identical config singleton from configs.settings."""
-    assert setu.config.config is config
-    assert setu.config.config.features.feature_dim == 158
-    assert setu.config.config.features.contact_sigma == 0.05
-    assert setu.config.config.vision.mirror_user_preview is True
-    assert setu.config.CONFIDENCE_THRESHOLD_ALPHABET == 0.30
-    assert setu.config.CONFIDENCE_THRESHOLD_SEQUENCE == 0.35
-    assert setu.config.STREAK_ALPHABET == 2
-    assert setu.config.STREAK_SEQUENCE == 2
-    assert setu.config.COOLDOWN_MS == 350
+    """Verify config package exports the identical config singleton and settings."""
+    assert config_pkg.config is config
+    assert config.features.feature_dim == 158
+    assert config.features.contact_sigma == 0.05
+    assert config.vision.mirror_user_preview is True
+    assert config.sequence.confidence_threshold_alphabet == 0.30
+    assert config.sequence.confidence_threshold_sequence == 0.35
+    assert config.sequence.streak_alphabet == 2
+    assert config.sequence.streak_sequence == 2
+    assert config.sequence.cooldown_ms == 350
 
 def test_exception_hierarchy():
     """Verify all custom exceptions inherit from SETUError base."""

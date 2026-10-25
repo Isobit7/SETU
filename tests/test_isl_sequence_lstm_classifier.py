@@ -5,7 +5,7 @@ import pytest
 import torch
 from pathlib import Path
 
-from setu.models.isl_sequence_lstm_classifier import (
+from models.adapters.sequence_lstm import (
     ISLSequenceLSTMClassifier,
     ISLSequencePrediction,
     DEFAULT_SEQUENCE_LSTM_MODEL_PATH,

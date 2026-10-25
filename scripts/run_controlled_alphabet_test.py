@@ -22,9 +22,9 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from setu.vision.camera import CameraReader
-from setu.vision.landmarks import HolisticLandmarkerWrapper
-from setu.models.rf_uv11_adapter import RFUV11Adapter
+from backend.app.services.vision import CameraReader
+from backend.app.services.vision import HolisticLandmarkerWrapper
+from models.adapters.rf_uv11 import RFUV11Adapter
 
 # Target test cases contrasting authentic ISL (two-handed) vs single-handed gestures
 TARGET_ALPHABET_TESTS = [

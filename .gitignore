@@ -27,6 +27,7 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
+setu.egg-info/
 .eggs/
 build/
 dist/
@@ -81,6 +82,7 @@ models/reference/*.h5
 models/pretrained/*.pth
 
 # Whitelist essential SETU models and configurations
+!models/weights/*
 !models/realsign_26class_mlp.pth
 !models/isl_sequence_lstm.pth
 !models/isl_mvp_model.npz

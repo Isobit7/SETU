@@ -34,11 +34,11 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from setu.features.geometry import normalize_wrist_coordinates
-from setu.features.extractor import extract_realsign_hand_features
+from training.feature_extractor import normalize_wrist_coordinates
+from training.feature_extractor import extract_realsign_hand_features
 
 DEFAULT_FEATURES_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
-DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
+DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "weights" / "realsign_26class_mlp.pth"
 DEFAULT_REPORT_SAVE_PATH = ROOT_DIR / "reports" / "realsign_26class_evaluation_report.json"
 
 
@@ -198,6 +198,20 @@ def transform_landmarks_to_canonical_invariants(X: np.ndarray) -> np.ndarray:
     print(f"Invariant feature transformation completed in {t1 - t0:.2f}s.")
     return X_canonical
 
+
+
+class RealSignDataset(torch.utils.data.Dataset):
+    """PyTorch Dataset wrapper for RealSign landmark feature vectors."""
+
+    def __init__(self, X: np.ndarray, y: np.ndarray):
+        self.X = torch.from_numpy(np.array(X, dtype=np.float32))
+        self.y = torch.from_numpy(np.array(y, dtype=np.int64))
+
+    def __len__(self) -> int:
+        return len(self.X)
+
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self.X[idx], self.y[idx]
 
 
 class RealSignMLP(nn.Module):

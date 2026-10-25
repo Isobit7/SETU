@@ -5,8 +5,6 @@ import {
   Minimize2,
   RefreshCw,
   AlertCircle,
-  Activity,
-  ShieldCheck,
 } from 'lucide-react';
 import type { CameraStatus, LandmarkStyles, RecognitionPayload, SubtitleSize } from '../types';
 import { drawLandmarksOnCanvas } from '../utils/landmarksDrawer';
@@ -17,8 +15,8 @@ interface CameraWorkspaceProps {
   errorMessage: string | null;
   currentResult: RecognitionPayload | null;
   landmarkStyles: LandmarkStyles;
-  subtitleVisible: boolean;
-  subtitleSize: SubtitleSize;
+  subtitleVisible?: boolean;
+  subtitleSize?: SubtitleSize;
   onStartCamera: () => void;
   onRetry: () => void;
 }
@@ -29,8 +27,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   errorMessage,
   currentResult,
   landmarkStyles,
-  subtitleVisible,
-  subtitleSize,
+  subtitleVisible = true,
+  subtitleSize = 'medium',
   onStartCamera,
   onRetry,
 }) => {
@@ -86,74 +84,57 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     }
   }, [currentResult, landmarkStyles, videoRef]);
 
-  // Determine dynamic subtitle placement:
-  // If hands are inside lower subtitle area, move subtitle up to avoid covering hands!
-  const handsInSafeZone = currentResult?.hands_in_subtitle_zone || false;
+  // Determine hand tracking status
+  const handDetected = currentResult?.hand_detected || false;
+
+  // Fixed movie-style subtitle calculation
   const isKnown = currentResult?.is_known_sign || false;
-  const activeLabel = currentResult?.display_name || 'Waiting for a sign...';
+  const label = currentResult?.label || 'no_sign';
   const confidencePercent = currentResult?.confidence
     ? Math.round(currentResult.confidence * 100)
     : 0;
 
-  // Determine hand tracking status text
-  const handDetected = currentResult?.hand_detected || false;
-  const handStatusText =
-    cameraStatus === 'detecting'
-      ? handDetected
-        ? 'Tracking hands'
-        : 'Hand not detected'
-      : cameraStatus === 'paused'
-      ? 'Paused'
-      : cameraStatus === 'requesting'
-      ? 'Camera starting'
-      : 'Ready';
+  let subtitleText = 'Waiting for sign...';
+  if (cameraStatus === 'paused') {
+    subtitleText = 'Detection Paused';
+  } else if (cameraStatus === 'detecting') {
+    if (isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input') {
+      if (currentResult?.display_name) {
+        subtitleText = currentResult.display_name;
+      } else if (currentResult?.active_model === 'realsign' && label.length === 1) {
+        subtitleText = `Letter ${label.toUpperCase()}`;
+      } else {
+        subtitleText = label.replace('_', ' ').toUpperCase();
+      }
+    } else if (handDetected) {
+      subtitleText = 'Holding sign...';
+    } else {
+      subtitleText = 'Show hands to translate';
+    }
+  }
 
   return (
     <div
       ref={containerRef}
-      className={`camera-workspace-card ${isFullscreen ? 'fullscreen' : ''}`}
+      className={`camera-workspace-card ${isFullscreen ? 'fullscreen' : ''} ${cameraStatus === 'requesting' ? 'camera-initializing' : ''}`}
       id="camera-workspace"
     >
-      {/* Top Overlay Badge Bar */}
+      {/* Minimal Unobtrusive Viewport Tools (Zero Hardware / Mock Telemetry) */}
       <div className="camera-header-overlay">
-        <div className="left-badges">
-          <div className={`status-badge ${cameraStatus}`}>
-            <span className="status-dot"></span>
-            <span className="status-text">
-              {cameraStatus === 'detecting' && 'LIVE DETECTING'}
-              {cameraStatus === 'paused' && 'DETECTION PAUSED'}
-              {cameraStatus === 'requesting' && 'STARTING CAMERA...'}
-              {cameraStatus === 'idle' && 'READY'}
-              {cameraStatus === 'stopped' && 'CAMERA OFF'}
-              {cameraStatus === 'permission_denied' && 'CAMERA BLOCKED'}
-              {cameraStatus === 'error' && 'ERROR'}
-            </span>
+        {cameraStatus === 'detecting' && (
+          <div className="live-camera-indicator">
+            <span className="live-status-dot" aria-hidden="true" />
+            <span className="live-status-label">Live Camera</span>
           </div>
-
-          {cameraStatus === 'detecting' && (
-            <div
-              className={`badge hand-detected-badge ${handDetected ? 'tracking' : 'waiting'}`}
-              title={handDetected ? 'Hands tracked by MediaPipe' : 'No hands visible in camera'}
-            >
-              <span>{handStatusText}</span>
-            </div>
-          )}
-        </div>
-
+        )}
         <div className="right-tools">
-          {/* Landmark Toggles quick legend - HANDS ONLY */}
-          <div className="landmark-quick-legend" title="Hand tracking color legend">
-            <span className="legend-tag left-hand">● Left hand</span>
-            <span className="legend-tag right-hand">● Right hand</span>
-          </div>
-
           <button
             className="overlay-icon-btn"
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Camera'}
             aria-label="Toggle fullscreen"
           >
-            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
           </button>
         </div>
       </div>
@@ -163,7 +144,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         {/* Actual Live Video */}
         <video
           ref={videoRef}
-          className={`live-video ${landmarkStyles.mirrored ? 'mirrored' : ''}`}
+          className={`live-video ${landmarkStyles.mirrored ? 'mirrored' : ''} ${(cameraStatus === 'detecting' || cameraStatus === 'paused') ? 'active-stream' : ''}`}
           playsInline
           muted
           autoPlay
@@ -176,111 +157,102 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           aria-label="Real MediaPipe Hand Landmark Visualization"
         />
 
-        {/* Idle / Permission / Error Backdrop */}
-        {cameraStatus !== 'detecting' && cameraStatus !== 'paused' && (
-          <div className="camera-backdrop-state">
-            {cameraStatus === 'requesting' && (
-              <div className="state-message">
-                <RefreshCw className="animate-spin text-primary" size={44} />
-                <h3>Starting Camera...</h3>
-                <p>Please click "Allow" in your browser prompt.</p>
-              </div>
-            )}
+        {/* Idle / Permission / Error Backdrop (Smooth 300ms transition, no abrupt layout shifts) */}
+        <div
+          className={`camera-backdrop-state ${(cameraStatus === 'detecting' || cameraStatus === 'paused') ? 'backdrop-hidden' : 'backdrop-visible'}`}
+          aria-hidden={cameraStatus === 'detecting' || cameraStatus === 'paused'}
+        >
+          {cameraStatus === 'requesting' && (
+            <div className="state-message">
+              <RefreshCw className="animate-spin" size={44} />
+              <h3>Starting Camera...</h3>
+              <p>Please click "Allow" in your browser prompt.</p>
+            </div>
+          )}
 
-            {cameraStatus === 'permission_denied' && (
-              <div className="state-message error">
-                <AlertCircle className="text-danger" size={44} />
-                <h3>Camera Permission Denied</h3>
-                <p>SETU requires webcam access to track hand signs locally.</p>
-                <button className="primary-btn" onClick={onRetry}>
-                  Retry Permission
-                </button>
-              </div>
-            )}
+          {cameraStatus === 'permission_denied' && (
+            <div className="state-message error">
+              <AlertCircle className="text-danger" size={44} />
+              <h3>Camera Permission Denied</h3>
+              <p>SETU requires webcam access to track hand signs locally.</p>
+              <button className="primary-btn" onClick={onRetry}>
+                Retry Permission
+              </button>
+            </div>
+          )}
 
-            {(cameraStatus === 'idle' || cameraStatus === 'stopped') && (
-              <div className="state-message">
-                <div className="camera-icon-wrap">
-                  <Camera size={44} />
-                </div>
-                <h3>Camera Standby</h3>
-                <p>Position your hands comfortably in camera view to translate ISL gestures.</p>
-                <button className="start-large-btn" onClick={onStartCamera}>
-                  <Camera size={18} />
-                  <span>Start Camera & Detection</span>
-                </button>
+          {(cameraStatus === 'idle' || cameraStatus === 'stopped') && (
+            <div className="state-message standby-state-card">
+              <div className="standby-aperture-visual" aria-hidden="true">
+                <Camera size={26} strokeWidth={1.8} className="standby-camera-icon" />
               </div>
-            )}
 
-            {cameraStatus === 'no_camera' && (
-              <div className="state-message error" role="alert" aria-live="assertive">
-                <AlertCircle className="text-danger" size={44} />
-                <h3>No Camera Found</h3>
-                <p>No webcam device was detected. Please connect a USB or built-in camera.</p>
-                <button className="primary-btn" onClick={onRetry} aria-label="Retry detecting camera">
-                  <RefreshCw size={16} />
-                  <span>Scan for Camera</span>
-                </button>
+              <div className="standby-text-block">
+                <h3 className="standby-title">Live Sign Language Recognition</h3>
+                <p className="standby-desc">
+                  Position your hands inside camera view to translate Indian Sign Language into English in real time.
+                </p>
               </div>
-            )}
 
-            {cameraStatus === 'error' && (
-              <div className="state-message error" role="alert" aria-live="assertive">
-                <AlertCircle size={44} />
-                <h3>Camera Error</h3>
-                <p>{errorMessage || 'An error occurred while accessing the camera.'}</p>
-                <button className="primary-btn" onClick={onRetry} aria-label="Retry camera initialization">
-                  <RefreshCw size={16} />
-                  <span>Retry</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+              <button
+                type="button"
+                className="start-camera-cta-btn"
+                onClick={onStartCamera}
+                aria-label="Start Camera and Begin Live Sign Translation"
+              >
+                <Camera size={16} />
+                <span>Start Camera</span>
+              </button>
+            </div>
+          )}
 
-        {/* CRITICAL REQUIREMENT: MOVIE-STYLE SUBTITLE BAND OVER CAMERA PREVIEW */}
+          {cameraStatus === 'no_camera' && (
+            <div className="state-message error" role="alert" aria-live="assertive">
+              <AlertCircle className="text-danger" size={44} />
+              <h3>No Camera Found</h3>
+              <p>No webcam device was detected. Please connect a USB or built-in camera.</p>
+              <button className="primary-btn" onClick={onRetry} aria-label="Retry detecting camera">
+                <RefreshCw size={16} />
+                <span>Scan for Camera</span>
+              </button>
+            </div>
+          )}
+
+          {cameraStatus === 'error' && (
+            <div className="state-message error" role="alert" aria-live="assertive">
+              <AlertCircle size={44} />
+              <h3>Camera Error</h3>
+              <p>{errorMessage || 'An error occurred while accessing the camera.'}</p>
+              <button className="primary-btn" onClick={onRetry} aria-label="Retry camera initialization">
+                <RefreshCw size={16} />
+                <span>Retry</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* PERSISTENT PREDICTED SIGN SUBTITLE BAR (Docked Permanently at Bottom during Live Detection, Zero Jitter / CLS = 0) */}
         {subtitleVisible && (cameraStatus === 'detecting' || cameraStatus === 'paused') && (
-          <div
-            className={`movie-subtitle-container ${handsInSafeZone ? 'avoid-hands' : ''}`}
-            aria-live="polite"
-          >
-            <div className={`movie-subtitle-band ${subtitleSize} ${isKnown ? 'active-sign' : 'resting'}`}>
-              <div className="subtitle-content">
-                <span className="subtitle-text">{activeLabel}</span>
-                {isKnown && (
-                  <span className="subtitle-conf-badge" title="Model ranking score (uncalibrated candidate score)">
-                    Score: {confidencePercent}%
+          <div className={`persistent-subtitle-dock subtitle-size-${subtitleSize}`} aria-live="polite">
+            <div className={`subtitle-panel ${isKnown ? 'active-sign' : 'resting'}`}>
+              <div className="subtitle-header-row">
+                <span className="subtitle-category-label">CURRENT PREDICTED SIGN</span>
+                {isKnown && confidencePercent > 0 && (
+                  <span className="subtitle-confidence-pill">
+                    {confidencePercent}% Match
                   </span>
                 )}
               </div>
-              {handsInSafeZone && (
-                <div className="reposition-indicator" title="Repositioned automatically because hands are in the lower frame">
-                  Repositioned for hand visibility
-                </div>
-              )}
+              <div className="subtitle-value-row">
+                <span className="subtitle-main-display">
+                  {cameraStatus === 'detecting'
+                    ? subtitleText
+                    : 'Detection Paused'}
+                </span>
+              </div>
             </div>
           </div>
         )}
-      </div>
-
-      {/* 24px Micro Status Bar Directly Beneath Camera Feed */}
-      <div className="camera-micro-statusbar" role="status" aria-label="Hardware and Processing Status">
-        <div className="micro-status-left">
-          <span className="micro-status-item">
-            <Camera size={12} className="micro-status-icon" />
-            <span>Hardware: {cameraStatus === 'detecting' ? 'Ready (Active)' : cameraStatus === 'paused' ? 'Paused' : 'Ready'}</span>
-          </span>
-          <span className="micro-status-sep">•</span>
-          <span className="micro-status-item">
-            <Activity size={12} className="micro-status-icon" />
-            <span>158-D Holistic ({currentResult?.fps ? `${currentResult.fps} FPS` : '18 FPS'})</span>
-          </span>
-          <span className="micro-status-sep">•</span>
-          <span className="micro-status-item">
-            <ShieldCheck size={12} className="micro-status-icon" />
-            <span>Local Processing</span>
-          </span>
-        </div>
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from setu.features.extractor import extract_realsign_hand_features
+from training.feature_extractor import extract_realsign_hand_features
 
 # Standard 26-class uppercase alphabet
 CLASSES_26: List[str] = [chr(ord("A") + i) for i in range(26)]

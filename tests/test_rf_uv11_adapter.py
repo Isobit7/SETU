@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 import numpy as np
 
-from setu.models.rf_uv11_adapter import RFUV11Adapter
-from setu.exceptions import ModelArtifactError, LandmarkExtractionError, InferenceError
+from models.adapters.rf_uv11 import RFUV11Adapter
+from config.exceptions import ModelArtifactError, LandmarkExtractionError, InferenceError
 
 MODEL_PATH = Path("models/pretrained/rf_uv_11_model.h5")
 

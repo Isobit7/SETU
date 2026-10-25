@@ -8,12 +8,12 @@ import {
   HelpCircle,
   Menu,
   X,
-  Wifi,
-  WifiOff,
   ShieldCheck,
   Film,
   Type,
   ChevronDown,
+  ArrowRight,
+  ArrowLeftRight,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -22,8 +22,8 @@ interface TopNavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isBackendConnected: boolean;
-  fps: number;
-  latencyMs: number;
+  fps?: number;
+  latencyMs?: number;
   onOpenSettings: () => void;
   onOpenVocabulary: () => void;
   onOpenAlphabetModal?: () => void;
@@ -35,14 +35,16 @@ interface TopNavbarProps {
   autoSpeakEnabled?: boolean;
   onToggleAutoSpeak?: () => void;
   isSpeaking?: boolean;
+  translationDirection?: 'isl-to-en' | 'en-to-isl';
+  onToggleDirection?: () => void;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
   activeTab,
   setActiveTab,
   isBackendConnected,
-  fps,
-  latencyMs,
+  fps: _fps = 0,
+  latencyMs: _latencyMs = 0,
   onOpenSettings,
   onOpenVocabulary,
   onOpenAlphabetModal,
@@ -54,6 +56,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   autoSpeakEnabled = true,
   onToggleAutoSpeak,
   isSpeaking = false,
+  translationDirection = 'isl-to-en',
+  onToggleDirection,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -78,11 +82,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
   return (
     <header className="top-navbar" role="banner">
-      {/* 1. Brand Logo */}
+      {/* 1. Brand Logo & Mark */}
       <div className="navbar-brand">
-        <div className="brand-logo-wrap">
-          <div className="brand-symbol">
-            <span className="brand-letter">S</span>
+        <div className="brand-logo-wrap" title="SETU: Indian Sign Language Translator">
+          <div className="brand-symbol" aria-hidden="true">
+            <img
+              src="/logo-square.png"
+              alt="SETU Logo"
+              className="brand-logo-img"
+            />
           </div>
           <div className="brand-text">
             <span className="brand-name">SETU</span>
@@ -90,12 +98,29 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </div>
         </div>
 
-        {/* 2. Language Switcher / Direction */}
-        <div className="navbar-direction-badge" title="Translation Pipeline">
-          <span className="lang-pill primary">ISL</span>
-          <span className="direction-arrow">→</span>
-          <span className="lang-pill secondary">English</span>
-        </div>
+        {/* 2. Interactive 2-Way Communication Toggle */}
+        <button
+          type="button"
+          className="navbar-direction-toggle"
+          onClick={onToggleDirection}
+          title={`Click to switch mode: ${
+            translationDirection === 'isl-to-en'
+              ? 'ISL → English (Sign Recognition)'
+              : 'English → ISL (Sign Avatar Translation)'
+          }`}
+          aria-label="Toggle translation direction"
+        >
+          <span className={`dir-lang ${translationDirection === 'isl-to-en' ? 'active-source' : ''}`}>
+            {translationDirection === 'isl-to-en' ? 'ISL' : 'English'}
+          </span>
+          <div className={`dir-arrow-wrap ${translationDirection === 'en-to-isl' ? 'rotated' : ''}`}>
+            <ArrowRight size={13} className={`dir-arrow-icon ${translationDirection === 'en-to-isl' ? 'rotated' : ''}`} />
+          </div>
+          <span className={`dir-lang ${translationDirection === 'en-to-isl' ? 'active-source' : ''}`}>
+            {translationDirection === 'isl-to-en' ? 'English' : 'ISL'}
+          </span>
+          <ArrowLeftRight size={11} className="dir-swap-hint" />
+        </button>
       </div>
 
       {/* Center Navigation Links (Streamlined) */}
@@ -140,7 +165,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                     setResourcesOpen(false);
                   }}
                 >
-                  <Type size={14} className="dropdown-item-icon text-primary" />
+                  <Type size={14} className="dropdown-item-icon" />
                   <div className="dropdown-item-text">
                     <span className="item-title">26 Letters (RealSign)</span>
                     <span className="item-desc">A–Z Alphabet classifier</span>
@@ -156,7 +181,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   setResourcesOpen(false);
                 }}
               >
-                <BookOpen size={14} className="dropdown-item-icon text-teal" />
+                <BookOpen size={14} className="dropdown-item-icon" />
                 <div className="dropdown-item-text">
                   <span className="item-title">ISL Vocabulary</span>
                   <span className="item-desc">5 Core conversational phrases</span>
@@ -250,7 +275,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                     setHistoryMenuOpen(false);
                   }}
                 >
-                  <Bookmark size={14} className="dropdown-item-icon text-warning" />
+                  <Bookmark size={14} className="dropdown-item-icon" />
                   <div className="dropdown-item-text">
                     <span className="item-title">Saved Signs</span>
                     <span className="item-desc">Bookmarked translations</span>
@@ -302,32 +327,22 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </button>
         )}
 
-        {/* Connection status pill */}
+        {/* Connection status pill - Clean Single-Indicator Minimalist Badge */}
         <div
           className={`connection-pill ${isBackendConnected ? 'connected' : 'disconnected'}`}
           title={
             isBackendConnected
-              ? `Connected to SETU Backend (${latencyMs}ms latency, ~${fps} FPS)`
+              ? 'Connected to SETU Engine (Active WebSocket)'
               : 'Backend disconnected (ws://localhost:8000)'
           }
         >
-          {isBackendConnected ? (
-            <>
-              <Wifi size={13} />
-              <span className="status-label">Online</span>
-              {fps > 0 && <span className="fps-counter">{fps} FPS</span>}
-            </>
-          ) : (
-            <>
-              <WifiOff size={13} />
-              <span className="status-label">Offline</span>
-            </>
-          )}
+          <span className="connection-status-dot" aria-hidden="true" />
+          <span className="status-label">{isBackendConnected ? 'Online' : 'Offline'}</span>
         </div>
 
         {/* Privacy Pill */}
         <div className="privacy-pill" title="Local frame processing. No external cloud recording.">
-          <ShieldCheck size={13} className="text-success" />
+          <ShieldCheck size={13} className="privacy-icon" />
           <span className="privacy-text">Local</span>
         </div>
 
@@ -352,7 +367,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 setMobileMenuOpen(false);
               }}
             >
-              {autoSpeakEnabled ? <Volume2 size={16} className="text-primary" /> : <VolumeX size={16} />}
+              {autoSpeakEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
               <span>Auto-Speak: {autoSpeakEnabled ? 'Enabled' : 'Muted'}</span>
             </button>
           )}

@@ -9,7 +9,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 
 from backend.app.schemas.predict import LandmarkRequest, PredictionResponse
-from backend.app.services.classifier import classifier_service
+from backend.app.services.realsign_classifier_service import classifier_service
 
 logger = logging.getLogger("setu.api.predict")
 

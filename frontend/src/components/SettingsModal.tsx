@@ -168,7 +168,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   }
                 />
                 <span className="toggle-label-text">
-                  <strong>Left Hand Skeletons</strong> (Emerald Green #10B981)
+                  <strong>Left Hand Skeletons</strong> (Calm Sage Green)
                 </span>
               </label>
 
@@ -181,7 +181,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   }
                 />
                 <span className="toggle-label-text">
-                  <strong>Right Hand Skeletons</strong> (Amber Orange #F59E0B)
+                  <strong>Right Hand Skeletons</strong> (Warm Slate)
                 </span>
               </label>
 

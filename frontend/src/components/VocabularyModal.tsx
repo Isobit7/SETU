@@ -67,7 +67,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({ isOpen, onClos
 
         <div className="modal-body">
           <p className="modal-intro">
-            SETU's initial MVP model recognizes 5 core Indian Sign Language (ISL) gestures using 158-D MediaPipe Holistic landmarks and temporal sequence pooling.
+            SETU recognizes core Indian Sign Language (ISL) gestures using precise hand tracking and spatiotemporal sequence classification.
           </p>
 
           <div className="vocab-cards-grid">

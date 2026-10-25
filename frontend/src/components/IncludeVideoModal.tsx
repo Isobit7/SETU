@@ -346,7 +346,7 @@ export const IncludeVideoModal: React.FC<IncludeVideoModalProps> = ({ isOpen, on
           <div className="architecture-note">
             <Info size={15} />
             <span>
-              <strong>Note:</strong> The AI4Bharat INCLUDE model performs isolated ISL sign recognition across 263 classes from video clips. SETU's real-time streaming pipeline uses the 158-D geometry model for live webcam interactions.
+              <strong>Note:</strong> The AI4Bharat INCLUDE model performs isolated ISL sign recognition across 263 classes from video clips. SETU's real-time streaming pipeline is optimized for live camera interactions.
             </span>
           </div>
         </div>

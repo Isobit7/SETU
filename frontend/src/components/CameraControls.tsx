@@ -15,7 +15,6 @@ import {
   Volume2,
   VolumeX,
   Activity,
-  Video,
 } from 'lucide-react';
 import type { ActiveModelType, CameraStatus, LandmarkStyles } from '../types';
 
@@ -55,7 +54,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   onToggleAutoSpeak,
   landmarkStyles,
   subtitleVisible,
-  onStart,
+  onStart: _onStart,
   onPause,
   onResume,
   onStop,
@@ -77,18 +76,9 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
     <div className="camera-controls-wrapper">
       {/* Primary Toolbar: Essential Controls Only */}
       <div className="controls-bar minimalist-bar" role="toolbar" aria-label="Essential Camera Controls">
-        {/* 1. Primary Start / Stop / Pause Action */}
-        <div className="control-group primary-stream-action">
-          {!isActive ? (
-            <button
-              className="ctrl-btn primary-start-btn"
-              onClick={onStart}
-              title="Start webcam and live sign detection"
-            >
-              <Video size={16} />
-              <span>Start Camera</span>
-            </button>
-          ) : (
+        {/* 1. Stream Control Actions (Only shown when active) */}
+        {isActive && (
+          <div className="control-group primary-stream-action">
             <div className="active-stream-btns">
               <button
                 className="ctrl-btn stop-btn"
@@ -118,8 +108,8 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                 </button>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 2. Mode Selector: 3-Way Segmented Control */}
         {onSwitchModel && (
@@ -127,7 +117,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             <button
               className={`segmented-mode-btn ${activeModel === 'realsign' ? 'active' : ''}`}
               onClick={() => onSwitchModel('realsign')}
-              title="Alphabet (A–Z): RealSign PyTorch 26-Class MLP"
+              title="Alphabet (A–Z): Real-time fingerspelling recognition"
               role="radio"
               aria-checked={activeModel === 'realsign'}
             >
@@ -137,7 +127,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             <button
               className={`segmented-mode-btn ${activeModel === 'isl_mvp' ? 'active' : ''}`}
               onClick={() => onSwitchModel('isl_mvp')}
-              title="Phrases (Static): 5 Core Conversational Signs"
+              title="Phrases (Static): Common conversational signs"
               role="radio"
               aria-checked={activeModel === 'isl_mvp'}
             >
@@ -147,12 +137,12 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             <button
               className={`segmented-mode-btn ${activeModel === 'isl_sequence_lstm' ? 'active' : ''}`}
               onClick={() => onSwitchModel('isl_sequence_lstm')}
-              title="Sequence (Dynamic LSTM): 30-Frame Spatiotemporal Model on GPU"
+              title="Sequence (Dynamic LSTM): Spatiotemporal continuous sign gestures"
               role="radio"
               aria-checked={activeModel === 'isl_sequence_lstm'}
             >
               <Activity size={14} />
-              <span>Sequence (Dynamic LSTM)</span>
+              <span>Sequence (Dynamic)</span>
             </button>
           </div>
         )}

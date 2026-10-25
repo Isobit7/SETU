@@ -320,6 +320,6 @@ def download_subset(raw_dir: Path) -> List[Dict[str, Any]]:
 
 
 if __name__ == "__main__":
-    from configs.settings import PROJECT_ROOT
+    from config.settings import PROJECT_ROOT
     dest_dir = PROJECT_ROOT / "data" / "raw" / "include"
     download_subset(dest_dir)

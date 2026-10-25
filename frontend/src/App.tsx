@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { TopNavbar } from './components/TopNavbar';
 import { CameraWorkspace } from './components/CameraWorkspace';
 import { CameraControls } from './components/CameraControls';
@@ -10,13 +10,18 @@ import { HistoryModal } from './components/HistoryModal';
 import { SavedModal } from './components/SavedModal';
 import { HelpModal } from './components/HelpModal';
 import { IncludeVideoModal } from './components/IncludeVideoModal';
+import { TextToSignWorkspace } from './components/TextToSignWorkspace';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
+import { useSentenceBuilder } from './hooks/useSentenceBuilder';
 import type { LandmarkStyles, SubtitleSize } from './types';
 import './index.css';
 
 export const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // 2-Way Translation Direction ('isl-to-en' or 'en-to-isl')
+  const [translationDirection, setTranslationDirection] = useState<'isl-to-en' | 'en-to-isl'>('isl-to-en');
 
   // Active top navigation section
   const [activeTab, setActiveTab] = useState<string>('translator');
@@ -35,9 +40,6 @@ export const App: React.FC = () => {
   const [subtitleSize, setSubtitleSize] = useState<SubtitleSize>('medium');
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.35);
 
-  // Sentence Builder State
-  const [sentence, setSentence] = useState<string>('');
-
   // Browser-Native Text-to-Speech (TTS) Hook
   const {
     isSpeaking,
@@ -50,109 +52,21 @@ export const App: React.FC = () => {
     setSelectedVoice,
   } = useTTS();
 
-  // Stability Gate & Cooldown Refs
-  const candidateStreakRef = useRef<{ sign: string; count: number }>({ sign: '', count: 0 });
-  const lastAppendedSignRef = useRef<string>('');
-  const lastAppendedTimeRef = useRef<number>(0);
-  const hadHandDropRef = useRef<boolean>(false);
-  const lastSpokenSentenceRef = useRef<string>('');
-
-  // Callback when a new prediction arrives from WebSocket
-  const handlePredictionChange = (data: any) => {
-    if (!data) return;
-
-    // Directly synchronize sentence buffer from backend SentenceAccumulator
-    if (data.sentence_buffer !== undefined) {
-      setSentence(data.sentence_buffer);
-    }
-
-    // Auto-Speak trigger on sentence completion:
-    // When translated_text updates and differs from lastSpokenSentenceRef.current
-    if (data.translated_text && typeof data.translated_text === 'string') {
-      const translated = data.translated_text.trim();
-      if (translated && translated !== lastSpokenSentenceRef.current) {
-        lastSpokenSentenceRef.current = translated;
-        if (autoSpeakEnabled) {
-          speak(translated);
-        }
-      }
-    } else if (!data.sentence_buffer && !data.translated_text) {
-      lastSpokenSentenceRef.current = '';
-    }
-
-    const isHand = data.hand_detected ?? false;
-    const isKnown = data.is_known_sign ?? false;
-    const conf = data.confidence ?? 0;
-    const label = data.label ?? '';
-
-    const noSignProb = data.probabilities?.['no_sign'] ?? 0;
-
-    // If hand dropped or no sign, note the drop and reset streak
-    if (!isHand || label === 'no_sign' || label === 'unknown' || label === 'Awaiting Sign Input' || noSignProb > 0.70 || !isKnown) {
-      candidateStreakRef.current = { sign: '', count: 0 };
-      hadHandDropRef.current = true;
-      return;
-    }
-
-    // Check user confidence threshold gate
-    const activeThreshold = confidenceThreshold;
-    if (conf < activeThreshold) {
-      candidateStreakRef.current = { sign: '', count: 0 };
-      return;
-    }
-
-    // Determine the sign/character to append
-    let signText = '';
-    if (data.active_model === 'realsign') {
-      signText = (data.label || '').toUpperCase();
-    } else {
-      signText = (data.display_name || label.replace('_', ' ')).toUpperCase();
-    }
-
-    if (!signText || signText === 'NO_SIGN' || signText === 'UNKNOWN' || signText === 'AWAITING SIGN INPUT') return;
-
-    // Temporal Streak Counter: 2 consecutive frames for Alphabet, 3 for Sequence
-    const requiredStreak = data.active_model === 'realsign' ? 2 : 3;
-
-    if (candidateStreakRef.current.sign === signText) {
-      candidateStreakRef.current.count += 1;
-    } else {
-      candidateStreakRef.current = { sign: signText, count: 1 };
-      return;
-    }
-
-    if (candidateStreakRef.current.count < requiredStreak) {
-      return;
-    }
-
-    // Refractory Cooldown & Duplicate Prevention
-    const now = Date.now();
-    const timeSinceLast = now - lastAppendedTimeRef.current;
-    const isSameSign = signText === lastAppendedSignRef.current;
-
-    // Duplicate lockout: 350ms lockout AND requires idle baseline transition
-    if (isSameSign && (timeSinceLast < 350 || !hadHandDropRef.current)) {
-      return;
-    }
-
-    // Confirmed append! (Distinct new signs commit immediately once consecutive streak is met)
-    lastAppendedSignRef.current = signText;
-    lastAppendedTimeRef.current = now;
-    hadHandDropRef.current = false;
-
-    setSentence((prev) => {
-      // If single-character alphabet letter (A-Z)
-      if (signText.length === 1) {
-        return prev + signText;
-      }
-      // If phrase (e.g., "HELLO", "THANK YOU")
-      const trimmed = prev.trim();
-      if (!trimmed) {
-        return signText + ' ';
-      }
-      return prev.endsWith(' ') ? `${prev}${signText} ` : `${prev} ${signText} `;
-    });
-  };
+  // Decoupled Sentence Accumulator & Temporal Debouncer Hook
+  const {
+    sentence,
+    setSentence,
+    handlePredictionChange,
+    handleClear: handleClearSentence,
+    handleBackspace: handleBackspaceSentence,
+  } = useSentenceBuilder({
+    confidenceThreshold,
+    autoSpeakEnabled,
+    speak,
+    stop,
+    onClearBackend: () => clearSentence(),
+    onBackspaceBackend: () => backspaceSentence(),
+  });
 
   // Hand-only landmark layer styles (Pose and Face permanently excluded)
   const [landmarkStyles, setLandmarkStyles] = useState<LandmarkStyles>({
@@ -224,37 +138,10 @@ export const App: React.FC = () => {
     }
   };
 
-  // Auto-speak completed sentences when translated_text arrives or updates in currentResult
-  useEffect(() => {
-    const textToSpeak = currentResult?.translated_text?.trim();
-    if (textToSpeak && textToSpeak !== lastSpokenSentenceRef.current) {
-      lastSpokenSentenceRef.current = textToSpeak;
-      if (autoSpeakEnabled) {
-        speak(textToSpeak);
-      }
-    } else if (!currentResult?.sentence_buffer && !textToSpeak) {
-      lastSpokenSentenceRef.current = '';
-    }
-  }, [currentResult?.translated_text, currentResult?.sentence_buffer, autoSpeakEnabled, speak]);
-
-  const handleClearSentence = () => {
-    setSentence('');
-    lastAppendedSignRef.current = '';
-    candidateStreakRef.current = { sign: '', count: 0 };
-    lastSpokenSentenceRef.current = '';
-    stop();
-    clearSentence();
-  };
-
   const handleResetSession = () => {
-    lastSpokenSentenceRef.current = '';
     stop();
+    handleClearSentence();
     resetSession();
-  };
-
-  const handleBackspaceSentence = () => {
-    setSentence((prev) => (prev.length > 0 ? prev.slice(0, -1) : ''));
-    backspaceSentence();
   };
 
   const handleAddSpaceSentence = () => {
@@ -281,67 +168,77 @@ export const App: React.FC = () => {
         autoSpeakEnabled={autoSpeakEnabled}
         onToggleAutoSpeak={toggleAutoSpeak}
         isSpeaking={isSpeaking}
+        translationDirection={translationDirection}
+        onToggleDirection={() =>
+          setTranslationDirection((prev) => (prev === 'isl-to-en' ? 'en-to-isl' : 'isl-to-en'))
+        }
       />
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
-      <main className="workspace-grid" role="main">
-        {/* Left Column: Live Camera, Micro Status & Controls */}
-        <section className="workspace-camera-section" aria-label="Camera and Sign Recognition View">
-          <CameraWorkspace
-            videoRef={videoRef}
-            cameraStatus={cameraStatus}
-            errorMessage={errorMessage}
-            currentResult={currentResult}
-            landmarkStyles={landmarkStyles}
-            subtitleVisible={subtitleVisible}
-            subtitleSize={subtitleSize}
-            onStartCamera={startCamera}
-            onRetry={startCamera}
-          />
+      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''}`} role="main">
+        {translationDirection === 'isl-to-en' ? (
+          <>
+            {/* Left Column: Live Camera, Persistent Prediction Bar & Controls */}
+            <section className="workspace-camera-section" aria-label="Camera and Sign Recognition View">
+              <CameraWorkspace
+                videoRef={videoRef}
+                cameraStatus={cameraStatus}
+                errorMessage={errorMessage}
+                currentResult={currentResult}
+                landmarkStyles={landmarkStyles}
+                subtitleVisible={subtitleVisible}
+                subtitleSize={subtitleSize}
+                onStartCamera={startCamera}
+                onRetry={startCamera}
+              />
 
-          {/* Under-Camera Controls */}
-          <CameraControls
-            cameraStatus={cameraStatus}
-            availableCameras={availableCameras}
-            selectedCameraId={selectedCameraId}
-            activeModel={activeModel}
-            onSwitchModel={switchModel}
-            confidenceThreshold={confidenceThreshold}
-            onThresholdChange={setConfidenceThreshold}
-            autoSpeak={autoSpeakEnabled}
-            onToggleAutoSpeak={toggleAutoSpeak}
-            landmarkStyles={landmarkStyles}
-            subtitleVisible={subtitleVisible}
-            onStart={startCamera}
-            onPause={pauseDetection}
-            onResume={resumeDetection}
-            onStop={stopCamera}
-            onReset={handleResetSession}
-            onSwitchCamera={(id) => setSelectedCameraId(id)}
-            onToggleLandmarks={handleToggleLandmarks}
-            onToggleMirror={handleToggleMirror}
-            onToggleSubtitles={() => setSubtitleVisible(!subtitleVisible)}
-            onOpenIncludeModal={() => setIsIncludeModalOpen(true)}
-          />
-        </section>
+              {/* Under-Camera Controls */}
+              <CameraControls
+                cameraStatus={cameraStatus}
+                availableCameras={availableCameras}
+                selectedCameraId={selectedCameraId}
+                activeModel={activeModel}
+                onSwitchModel={switchModel}
+                confidenceThreshold={confidenceThreshold}
+                onThresholdChange={setConfidenceThreshold}
+                autoSpeak={autoSpeakEnabled}
+                onToggleAutoSpeak={toggleAutoSpeak}
+                landmarkStyles={landmarkStyles}
+                subtitleVisible={subtitleVisible}
+                onStart={startCamera}
+                onPause={pauseDetection}
+                onResume={resumeDetection}
+                onStop={stopCamera}
+                onReset={handleResetSession}
+                onSwitchCamera={(id) => setSelectedCameraId(id)}
+                onToggleLandmarks={handleToggleLandmarks}
+                onToggleMirror={handleToggleMirror}
+                onToggleSubtitles={() => setSubtitleVisible(!subtitleVisible)}
+                onOpenIncludeModal={() => setIsIncludeModalOpen(true)}
+              />
+            </section>
 
-        {/* Right Column: Active Output, Candidate Scores & Sentence Buffer */}
-        <aside className="workspace-side-section" aria-label="Translation Output and Candidates">
-          <TranslationPanel
-            currentResult={currentResult}
-            onClearCurrent={handleResetSession}
-            onOpenHistory={() => setIsHistoryModalOpen(true)}
-            historyCount={history.length}
-            sentence={sentence}
-            translatedText={currentResult?.translated_text}
-            onClearSentence={handleClearSentence}
-            onBackspaceSentence={handleBackspaceSentence}
-            onAddSpaceSentence={handleAddSpaceSentence}
-            isSpeaking={isSpeaking}
-            onSpeak={speak}
-            onStopSpeak={stop}
-          />
-        </aside>
+            {/* Right Column: Active Output, Candidate Scores & Sentence Buffer */}
+            <aside className="workspace-side-section" aria-label="Translation Output and Candidates">
+              <TranslationPanel
+                currentResult={currentResult}
+                onClearCurrent={handleResetSession}
+                onOpenHistory={() => setIsHistoryModalOpen(true)}
+                historyCount={history.length}
+                sentence={sentence}
+                translatedText={currentResult?.translated_text}
+                onClearSentence={handleClearSentence}
+                onBackspaceSentence={handleBackspaceSentence}
+                onAddSpaceSentence={handleAddSpaceSentence}
+                isSpeaking={isSpeaking}
+                onSpeak={speak}
+                onStopSpeak={stop}
+              />
+            </aside>
+          </>
+        ) : (
+          <TextToSignWorkspace onSpeak={speak} isSpeaking={isSpeaking} />
+        )}
       </main>
 
       {/* Modals */}

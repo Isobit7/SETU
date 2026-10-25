@@ -7,8 +7,9 @@ import numpy as np
 import torch
 from fastapi.testclient import TestClient
 
-from setu.api.server import app, pipeline
-from setu.models.include_model import (
+from backend.app.main import app
+from backend.app.services.pipeline_manager import pipeline
+from models.adapters.include import (
     INCLUDEInferenceService,
     INCLUDELstmConfig,
     INCLUDELstmModel,

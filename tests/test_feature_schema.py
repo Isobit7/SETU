@@ -6,7 +6,7 @@ Tests every slice, dimension boundary, normalization invariant, and handedness c
 import pytest
 import numpy as np
 
-from setu.features.schema import (
+from training.feature_extractor import (
     SCHEMA_VERSION,
     FEATURE_DIM,
     RIGHT_HAND_COORDS_SLICE,
@@ -31,8 +31,8 @@ from setu.features.schema import (
     CONTACT_SCORE_INDEX,
     validate_schema_vector
 )
-from setu.features.extractor import FeatureExtractor158
-from setu.utils.geometry import (
+from training.feature_extractor import FeatureExtractor158
+from training.feature_extractor import (
     compute_joint_angle,
     normalize_hand_landmarks,
     compute_contact_score
@@ -247,7 +247,7 @@ def test_validation_rejects_corrupted_vectors():
 
 def test_facial_expression_feature_fallback():
     """Missing or empty face landmarks must safely return [0.0] * 6."""
-    from setu.features.extractor import extract_facial_expression_features
+    from training.feature_extractor import extract_facial_expression_features
 
     assert extract_facial_expression_features(None) == [0.0] * 6
     assert extract_facial_expression_features([]) == [0.0] * 6
@@ -256,7 +256,7 @@ def test_facial_expression_feature_fallback():
 
 def test_facial_expression_ratio_math():
     """Verifies that the 6 scale-invariant facial ratios compute accurately."""
-    from setu.features.extractor import extract_facial_expression_features
+    from training.feature_extractor import extract_facial_expression_features
 
     # Create synthetic 468 face mesh landmarks
     synthetic_mesh = [{"x": 0.5, "y": 0.5, "z": 0.0} for _ in range(468)]
@@ -312,7 +312,7 @@ def test_facial_expression_ratio_math():
 
 def test_expanded_164_feature_vector_validation():
     """Schema must validate 164-D vectors (158 Holistic + 6 Facial Ratios)."""
-    from setu.features.schema import EXPANDED_FEATURE_DIM
+    from training.feature_extractor import EXPANDED_FEATURE_DIM
 
     vec_164 = np.zeros(EXPANDED_FEATURE_DIM, dtype=np.float32)
     vec_164[RIGHT_PRESENCE_INDEX] = 1.0
@@ -330,7 +330,7 @@ def test_expanded_164_feature_vector_validation():
 
 def test_velocity_features_328_computation():
     """compute_velocity_features must produce exact 328-D vectors across all input shapes."""
-    from setu.features.extractor import compute_velocity_features
+    from training.feature_extractor import compute_velocity_features
 
     # (30, 164) -> (30, 328)
     seq_164 = np.ones((30, 164), dtype=np.float32)

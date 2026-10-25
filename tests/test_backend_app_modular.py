@@ -3,8 +3,8 @@
 - backend.app.schemas.predict
 - backend.app.services.classifier
 - backend.app.api.endpoints.predict
-- ml.feature_extractor
-- ml.evaluate
+- training.feature_extractor
+- training.evaluate
 """
 
 import numpy as np
@@ -13,9 +13,10 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app as modular_app
 from backend.app.schemas.predict import LandmarkRequest, PredictionResponse, TopCandidate
-from backend.app.services.classifier import RealSignMLP, RealSignInferenceService, classifier_service
-from ml.feature_extractor import normalize_landmarks_to_63d, extract_realsign_hand_features
-from ml.evaluate import evaluate_model
+from backend.app.services.realsign_classifier_service import RealSignMLP, RealSignInferenceService, classifier_service
+import backend.app.services.classifier  # backward-compatibility verification
+from training.feature_extractor import normalize_landmarks_to_63d, extract_realsign_hand_features
+import training.feature_extractor  # modular verification
 
 
 @pytest.fixture(scope="module")
@@ -91,8 +92,8 @@ def test_realsign_mlp_architecture():
     assert out.shape == (4, 26)
 
 
-def test_ml_feature_extractor_standalone():
-    """Verify ml.feature_extractor transforms properly."""
+def test_training_feature_extractor_standalone():
+    """Verify training.feature_extractor transforms properly."""
     raw_pts = np.zeros((21, 3), dtype=np.float32)
     raw_pts[0] = [0.5, 0.5, 0.0]
     raw_pts[9] = [0.5, 0.3, 0.0]

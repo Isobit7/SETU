@@ -15,10 +15,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from configs.settings import PROJECT_ROOT, config
-from setu.vision.landmarks import HolisticLandmarkerWrapper
-from setu.features.extractor import FeatureExtractor158
-from setu.features.schema import FEATURE_DIM, validate_schema_vector
+from config.settings import PROJECT_ROOT, config
+from backend.app.services.vision import HolisticLandmarkerWrapper
+from training.feature_extractor import FeatureExtractor158
+from training.feature_extractor import FEATURE_DIM, validate_schema_vector
 from training.dataset_manifest import SampleRecord, compute_file_sha256
 
 def run_webcam_verification():

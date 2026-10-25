@@ -9,10 +9,10 @@ from typing import Tuple, Dict, Any, Optional
 import cv2
 import numpy as np
 
-from setu.features.schema import FEATURE_DIM, validate_schema_vector
-from setu.features.extractor import FeatureExtractor158
-from setu.vision.landmarks import HolisticLandmarkerWrapper
-from training.dataset_manifest import SampleRecord, compute_file_sha256
+from training.feature_extractor import FEATURE_DIM, validate_schema_vector
+from training.feature_extractor import FeatureExtractor158
+from backend.app.services.vision import HolisticLandmarkerWrapper
+from training.isl_dataset_manifest_schema import SampleRecord, compute_file_sha256
 
 class FeatureExtractionPipeline:
     """

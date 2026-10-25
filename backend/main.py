@@ -23,7 +23,7 @@ from backend.app.schemas.predict import (
     PredictRequest,
     PredictResponse,
 )
-from backend.app.services.classifier import (
+from backend.app.services.realsign_classifier_service import (
     CLASSES_26,
     RealSignMLP,
     RealSignInferenceService,

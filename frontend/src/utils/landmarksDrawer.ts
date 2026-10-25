@@ -34,13 +34,13 @@ export function drawLandmarksOnCanvas(
     return [normX * width, p.y * height];
   };
 
-  // 1. Draw Left Hand (Emerald / Bright Green #10B981)
+  // 1. Draw Left Hand (Calm Natural Sage Green)
   if (styles.showLeftHand && landmarks.left_hand && landmarks.left_hand.length > 0) {
     const pts = landmarks.left_hand;
 
     // Hand skeleton connections
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#10B981';
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = '#4E9F76';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -59,26 +59,26 @@ export function drawLandmarksOnCanvas(
     for (let i = 0; i < pts.length; i++) {
       const [px, py] = getPt(pts[i]);
       const isFingertip = [4, 8, 12, 16, 20].includes(i);
-      const radius = isFingertip ? 5.5 : 3.5;
+      const radius = isFingertip ? 4.5 : 2.5;
 
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = isFingertip ? '#34D399' : '#10B981';
+      ctx.fillStyle = isFingertip ? '#6EE7B7' : '#3B7A57';
       ctx.fill();
 
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = '#064E3B';
+      ctx.lineWidth = 1.0;
+      ctx.strokeStyle = '#1A3324';
       ctx.stroke();
     }
   }
 
-  // 2. Draw Right Hand (Amber / Bright Orange #F59E0B)
+  // 2. Draw Right Hand (Warm Slate & Bone White)
   if (styles.showRightHand && landmarks.right_hand && landmarks.right_hand.length > 0) {
     const pts = landmarks.right_hand;
 
     // Hand skeleton connections
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = '#94A3B8';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -97,15 +97,15 @@ export function drawLandmarksOnCanvas(
     for (let i = 0; i < pts.length; i++) {
       const [px, py] = getPt(pts[i]);
       const isFingertip = [4, 8, 12, 16, 20].includes(i);
-      const radius = isFingertip ? 5.5 : 3.5;
+      const radius = isFingertip ? 4.5 : 2.5;
 
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = isFingertip ? '#FDE68A' : '#F59E0B';
+      ctx.fillStyle = isFingertip ? '#E2E8F0' : '#64748B';
       ctx.fill();
 
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = '#78350F';
+      ctx.lineWidth = 1.0;
+      ctx.strokeStyle = '#1E293B';
       ctx.stroke();
     }
   }

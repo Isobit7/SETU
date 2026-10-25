@@ -30,9 +30,9 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from setu.vision.landmarks import HolisticLandmarkerWrapper
-from setu.features.extractor import FeatureExtractor158
-from setu.features.schema import validate_schema_vector, FEATURE_DIM
+from backend.app.services.vision import HolisticLandmarkerWrapper
+from training.feature_extractor import FeatureExtractor158
+from training.feature_extractor import validate_schema_vector, FEATURE_DIM
 
 ZIP_PATH = Path("data/raw/realsign/Dataset.zip")
 REPORT_PATH = Path("reports/realsign_hand_pilot_report.json")

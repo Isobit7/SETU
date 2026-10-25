@@ -8,9 +8,10 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from setu.api.server import app, pipeline
-from setu.models.realsign_classifier import RealSignClassifier, RealSignPrediction, RealSignMLP
-from setu.features.extractor import extract_realsign_hand_features
+from backend.app.main import app
+from backend.app.services.pipeline_manager import pipeline
+from models.adapters.realsign import RealSignClassifier, RealSignPrediction, RealSignMLP
+from training.feature_extractor import extract_realsign_hand_features
 
 
 @pytest.fixture(scope="module")
@@ -211,7 +212,7 @@ def _make_hand_pose(
 
 def test_finger_extension_states_and_heuristics():
     """Verify get_finger_extension_states and evaluate_alphabet_heuristics across 7 key signs."""
-    from setu.features.geometry import get_finger_extension_states, evaluate_alphabet_heuristics
+    from training.feature_extractor import get_finger_extension_states, evaluate_alphabet_heuristics
 
     # 1. 'L': Index + Thumb extended, others curled
     pose_l = _make_hand_pose(thumb=True, index=True, middle=False, ring=False, pinky=False)
@@ -276,8 +277,8 @@ def test_realsign_classifier_hybrid_heuristics_boost():
 
 
 def test_instant_retrain_realsign_mlp(tmp_path):
-    """Verify scripts.train_az_realsign.retrain_realsign_mlp completes in < 5 seconds with high accuracy."""
-    from scripts.train_az_realsign import retrain_realsign_mlp, generate_synthetic_samples_for_letter
+    """Verify scripts.calibrate_and_train_webcam_alphabet.retrain_realsign_mlp completes in < 5 seconds with high accuracy."""
+    from scripts.calibrate_and_train_webcam_alphabet import retrain_realsign_mlp, generate_synthetic_samples_for_letter
 
     # Create small calibration dataset of 10 samples each for letters A and B
     samples_a = generate_synthetic_samples_for_letter("A", num_samples=10)

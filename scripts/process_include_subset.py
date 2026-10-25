@@ -9,9 +9,9 @@ from pathlib import Path
 import json
 import numpy as np
 
-from configs.settings import PROJECT_ROOT, config
-from setu.vision.landmarks import HolisticLandmarkerWrapper
-from setu.features.schema import FEATURE_DIM, validate_schema_vector
+from config.settings import PROJECT_ROOT, config
+from backend.app.services.vision import HolisticLandmarkerWrapper
+from training.feature_extractor import FEATURE_DIM, validate_schema_vector
 from training.extract_features import FeatureExtractionPipeline
 from training.dataset_manifest import DatasetManifest, SampleRecord, compute_file_sha256
 

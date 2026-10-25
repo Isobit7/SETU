@@ -13,9 +13,9 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from setu.nlp.accumulator import SentenceAccumulator
-from setu.nlp.gloss_parser import ISLGlossParser
-from setu.api.server import app
+from backend.app.services.nlp import SentenceAccumulator
+from backend.app.services.nlp import ISLGlossParser
+from backend.app.main import app
 
 
 # ---------------------------------------------------------------------------

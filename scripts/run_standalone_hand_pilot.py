@@ -43,8 +43,8 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-from setu.features.extractor import FeatureExtractor158
-from setu.features.schema import (
+from training.feature_extractor import FeatureExtractor158
+from training.feature_extractor import (
     validate_schema_vector,
     FEATURE_DIM,
     RIGHT_PRESENCE_INDEX,

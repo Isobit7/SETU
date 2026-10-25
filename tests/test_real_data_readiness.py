@@ -9,8 +9,8 @@ import json
 import numpy as np
 import pytest
 
-from configs.settings import PROJECT_ROOT, config
-from setu.features.schema import FEATURE_DIM, EXPANDED_FEATURE_DIM, validate_schema_vector
+from config.settings import PROJECT_ROOT, config
+from training.feature_extractor import FEATURE_DIM, EXPANDED_FEATURE_DIM, validate_schema_vector
 from training.dataset_manifest import DatasetManifest, SampleRecord
 
 def test_mvp_manifest_structure_and_integrity():

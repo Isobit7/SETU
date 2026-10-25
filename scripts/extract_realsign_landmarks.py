@@ -38,7 +38,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from setu.utils.geometry import normalize_hand_landmarks
+from training.feature_extractor import normalize_hand_landmarks
 
 DEFAULT_MANIFEST_PATH = ROOT_DIR / "data" / "manifests" / "realsign_clean_manifest.json"
 DEFAULT_ZIP_PATH = ROOT_DIR / "data" / "raw" / "realsign" / "Dataset.zip"

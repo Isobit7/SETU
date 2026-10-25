@@ -30,9 +30,9 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from setu.features.extractor import FeatureExtractor158
-from setu.features.schema import EXPANDED_FEATURE_DIM
-from setu.vision.landmarks import HolisticLandmarkerWrapper
+from training.feature_extractor import FeatureExtractor158
+from training.feature_extractor import EXPANDED_FEATURE_DIM
+from backend.app.services.vision import HolisticLandmarkerWrapper
 
 logging.basicConfig(
     level=logging.INFO,
