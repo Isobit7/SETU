@@ -142,9 +142,16 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     }
 
     const ctx = canvas.getContext('2d');
-    if (ctx && currentResult?.landmarks) {
-      drawLandmarksOnCanvas(ctx, width, height, currentResult.landmarks, landmarkStyles);
-    } else if (ctx && !currentResult?.landmarks) {
+    if (ctx && (currentResult?.landmarks || currentResult?.detected_objects)) {
+      drawLandmarksOnCanvas(
+        ctx,
+        width,
+        height,
+        currentResult.landmarks || {},
+        landmarkStyles,
+        currentResult.detected_objects
+      );
+    } else if (ctx) {
       ctx.clearRect(0, 0, width, height);
     }
   }, [currentResult, landmarkStyles, videoRef]);

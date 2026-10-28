@@ -24,7 +24,14 @@ export function drawLandmarksOnCanvas(
     pose?: Array<{ x: number; y: number; z: number }>;
     face?: Array<{ x: number; y: number; z: number }>;
   },
-  styles: LandmarkStyles
+  styles: LandmarkStyles,
+  detectedObjects?: Array<{
+    label: string;
+    display_name: string;
+    confidence: number;
+    is_held: boolean;
+    bbox: [number, number, number, number];
+  }>
 ) {
   ctx.clearRect(0, 0, width, height);
 
@@ -160,6 +167,53 @@ export function drawLandmarksOnCanvas(
           ctx.restore();
         }
       }
+    }
+  }
+
+  // 4. Detected Physical Objects Bounding Boxes (Show-and-Sign Multimodal Grounding)
+  if (detectedObjects && detectedObjects.length > 0) {
+    for (const obj of detectedObjects) {
+      if (!obj.bbox || obj.bbox.length < 4) continue;
+      const [ymin, xmin, ymax, xmax] = obj.bbox;
+
+      // Coordinate mapping with mirror horizontal flip support
+      const leftNorm = styles.mirrored ? (1.0 - xmax) : xmin;
+      const rightNorm = styles.mirrored ? (1.0 - xmin) : xmax;
+      const x1 = Math.max(0, leftNorm * width);
+      const y1 = Math.max(0, ymin * height);
+      const boxW = Math.min(width - x1, Math.max(20, (rightNorm - leftNorm) * width));
+      const boxH = Math.min(height - y1, Math.max(20, (ymax - ymin) * height));
+
+      const isHeld = obj.is_held;
+      const strokeColor = isHeld ? '#f59e0b' : '#38bdf8'; // Amber Gold if held near hand, else Sky Cyan
+      const bgColor = isHeld ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.08)';
+
+      ctx.save();
+      // Bounding box outline
+      ctx.lineWidth = isHeld ? 2.5 : 1.8;
+      ctx.strokeStyle = strokeColor;
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      ctx.roundRect(x1, y1, boxW, boxH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Top label badge
+      const tagText = `${obj.display_name} ${Math.round(obj.confidence * 100)}%${isHeld ? ' • HELD' : ''}`;
+      ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+      const textMetrics = ctx.measureText(tagText);
+      const badgeW = textMetrics.width + 14;
+      const badgeH = 20;
+      const badgeY = Math.max(2, y1 - badgeH - 2);
+
+      ctx.fillStyle = strokeColor;
+      ctx.beginPath();
+      ctx.roundRect(x1, badgeY, badgeW, badgeH, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(tagText, x1 + 7, badgeY + 14);
+      ctx.restore();
     }
   }
 

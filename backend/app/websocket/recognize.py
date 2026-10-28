@@ -181,6 +181,8 @@ async def websocket_recognize(
     alphabet_streak_candidate: str = ""
     alphabet_streak_count: int = 0
     alphabet_last_committed: str = ""
+    alphabet_last_committed_time: float = 0.0
+    alphabet_had_baseline: bool = True
 
     # Word / Phrase Persistence & Latching State
     last_word_label: str = ""
@@ -244,6 +246,8 @@ async def websocket_recognize(
                 alphabet_streak_candidate = ""
                 alphabet_streak_count = 0
                 alphabet_last_committed = ""
+                alphabet_last_committed_time = 0.0
+                alphabet_had_baseline = True
                 last_word_label = ""
                 last_word_display = ""
                 last_word_conf = 0.0
@@ -282,8 +286,10 @@ async def websocket_recognize(
                     selected_label = disambiguation_top2.lower()
 
                 if selected_label:
-                    disp = DISPLAY_NAMES.get(selected_label, selected_label.upper().replace("_", " "))
-                    accumulator.add_token(disp, token_type="phrase", timestamp=time.time())
+                    is_letter = (len(selected_label) == 1 and selected_label.isalpha())
+                    disp = selected_label.upper() if is_letter else DISPLAY_NAMES.get(selected_label, selected_label.upper().replace("_", " "))
+                    token_type = "letter" if is_letter else "phrase"
+                    accumulator.add_token(disp, token_type=token_type, timestamp=time.time())
                     disambiguation_active = False
                     disambiguation_options = []
                     disambiguation_top1 = ""
@@ -697,13 +703,15 @@ async def websocket_recognize(
                 )
                 required_streak = STREAK_ALPHABET if active_model == "realsign" else STREAK_SEQUENCE
 
+                has_realsign_feat = (realsign_feat_126d is not None) or (realsign_feat_63d is not None)
+
                 if active_model == "realsign":
                     res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
                     raw_conf = round(realsign_pred.confidence, 4) if realsign_pred else 0.0
                     raw_top_class = realsign_pred.top_3[0][0] if (realsign_pred and realsign_pred.top_3) else ("no_hand" if not hand_detected else "unknown")
                     raw_top_conf = float(realsign_pred.top_3[0][1]) if (realsign_pred and realsign_pred.top_3) else 0.0
                     raw_top_3 = realsign_pred.top_3 if realsign_pred else []
-                    buffer_fill = 1.0 if (hand_detected and realsign_feat_63d is not None) else 0.0
+                    buffer_fill = 1.0 if (hand_detected and has_realsign_feat) else 0.0
                     is_pred_valid = bool(realsign_pred and realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign)
                     pred_label = realsign_pred.letter if realsign_pred else ""
                 elif active_model == "include_stream":
@@ -736,10 +744,37 @@ async def websocket_recognize(
                     pred_label = isl_pred.label if isl_pred else ""
 
                 if active_model == "realsign":
-                    if not hand_detected or realsign_feat_63d is None or not is_pred_valid:
+                    if not hand_detected or not has_realsign_feat or not is_pred_valid:
                         current_prediction = "Awaiting Sign Input"
+                        alphabet_had_baseline = True
                     else:
                         current_prediction = pred_label
+
+                    # Check for borderline alphabet margin to trigger Disambiguation HUD
+                    if (
+                        realsign_pred
+                        and len(realsign_pred.top_3) >= 2
+                        and is_pred_valid
+                        and not disambiguation_active
+                    ):
+                        t1_let = str(realsign_pred.top_3[0][0]).strip().upper()
+                        t2_let = str(realsign_pred.top_3[1][0]).strip().upper()
+                        t1_c = float(realsign_pred.top_3[0][1])
+                        t2_c = float(realsign_pred.top_3[1][1])
+                        if (
+                            t1_let not in ("", "NO_SIGN", "UNKNOWN", "AWAITING SIGN INPUT")
+                            and t2_let not in ("", "NO_SIGN", "UNKNOWN", "AWAITING SIGN INPUT")
+                            and (t1_c - t2_c < 0.20)
+                            and (t1_c < 0.65)
+                        ):
+                            disambiguation_active = True
+                            disambiguation_top1 = t1_let
+                            disambiguation_top2 = t2_let
+                            disambiguation_options = [
+                                {"label": t1_let, "display": f"LETTER {t1_let}", "hand": "left"},
+                                {"label": t2_let, "display": f"LETTER {t2_let}", "hand": "right"},
+                            ]
+                            disambiguation_start_time = now
 
                     if current_prediction == alphabet_streak_candidate:
                         alphabet_streak_count += 1
@@ -747,16 +782,27 @@ async def websocket_recognize(
                         alphabet_streak_candidate = current_prediction
                         alphabet_streak_count = 1
 
-                    if alphabet_streak_count >= required_streak:
+                    if alphabet_streak_count >= required_streak and not disambiguation_active:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
-                            alphabet_last_committed = alphabet_streak_candidate
                             res_label = alphabet_streak_candidate
                             res_display = f"LETTER {alphabet_streak_candidate}"
                             res_conf = raw_conf
                             res_is_known = True
                             is_stable = True
-                            if alphabet_streak_count == required_streak and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
+
+                            # Anti-jitter refractory lockout
+                            can_commit = False
+                            if alphabet_streak_candidate == alphabet_last_committed:
+                                if (now - alphabet_last_committed_time >= 0.75) and alphabet_had_baseline:
+                                    can_commit = True
+                            else:
+                                can_commit = True
+
+                            if can_commit and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
                                 accumulator.add_token(alphabet_streak_candidate, token_type="letter", timestamp=now)
+                                alphabet_last_committed = alphabet_streak_candidate
+                                alphabet_last_committed_time = now
+                                alphabet_had_baseline = False
                         else:
                             alphabet_last_committed = ""
                             res_label = "Awaiting Sign Input"
@@ -765,7 +811,7 @@ async def websocket_recognize(
                             res_is_known = False
                             is_stable = False
                     else:
-                        if alphabet_last_committed and hand_detected and realsign_feat_63d is not None:
+                        if alphabet_last_committed and hand_detected and has_realsign_feat:
                             res_label = alphabet_last_committed
                             res_display = f"LETTER {alphabet_last_committed}"
                             res_conf = raw_conf
@@ -820,8 +866,8 @@ async def websocket_recognize(
                             candidate_label = res_label
                             candidate_streak = 1
 
-                        # Disambiguation Check & Hand-Lift Selection (when margin < 0.20 or is_ambiguous)
-                        if seq_pred and getattr(seq_pred, "is_ambiguous", False) and len(seq_pred.top_3) >= 2:
+                        # Disambiguation Check (when margin < 0.20 or is_ambiguous)
+                        if seq_pred and getattr(seq_pred, "is_ambiguous", False) and len(seq_pred.top_3) >= 2 and not disambiguation_active:
                             t1_lbl = seq_pred.top_3[0][0]
                             t2_lbl = seq_pred.top_3[1][0]
                             if t1_lbl not in ("no_sign", "unknown") and t2_lbl not in ("no_sign", "unknown"):
@@ -833,25 +879,6 @@ async def websocket_recognize(
                                     {"label": t2_lbl, "display": DISPLAY_NAMES.get(t2_lbl, t2_lbl.upper().replace("_", " ")), "hand": "right"},
                                 ]
                                 disambiguation_start_time = now
-
-                        # If disambiguation is active, evaluate wrist elevation for natural gesture resolution
-                        if disambiguation_active:
-                            if has_left and has_right and len(left_hand) > 0 and len(right_hand) > 0:
-                                lw_y = left_hand[0]["y"]
-                                rw_y = right_hand[0]["y"]
-                                if lw_y < rw_y - 0.12:  # Left hand raised notably higher
-                                    disp = DISPLAY_NAMES.get(disambiguation_top1, disambiguation_top1.upper())
-                                    accumulator.add_token(disp, token_type="phrase", timestamp=now)
-                                    disambiguation_active = False
-                                    disambiguation_options = []
-                                elif rw_y < lw_y - 0.12:  # Right hand raised notably higher
-                                    disp = DISPLAY_NAMES.get(disambiguation_top2, disambiguation_top2.upper())
-                                    accumulator.add_token(disp, token_type="phrase", timestamp=now)
-                                    disambiguation_active = False
-                                    disambiguation_options = []
-                            if now - disambiguation_start_time > 3.5:
-                                disambiguation_active = False
-                                disambiguation_options = []
 
                         # Debounce gate for committing to backend accumulator (gated by disambiguation)
                         if candidate_streak >= required_streak and not disambiguation_active:
@@ -887,6 +914,35 @@ async def websocket_recognize(
                         is_stable = False
                         candidate_streak = 0
                         candidate_label = ""
+
+                # Universal Disambiguation Hand-Lift Elevation Arbiter
+                if disambiguation_active:
+                    resolved_choice = None
+                    if has_left and len(left_hand) > 0:
+                        lw_y = left_hand[0]["y"]
+                        rw_y = right_hand[0]["y"] if (has_right and len(right_hand) > 0) else 1.0
+                        if (lw_y < rw_y - 0.10) or (lw_y < 0.32):
+                            resolved_choice = disambiguation_top1
+                    if not resolved_choice and has_right and len(right_hand) > 0:
+                        rw_y = right_hand[0]["y"]
+                        lw_y = left_hand[0]["y"] if (has_left and len(left_hand) > 0) else 1.0
+                        if (rw_y < lw_y - 0.10) or (rw_y < 0.32):
+                            resolved_choice = disambiguation_top2
+
+                    if resolved_choice:
+                        is_letter = (len(resolved_choice) == 1 and resolved_choice.isalpha())
+                        disp = resolved_choice.upper() if is_letter else DISPLAY_NAMES.get(resolved_choice.lower(), resolved_choice.upper().replace("_", " "))
+                        token_type = "letter" if is_letter else "phrase"
+                        accumulator.add_token(disp, token_type=token_type, timestamp=now)
+                        disambiguation_active = False
+                        disambiguation_options = []
+                        disambiguation_top1 = ""
+                        disambiguation_top2 = ""
+                    elif now - disambiguation_start_time > 3.5:
+                        disambiguation_active = False
+                        disambiguation_options = []
+                        disambiguation_top1 = ""
+                        disambiguation_top2 = ""
 
                 accumulator.check_timeouts(current_time=now)
 

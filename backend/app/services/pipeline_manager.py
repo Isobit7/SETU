@@ -142,8 +142,9 @@ class PipelineManager:
         """Runs dummy forward passes through neural network models with zero tensors."""
         if self.realsign_classifier is not None:
             try:
-                dummy_63 = np.zeros(63, dtype=np.float32)
-                self.realsign_classifier.predict(dummy_63, apply_smoothing=False)
+                in_dim = getattr(self.realsign_classifier, "input_dim", 126)
+                dummy = np.ones(in_dim, dtype=np.float32) * 0.05
+                self.realsign_classifier.predict(dummy, confidence_threshold=0.0, apply_smoothing=False)
                 logger.info("RealSign 26-class PyTorch model warmed up successfully.")
             except Exception as e:
                 logger.warning("RealSign warmup encountered error: %s", e)

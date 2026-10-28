@@ -271,7 +271,25 @@ export function useRecognitionStream({
         audio: false,
       };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (firstErr: any) {
+        if (
+          selectedCameraId &&
+          (firstErr.name === 'OverconstrainedError' ||
+            firstErr.name === 'ConstraintNotSatisfiedError' ||
+            firstErr.name === 'NotFoundError')
+        ) {
+          console.warn('Overconstrained camera device, falling back to default camera:', firstErr);
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+            audio: false,
+          });
+        } else {
+          throw firstErr;
+        }
+      }
       streamRef.current = stream;
 
       if (videoRef.current) {
@@ -397,15 +415,42 @@ export function useRecognitionStream({
           lastFrameSentTimeRef.current = now;
           waitingForResponseRef.current = true;
 
+          // Preserve camera aspect ratio dynamically to prevent squishing 16:9 frames into 4:3
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            const maxDim = 480;
+            let targetW = 480;
+            let targetH = 360;
+            if (video.videoWidth >= video.videoHeight) {
+              targetW = maxDim;
+              targetH = Math.round((video.videoHeight / video.videoWidth) * maxDim);
+            } else {
+              targetH = maxDim;
+              targetW = Math.round((video.videoWidth / video.videoHeight) * maxDim);
+            }
+            if (canvas.width !== targetW || canvas.height !== targetH) {
+              canvas.width = targetW;
+              canvas.height = targetH;
+            }
+          }
+
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             canvas.toBlob(
               (blob) => {
                 if (blob && ws.readyState === WebSocket.OPEN) {
-                  blob.arrayBuffer().then((buf) => {
-                    ws.send(buf);
-                  });
+                  blob
+                    .arrayBuffer()
+                    .then((buf) => {
+                      if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(buf);
+                      } else {
+                        waitingForResponseRef.current = false;
+                      }
+                    })
+                    .catch(() => {
+                      waitingForResponseRef.current = false;
+                    });
                 } else {
                   waitingForResponseRef.current = false;
                 }
