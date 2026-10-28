@@ -6,7 +6,7 @@ Welcome to the **Sathwik** project documentation directory. This folder contains
 
 ## 📌 Single Canonical Master Document
 
-[**`SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) **(Checkpoint 26 Master Edition)**
+[**`SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) **(Checkpoint 27 Master Hardened Edition)**
 This single canonical document consolidates the entire engineering audit into one authoritative reference:
 - **Executive Summary & End-to-End Execution Flow:** Camera &rarr; CLAHE Enhancer &rarr; Landmarks + COCO Objects &rarr; Normalization &rarr; Inference &rarr; Disambiguation Arbiter &rarr; Multimodal NLP &rarr; Speech (with ASCII & Mermaid diagrams).
 - **Mathematical Invariance Engineering:** Translation (wrist-centering), scale (palm-span), and body-anchored invariance proofs.
@@ -16,7 +16,7 @@ This single canonical document consolidates the entire engineering audit into on
 - **Deep Scientific Diagnostic Audit:** Numerical stability (0 NaN, 0 Inf), overfitting risk analysis (0.8% gap), hallucination stress test (0.0000 on blank frames), and per-class precision/recall.
 - **Complete 15-Endpoint API & WebSocket Encyclopedia:** Full request/response JSON schemas, wire protocols, session capture endpoints, and frontend callers.
 - **Coupling & Fragility Analysis:** 63D/89D/126D/158D/164D/328D contracts, handedness mirroring, backpressure, disambiguation baselines, and race condition prevention.
-- **Working vs. Defective Feature Audit:** Verified 134/134 passing test suite, Vite proxy fix, and Checkpoint 26 deliverables.
+- **Working vs. Defective Feature Audit:** Verified 134/134 passing test suite (100%), 0 Vite build errors, Checkpoint 26 deliverables, and Checkpoint 27 runtime hardening (aspect-ratio preservation, 126D universal gating, touchless alphabet disambiguation, and glowing object bounding boxes).
 - **Inaccuracies, Bottlenecks & Algorithmic Solutions:** Low-light CLAHE, hand-lift disambiguation, and Show-and-Sign object grounding.
 - **Retraining Strategy, Required Datasets Catalog & Target Architectures:** Continuous fine-tuning CLI (`scripts/fine_tune_from_captures.py`), ST-GCN, and CTC-BiLSTM models.
 - **Proposed New Features & Actionable 5-Phase Roadmap:** Phases 1 to 5.
