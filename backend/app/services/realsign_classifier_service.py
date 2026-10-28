@@ -210,6 +210,8 @@ class RealSignInferenceService:
         if request.features is not None:
             feat_len = len(request.features)
             feat_array = np.array(request.features, dtype=np.float32)
+            if np.isnan(feat_array).any() or np.isinf(feat_array).any():
+                raise ValueError("Features must not contain NaN or Inf values.")
             if feat_len == 63 and expected_dim == 89:
                 feat_array = expand_63d_to_89d(feat_array)
             elif feat_len == 63 and expected_dim == 126:
