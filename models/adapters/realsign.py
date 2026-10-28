@@ -324,8 +324,10 @@ class RealSignClassifier:
                 logsumexp_other = float(max_other + np.log(np.sum(np.exp(other_logits - max_other))))
                 logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 2.0)
 
-        # Softmax over (potentially boosted) logits
-        exp_logits = np.exp(logits_arr - np.max(logits_arr))
+        # Calibrated Softmax with Temperature Scaling (T=0.75) for high-confidence discriminability
+        temperature = 0.75
+        scaled_logits = (logits_arr - np.max(logits_arr)) / temperature
+        exp_logits = np.exp(scaled_logits)
         raw_probs = (exp_logits / np.sum(exp_logits)).astype(np.float32)
 
         # Exponential Moving Average (EMA) Smoothing: S_t = alpha * P_t + (1 - alpha) * S_{t-1}

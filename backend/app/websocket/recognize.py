@@ -634,7 +634,7 @@ async def websocket_recognize(
                                     target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
-                                    apply_heuristic_boost=False,
+                                    apply_heuristic_boost=True,
                                     raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )
