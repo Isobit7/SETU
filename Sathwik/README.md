@@ -4,22 +4,17 @@ Welcome to the **Sathwik** project documentation directory. This folder contains
 
 ---
 
-## 📌 Single Canonical Master Document
+## 📌 Primary Reference Documents
 
-[**`SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) **(Checkpoint 27 Master Hardened Edition)**
-This single canonical document consolidates the entire engineering audit into one authoritative reference:
-- **Executive Summary & End-to-End Execution Flow:** Camera &rarr; CLAHE Enhancer &rarr; Landmarks + COCO Objects &rarr; Normalization &rarr; Inference &rarr; Disambiguation Arbiter &rarr; Multimodal NLP &rarr; Speech (with ASCII & Mermaid diagrams).
-- **Mathematical Invariance Engineering:** Translation (wrist-centering), scale (palm-span), and body-anchored invariance proofs.
-- **Exhaustive 236-File Repository Inventory:** Complete coverage across `backend/`, `frontend/`, `models/`, `training/`, `data/`, `config/`, `scripts/`, `reports/`, `docs/`, and `tests/`.
-- **Present Codebase Behavior vs. Actual Intended Scope:** Comprehensive "Vision Gap" analysis comparing what SETU does today vs. its true production mission.
-- **Exhaustive ML Model Deep-Dive & Comparative Matrix:** RealSign MLP, ISL MVP Ridge, Sequence BiLSTM, AI4Bharat INCLUDE, YOLOv11, and MobileNetV3 SSDLite COCO Object Detector.
-- **Deep Scientific Diagnostic Audit:** Numerical stability (0 NaN, 0 Inf), overfitting risk analysis (0.8% gap), hallucination stress test (0.0000 on blank frames), and per-class precision/recall.
-- **Complete 15-Endpoint API & WebSocket Encyclopedia:** Full request/response JSON schemas, wire protocols, session capture endpoints, and frontend callers.
-- **Coupling & Fragility Analysis:** 63D/89D/126D/158D/164D/328D contracts, handedness mirroring, backpressure, disambiguation baselines, and race condition prevention.
-- **Working vs. Defective Feature Audit:** Verified 134/134 passing test suite (100%), 0 Vite build errors, Checkpoint 26 deliverables, and Checkpoint 27 runtime hardening (aspect-ratio preservation, 126D universal gating, touchless alphabet disambiguation, and glowing object bounding boxes).
-- **Inaccuracies, Bottlenecks & Algorithmic Solutions:** Low-light CLAHE, hand-lift disambiguation, and Show-and-Sign object grounding.
-- **Retraining Strategy, Required Datasets Catalog & Target Architectures:** Continuous fine-tuning CLI (`scripts/fine_tune_from_captures.py`), ST-GCN, and CTC-BiLSTM models.
-- **Proposed New Features & Actionable 5-Phase Roadmap:** Phases 1 to 5.
+1. [**`SETU_WORKING_AND_FORMULAS_GUIDE.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_WORKING_AND_FORMULAS_GUIDE.md) **(Complete System Working & Mathematical Formulas Guide)**
+   - **End-to-End Visual Architecture**: Mermaid flowchart of the 7-stage processing pipeline.
+   - **Mathematical Formulas**: Exact equations for CLAHE contrast boost, Euclidean framing & distance evaluation, wrist translation centering, palm scale normalization, 6-D facial ratios, and 12-D body anchors.
+   - **ML & DL Engines**: In-depth review of RealSign 26-Class MLP, ISL Sequence BiLSTM, and AI4Bharat INCLUDE (263 signs).
+   - **Qwen2.5-0.5B Neural Seq2Seq Translation**: How the on-device Small Language Model on CUDA transforms arbitrary sign tokens and spelled letters into fluent, grammatically correct English sentences in ~350 ms.
+   - **Actionable Improvement Ideas**: Step-by-step suggestions for improving model accuracy, finger jitter filtering, and future enhancements.
+
+2. [**`SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) **(Checkpoint 28 Master Hardened Edition)**
+   - Complete 236-file repository inventory, 15-endpoint API encyclopedia, deep scientific diagnostic audit, coupling analysis, and 5-phase engineering roadmap.
 
 ---
 
