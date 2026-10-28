@@ -16,7 +16,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from training.feature_extractor import normalize_hand_landmarks, evaluate_alphabet_heuristics
+from training.features.geometry import normalize_hand_landmarks, evaluate_alphabet_heuristics
 
 logger = logging.getLogger(__name__)
 
@@ -53,21 +53,35 @@ class RealSignMLP(nn.Module):
 
     def __init__(
         self,
-        input_dim: int = 63,
+        input_dim: int = 89,
         hidden1: int = 128,
         hidden2: int = 64,
         num_classes: int = 26,
         dropout: float = 0.2,
+        use_batchnorm: bool = True,
     ) -> None:
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden1),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden1, hidden2),
-            nn.ReLU(),
-            nn.Linear(hidden2, num_classes),
-        )
+        self.use_batchnorm = use_batchnorm
+        if use_batchnorm:
+            self.net = nn.Sequential(
+                nn.Linear(input_dim, hidden1),
+                nn.BatchNorm1d(hidden1),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+                nn.Linear(hidden1, hidden2),
+                nn.BatchNorm1d(hidden2),
+                nn.ReLU(),
+                nn.Linear(hidden2, num_classes),
+            )
+        else:
+            self.net = nn.Sequential(
+                nn.Linear(input_dim, hidden1),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+                nn.Linear(hidden1, hidden2),
+                nn.ReLU(),
+                nn.Linear(hidden2, num_classes),
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
@@ -80,7 +94,7 @@ class RealSignClassifier:
     normalization, and classifies into letters A to Z using the PyTorch MLP.
     """
 
-    DEFAULT_CONFIDENCE_THRESHOLD = 0.50
+    DEFAULT_CONFIDENCE_THRESHOLD = 0.40
 
     def __init__(self, weights_path: Path | str = DEFAULT_REALSIGN_MODEL_PATH) -> None:
         self.weights_path = Path(weights_path)
@@ -88,18 +102,26 @@ class RealSignClassifier:
             raise FileNotFoundError(f"RealSign model weights not found at {self.weights_path.resolve()}")
 
         checkpoint = torch.load(str(self.weights_path), map_location="cpu", weights_only=False)
+        state_dict = checkpoint.get("model_state_dict", checkpoint)
 
         self.class_names: List[str] = checkpoint.get(
             "classes", [chr(ord("A") + i) for i in range(26)]
         )
         self.num_classes: int = len(self.class_names)
-        arch = checkpoint.get("architecture", {})
-        self.input_dim = arch.get("input_dim", 63)
+        arch = checkpoint.get("architecture", {}) if isinstance(checkpoint, dict) else {}
+
+        # Auto-detect batchnorm and input dimensions from weights
+        first_layer_weight = state_dict.get("net.0.weight")
+        inferred_in_dim = first_layer_weight.shape[1] if first_layer_weight is not None else 63
+        has_bn = any("running_mean" in k for k in state_dict.keys())
+
+        self.input_dim = arch.get("input_dim", inferred_in_dim)
         self.hidden1 = arch.get("hidden1", 128)
         self.hidden2 = arch.get("hidden2", 64)
         self.dropout = arch.get("dropout", 0.2)
-        self.test_accuracy = checkpoint.get("test_accuracy", None)
-        self.macro_f1 = checkpoint.get("macro_f1", None)
+        self.use_batchnorm = arch.get("use_batchnorm", has_bn)
+        self.test_accuracy = checkpoint.get("test_accuracy", None) if isinstance(checkpoint, dict) else None
+        self.macro_f1 = checkpoint.get("macro_f1", None) if isinstance(checkpoint, dict) else None
 
         self.model = RealSignMLP(
             input_dim=self.input_dim,
@@ -107,8 +129,9 @@ class RealSignClassifier:
             hidden2=self.hidden2,
             num_classes=self.num_classes,
             dropout=self.dropout,
+            use_batchnorm=self.use_batchnorm,
         )
-        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.model.load_state_dict(state_dict)
         self.model.eval()
 
         # Exponential Moving Average (EMA) smoothing state: S_t = alpha * P_t + (1 - alpha) * S_{t-1}
@@ -117,8 +140,10 @@ class RealSignClassifier:
         self._last_mtime: float = self.weights_path.stat().st_mtime if self.weights_path.exists() else 0.0
 
         logger.info(
-            "RealSignClassifier loaded from %s. Supported classes: %d (%s..%s). Accuracy: %s",
+            "RealSignClassifier loaded from %s (Dim: %d, BN: %s). Supported classes: %d (%s..%s). Accuracy: %s",
             self.weights_path,
+            self.input_dim,
+            self.use_batchnorm,
             self.num_classes,
             self.class_names[0],
             self.class_names[-1],
@@ -134,15 +159,35 @@ class RealSignClassifier:
             if current_mtime > self._last_mtime:
                 logger.info("Detected newly trained RealSign weights at %s. Hot-reloading model in-memory...", self.weights_path)
                 checkpoint = torch.load(str(self.weights_path), map_location="cpu", weights_only=False)
-                self.class_names = checkpoint.get("classes", [chr(ord("A") + i) for i in range(26)])
+                state_dict = checkpoint.get("model_state_dict", checkpoint)
+                arch = checkpoint.get("architecture", {}) if isinstance(checkpoint, dict) else {}
+                first_layer_weight = state_dict.get("net.0.weight")
+                inferred_in_dim = first_layer_weight.shape[1] if first_layer_weight is not None else 63
+                has_bn = any("running_mean" in k for k in state_dict.keys())
+
+                self.input_dim = arch.get("input_dim", inferred_in_dim)
+                self.hidden1 = arch.get("hidden1", 128)
+                self.hidden2 = arch.get("hidden2", 64)
+                self.dropout = arch.get("dropout", 0.2)
+                self.use_batchnorm = arch.get("use_batchnorm", has_bn)
+                self.class_names = checkpoint.get("classes", [chr(ord("A") + i) for i in range(26)]) if isinstance(checkpoint, dict) else [chr(ord("A") + i) for i in range(26)]
                 self.num_classes = len(self.class_names)
-                self.test_accuracy = checkpoint.get("test_accuracy", None)
-                self.macro_f1 = checkpoint.get("macro_f1", None)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
+                self.test_accuracy = checkpoint.get("test_accuracy", None) if isinstance(checkpoint, dict) else None
+                self.macro_f1 = checkpoint.get("macro_f1", None) if isinstance(checkpoint, dict) else None
+
+                self.model = RealSignMLP(
+                    input_dim=self.input_dim,
+                    hidden1=self.hidden1,
+                    hidden2=self.hidden2,
+                    num_classes=self.num_classes,
+                    dropout=self.dropout,
+                    use_batchnorm=self.use_batchnorm,
+                )
+                self.model.load_state_dict(state_dict)
                 self.model.eval()
                 self._last_mtime = current_mtime
                 self.reset_smoothing()
-                logger.info("RealSign model successfully hot-reloaded! (Classes: %d, Accuracy: %s)", self.num_classes, f"{self.test_accuracy*100:.2f}%" if self.test_accuracy else "N/A")
+                logger.info("RealSign model successfully hot-reloaded! (Dim: %d, Accuracy: %s)", self.input_dim, f"{self.test_accuracy*100:.2f}%" if self.test_accuracy else "N/A")
         except Exception as e:
             logger.warning("Error checking/reloading RealSign weights: %s", e)
 
@@ -155,15 +200,28 @@ class RealSignClassifier:
         features_63d: np.ndarray,
         confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
         apply_smoothing: bool = False,
+        apply_heuristic_boost: bool = False,
+        raw_landmarks_21x3: Optional[np.ndarray] = None,
     ) -> RealSignPrediction:
         """
-        Accepts the 63-D normalized hand vector directly and runs inference.
+        Accepts a 63-D, 89-D, or 126-D feature vector, or a (21, 3) raw landmark matrix directly and runs inference.
         Returns RealSignPrediction with raw class logits and softmax probabilities across 26 letters (A–Z).
         """
+        features_arr = np.asarray(features_63d, dtype=np.float32)
+        if features_arr.ndim == 2 and features_arr.shape == (21, 3):
+            return self.predict_landmarks(
+                features_arr,
+                confidence_threshold=confidence_threshold,
+                apply_smoothing=apply_smoothing,
+                apply_heuristic_boost=apply_heuristic_boost,
+            )
+
         return self.predict_vector(
-            features_63d,
+            features_arr,
             confidence_threshold=confidence_threshold,
             apply_smoothing=apply_smoothing,
+            apply_heuristic_boost=apply_heuristic_boost,
+            raw_landmarks_21x3=raw_landmarks_21x3,
         )
 
     @torch.inference_mode()
@@ -172,25 +230,55 @@ class RealSignClassifier:
         features_63d: np.ndarray,
         confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
         apply_smoothing: bool = False,
+        apply_heuristic_boost: bool = False,
+        raw_landmarks_21x3: Optional[np.ndarray] = None,
     ) -> RealSignPrediction:
         """
-        Run inference on a single 63-D normalized feature vector.
+        Run inference on a single 63-D normalized feature vector or (21, 3) landmark matrix.
         Uses @torch.inference_mode() to prevent autograd graph memory leaks
         and applies EMA probability smoothing to eliminate 1-frame jitter flickering.
+        By default, apply_heuristic_boost is False, trusting the pure trained neural network.
         """
         self.check_and_reload()
 
-        if features_63d.ndim != 1 or features_63d.shape[0] != self.input_dim:
-            raise ValueError(f"Expected feature vector shape ({self.input_dim},), got {features_63d.shape}")
+        original_63d: Optional[np.ndarray] = None
+        feat_vec = np.asarray(features_63d, dtype=np.float32)
 
-        if not np.all(np.isfinite(features_63d)):
+        if feat_vec.ndim == 2 and feat_vec.shape == (21, 3):
+            norm_pts, _ = normalize_wrist_coordinates(feat_vec)
+            feat_vec = norm_pts.ravel().astype(np.float32)
+
+        if feat_vec.ndim == 1 and feat_vec.shape[0] == 126:
+            # Dual-hand 126-D input
+            if self.input_dim == 89 or self.input_dim == 63:
+                # Use primary active hand (right hand slots 63:126 or left hand slots 0:63)
+                rh_part = feat_vec[63:126]
+                lh_part = feat_vec[0:63]
+                primary_hand = rh_part if float(np.linalg.norm(rh_part)) > 1e-3 else lh_part
+                feat_vec = primary_hand
+                original_63d = feat_vec.copy()
+                if self.input_dim == 89:
+                    from training.features.geometry import expand_63d_to_89d
+                    feat_vec = expand_63d_to_89d(feat_vec)
+        elif feat_vec.ndim == 1 and feat_vec.shape[0] == 63:
+            original_63d = feat_vec.copy()
+            if self.input_dim == 89:
+                from training.features.geometry import expand_63d_to_89d
+                feat_vec = expand_63d_to_89d(feat_vec)
+            elif self.input_dim == 126:
+                # Pad left hand with zeros when given single right hand
+                feat_vec = np.concatenate([np.zeros(63, dtype=np.float32), feat_vec])
+
+        if feat_vec.ndim != 1 or feat_vec.shape[0] != self.input_dim:
+            raise ValueError(f"Expected feature vector shape ({self.input_dim},), got {feat_vec.shape}")
+
+        if not np.all(np.isfinite(feat_vec)):
             raise ValueError("Feature vector contains NaN or Inf values")
 
         # Guard against zero or degenerate landmark vectors (e.g. absent or uninitialized hand)
-        pts_21x3 = features_63d.reshape(21, 3)
-        palm_len = float(np.linalg.norm(pts_21x3[9] - pts_21x3[0]))
-        total_energy = float(np.linalg.norm(features_63d))
-        if confidence_threshold > 0.0 and (palm_len < 1e-3 or total_energy < 1e-3):
+        raw_energy = float(np.linalg.norm(features_63d))
+        total_energy = float(np.linalg.norm(feat_vec))
+        if confidence_threshold > 0.0 and (raw_energy < 1e-3 or total_energy < 1e-3):
             return RealSignPrediction(
                 letter="Awaiting Sign Input",
                 confidence=0.0,
@@ -201,29 +289,40 @@ class RealSignClassifier:
                 logits={name: 0.0 for name in self.class_names},
             )
 
-        # Check physical finger-extension geometric heuristics for unambiguous poses
-        boosted_letter: Optional[str] = None
-        try:
-            if palm_len > 1e-4:
-                boosted_letter = evaluate_alphabet_heuristics(pts_21x3)
-        except Exception as e:
-            logger.debug("Failed evaluating alphabet heuristics: %s", e)
-
         with torch.inference_mode():
-            inp_tensor = torch.from_numpy(features_63d.astype(np.float32)).unsqueeze(0)
+            inp_tensor = torch.from_numpy(feat_vec.astype(np.float32)).unsqueeze(0)
             logits_tensor = self.model(inp_tensor)
             logits_arr = logits_tensor.numpy()[0].copy()
 
-        # Apply geometric rule validation to boost confidence for clear finger poses
-        if boosted_letter and boosted_letter in self.class_names:
-            target_idx = self.class_names.index(boosted_letter)
-            other_mask = np.ones(self.num_classes, dtype=bool)
-            other_mask[target_idx] = False
-            other_logits = logits_arr[other_mask]
-            max_other = float(np.max(other_logits))
-            logsumexp_other = float(max_other + np.log(np.sum(np.exp(other_logits - max_other))))
-            # Boost target logit to ensure at least ~88% confidence for matching physical pose
-            logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 2.0)
+        # Optional geometric rule validation (only if explicitly enabled; disabled by default to avoid hijacking)
+        if apply_heuristic_boost:
+            boosted_letter: Optional[str] = None
+            try:
+                pts_to_eval = None
+                if raw_landmarks_21x3 is not None:
+                    pts_to_eval = raw_landmarks_21x3
+                elif original_63d is not None:
+                    pts_to_eval = original_63d.reshape(21, 3)
+                else:
+                    from training.features.geometry import ACTIVE_COORDINATE_INDICES_57
+                    recon_63 = np.zeros(63, dtype=np.float32)
+                    recon_63[ACTIVE_COORDINATE_INDICES_57] = feat_vec[:57]
+                    recon_63[28] = -1.0
+                    pts_to_eval = recon_63.reshape(21, 3)
+
+                if pts_to_eval is not None:
+                    boosted_letter = evaluate_alphabet_heuristics(pts_to_eval)
+            except Exception as e:
+                logger.debug("Failed evaluating alphabet heuristics: %s", e)
+
+            if boosted_letter and boosted_letter in self.class_names:
+                target_idx = self.class_names.index(boosted_letter)
+                other_mask = np.ones(self.num_classes, dtype=bool)
+                other_mask[target_idx] = False
+                other_logits = logits_arr[other_mask]
+                max_other = float(np.max(other_logits))
+                logsumexp_other = float(max_other + np.log(np.sum(np.exp(other_logits - max_other))))
+                logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 2.0)
 
         # Softmax over (potentially boosted) logits
         exp_logits = np.exp(logits_arr - np.max(logits_arr))
@@ -247,10 +346,10 @@ class RealSignClassifier:
         margin = p_top1 - p_top2
 
         # Confidence & Margin Gate:
-        # If p_top1 < 0.50 OR margin < 0.15:
-        # Return label: "Awaiting Sign Input", confidence: 0.0, is_known_sign: False
-        effective_min_conf = max(confidence_threshold, 0.50) if confidence_threshold > 0.0 else 0.0
-        effective_min_margin = 0.15 if confidence_threshold > 0.0 else 0.0
+        # Respect user/client-configured confidence_threshold without forcing a 0.50 clamp,
+        # with a gentle 0.05 margin requirement to filter true noise while retaining responsiveness.
+        effective_min_conf = float(confidence_threshold) if confidence_threshold > 0.0 else 0.0
+        effective_min_margin = 0.05 if confidence_threshold > 0.0 else 0.0
 
         if p_top1 < effective_min_conf or margin < effective_min_margin:
             is_known = False
@@ -280,6 +379,7 @@ class RealSignClassifier:
         landmarks_21x3: np.ndarray,
         confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
         apply_smoothing: bool = False,
+        apply_heuristic_boost: bool = False,
     ) -> RealSignPrediction:
         """
         Preprocess 21 3D landmarks (wrist-centering and palm scale) and run inference.
@@ -291,12 +391,19 @@ class RealSignClassifier:
         if pts.shape != (21, 3):
             raise ValueError(f"Expected shape (21, 3), got {pts.shape}")
 
-        norm_pts, _ = normalize_hand_landmarks(pts)
-        feat_vec = norm_pts.flatten()
+        if self.input_dim == 89:
+            from training.features.geometry import extract_realsign_89d_features
+            feat_vec = extract_realsign_89d_features(pts)
+        else:
+            norm_pts, _ = normalize_hand_landmarks(pts)
+            feat_vec = norm_pts.flatten()
+
         return self.predict_vector(
             feat_vec,
             confidence_threshold=confidence_threshold,
             apply_smoothing=apply_smoothing,
+            apply_heuristic_boost=apply_heuristic_boost,
+            raw_landmarks_21x3=pts,
         )
 
     def predict_hand_points(
@@ -304,6 +411,7 @@ class RealSignClassifier:
         raw_landmarks: Any,
         confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
         apply_smoothing: bool = False,
+        apply_heuristic_boost: bool = False,
     ) -> RealSignPrediction:
         """
         Helper accepting MediaPipe NormalizedLandmark objects or serialized dicts.
@@ -331,6 +439,7 @@ class RealSignClassifier:
             pts,
             confidence_threshold=confidence_threshold,
             apply_smoothing=apply_smoothing,
+            apply_heuristic_boost=apply_heuristic_boost,
         )
 
     def _empty_prediction(self) -> RealSignPrediction:

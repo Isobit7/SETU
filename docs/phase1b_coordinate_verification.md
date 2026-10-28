@@ -67,16 +67,16 @@ For inter-hand features, using wrist-centered coordinates would erase inter-hand
 |    - User's Right Hand is anatomically RIGHT.                                     |
 |    - Appears on LEFT of raw image sensor (x < 0.5).                               |
 |                                                                                   |
-| 2. Video Capture (setu.vision.camera.CameraReader):                              |
+| 2. Video Capture (Browser MediaDevices / OpenCV CameraReader):                    |
 |    - raw_bgr_frame: Unaltered sensor feed -> Passed to MediaPipe Tasks.           |
-|    - preview_bgr_frame: cv2.flip(frame, 1) -> Displayed to User (Mirror UX).      |
+|    - preview_frame: CSS mirror (scaleX(-1)) -> Displayed to User (Mirror UX).    |
 |                                                                                   |
-| 3. Keypoint Detection (setu.vision.landmarks.HolisticLandmarkerWrapper):          |
+| 3. Keypoint Detection (backend.app.services.vision.HolisticLandmarkerWrapper):    |
 |    - MediaPipe analyzes raw_bgr_frame.                                            |
 |    - Accurately classifies User Right Hand as right_hand_landmarks.                |
 |    - Accurately classifies User Left Hand as left_hand_landmarks.                  |
 |                                                                                   |
-| 4. Slotting Assignment (setu.features.extractor.FeatureExtractor158):             |
+| 4. Slotting Assignment (training.features.extractor.CanonicalFeatureExtractor158):|
 |    - Slot 0 (Indices 0:73):   User Right Hand (Dominant). Presence Flag: 146.     |
 |    - Slot 1 (Indices 73:146):  User Left Hand (Support).  Presence Flag: 147.     |
 +-----------------------------------------------------------------------------------+

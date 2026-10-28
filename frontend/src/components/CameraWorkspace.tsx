@@ -1,13 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Camera,
   Maximize2,
   Minimize2,
   RefreshCw,
   AlertCircle,
+  Focus,
+  BookOpen,
+  Sparkles,
+  X,
 } from 'lucide-react';
-import type { CameraStatus, LandmarkStyles, RecognitionPayload, SubtitleSize } from '../types';
+import type {
+  CameraStatus,
+  FramingFeedback,
+  LandmarkStyles,
+  RecognitionPayload,
+  SubtitleSize,
+} from '../types';
 import { drawLandmarksOnCanvas } from '../utils/landmarksDrawer';
+import { evaluateFraming } from '../utils/framingEvaluator';
+import { VisualFramingGuide } from './VisualFramingGuide';
+import { DisambiguationOverlay } from './DisambiguationOverlay';
 
 interface CameraWorkspaceProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -19,6 +32,15 @@ interface CameraWorkspaceProps {
   subtitleSize?: SubtitleSize;
   onStartCamera: () => void;
   onRetry: () => void;
+  // Proactive Framing Guide & Gating
+  showFramingGuide?: boolean;
+  onToggleFramingGuide?: () => void;
+  enforceFraming?: boolean;
+  onToggleEnforceFraming?: () => void;
+  onFramingChange?: (feedback: FramingFeedback) => void;
+  onOpenVocabulary?: () => void;
+  onResolveDisambiguation?: (label: string) => void;
+  onAcceptPrediction?: (phrase: string) => void;
 }
 
 export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
@@ -31,10 +53,53 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   subtitleSize = 'medium',
   onStartCamera,
   onRetry,
+  showFramingGuide,
+  onToggleFramingGuide,
+  enforceFraming: _enforceFraming,
+  onToggleEnforceFraming: _onToggleEnforceFraming,
+  onFramingChange,
+  onOpenVocabulary,
+  onResolveDisambiguation,
+  onAcceptPrediction,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showSignGuide, setShowSignGuide] = useState<boolean>(false);
+
+  // Local state fallback if external handler isn't explicitly passed
+  const [internalShowGuide, setInternalShowGuide] = useState<boolean>(false);
+
+  const activeShowGuide = showFramingGuide !== undefined ? showFramingGuide : internalShowGuide;
+
+  const handleToggleGuide = () => {
+    if (onToggleFramingGuide) {
+      onToggleFramingGuide();
+    } else {
+      setInternalShowGuide((prev) => !prev);
+    }
+  };
+
+  // Real-time client-side framing feedback computation (<0.02ms, zero lag)
+  const framingFeedback: FramingFeedback = useMemo(() => {
+    if (cameraStatus !== 'detecting' && cameraStatus !== 'paused') {
+      return {
+        status: 'searching',
+        message: 'Position yourself within the guide',
+        isOptimal: false,
+        score: 0,
+        handsDetected: false,
+      };
+    }
+    return evaluateFraming(currentResult?.landmarks, {
+      mirrored: landmarkStyles.mirrored,
+    });
+  }, [cameraStatus, currentResult?.landmarks, landmarkStyles.mirrored]);
+
+  // Notify parent of framing adjustments
+  useEffect(() => {
+    onFramingChange?.(framingFeedback);
+  }, [framingFeedback, onFramingChange]);
 
   // Toggle fullscreen
   const toggleFullscreen = async () => {
@@ -119,15 +184,62 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       className={`camera-workspace-card ${isFullscreen ? 'fullscreen' : ''} ${cameraStatus === 'requesting' ? 'camera-initializing' : ''}`}
       id="camera-workspace"
     >
-      {/* Minimal Unobtrusive Viewport Tools (Zero Hardware / Mock Telemetry) */}
+      {/* Minimal Unobtrusive Viewport Tools */}
       <div className="camera-header-overlay">
-        {cameraStatus === 'detecting' && (
-          <div className="live-camera-indicator">
-            <span className="live-status-dot" aria-hidden="true" />
-            <span className="live-status-label">Live Camera</span>
-          </div>
-        )}
+        <div className="camera-header-left">
+          {cameraStatus === 'requesting' && (
+            <div className="camera-readiness-pill status-starting">
+              <span className="readiness-dot starting" aria-hidden="true" />
+              <span>Starting Camera...</span>
+            </div>
+          )}
+          {cameraStatus === 'detecting' && (
+            <div className="camera-readiness-pill status-live">
+              <span className="readiness-dot live" aria-hidden="true" />
+              <span>Live Recognition</span>
+            </div>
+          )}
+          {cameraStatus === 'paused' && (
+            <div className="camera-readiness-pill status-paused">
+              <span className="readiness-dot paused" aria-hidden="true" />
+              <span>Detection Paused</span>
+            </div>
+          )}
+          {activeShowGuide && cameraStatus === 'detecting' && (
+            <div
+              className={`framing-status-chip ${
+                framingFeedback.isOptimal ? 'optimal' : 'adjust'
+              }`}
+            >
+              <span className="framing-chip-dot" />
+              <span className="framing-chip-text">{framingFeedback.message}</span>
+            </div>
+          )}
+        </div>
+
         <div className="right-tools">
+          {/* Toggle Framing Guide Overlay */}
+          <button
+            className={`overlay-icon-btn ${activeShowGuide ? 'active-tool' : ''}`}
+            onClick={handleToggleGuide}
+            title={activeShowGuide ? 'Hide Framing Guide' : 'Show Framing Guide'}
+            aria-label="Toggle visual framing guide overlay"
+            aria-pressed={activeShowGuide}
+          >
+            <Focus size={15} />
+          </button>
+
+          {/* Toggle Reference Gesture Guide */}
+          <button
+            className={`overlay-icon-btn ${showSignGuide ? 'active-tool' : ''}`}
+            onClick={() => setShowSignGuide((prev) => !prev)}
+            title={showSignGuide ? 'Hide Sign Guide' : 'Show Sign Reference & Guidance'}
+            aria-label="Toggle sign reference guide overlay"
+            aria-pressed={showSignGuide}
+          >
+            <BookOpen size={15} />
+          </button>
+
           <button
             className="overlay-icon-btn"
             onClick={toggleFullscreen}
@@ -144,7 +256,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         {/* Actual Live Video */}
         <video
           ref={videoRef}
-          className={`live-video ${landmarkStyles.mirrored ? 'mirrored' : ''} ${(cameraStatus === 'detecting' || cameraStatus === 'paused') ? 'active-stream' : ''}`}
+          className={`live-video ${landmarkStyles.mirrored ? 'mirrored' : ''} ${cameraStatus === 'detecting' || cameraStatus === 'paused' ? 'active-stream' : ''}`}
           playsInline
           muted
           autoPlay
@@ -157,9 +269,86 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           aria-label="Real MediaPipe Hand Landmark Visualization"
         />
 
-        {/* Idle / Permission / Error Backdrop (Smooth 300ms transition, no abrupt layout shifts) */}
+        {/* Visual Framing Guide */}
+        {(cameraStatus === 'detecting' || cameraStatus === 'paused') && activeShowGuide && (
+          <VisualFramingGuide
+            feedback={framingFeedback}
+            visible={activeShowGuide}
+            mirrored={landmarkStyles.mirrored}
+          />
+        )}
+
+        {/* Soft Framing Guidance Hint when hands are not yet in frame */}
+        {cameraStatus === 'detecting' && !handDetected && !activeShowGuide && (
+          <div className="camera-framing-hint-banner" aria-live="polite">
+            <span className="framing-hint-dot" aria-hidden="true" />
+            <span className="framing-hint-text">Position hands within camera frame to translate</span>
+          </div>
+        )}
+
+        {/* Real-Time Reference Gesture & Sign Assistance Card */}
+        {showSignGuide && (
+          <div className="reference-sign-guide-overlay" role="region" aria-label="Sign Language Reference Guide">
+            <div className="guide-card-header">
+              <div className="guide-card-title-group">
+                <Sparkles size={14} className="guide-sparkle-icon" />
+                <span className="guide-card-title">
+                  {currentResult?.active_model === 'include_stream'
+                    ? 'AI4Bharat INCLUDE (263 Signs)'
+                    : currentResult?.active_model === 'realsign'
+                    ? 'RealSign ISL Alphabet (26 Letters)'
+                    : 'ISL Conversational Signs'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="guide-card-close"
+                onClick={() => setShowSignGuide(false)}
+                aria-label="Close gesture guide"
+              >
+                <X size={13} />
+              </button>
+            </div>
+
+            <div className="guide-card-body">
+              <p className="guide-card-hint">
+                {currentResult?.active_model === 'include_stream'
+                  ? 'Dynamic 263-class bimanual vocabulary. Articulate signs with fluid continuous motion in the frame.'
+                  : currentResult?.active_model === 'realsign'
+                  ? 'Authentic ISL fingerspelling. Letters B, D, P, Q, T require contact between both hands; A, C, L use one hand.'
+                  : 'Core conversational gestures. Hold hand steady for recognition.'}
+              </p>
+
+              <div className="guide-sample-chips">
+                {(currentResult?.active_model === 'include_stream'
+                  ? ['THANK YOU', 'HELLO', 'GOOD MORNING', 'NAMASTE', 'HELP', 'WATER', 'FOOD', 'PLEASE']
+                  : currentResult?.active_model === 'realsign'
+                  ? ['A (Single)', 'B (Dual-Hand)', 'C', 'D (Dual-Hand)', 'L', 'P (Dual-Hand)', 'Q (Dual)', 'T (Dual)']
+                  : ['HELLO', 'THANK YOU', 'GOOD MORNING', 'I', 'YOU']
+                ).map((chip) => (
+                  <span key={chip} className="guide-chip">
+                    {chip}
+                  </span>
+                ))}
+              </div>
+
+              {onOpenVocabulary && (
+                <button
+                  type="button"
+                  className="guide-card-cta"
+                  onClick={onOpenVocabulary}
+                >
+                  <BookOpen size={13} />
+                  <span>Browse All Vocabulary & Tips</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Idle / Permission / Error Backdrop */}
         <div
-          className={`camera-backdrop-state ${(cameraStatus === 'detecting' || cameraStatus === 'paused') ? 'backdrop-hidden' : 'backdrop-visible'}`}
+          className={`camera-backdrop-state ${cameraStatus === 'detecting' || cameraStatus === 'paused' ? 'backdrop-hidden' : 'backdrop-visible'}`}
           aria-hidden={cameraStatus === 'detecting' || cameraStatus === 'paused'}
         >
           {cameraStatus === 'requesting' && (
@@ -231,26 +420,87 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           )}
         </div>
 
-        {/* PERSISTENT PREDICTED SIGN SUBTITLE BAR (Docked Permanently at Bottom during Live Detection, Zero Jitter / CLS = 0) */}
+        {/* Show-and-Sign Multimodal Fused Text Banner */}
+        {currentResult?.fused_multimodal_text && (
+          <div className="show-and-sign-pill">
+            <Sparkles size={14} className="sparkle-gold" />
+            <span className="show-and-sign-label">Show-and-Sign:</span>
+            <span className="show-and-sign-text">{currentResult.fused_multimodal_text}</span>
+          </div>
+        )}
+
+        {/* Detected Physical Objects Tags */}
+        {currentResult?.detected_objects && currentResult.detected_objects.length > 0 && (
+          <div className="detected-objects-bar">
+            {currentResult.detected_objects.slice(0, 3).map((obj) => (
+              <span key={obj.label} className={`object-chip ${obj.is_held ? 'held' : ''}`}>
+                <span className="object-chip-dot" />
+                <span>{obj.display_name}</span>
+                {obj.is_held && <span className="held-badge">Held</span>}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Low-Light Enhancement Chip */}
+        {currentResult?.lighting?.enhanced && (
+          <div className="low-light-chip" title="Adaptive CLAHE low-light enhancement active">
+            <span>🌙</span>
+            <span>Low-Light Boost</span>
+          </div>
+        )}
+
+        {/* Low-Margin Sign Left/Right Disambiguation HUD */}
+        {currentResult?.disambiguation?.active && currentResult.disambiguation.options && (
+          <DisambiguationOverlay
+            active={currentResult.disambiguation.active}
+            options={currentResult.disambiguation.options}
+            onSelect={(label) => onResolveDisambiguation?.(label)}
+          />
+        )}
+
+        {/* PERSISTENT PREDICTED SIGN SUBTITLE BAR */}
         {subtitleVisible && (cameraStatus === 'detecting' || cameraStatus === 'paused') && (
           <div className={`persistent-subtitle-dock subtitle-size-${subtitleSize}`} aria-live="polite">
-            <div className={`subtitle-panel ${isKnown ? 'active-sign' : 'resting'}`}>
+            <div
+              className={`subtitle-panel ${
+                isKnown ? 'active-sign' : 'resting'
+              }`}
+            >
               <div className="subtitle-header-row">
-                <span className="subtitle-category-label">CURRENT PREDICTED SIGN</span>
-                {isKnown && confidencePercent > 0 && (
+                <span className="subtitle-category-label">
+                  CURRENT PREDICTED SIGN
+                </span>
+                {isKnown && confidencePercent > 0 ? (
                   <span className="subtitle-confidence-pill">
                     {confidencePercent}% Match
                   </span>
-                )}
+                ) : null}
               </div>
               <div className="subtitle-value-row">
                 <span className="subtitle-main-display">
-                  {cameraStatus === 'detecting'
-                    ? subtitleText
-                    : 'Detection Paused'}
+                  {cameraStatus === 'detecting' ? subtitleText : 'Detection Paused'}
                 </span>
               </div>
             </div>
+
+            {/* Predictive Next-Word / Phrase Quick Suggestions */}
+            {currentResult?.predictive_suggestions && currentResult.predictive_suggestions.length > 0 && (
+              <div className="predictive-suggestions-bar">
+                <span className="predictive-hint">Suggestions:</span>
+                {currentResult.predictive_suggestions.map((phrase) => (
+                  <button
+                    key={phrase}
+                    type="button"
+                    className="predictive-chip-btn"
+                    onClick={() => onAcceptPrediction?.(phrase)}
+                    title={`Add "${phrase}" to sentence`}
+                  >
+                    <span>+ {phrase}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -49,7 +49,20 @@ def normalize_wrist_coordinates(
     if landmarks_21x3 is None or len(landmarks_21x3) != 21:
         return np.zeros((21, 3), dtype=np.float32), 0.0
 
-    pts = np.asarray(landmarks_21x3, dtype=np.float64)
+    # Parse landmarks safely if given as objects (e.g. MediaPipe landmarks, dicts)
+    first = landmarks_21x3[0]
+    if isinstance(first, dict):
+        raw_list = [[float(p.get("x", 0.0)), float(p.get("y", 0.0)), float(p.get("z", 0.0))] for p in landmarks_21x3]
+        pts = np.asarray(raw_list, dtype=np.float64)
+    elif hasattr(first, "x") and hasattr(first, "y"):
+        raw_list = [[float(getattr(p, "x", 0.0)), float(getattr(p, "y", 0.0)), float(getattr(p, "z", 0.0))] for p in landmarks_21x3]
+        pts = np.asarray(raw_list, dtype=np.float64)
+    else:
+        try:
+            pts = np.asarray(landmarks_21x3, dtype=np.float64)
+        except Exception:
+            return np.zeros((21, 3), dtype=np.float32), 0.0
+
     if pts.shape == (21, 2):
         pts = np.hstack([pts, np.zeros((21, 1), dtype=np.float64)])
     elif pts.shape != (21, 3):
@@ -116,6 +129,39 @@ def normalize_wrist_coordinates(
 
 # Alias for backward compatibility across existing pipeline modules
 normalize_hand_landmarks = normalize_wrist_coordinates
+
+
+def normalize_landmarks_to_63d(
+    landmarks: Any,
+    is_left_hand: bool = False,
+    eps: float = 1e-6,
+) -> np.ndarray:
+    """
+    Transforms 21 3D hand landmarks into a canonical wrist-centered,
+    scale- and rotation-invariant 63-D vector.
+    """
+    if len(landmarks) != 21:
+        raise ValueError(f"Expected 21 landmarks, received {len(landmarks)}")
+
+    pts = np.empty((21, 3), dtype=np.float32)
+    for i, lm in enumerate(landmarks):
+        if isinstance(lm, dict):
+            pts[i, 0] = float(lm.get("x", 0.0))
+            pts[i, 1] = float(lm.get("y", 0.0))
+            pts[i, 2] = float(lm.get("z", 0.0))
+        elif isinstance(lm, (list, tuple, np.ndarray)) and len(lm) >= 3:
+            pts[i, 0] = float(lm[0])
+            pts[i, 1] = float(lm[1])
+            pts[i, 2] = float(lm[2])
+        else:
+            raise ValueError(f"Invalid landmark at index {i}: {lm}")
+
+    if is_left_hand:
+        # Reflect across wrist in sagittal plane: preserves wrist origin without coordinate drift
+        pts[:, 0] = 2.0 * pts[0, 0] - pts[:, 0]
+
+    norm_pts, _ = normalize_wrist_coordinates(pts, eps=eps)
+    return norm_pts.flatten()
 
 
 # Key finger joint triplets: (Proximal, Vertex, Distal)
@@ -398,9 +444,16 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
 
     thumb_ext, index_ext, middle_ext, ring_ext, pinky_ext = get_finger_extension_states(arr)
 
-    # 1. 'A': All fingers curled into fist
+    # Aperture distance between thumb tip (landmark 4) and index tip (landmark 8)
+    d_thumb_idx = float(np.linalg.norm(arr[4] - arr[8])) / palm_len
+
+    # 1. Non-extended finger poses: 'C' (open curved arc) vs 'A' (closed fist)
     if not index_ext and not middle_ext and not ring_ext and not pinky_ext and not thumb_ext:
-        return "A"
+        if d_thumb_idx >= 0.35:
+            return "C"
+        elif d_thumb_idx < 0.25:
+            return "A"
+        return None
 
     # 2. 'B': All 4 fingers extended together (thumb folded / curled)
     if index_ext and middle_ext and ring_ext and pinky_ext and not thumb_ext:
@@ -429,4 +482,304 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
         return "Y"
 
     return None
+
+
+# 57 Active coordinate indices: 63 dimensions minus 6 dead coordinates
+# Excludes Landmark 0 (wrist origin: 0, 1, 2) and Landmark 9 (middle MCP unit vector: 27, 28, 29)
+ACTIVE_COORDINATE_INDICES_57 = np.array([
+    i for i in range(63) if i not in (0, 1, 2, 27, 28, 29)
+], dtype=np.int32)
+
+
+def compute_adjacent_fingertip_distances(landmarks_21x3: np.ndarray) -> np.ndarray:
+    """
+    Computes 4 normalized adjacent fingertip distances:
+    Thumb(4)-Index(8), Index(8)-Middle(12), Middle(12)-Ring(16), Ring(16)-Pinky(20).
+    Crucial for distinguishing spread (e.g. 'W', 'V') vs held-together digits (e.g. 'M', 'U').
+    """
+    if landmarks_21x3 is None or len(landmarks_21x3) != 21:
+        return np.zeros(4, dtype=np.float32)
+
+    pts = np.asarray(landmarks_21x3, dtype=np.float32)
+    if pts.shape != (21, 3):
+        return np.zeros(4, dtype=np.float32)
+
+    p1 = pts[[4, 8, 12, 16]]
+    p2 = pts[[8, 12, 16, 20]]
+    return np.linalg.norm(p1 - p2, axis=-1).astype(np.float32)
+
+
+def compute_finger_spread_angles(landmarks_21x3: np.ndarray, eps: float = 1e-7) -> np.ndarray:
+    """
+    Computes 4 angular spreads between adjacent fingertip rays originating at Wrist (0):
+    - Angle between Thumb ray (0->4) and Index ray (0->8)
+    - Angle between Index ray (0->8) and Middle ray (0->12)
+    - Angle between Middle ray (0->12) and Ring ray (0->16)
+    - Angle between Ring ray (0->16) and Pinky ray (0->20)
+    Normalized by pi into [0.0, 1.0].
+    """
+    if landmarks_21x3 is None or len(landmarks_21x3) != 21:
+        return np.zeros(4, dtype=np.float32)
+
+    pts = np.asarray(landmarks_21x3, dtype=np.float64)
+    if pts.shape != (21, 3):
+        return np.zeros(4, dtype=np.float32)
+
+    # In canonical wrist-normalized coordinates, wrist is at (0, 0, 0)
+    wrist = pts[0]
+    v_thumb = pts[4] - wrist
+    v_index = pts[8] - wrist
+    v_mid = pts[12] - wrist
+    v_ring = pts[16] - wrist
+    v_pinky = pts[20] - wrist
+
+    v_a = np.stack([v_thumb, v_index, v_mid, v_ring])
+    v_b = np.stack([v_index, v_mid, v_ring, v_pinky])
+
+    dot_prod = np.sum(v_a * v_b, axis=-1)
+    norm_a = np.linalg.norm(v_a, axis=-1)
+    norm_b = np.linalg.norm(v_b, axis=-1)
+
+    denom = np.maximum(norm_a * norm_b, eps)
+    cos_vals = np.clip(dot_prod / denom, -1.0, 1.0)
+    return (np.arccos(cos_vals) / np.pi).astype(np.float32)
+
+
+def extract_realsign_89d_features(
+    landmarks_21x3: Optional[Union[np.ndarray, List[Any]]],
+    is_left_hand: bool = False,
+    eps: float = 1e-6,
+) -> np.ndarray:
+    """
+    Transforms 21 3D hand landmarks into the canonical 89-D invariant feature vector:
+    - 57-D Active Coordinates (pruned of zero-variance wrist and middle-MCP anchors)
+    - 15-D Invariant Finger Joint Angles (MCP, PIP, DIP for all 5 fingers in [0, 1])
+    - 5-D Fingertip-to-Wrist Radial Distances
+    - 4-D Fingertip-to-Thumb Proximity Distances
+    - 4-D Adjacent Fingertip Spread Distances
+    - 4-D Fingertip Angular Spreads from Wrist
+    Total: 57 + 15 + 5 + 4 + 4 + 4 = 89 dimensions.
+    """
+    if landmarks_21x3 is None or len(landmarks_21x3) != 21:
+        return np.zeros(89, dtype=np.float32)
+
+    pts = np.empty((21, 3), dtype=np.float32)
+    for i, lm in enumerate(landmarks_21x3):
+        if isinstance(lm, dict):
+            pts[i, 0] = float(lm.get("x", 0.0))
+            pts[i, 1] = float(lm.get("y", 0.0))
+            pts[i, 2] = float(lm.get("z", 0.0))
+        elif isinstance(lm, (list, tuple, np.ndarray)) and len(lm) >= 3:
+            pts[i, 0] = float(lm[0])
+            pts[i, 1] = float(lm[1])
+            pts[i, 2] = float(lm[2])
+        else:
+            return np.zeros(89, dtype=np.float32)
+
+    if is_left_hand:
+        wrist_x = pts[0, 0]
+        pts[:, 0] = 2.0 * wrist_x - pts[:, 0]
+
+    norm_pts, scale = normalize_wrist_coordinates(pts, eps=eps)
+    if scale < 1e-6:
+        return np.zeros(89, dtype=np.float32)
+
+    flat_63 = norm_pts.flatten()
+    coords_57 = flat_63[ACTIVE_COORDINATE_INDICES_57]
+    angles_15 = compute_joint_angles_15(norm_pts)
+    dist_wrist_5 = compute_fingertip_to_wrist_distances(norm_pts)
+    dist_thumb_4 = compute_fingertip_to_thumb_distances(norm_pts, include_self=False)
+    dist_adj_4 = compute_adjacent_fingertip_distances(norm_pts)
+    spread_angles_4 = compute_finger_spread_angles(norm_pts)
+
+    return np.concatenate([
+        coords_57,
+        angles_15,
+        dist_wrist_5,
+        dist_thumb_4,
+        dist_adj_4,
+        spread_angles_4,
+    ]).astype(np.float32)
+
+
+def expand_63d_to_89d(features_63d: np.ndarray) -> np.ndarray:
+    """
+    Instantaneously expands a canonical 63-D normalized hand landmark vector into the
+    high-accuracy 89-D invariant feature vector. Works on single vectors (63,) or batches (N, 63).
+    """
+    arr = np.asarray(features_63d, dtype=np.float32)
+    single = (arr.ndim == 1)
+    if single:
+        arr = arr.reshape(1, 63)
+
+    num_samples = len(arr)
+    # Fast path for degenerate / uninitialized hand vectors
+    norms = np.linalg.norm(arr, axis=-1)
+    if np.all(norms < 1e-4):
+        zero_out = np.zeros((num_samples, 89), dtype=np.float32)
+        return zero_out[0] if single else zero_out
+
+    pts = arr.reshape(num_samples, 21, 3)
+
+    # 1. 57 active coordinates
+    coords_57 = arr[:, ACTIVE_COORDINATE_INDICES_57]
+
+    # 2. 15 joint angles
+    triplets = _FINGER_JOINT_TRIPLETS_ARR
+    p_a = pts[:, triplets[:, 0], :]
+    p_b = pts[:, triplets[:, 1], :]
+    p_c = pts[:, triplets[:, 2], :]
+    vec_ba = p_a - p_b
+    vec_bc = p_c - p_b
+    dot_prod = np.sum(vec_ba * vec_bc, axis=-1)
+    norm_ba = np.linalg.norm(vec_ba, axis=-1)
+    norm_bc = np.linalg.norm(vec_bc, axis=-1)
+    denom = np.maximum(norm_ba * norm_bc, 1e-7)
+    angles_15 = np.arccos(np.clip(dot_prod / denom, -1.0, 1.0)) / np.pi
+
+    # 3. 5 wrist distances
+    dist_wrist_5 = np.linalg.norm(pts[:, [4, 8, 12, 16, 20], :], axis=-1)
+
+    # 4. 4 thumb distances
+    dist_thumb_4 = np.linalg.norm(pts[:, [8, 12, 16, 20], :] - pts[:, 4:5, :], axis=-1)
+
+    # 5. 4 adjacent fingertip distances
+    d_4_8 = np.linalg.norm(pts[:, 4] - pts[:, 8], axis=-1, keepdims=True)
+    d_8_12 = np.linalg.norm(pts[:, 8] - pts[:, 12], axis=-1, keepdims=True)
+    d_12_16 = np.linalg.norm(pts[:, 12] - pts[:, 16], axis=-1, keepdims=True)
+    d_16_20 = np.linalg.norm(pts[:, 16] - pts[:, 20], axis=-1, keepdims=True)
+    dist_adj_4 = np.concatenate([d_4_8, d_8_12, d_12_16, d_16_20], axis=-1)
+
+    # 6. 4 spread angles from wrist
+    v4, v8, v12, v16, v20 = pts[:, 4], pts[:, 8], pts[:, 12], pts[:, 16], pts[:, 20]
+    def _vec_angle(v1, v2):
+        dot = np.sum(v1 * v2, axis=-1, keepdims=True)
+        denom_v = np.maximum(np.linalg.norm(v1, axis=-1, keepdims=True) * np.linalg.norm(v2, axis=-1, keepdims=True), 1e-7)
+        return np.arccos(np.clip(dot / denom_v, -1.0, 1.0)) / np.pi
+
+    spread_angles_4 = np.concatenate([
+        _vec_angle(v4, v8),
+        _vec_angle(v8, v12),
+        _vec_angle(v12, v16),
+        _vec_angle(v16, v20),
+    ], axis=-1)
+
+    out_89 = np.concatenate([
+        coords_57,
+        angles_15,
+        dist_wrist_5,
+        dist_thumb_4,
+        dist_adj_4,
+        spread_angles_4,
+    ], axis=-1).astype(np.float32)
+
+    return out_89[0] if single else out_89
+
+
+def extract_dual_hand_126d(
+    left_hand: Optional[Union[np.ndarray, List[Any]]] = None,
+    right_hand: Optional[Union[np.ndarray, List[Any]]] = None,
+) -> np.ndarray:
+    """
+    Extracts a symmetric 126-dimensional representation for dual-handed ISL recognition:
+    - Left Hand normalized 3D landmarks (slots 0..62, 63-D), zero-padded if absent.
+    - Right Hand normalized 3D landmarks (slots 63..125, 63-D), zero-padded if absent.
+    Each hand is normalized to its own wrist origin and palm span scale.
+    Returns:
+        np.ndarray of shape (126,) and dtype np.float32.
+    """
+    norm_lh = np.zeros(63, dtype=np.float32)
+    norm_rh = np.zeros(63, dtype=np.float32)
+
+    if left_hand is not None and len(left_hand) == 21:
+        lh_arr, _ = normalize_wrist_coordinates(left_hand)
+        norm_lh = lh_arr.flatten().astype(np.float32)
+
+    if right_hand is not None and len(right_hand) == 21:
+        rh_arr, _ = normalize_wrist_coordinates(right_hand)
+        norm_rh = rh_arr.flatten().astype(np.float32)
+
+    return np.concatenate([norm_lh, norm_rh], axis=0).astype(np.float32)
+
+
+def extract_body_anchored_features(
+    pose_landmarks: Optional[Union[np.ndarray, List[Any]]] = None,
+    left_hand: Optional[Union[np.ndarray, List[Any]]] = None,
+    right_hand: Optional[Union[np.ndarray, List[Any]]] = None,
+    eps: float = 1e-4,
+) -> np.ndarray:
+    """
+    Extracts 12 body-anchored relational features (4 x 3D vectors):
+    - Right wrist relative to mid-shoulder (chest) scaled by shoulder span: [dx, dy, dz] (slots 0..2)
+    - Right wrist relative to nose scaled by shoulder span: [dx, dy, dz] (slots 3..5)
+    - Left wrist relative to mid-shoulder (chest) scaled by shoulder span: [dx, dy, dz] (slots 6..8)
+    - Left wrist relative to nose scaled by shoulder span: [dx, dy, dz] (slots 9..11)
+
+    Returns:
+        np.ndarray of shape (12,) and dtype np.float32.
+    """
+    def _to_pt(lm: Any) -> Optional[np.ndarray]:
+        if lm is None:
+            return None
+        if hasattr(lm, "x") and hasattr(lm, "y"):
+            return np.array([float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))], dtype=np.float32)
+        if isinstance(lm, dict):
+            return np.array([float(lm.get("x", 0.0)), float(lm.get("y", 0.0)), float(lm.get("z", 0.0))], dtype=np.float32)
+        if isinstance(lm, (list, tuple, np.ndarray)) and len(lm) >= 2:
+            z_val = float(lm[2]) if len(lm) >= 3 else 0.0
+            return np.array([float(lm[0]), float(lm[1]), z_val], dtype=np.float32)
+        return None
+
+    pose = pose_landmarks
+    if hasattr(pose, "landmark"):
+        pose = pose.landmark
+    elif isinstance(pose, (list, tuple)) and len(pose) > 0 and isinstance(pose[0], (list, tuple)):
+        pose = pose[0]
+
+    nose = None
+    chest = None
+    shoulder_span = 0.3
+
+    if pose is not None and len(pose) >= 13:
+        nose = _to_pt(pose[0])
+        ls = _to_pt(pose[11])
+        rs = _to_pt(pose[12])
+        if ls is not None and rs is not None:
+            chest = (ls + rs) / 2.0
+            shoulder_span = max(float(np.linalg.norm(ls - rs)), eps)
+
+    if chest is None:
+        chest = nose if nose is not None else np.zeros(3, dtype=np.float32)
+
+    rw = None
+    if right_hand is not None and len(right_hand) > 0:
+        first_r = right_hand[0] if not isinstance(right_hand[0], (list, tuple)) or len(right_hand[0]) != 21 else right_hand[0][0]
+        rw = _to_pt(first_r)
+    if rw is None and pose is not None and len(pose) > 16:
+        rw = _to_pt(pose[16])
+
+    lw = None
+    if left_hand is not None and len(left_hand) > 0:
+        first_l = left_hand[0] if not isinstance(left_hand[0], (list, tuple)) or len(left_hand[0]) != 21 else left_hand[0][0]
+        lw = _to_pt(first_l)
+    if lw is None and pose is not None and len(pose) > 15:
+        lw = _to_pt(pose[15])
+
+    if rw is not None:
+        rw_chest = (rw - chest) / shoulder_span
+        rw_nose = (rw - nose) / shoulder_span if nose is not None else rw_chest
+    else:
+        rw_chest = np.zeros(3, dtype=np.float32)
+        rw_nose = np.zeros(3, dtype=np.float32)
+
+    if lw is not None:
+        lw_chest = (lw - chest) / shoulder_span
+        lw_nose = (lw - nose) / shoulder_span if nose is not None else lw_chest
+    else:
+        lw_chest = np.zeros(3, dtype=np.float32)
+        lw_nose = np.zeros(3, dtype=np.float32)
+
+    return np.concatenate([rw_chest, rw_nose, lw_chest, lw_nose], axis=0).astype(np.float32)
+
+
 

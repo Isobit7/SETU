@@ -17,7 +17,11 @@ from backend.app.services.vision import HolisticLandmarkerWrapper, HandLandmarke
 from models.adapters.realsign import RealSignClassifier
 from models.adapters.mvp import ISLMvpClassifier
 from models.adapters.sequence_lstm import ISLSequenceLSTMClassifier
-from models.adapters.include import INCLUDEInferenceService
+from models.adapters.include import INCLUDEInferenceService, StreamingIncludeAdapter
+from backend.app.services.vision.object_detector import COCOObjectDetector
+from backend.app.services.vision.enhancer import AdaptiveLowLightEnhancer
+from backend.app.services.nlp.multimodal_fuser import MultimodalFuser
+from backend.app.services.nlp.predictive import PredictiveTextEngine
 
 logger = logging.getLogger("setu.backend.pipeline")
 
@@ -40,6 +44,11 @@ class PipelineManager:
         self.hand_landmarker: Optional[HandLandmarkerWrapper] = None
         self.extractor: Optional[FeatureExtractor158] = None
         self.include_service: Optional[INCLUDEInferenceService] = None
+        self.streaming_include: Optional[StreamingIncludeAdapter] = None
+        self.object_detector: Optional[COCOObjectDetector] = None
+        self.enhancer: Optional[AdaptiveLowLightEnhancer] = None
+        self.fuser: Optional[MultimodalFuser] = None
+        self.predictive: Optional[PredictiveTextEngine] = None
 
         # Standard file paths
         self.model_path = _find_weight_file("isl_mvp_model.npz")
@@ -105,9 +114,23 @@ class PipelineManager:
         try:
             self.include_service = INCLUDEInferenceService.get_instance()
             self.include_service.load()
-            logger.info("AI4Bharat INCLUDE service loaded (%d classes).", len(self.include_service.label_map))
+            self.streaming_include = StreamingIncludeAdapter(service=self.include_service)
+            logger.info("AI4Bharat INCLUDE service & streaming adapter loaded (%d classes).", len(self.include_service.label_map))
         except Exception as e:
             logger.warning("Could not pre-load INCLUDE model on startup: %s", e)
+
+        # Initialize adaptive low-light enhancer and NLP fusers
+        self.enhancer = AdaptiveLowLightEnhancer()
+        self.fuser = MultimodalFuser()
+        self.predictive = PredictiveTextEngine()
+
+        # Initialize COCO 80+ class object detector for Show-and-Sign interaction
+        try:
+            self.object_detector = COCOObjectDetector()
+            self.object_detector.warmup()
+            logger.info("COCO Object Detector initialized for Show-and-Sign interaction.")
+        except Exception as e:
+            logger.warning("Could not initialize COCO Object Detector: %s", e)
 
         # Startup Model Warmup
         self.warmup_models()
@@ -144,6 +167,8 @@ class PipelineManager:
                 self.hand_landmarker.close()
             except Exception as e:
                 logger.warning("Error closing hand landmarker: %s", e)
+        if self.streaming_include is not None:
+            self.streaming_include.reset()
         self.landmarker = None
         self.hand_landmarker = None
         self.classifier = None
@@ -151,6 +176,7 @@ class PipelineManager:
         self.sequence_lstm_classifier = None
         self.extractor = None
         self.include_service = None
+        self.streaming_include = None
         self.is_ready = False
         logger.info("SETU ML Pipeline shutdown completed.")
 

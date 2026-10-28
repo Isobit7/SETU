@@ -18,10 +18,17 @@ import numpy as np
 from fastapi import WebSocket, WebSocketDisconnect
 
 from backend.app.services.pipeline_manager import pipeline
-from training.feature_extractor import extract_realsign_hand_features
+from backend.app.services.vision.landmarks import HolisticLandmarkerResult
+from training.feature_extractor import (
+    FeatureExtractor158,
+    extract_facial_expression_features,
+    extract_realsign_hand_features,
+)
+from training.features.geometry import extract_dual_hand_126d, extract_body_anchored_features
 from models.adapters.realsign import RealSignPrediction
 from models.adapters.sequence_lstm import SequencePrediction as ISLSequencePrediction
 from models.adapters.mvp import MVPClassifierPrediction as ISLPrediction
+from models.adapters.include import StreamingIncludeAdapter, INCLUDEResult
 from backend.app.services.nlp import SentenceAccumulator
 from config.settings import (
     CONFIDENCE_THRESHOLD_ALPHABET,
@@ -38,6 +45,7 @@ DISPLAY_NAMES: Dict[str, str] = {
     "good_morning": "GOOD MORNING",
     "i": "I (ME)",
     "you": "YOU",
+    "namaste": "NAMASTE",
     "no_sign": "Waiting for a sign...",
     "unknown": "UNKNOWN / UNCLEAR",
 }
@@ -141,8 +149,14 @@ async def websocket_recognize(
 
     # Per-connection state
     active_model = (model or "realsign").lower()
-    if active_model not in ("realsign", "isl_mvp", "isl_sequence_lstm"):
+    if active_model == "include":
+        active_model = "include_stream"
+    if active_model not in ("realsign", "isl_mvp", "isl_sequence_lstm", "include_stream"):
         active_model = "realsign"
+
+    streaming_include: Optional[StreamingIncludeAdapter] = None
+    if pipeline.include_service is not None:
+        streaming_include = StreamingIncludeAdapter(service=pipeline.include_service)
 
     rolling_features: deque = deque(maxlen=15)
     client_threshold: Optional[float] = None
@@ -168,13 +182,35 @@ async def websocket_recognize(
     alphabet_streak_count: int = 0
     alphabet_last_committed: str = ""
 
+    # Word / Phrase Persistence & Latching State
+    last_word_label: str = ""
+    last_word_display: str = ""
+    last_word_conf: float = 0.0
+    last_word_is_known: bool = False
+    last_word_probs: Dict[str, float] = {}
+    last_word_top3: List[Tuple[str, float]] = []
+    last_word_pred_time: float = 0.0
+
     # Motion-Based Kinetic Energy & Active Gesture Segmentation State
     prev_hand_pts: Optional[np.ndarray] = None
     prev_frame_perf_time: float = time.perf_counter()
     gesture_sequence_buffer: List[np.ndarray] = []
     is_actively_signing: bool = False
     settled_frames_count: int = 0
-    KINETIC_ENERGY_THRESHOLD: float = 0.05
+    KINETIC_ENERGY_THRESHOLD: float = 0.025
+
+    # Multimodal Object Detection & Show-and-Sign State
+    current_detected_objects: List[Any] = []
+    fused_sentence: Optional[str] = None
+    lighting_score: float = 1.0
+    was_low_light_enhanced: bool = False
+
+    # Disambiguation HUD & Low-Margin Gate State
+    disambiguation_active: bool = False
+    disambiguation_top1: str = ""
+    disambiguation_top2: str = ""
+    disambiguation_options: List[Dict[str, Any]] = []
+    disambiguation_start_time: float = 0.0
 
     # Real-Time Sentence Accumulator & ISL Gloss Parser
     accumulator = SentenceAccumulator()
@@ -187,6 +223,9 @@ async def websocket_recognize(
         nonlocal prev_hand_pts, candidate_label, candidate_streak, last_committed_sign
         nonlocal last_committed_time, had_idle_baseline
         nonlocal alphabet_streak_candidate, alphabet_streak_count, alphabet_last_committed
+        nonlocal last_word_label, last_word_display, last_word_conf, last_word_is_known
+        nonlocal last_word_probs, last_word_top3, last_word_pred_time
+        nonlocal disambiguation_active, disambiguation_top1, disambiguation_top2, disambiguation_options
         try:
             payload = json.loads(text_str)
             action = payload.get("action")
@@ -205,6 +244,13 @@ async def websocket_recognize(
                 alphabet_streak_candidate = ""
                 alphabet_streak_count = 0
                 alphabet_last_committed = ""
+                last_word_label = ""
+                last_word_display = ""
+                last_word_conf = 0.0
+                last_word_is_known = False
+                last_word_probs.clear()
+                last_word_top3.clear()
+                last_word_pred_time = 0.0
                 if pipeline.landmarker is not None:
                     pipeline.landmarker.reset_smoothing()
                 if pipeline.hand_landmarker is not None:
@@ -228,12 +274,49 @@ async def websocket_recognize(
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
                 })
+            elif action in ("resolve_disambiguation", "select_disambiguation"):
+                selected_label = str(payload.get("selected", payload.get("choice", ""))).strip().lower()
+                if selected_label in ("left", "option_a") and disambiguation_top1:
+                    selected_label = disambiguation_top1.lower()
+                elif selected_label in ("right", "option_b") and disambiguation_top2:
+                    selected_label = disambiguation_top2.lower()
+
+                if selected_label:
+                    disp = DISPLAY_NAMES.get(selected_label, selected_label.upper().replace("_", " "))
+                    accumulator.add_token(disp, token_type="phrase", timestamp=time.time())
+                    disambiguation_active = False
+                    disambiguation_options = []
+                    disambiguation_top1 = ""
+                    disambiguation_top2 = ""
+                    await websocket.send_json({
+                        "type": "info",
+                        "message": f"Resolved disambiguation with {disp}",
+                        "sentence_buffer": accumulator.sentence_buffer,
+                    })
+                else:
+                    await websocket.send_json({
+                        "type": "info",
+                        "message": "Disambiguation acknowledged",
+                    })
+            elif action == "accept_prediction":
+                phrase = str(payload.get("phrase", "")).strip()
+                if phrase:
+                    accumulator.add_token(phrase.upper(), token_type="phrase", timestamp=time.time())
+                    await websocket.send_json({
+                        "type": "info",
+                        "message": f"Accepted predictive phrase: {phrase}",
+                        "sentence_buffer": accumulator.sentence_buffer,
+                    })
             elif action == "set_model":
                 req_model = str(payload.get("model", "realsign")).lower()
-                if req_model in ("realsign", "isl_mvp", "isl_sequence_lstm"):
+                if req_model == "include":
+                    req_model = "include_stream"
+                if req_model in ("realsign", "isl_mvp", "isl_sequence_lstm", "include_stream"):
                     active_model = req_model
                     rolling_features.clear()
                     gesture_sequence_buffer.clear()
+                    if streaming_include is not None:
+                        streaming_include.reset()
                     accumulator.reset()
                     is_actively_signing = False
                     settled_frames_count = 0
@@ -246,6 +329,13 @@ async def websocket_recognize(
                     alphabet_streak_candidate = ""
                     alphabet_streak_count = 0
                     alphabet_last_committed = ""
+                    last_word_label = ""
+                    last_word_display = ""
+                    last_word_conf = 0.0
+                    last_word_is_known = False
+                    last_word_probs.clear()
+                    last_word_top3.clear()
+                    last_word_pred_time = 0.0
                     if pipeline.landmarker is not None:
                         pipeline.landmarker.reset_smoothing()
                     if pipeline.hand_landmarker is not None:
@@ -294,6 +384,12 @@ async def websocket_recognize(
                     await websocket.send_json({"type": "error", "message": "Failed to decode JPEG frame"})
                     continue
 
+                # Adaptive low-light CLAHE enhancement
+                lighting_score = 1.0
+                was_low_light_enhanced = False
+                if pipeline.enhancer is not None:
+                    frame, lighting_score, was_low_light_enhanced = pipeline.enhancer.process(frame)
+
                 frame_count += 1
                 total_stream_frames += 1
                 now = time.time()
@@ -308,15 +404,40 @@ async def websocket_recognize(
 
                 def _extract_landmarks_sync(img: np.ndarray):
                     h_raw = None
-                    if pipeline.hand_landmarker is not None:
-                        try:
-                            hld_res = pipeline.hand_landmarker.detect(img)
-                            if hld_res and hld_res.hand_landmarks and len(hld_res.hand_landmarks) > 0:
-                                h_raw = hld_res
-                        except Exception as e:
-                            logger.debug("HandLandmarker error: %s", e)
+                    hl_res = None
 
-                    hl_res = pipeline.landmarker.detect(img)
+                    if active_model == "realsign":
+                        # Fast-path for alphabet fingerspelling:
+                        # HandLandmarker detects up to 2 hands with high precision and low latency (~20ms).
+                        if pipeline.hand_landmarker is not None:
+                            try:
+                                hld_res = pipeline.hand_landmarker.detect(img)
+                                if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
+                                    h_raw = hld_res
+                            except Exception as e:
+                                logger.debug("HandLandmarker error: %s", e)
+
+                        # Only fallback to heavyweight Holistic if HandLandmarker found no hands
+                        if h_raw is None and pipeline.landmarker is not None:
+                            hl_res = pipeline.landmarker.detect(img)
+                        else:
+                            hl_res = HolisticLandmarkerResult()
+                    else:
+                        # Sequence / Word models: need pose and face for 164-D vectors
+                        if pipeline.landmarker is not None:
+                            hl_res = pipeline.landmarker.detect(img)
+                        else:
+                            hl_res = HolisticLandmarkerResult()
+
+                        # Only fallback to HandLandmarker if Holistic detected neither left nor right hand
+                        if not (hl_res.left_hand_landmarks or hl_res.right_hand_landmarks) and pipeline.hand_landmarker is not None:
+                            try:
+                                hld_res = pipeline.hand_landmarker.detect(img)
+                                if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
+                                    h_raw = hld_res
+                            except Exception as e:
+                                logger.debug("HandLandmarker secondary error: %s", e)
+
                     return h_raw, hl_res
 
                 try:
@@ -329,9 +450,6 @@ async def websocket_recognize(
                         "message": f"Landmark detection failed: {e}",
                     })
                     continue
-
-                feat_164 = pipeline.extractor.extract_from_mediapipe_result(hl_result, include_facial=True)
-                rolling_features.append(feat_164)
 
                 left_hand = serialize_landmarks(hl_result.left_hand_landmarks)
                 right_hand = serialize_landmarks(hl_result.right_hand_landmarks)
@@ -360,6 +478,45 @@ async def websocket_recognize(
                 has_right = len(right_hand) > 0
                 hand_detected = has_left or has_right or (hand_landmarks_raw is not None)
 
+                # Periodic COCO Object Detection for Show-and-Sign interaction (every 10 frames)
+                if pipeline.object_detector is not None and (total_stream_frames % 10 == 0):
+                    try:
+                        detected_objs = await loop.run_in_executor(
+                            None,
+                            pipeline.object_detector.detect,
+                            frame,
+                            0.45,
+                            left_hand + right_hand,
+                        )
+                        current_detected_objects = detected_objs
+                    except Exception as e:
+                        logger.debug("Object detection error: %s", e)
+
+                # Robust 176-D body-anchored feature extraction
+                face_lms = getattr(hl_result, "face_landmarks", None)
+                pose_lms = getattr(hl_result, "pose_landmarks", None)
+                facial_ratios = extract_facial_expression_features(face_lms)
+                body_anchors = extract_body_anchored_features(
+                    pose_lms,
+                    left_hand=left_hand if has_left else None,
+                    right_hand=right_hand if has_right else None,
+                )
+
+                if has_left or has_right:
+                    feat_158 = FeatureExtractor158.extract_from_hands(
+                        right_hand=right_hand if has_right else None,
+                        left_hand=left_hand if has_left else None,
+                    )
+                    feat_164 = np.concatenate([feat_158, facial_ratios]).astype(np.float32)
+                else:
+                    feat_164 = pipeline.extractor.extract_from_mediapipe_result(hl_result, include_facial=True)
+
+                feat_176 = np.concatenate([feat_164, body_anchors]).astype(np.float32)
+                rolling_features.append(feat_176)
+
+                if active_model == "include_stream" and streaming_include is not None:
+                    streaming_include.append_frame(pose, left_hand, right_hand)
+
                 hands_in_subtitle_zone = check_subtitle_collision(left_hand, right_hand)
                 guidance_text = get_positioning_guidance(pose, hand_detected)
 
@@ -367,17 +524,22 @@ async def websocket_recognize(
                 dt_frame = max(curr_time_perf - prev_frame_perf_time, 0.001)
                 prev_frame_perf_time = curr_time_perf
 
+                def _extract_pt(lm):
+                    if isinstance(lm, dict):
+                        return [float(lm.get("x", 0.0)), float(lm.get("y", 0.0)), float(lm.get("z", 0.0))]
+                    return [float(getattr(lm, "x", 0.0)), float(getattr(lm, "y", 0.0)), float(getattr(lm, "z", 0.0))]
+
                 current_hand_pts_list = []
                 if hand_landmarks_raw is not None:
                     if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
                         for h_lm in hand_landmarks_raw.hand_landmarks[:1]:
-                            current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in h_lm])
+                            current_hand_pts_list.extend([_extract_pt(lm) for lm in h_lm])
                     else:
-                        current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in hand_landmarks_raw])
+                        current_hand_pts_list.extend([_extract_pt(lm) for lm in hand_landmarks_raw])
                 elif hl_result and getattr(hl_result, "right_hand_landmarks", None):
-                    current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in hl_result.right_hand_landmarks])
+                    current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.right_hand_landmarks])
                 if hl_result and getattr(hl_result, "left_hand_landmarks", None) and not current_hand_pts_list:
-                    current_hand_pts_list.extend([[float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))] for lm in hl_result.left_hand_landmarks])
+                    current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.left_hand_landmarks])
 
                 kinetic_energy = 0.0
                 if current_hand_pts_list:
@@ -401,46 +563,73 @@ async def websocket_recognize(
                     hand_source = left_hand
 
                 realsign_feat_63d: Optional[np.ndarray] = None
+                realsign_feat_126d: Optional[np.ndarray] = None
                 if hand_source is not None:
                     realsign_feat_63d = extract_realsign_hand_features(hand_source, dominant_hand="right")
+
+                if has_left or has_right:
+                    raw_lh = hl_result.left_hand_landmarks if (hl_result and getattr(hl_result, "left_hand_landmarks", None)) else (left_hand if has_left else None)
+                    raw_rh = hl_result.right_hand_landmarks if (hl_result and getattr(hl_result, "right_hand_landmarks", None)) else (right_hand if has_right else None)
+                    realsign_feat_126d = extract_dual_hand_126d(raw_lh, raw_rh)
 
                 should_run_inference = False
                 motion_settled_now = False
 
                 if active_model == "realsign":
-                    should_run_inference = (realsign_feat_63d is not None)
-                else:
+                    should_run_inference = (realsign_feat_126d is not None or realsign_feat_63d is not None)
+                elif active_model == "include_stream":
+                    should_run_inference = bool(streaming_include is not None and streaming_include.should_evaluate())
+                elif active_model == "isl_mvp":
+                    # ISL MVP model is ultra-lightweight (numpy/scikit ~50us). Run every frame hands are present
+                    should_run_inference = bool(hand_detected and len(rolling_features) >= 5)
+                elif active_model == "isl_sequence_lstm":
                     if kinetic_energy >= KINETIC_ENERGY_THRESHOLD:
                         is_actively_signing = True
                         settled_frames_count = 0
-                        gesture_sequence_buffer.append(feat_164)
+                        gesture_sequence_buffer.append(feat_176)
                         if len(gesture_sequence_buffer) > 60:
                             gesture_sequence_buffer.pop(0)
                     elif is_actively_signing:
                         settled_frames_count += 1
-                        gesture_sequence_buffer.append(feat_164)
+                        gesture_sequence_buffer.append(feat_176)
                         if settled_frames_count >= 1:
                             should_run_inference = True
                             motion_settled_now = True
                     else:
-                        should_run_inference = False
+                        # Periodic streaming evaluation for held or steady signs (every 2 frames = 15 FPS evaluation)
+                        if hand_detected and len(rolling_features) >= 8 and (total_stream_frames % 2 == 0):
+                            should_run_inference = True
 
                 realsign_pred: Optional[RealSignPrediction] = None
                 seq_pred: Optional[ISLSequencePrediction] = None
                 isl_pred: Optional[ISLPrediction] = None
+                include_pred: Optional[INCLUDEResult] = None
 
                 if should_run_inference:
-                    segment_to_classify = list(gesture_sequence_buffer) if len(gesture_sequence_buffer) >= 5 else list(rolling_features)
+                    segment_to_classify = list(gesture_sequence_buffer) if (is_actively_signing and len(gesture_sequence_buffer) >= 8) else list(rolling_features)
                     feat_array = np.array(segment_to_classify, dtype=np.float32)
 
-                    if active_model == "realsign" and pipeline.realsign_classifier is not None:
-                        if realsign_feat_63d is not None:
+                    if active_model == "include_stream" and streaming_include is not None:
+                        include_pred = await loop.run_in_executor(
+                            None,
+                            streaming_include.predict_window,
+                            confidence_threshold,
+                        )
+
+                    elif active_model == "realsign" and pipeline.realsign_classifier is not None:
+                        target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(pipeline.realsign_classifier, "input_dim", 63) == 126) else realsign_feat_63d
+                        if target_realsign_feat is None and realsign_feat_126d is not None:
+                            target_realsign_feat = realsign_feat_126d
+                        if target_realsign_feat is not None:
+                            raw_pts_arr = np.array(current_hand_pts_list, dtype=np.float32) if len(current_hand_pts_list) == 21 else None
                             realsign_pred = await loop.run_in_executor(
                                 None,
                                 lambda: pipeline.realsign_classifier.predict(
-                                    realsign_feat_63d,
+                                    target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
+                                    apply_heuristic_boost=False,
+                                    raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )
                         else:
@@ -479,7 +668,8 @@ async def websocket_recognize(
                                 raw_class_idx=pipeline.classifier.class_names.index("no_sign"),
                             )
 
-                    if active_model != "realsign":
+                    # Only reset active gesture buffer when gesture motion has settled
+                    if motion_settled_now:
                         is_actively_signing = False
                         settled_frames_count = 0
                         gesture_sequence_buffer.clear()
@@ -496,6 +686,8 @@ async def websocket_recognize(
                             probabilities={c: 0.0 for c in pipeline.classifier.class_names},
                             raw_class_idx=pipeline.classifier.class_names.index("no_sign"),
                         )
+                    if active_model == "include_stream" and streaming_include is not None:
+                        include_pred = streaming_include.last_result or streaming_include._empty_result()
 
                 t1 = time.perf_counter()
                 latency_ms = round((t1 - t0) * 1000.0, 1)
@@ -514,6 +706,15 @@ async def websocket_recognize(
                     buffer_fill = 1.0 if (hand_detected and realsign_feat_63d is not None) else 0.0
                     is_pred_valid = bool(realsign_pred and realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign)
                     pred_label = realsign_pred.letter if realsign_pred else ""
+                elif active_model == "include_stream":
+                    res_probs = {c.label: round(c.confidence, 4) for c in include_pred.top5_candidates} if (include_pred and include_pred.top5_candidates) else {}
+                    raw_conf = round(include_pred.confidence, 4) if include_pred else 0.0
+                    raw_top_class = include_pred.label if include_pred else "awaiting_sign"
+                    raw_top_conf = float(include_pred.confidence) if include_pred else 0.0
+                    raw_top_3 = [(c.display_name, round(c.confidence, 4)) for c in include_pred.top5_candidates[:3]] if (include_pred and include_pred.top5_candidates) else []
+                    buffer_fill = round(len(streaming_include.frame_buffer) / 30.0, 2) if streaming_include else 0.0
+                    is_pred_valid = bool(include_pred and include_pred.is_known_sign and include_pred.confidence >= active_threshold and include_pred.label != "awaiting_sign")
+                    pred_label = include_pred.label if include_pred else ""
                 elif active_model == "isl_sequence_lstm":
                     res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()} if seq_pred else {}
                     raw_conf = round(seq_pred.confidence, 4) if seq_pred else 0.0
@@ -546,7 +747,7 @@ async def websocket_recognize(
                         alphabet_streak_candidate = current_prediction
                         alphabet_streak_count = 1
 
-                    if alphabet_streak_count >= 4:
+                    if alphabet_streak_count >= required_streak:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
                             alphabet_last_committed = alphabet_streak_candidate
                             res_label = alphabet_streak_candidate
@@ -554,7 +755,7 @@ async def websocket_recognize(
                             res_conf = raw_conf
                             res_is_known = True
                             is_stable = True
-                            if alphabet_streak_count == 4 and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
+                            if alphabet_streak_count == required_streak and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
                                 accumulator.add_token(alphabet_streak_candidate, token_type="letter", timestamp=now)
                         else:
                             alphabet_last_committed = ""
@@ -578,47 +779,138 @@ async def websocket_recognize(
                             is_stable = False
 
                     candidate_streak = alphabet_streak_count
-                    required_streak = 4
                 else:
-                    if not should_run_inference:
+                    # Word / Sequence Models (isl_mvp, isl_sequence_lstm, include_stream)
+                    # If this inference produced a valid known sign, update the latched state
+                    if is_pred_valid and pred_label not in ("", "no_sign", "unknown", "Awaiting Sign Input", "awaiting_sign"):
+                        last_word_label = pred_label
+                        if active_model == "include_stream" and include_pred is not None:
+                            last_word_display = include_pred.display_name
+                        elif active_model == "isl_sequence_lstm":
+                            last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
+                        else:
+                            last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper())
+                        last_word_conf = raw_conf
+                        last_word_is_known = True
+                        last_word_probs = res_probs
+                        last_word_top3 = raw_top_3
+                        last_word_pred_time = now
+
+                    # Latch check: If hands are still visible and we have a valid word within 0.8s
+                    word_latch_active = bool(
+                        hand_detected
+                        and last_word_is_known
+                        and (now - last_word_pred_time < 0.8)
+                    )
+
+                    if word_latch_active:
+                        res_label = last_word_label
+                        res_display = last_word_display
+                        res_conf = last_word_conf
+                        res_is_known = True
+                        is_stable = True
+                        if not res_probs and last_word_probs:
+                            res_probs = last_word_probs
+                        if not raw_top_3 and last_word_top3:
+                            raw_top_3 = last_word_top3
+
+                        if candidate_label == res_label:
+                            candidate_streak += 1
+                        else:
+                            candidate_label = res_label
+                            candidate_streak = 1
+
+                        # Disambiguation Check & Hand-Lift Selection (when margin < 0.20 or is_ambiguous)
+                        if seq_pred and getattr(seq_pred, "is_ambiguous", False) and len(seq_pred.top_3) >= 2:
+                            t1_lbl = seq_pred.top_3[0][0]
+                            t2_lbl = seq_pred.top_3[1][0]
+                            if t1_lbl not in ("no_sign", "unknown") and t2_lbl not in ("no_sign", "unknown"):
+                                disambiguation_active = True
+                                disambiguation_top1 = t1_lbl
+                                disambiguation_top2 = t2_lbl
+                                disambiguation_options = [
+                                    {"label": t1_lbl, "display": DISPLAY_NAMES.get(t1_lbl, t1_lbl.upper().replace("_", " ")), "hand": "left"},
+                                    {"label": t2_lbl, "display": DISPLAY_NAMES.get(t2_lbl, t2_lbl.upper().replace("_", " ")), "hand": "right"},
+                                ]
+                                disambiguation_start_time = now
+
+                        # If disambiguation is active, evaluate wrist elevation for natural gesture resolution
+                        if disambiguation_active:
+                            if has_left and has_right and len(left_hand) > 0 and len(right_hand) > 0:
+                                lw_y = left_hand[0]["y"]
+                                rw_y = right_hand[0]["y"]
+                                if lw_y < rw_y - 0.12:  # Left hand raised notably higher
+                                    disp = DISPLAY_NAMES.get(disambiguation_top1, disambiguation_top1.upper())
+                                    accumulator.add_token(disp, token_type="phrase", timestamp=now)
+                                    disambiguation_active = False
+                                    disambiguation_options = []
+                                elif rw_y < lw_y - 0.12:  # Right hand raised notably higher
+                                    disp = DISPLAY_NAMES.get(disambiguation_top2, disambiguation_top2.upper())
+                                    accumulator.add_token(disp, token_type="phrase", timestamp=now)
+                                    disambiguation_active = False
+                                    disambiguation_options = []
+                            if now - disambiguation_start_time > 3.5:
+                                disambiguation_active = False
+                                disambiguation_options = []
+
+                        # Debounce gate for committing to backend accumulator (gated by disambiguation)
+                        if candidate_streak >= required_streak and not disambiguation_active:
+                            time_since_last = now - last_committed_time
+                            is_same_sign = (res_label == last_committed_sign)
+                            can_commit = False
+                            if is_same_sign:
+                                if time_since_last >= 1.0 and had_idle_baseline:
+                                    can_commit = True
+                            else:
+                                can_commit = True
+
+                            if can_commit:
+                                accumulator.add_token(res_display, token_type="phrase", timestamp=now)
+                                last_committed_sign = res_label
+                                last_committed_time = now
+                                had_idle_baseline = False
+                    else:
+                        # Idle or Awaiting Sign
+                        if not hand_detected:
+                            last_word_label = ""
+                            last_word_display = ""
+                            last_word_conf = 0.0
+                            last_word_is_known = False
+                            last_word_probs = {}
+                            last_word_top3 = []
+                            had_idle_baseline = True
+
                         res_label = "Awaiting Sign Input"
                         res_display = "Signing in progress..." if is_actively_signing else ("Waiting for a hand..." if not hand_detected else "Awaiting Sign Input")
-                        res_conf = 0.0 if hand_detected else 1.0
+                        res_conf = 0.0
                         res_is_known = False
                         is_stable = False
                         candidate_streak = 0
                         candidate_label = ""
-                    else:
-                        if is_pred_valid:
-                            res_label = pred_label
-                            if active_model == "isl_sequence_lstm":
-                                res_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
-                            else:
-                                res_display = DISPLAY_NAMES.get(pred_label, pred_label.upper())
-                            res_conf = raw_conf
-                            res_is_known = True
-                            is_stable = True
-                            candidate_streak = required_streak
-                            candidate_label = pred_label
-                            if pred_label not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
-                                accumulator.add_token(pred_label, token_type="phrase", timestamp=now)
-                        else:
-                            res_label = "Awaiting Sign Input"
-                            res_display = "Awaiting Sign Input"
-                            res_conf = raw_conf
-                            res_is_known = False
-                            is_stable = False
-                            candidate_streak = 0
-                            candidate_label = ""
 
                 accumulator.check_timeouts(current_time=now)
+
+                # Show-and-Sign Multimodal Sentence Fuser
+                fused_sentence = None
+                if (
+                    pipeline.fuser is not None
+                    and current_detected_objects
+                    and res_label not in ("", "no_sign", "unknown", "Awaiting Sign Input", "awaiting_sign")
+                ):
+                    fused_sentence = pipeline.fuser.fuse(res_label, current_detected_objects)
+
+                # Predictive Text & Phrase Suggestions
+                predictive_suggestions: List[str] = []
+                if pipeline.predictive is not None:
+                    curr_txt = accumulator.translated_text or accumulator.sentence_buffer or ""
+                    predictive_suggestions = pipeline.predictive.predict_next(curr_txt, limit=3)
 
                 candidates_payload = []
                 if raw_top_3:
                     candidates_payload = [
                         {"label": str(item[0]), "confidence": round(float(item[1]), 4)}
                         for item in raw_top_3
-                        if item[0] not in ("no_sign", "no_hand", "unknown", "Awaiting Sign Input")
+                        if item[0] not in ("no_sign", "no_hand", "unknown", "Awaiting Sign Input", "awaiting_sign")
                     ]
 
                 response = {
@@ -645,6 +937,29 @@ async def websocket_recognize(
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
                     "sentence_tokens": list(accumulator.sentence_tokens),
+                    "detected_objects": [
+                        {
+                            "label": o.label,
+                            "display_name": o.display_name,
+                            "confidence": o.confidence,
+                            "is_held": o.is_held,
+                            "is_interactive": o.is_interactive,
+                            "bbox": o.bbox,
+                        }
+                        for o in current_detected_objects
+                    ],
+                    "fused_multimodal_text": fused_sentence,
+                    "disambiguation": {
+                        "active": disambiguation_active,
+                        "options": disambiguation_options,
+                        "top1": disambiguation_top1,
+                        "top2": disambiguation_top2,
+                    },
+                    "lighting": {
+                        "score": lighting_score,
+                        "enhanced": was_low_light_enhanced,
+                    },
+                    "predictive_suggestions": predictive_suggestions,
                     "landmarks": {
                         "left_hand": left_hand,
                         "right_hand": right_hand,
@@ -664,6 +979,14 @@ async def websocket_recognize(
                         "is_known_sign": seq_pred.is_known_sign if seq_pred else False,
                         "top_3": [(l, round(c, 4)) for l, c in seq_pred.top_3] if seq_pred else [],
                     } if seq_pred else None,
+                    "include_prediction": {
+                        "label": include_pred.label if include_pred else "awaiting_sign",
+                        "display_name": include_pred.display_name if include_pred else "Awaiting Sign...",
+                        "confidence": round(include_pred.confidence, 4) if include_pred else 0.0,
+                        "is_known_sign": include_pred.is_known_sign if include_pred else False,
+                        "top_3": [(c.display_name, round(c.confidence, 4)) for c in include_pred.top5_candidates[:3]] if (include_pred and include_pred.top5_candidates) else [],
+                        "entropy": round(include_pred.entropy, 2) if include_pred else 0.0,
+                    } if include_pred else None,
                 }
 
                 await websocket.send_json(response)
@@ -678,4 +1001,6 @@ async def websocket_recognize(
     finally:
         rolling_features.clear()
         gesture_sequence_buffer.clear()
+        if streaming_include is not None:
+            streaming_include.reset()
         accumulator.reset()

@@ -32,7 +32,7 @@ def test_no_sign_generator_shapes_and_invariants():
     assert face_seq.dtype == np.float32
     
     batch = gen.generate_batch(count_per_scenario=2, base_seed=10)
-    assert len(batch) == 6 # 3 scenarios * 2
+    assert len(batch) == 10  # 5 scenarios * 2
     for seq in batch:
         assert seq.shape == (30, 158)
 

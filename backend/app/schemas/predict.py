@@ -10,14 +10,19 @@ from pydantic import BaseModel, Field
 
 
 class LandmarkRequest(BaseModel):
-    """Payload for hand landmark prediction endpoint."""
+    """Payload for hand landmark prediction endpoint supporting single-hand and dual-hand ISL."""
     features: Optional[List[float]] = Field(
         default=None,
-        description="63-dimensional normalized feature vector (21 hand joints x 3)",
+        description="Normalized feature vector: 126-D dual-hand (recommended for ISL), 89-D enriched, or 63-D single-hand",
+        examples=[[0.0] * 126],
     )
     landmarks: Optional[List[Dict[str, float]]] = Field(
         default=None,
-        description="21 hand landmarks, each with 'x', 'y', and optional 'z'",
+        description="21 primary hand landmarks (wrist + fingers), each with 'x', 'y', and optional 'z'",
+    )
+    secondary_landmarks: Optional[List[Dict[str, float]]] = Field(
+        default=None,
+        description="21 secondary hand landmarks for authentic bimanual ISL letters (B, D, P, Q, T)",
     )
     dominant_hand: Optional[str] = Field(
         default="right",

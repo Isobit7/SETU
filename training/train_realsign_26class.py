@@ -36,6 +36,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from training.feature_extractor import normalize_wrist_coordinates
 from training.feature_extractor import extract_realsign_hand_features
+from training.features.geometry import expand_63d_to_89d, ACTIVE_COORDINATE_INDICES_57
 
 DEFAULT_FEATURES_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
 DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "weights" / "realsign_26class_mlp.pth"
@@ -201,17 +202,24 @@ def transform_landmarks_to_canonical_invariants(X: np.ndarray) -> np.ndarray:
 
 
 class RealSignDataset(torch.utils.data.Dataset):
-    """PyTorch Dataset wrapper for RealSign landmark feature vectors."""
+    """PyTorch Dataset wrapper for RealSign 89-D invariant landmark feature vectors with coordinate jitter augmentation."""
 
-    def __init__(self, X: np.ndarray, y: np.ndarray):
+    def __init__(self, X: np.ndarray, y: np.ndarray, augment: bool = False, noise_std: float = 0.008):
         self.X = torch.from_numpy(np.array(X, dtype=np.float32))
         self.y = torch.from_numpy(np.array(y, dtype=np.int64))
+        self.augment = augment
+        self.noise_std = noise_std
 
     def __len__(self) -> int:
         return len(self.X)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self.X[idx], self.y[idx]
+        x = self.X[idx].clone()
+        if self.augment:
+            # Add small Gaussian noise to the active 57 coordinate features
+            noise = torch.randn_like(x[:57]) * self.noise_std
+            x[:57] = x[:57] + noise
+        return x, self.y[idx]
 
 
 class RealSignMLP(nn.Module):
@@ -219,21 +227,35 @@ class RealSignMLP(nn.Module):
 
     def __init__(
         self,
-        input_dim: int = 63,
+        input_dim: int = 89,
         hidden1: int = 128,
         hidden2: int = 64,
         num_classes: int = 26,
         dropout: float = 0.2,
+        use_batchnorm: bool = True,
     ):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden1),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden1, hidden2),
-            nn.ReLU(),
-            nn.Linear(hidden2, num_classes),
-        )
+        self.use_batchnorm = use_batchnorm
+        if use_batchnorm:
+            self.net = nn.Sequential(
+                nn.Linear(input_dim, hidden1),
+                nn.BatchNorm1d(hidden1),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+                nn.Linear(hidden1, hidden2),
+                nn.BatchNorm1d(hidden2),
+                nn.ReLU(),
+                nn.Linear(hidden2, num_classes),
+            )
+        else:
+            self.net = nn.Sequential(
+                nn.Linear(input_dim, hidden1),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+                nn.Linear(hidden1, hidden2),
+                nn.ReLU(),
+                nn.Linear(hidden2, num_classes),
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
@@ -354,6 +376,7 @@ def train_model(
     optimizer: torch.optim.Optimizer,
     epochs: int,
     device: torch.device,
+    scheduler: Optional[Any] = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Runs training loop for specified epochs and tracks epoch history."""
     history: List[Dict[str, float]] = []
@@ -385,6 +408,9 @@ def train_model(
             preds = torch.argmax(outputs, dim=1)
             train_correct += (preds == batch_y).sum().item()
             train_total += batch_x.size(0)
+
+        if scheduler is not None:
+            scheduler.step()
 
         epoch_train_loss = train_loss / max(train_total, 1)
         epoch_train_acc = train_correct / max(train_total, 1)
@@ -465,8 +491,15 @@ def main():
     except Exception:
         stats_meta = {}
 
-    # Re-extract canonical 63-D rotation-invariant features
-    X = transform_landmarks_to_canonical_invariants(X_raw)
+    # Expand canonical coordinates to the 89-D invariant geometric representation
+    if X_raw.shape[1] == 63:
+        print(f"Expanding 63-D coordinates to 89-D invariant geometric features across {len(X_raw):,} samples...")
+        X = expand_63d_to_89d(X_raw)
+    elif X_raw.shape[1] == 89:
+        X = X_raw
+    else:
+        X_canon_63 = transform_landmarks_to_canonical_invariants(X_raw)
+        X = expand_63d_to_89d(X_canon_63)
 
     if args.save_transformed_npz:
         save_dataset_archive(
@@ -521,9 +554,9 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using compute device: {device}")
 
-    train_dataset = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
-    val_dataset = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
-    test_dataset = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    train_dataset = RealSignDataset(X_train, y_train, augment=True, noise_std=0.008)
+    val_dataset = RealSignDataset(X_val, y_val, augment=False)
+    test_dataset = RealSignDataset(X_test, y_test, augment=False)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
@@ -531,18 +564,20 @@ def main():
 
     # Initialize model
     model = RealSignMLP(
-        input_dim=63,
+        input_dim=89,
         hidden1=128,
         hidden2=64,
         num_classes=26,
         dropout=0.2,
+        use_batchnorm=True,
     ).to(device)
 
     print("\nModel Architecture:")
     print(model)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-5)
 
     # Run training
     training_summary, best_state = train_model(
@@ -553,6 +588,7 @@ def main():
         optimizer=optimizer,
         epochs=args.epochs,
         device=device,
+        scheduler=scheduler,
     )
 
     # Evaluate on held-out test split
@@ -580,11 +616,12 @@ def main():
     save_payload = {
         "model_state_dict": best_state if best_state is not None else model.state_dict(),
         "architecture": {
-            "input_dim": 63,
+            "input_dim": 89,
             "hidden1": 128,
             "hidden2": 64,
             "num_classes": 26,
             "dropout": 0.2,
+            "use_batchnorm": True,
         },
         "classes": classes,
         "test_accuracy": test_metrics["overall_accuracy"],
@@ -592,8 +629,14 @@ def main():
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
     torch.save(save_payload, args.model_out)
+    alt_model_out = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
+    try:
+        alt_model_out.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(save_payload, alt_model_out)
+    except Exception:
+        pass
     model_size_kb = args.model_out.stat().st_size / 1024
-    print(f"\nTrained model weights saved to: {args.model_out} ({model_size_kb:.2f} KB)")
+    print(f"\nTrained model weights saved to: {args.model_out} and {alt_model_out} ({model_size_kb:.2f} KB)")
 
     # Save evaluation report
     args.report_out.parent.mkdir(parents=True, exist_ok=True)

@@ -10,11 +10,12 @@ import time
 from typing import Any, Dict, List, Optional
 
 from backend.app.services.nlp.gloss_parser import ISLGlossParser
+from models.adapters.sequence_lstm import CTCGreedyDecoder
 
 
 class SentenceAccumulator:
     """Accumulates individual alphabet letters and holistic phrases into full sentences,
-    handling timing buffers and dispatching to the ISLGlossParser.
+    handling timing buffers, CTC continuous sequence decoding, and dispatching to the ISLGlossParser.
     """
 
     def __init__(
@@ -22,10 +23,16 @@ class SentenceAccumulator:
         parser: Optional[ISLGlossParser] = None,
         word_timeout: float = 1.2,
         sentence_timeout: float = 2.5,
+        ctc_blank_token: str = "no_sign",
+        ctc_min_confidence: float = 0.40,
     ) -> None:
         self.parser: ISLGlossParser = parser or ISLGlossParser()
         self.word_timeout: float = word_timeout
         self.sentence_timeout: float = sentence_timeout
+
+        self.ctc_decoder: CTCGreedyDecoder = CTCGreedyDecoder(
+            blank_token=ctc_blank_token, min_confidence=ctc_min_confidence
+        )
 
         self.current_word: str = ""
         self.sentence_tokens: List[str] = []
@@ -106,13 +113,32 @@ class SentenceAccumulator:
         self.translated_text = self.parser.parse_gloss(self.sentence_tokens)
         return self.translated_text
 
+    def add_continuous_token(
+        self,
+        token: str,
+        confidence: float = 1.0,
+        token_type: str = "phrase",
+        timestamp: Optional[float] = None,
+    ) -> Optional[str]:
+        """
+        Ingests continuous streaming frame emissions using internal CTC greedy collapsing.
+        Returns the committed token string if a new gesture boundary was crossed, else None.
+        Enables seamless fluid co-articulation without 1.2s freeze requirements.
+        """
+        emitted = self.ctc_decoder.step(token, confidence=confidence)
+        if emitted:
+            self.add_token(emitted, token_type=token_type, timestamp=timestamp)
+            return emitted
+        return None
+
     def reset(self) -> None:
-        """Clears all word, sentence, and translation buffers."""
+        """Clears all word, sentence, translation buffers, and CTC decoder state."""
         self.current_word = ""
         self.sentence_tokens = []
         self.last_token_time = 0.0
         self.translated_text = ""
         self._tokens_changed = False
+        self.ctc_decoder.reset()
 
     def clear(self) -> None:
         """Alias for reset()."""

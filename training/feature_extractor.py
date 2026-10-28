@@ -42,6 +42,10 @@ from training.features.schema import (
     FACIAL_RATIOS_SLICE,
     VELOCITY_FEATURE_DIM_316,
     VELOCITY_FEATURE_DIM_328,
+    BODY_ANCHOR_DIM,
+    MULTIMODAL_FEATURE_DIM,
+    BODY_ANCHORS_SLICE,
+    VELOCITY_FEATURE_DIM_352,
     validate_schema_vector,
 )
 from training.features.geometry import (
@@ -55,11 +59,17 @@ from training.features.geometry import (
     compute_fingertip_to_thumb_distances,
     compute_pairwise_distances,
     compute_contact_score,
+    extract_body_anchored_features,
     normalize_wrist_coordinates,
     normalize_hand_landmarks,
     extract_invariant_hand_features,
     get_finger_extension_states,
     evaluate_alphabet_heuristics,
+    ACTIVE_COORDINATE_INDICES_57,
+    compute_adjacent_fingertip_distances,
+    compute_finger_spread_angles,
+    extract_realsign_89d_features,
+    expand_63d_to_89d,
 )
 from training.features.extractor import (
     FeatureExtractor158,
@@ -67,7 +77,7 @@ from training.features.extractor import (
     extract_facial_expression_features,
     compute_velocity_features,
 )
-from backend.app.services.realsign_classifier_service import normalize_landmarks_to_63d
+from training.features.geometry import normalize_landmarks_to_63d
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -93,6 +103,11 @@ __all__ = [
     "INTER_INDEX_VECTOR_SLICE",
     "INTER_INDEX_DISTANCE_INDEX",
     "INTER_THUMB_DISTANCE_INDEX",
+    "BODY_ANCHOR_DIM",
+    "MULTIMODAL_FEATURE_DIM",
+    "BODY_ANCHORS_SLICE",
+    "VELOCITY_FEATURE_DIM_352",
+    "extract_body_anchored_features",
     "CONTACT_SCORE_INDEX",
     "WRIST_INDEX",
     "THUMB_TIP_INDEX",
@@ -126,4 +141,9 @@ __all__ = [
     "extract_facial_expression_features",
     "compute_velocity_features",
     "normalize_landmarks_to_63d",
+    "ACTIVE_COORDINATE_INDICES_57",
+    "compute_adjacent_fingertip_distances",
+    "compute_finger_spread_angles",
+    "extract_realsign_89d_features",
+    "expand_63d_to_89d",
 ]

@@ -6,6 +6,7 @@ interface UseRecognitionStreamProps {
   fpsLimit?: number;
   confidenceThreshold?: number;
   onPredictionChange?: (pred: RecognitionPayload) => void;
+  isFramingGated?: boolean;
 }
 
 export function useRecognitionStream({
@@ -13,6 +14,7 @@ export function useRecognitionStream({
   fpsLimit = 18,
   confidenceThreshold = 0.35,
   onPredictionChange,
+  isFramingGated = false,
 }: UseRecognitionStreamProps) {
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function useRecognitionStream({
   const isPausedRef = useRef<boolean>(false);
   const confidenceThresholdRef = useRef<number>(confidenceThreshold);
   const onPredictionChangeRef = useRef<((pred: RecognitionPayload) => void) | undefined>(onPredictionChange);
+  const isFramingGatedRef = useRef<boolean>(isFramingGated);
 
   // Latest raw prediction ref
   const latestResultRef = useRef<RecognitionPayload | null>(null);
@@ -53,6 +56,10 @@ export function useRecognitionStream({
     onPredictionChangeRef.current = onPredictionChange;
   }, [onPredictionChange]);
 
+  useEffect(() => {
+    isFramingGatedRef.current = isFramingGated;
+  }, [isFramingGated]);
+
   // Dynamically push updated confidence threshold to active WebSocket session
   useEffect(() => {
     confidenceThresholdRef.current = confidenceThreshold;
@@ -61,11 +68,11 @@ export function useRecognitionStream({
     }
   }, [confidenceThreshold]);
 
-  // Initialize offscreen helper canvas for frame downsampling (320x240) before JPEG capture
+  // Initialize offscreen helper canvas for frame capture at full 640x480 for crisp MediaPipe landmark resolution
   useEffect(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 320;
-    canvas.height = 240;
+    canvas.width = 640;
+    canvas.height = 480;
     frameCanvasRef.current = canvas;
   }, []);
 
@@ -163,7 +170,7 @@ export function useRecognitionStream({
               hadIdleBaselineRef.current = true;
               candidateStreakRef.current = { sign: '', count: 0 };
             } else if (isKnown && label) {
-              const requiredStreak = data.active_model === 'realsign' ? 2 : 3;
+              const requiredStreak = data.required_streak ?? (data.active_model === 'realsign' ? 2 : 2);
               const activeMinThreshold = confidenceThresholdRef.current;
 
               if ((data.confidence || 0) >= activeMinThreshold) {
@@ -191,7 +198,7 @@ export function useRecognitionStream({
                     canCommit = true;
                   }
 
-                  if (canCommit) {
+                  if (canCommit && !isFramingGatedRef.current) {
                     lastCommittedSignRef.current = label;
                     lastCommittedTimeRef.current = now;
                     hadIdleBaselineRef.current = false;
@@ -384,8 +391,9 @@ export function useRecognitionStream({
         ws &&
         ws.readyState === WebSocket.OPEN
       ) {
-        // Send frame if elapsed time exceeds fps interval AND server is not backlogged
-        if (now - lastFrameSentTimeRef.current >= intervalMs && !waitingForResponseRef.current) {
+        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >120ms)
+        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 120);
+        if (now - lastFrameSentTimeRef.current >= intervalMs && (!waitingForResponseRef.current || isStaleLock)) {
           lastFrameSentTimeRef.current = now;
           waitingForResponseRef.current = true;
 
@@ -403,7 +411,7 @@ export function useRecognitionStream({
                 }
               },
               'image/jpeg',
-              0.65
+              0.60
             );
           }
         }
@@ -426,6 +434,20 @@ export function useRecognitionStream({
     setActiveModel(newModel);
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ action: 'set_model', model: newModel, threshold: confidenceThresholdRef.current }));
+    }
+  }, []);
+
+  // Resolve low-margin sign choice
+  const resolveDisambiguation = useCallback((selectedLabel: string) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'resolve_disambiguation', selected: selectedLabel }));
+    }
+  }, []);
+
+  // Accept predictive phrase suggestion
+  const acceptPrediction = useCallback((phrase: string) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'accept_prediction', phrase }));
     }
   }, []);
 
@@ -477,5 +499,7 @@ export function useRecognitionStream({
     backspaceSentence,
     clearHistory,
     setErrorMessage,
+    resolveDisambiguation,
+    acceptPrediction,
   };
 }

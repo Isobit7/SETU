@@ -5,7 +5,7 @@
 > **Architecture Level:** Production Enterprise Multi-Tier (React 19 + FastAPI + PyTorch/ONNX + MediaPipe)  
 > **Compliance Standard:** Enterprise Separation of Concerns & Living Master Index  
 > **Last Synchronized:** October 2026  
-> **Status:** 100% Operational (125/125 Automated Tests Passing | Zero Build Warnings)  
+> **Status:** 100% Operational (133/133 Automated Tests Passing | Zero Build Warnings)  
 
 This master document serves as the authoritative, living single-source-of-truth index for every directory and file across the SETU repository. Each directory is documented with **Why the Folder Exists** (its architectural rationale), and every file is accompanied by its **Exact Purpose** in plain, unambiguous language.
 
@@ -105,6 +105,7 @@ c:/MINI PROJ-SETU/
 │       │   ├── TextToSignWorkspace.tsx
 │       │   ├── TopNavbar.tsx
 │       │   ├── TranslationPanel.tsx
+│       │   ├── VisualFramingGuide.tsx
 │       │   ├── VocabularyModal.tsx
 │       │   └── WebcamAlphabetRecognition.tsx
 │       ├── hooks/
@@ -115,6 +116,7 @@ c:/MINI PROJ-SETU/
 │       ├── services/
 │       │   └── apiService.ts
 │       └── utils/
+│           ├── framingEvaluator.ts
 │           ├── landmarkProcessor.ts
 │           └── landmarksDrawer.ts
 │
@@ -226,6 +228,7 @@ c:/MINI PROJ-SETU/
 │   ├── build_overview_notebook.py
 │   ├── calibrate_and_train_webcam_alphabet.py
 │   ├── check_dataset_sources.py
+│   ├── check_framing_evaluator.js
 │   ├── clean_realsign_split.py
 │   ├── demo_conversational_5sign_webcam.py
 │   ├── demo_realsign_26class_webcam.py
@@ -305,7 +308,26 @@ c:/MINI PROJ-SETU/
 
 ---
 
-## 2. Master File-by-File Purpose Dictionary
+## 2. Master Component & Architecture Overview Table
+
+| Architectural Subsystem | Directory Path | Core Technical Function | Key Technologies & Anchor Files |
+| :--- | :--- | :--- | :--- |
+| **Root Workspace** | `/` | Containerization, environment variables, Windows startup launcher, package config | `docker-compose.yml`, `Start_SETU.bat`, `pyproject.toml`, `README.md` |
+| **Backend Server** | `/backend` | Asynchronous FastAPI server, REST routers, duplex WebSocket landmark streaming | FastAPI, Uvicorn, WebSockets (`backend/app/main.py`, `recognize.py`) |
+| **Frontend Workstation** | `/frontend` | React 19 UI workstation, MediaPipe WebAssembly landmark tracking, dark HUD | React 19, TypeScript, Vite (`App.tsx`, `CameraWorkspace.tsx`) |
+| **AI Model Layer** | `/models` | Multi-tier model adapters, weights registry, MediaPipe `.task` bundles | PyTorch, ONNX, MediaPipe (`models/registry.py`, `models/weights/`) |
+| **Training & Features** | `/training` | 89-D invariant geometric math, dataset manifests, PyTorch CUDA retraining | PyTorch, Scikit-learn (`training/features/geometry.py`, `train.py`) |
+| **Living System Records** | `/records` | Authoritative single-source-of-truth ledgers for architecture, models, audit | `ARCHITECTURE.md`, `CHECKPOINTS.md`, `DATASETS_AND_MODELS.md`, `MEMORY.md` |
+| **Centralized Config** | `/config` | Frozen dataclass settings, environment variables, typed domain exceptions | Python 3.10 Dataclasses (`config/settings.py`, `config/exceptions.py`) |
+| **Automated Test Suite** | `/tests` | 13 comprehensive test suites covering API, vision, invariant math, and models | 133 Pytest tests passing in 67s (`test_api.py`, `test_invariant_features...`) |
+| **Harnesses & Scripts** | `/scripts` | Sign calibration, data ingestion, webcam verification, release packager | Python, Node.js (`calibrate_and_train_webcam_alphabet.py`) |
+| **Audit Reports** | `/reports` | Evaluation matrices, bias audits, data leakage audits, pilot telemetry | JSON evaluation reports (`realsign_26class_evaluation_report.json`) |
+| **SSL/TLS Security** | `/certs` | Local SSL/TLS certificates enabling secure WebRTC/MediaDevices browser access | OpenSSL certificates (`fullchain.pem`, `privkey.pem`) |
+| **System Documentation**| `/docs` | Architectural deep-dive guides, handbooks, and conceptual user manuals | `docs/user_understanding/`, `SETU_DEEP_ARCHITECTURE_GUIDE.md` |
+
+---
+
+## 3. Master File-by-File Purpose Dictionary
 
 ### Root Workspace (`/`)
 * **Why the Folder Exists:** The root directory acts as the orchestration anchor for developer setup, container orchestration, environment variable defaults, dependency definitions, packaging configuration, and top-level execution triggers.
@@ -435,27 +457,29 @@ c:/MINI PROJ-SETU/
 71. **`frontend/src/components/TextToSignWorkspace.tsx`**: Reverse translator panel converting English text inputs into animated avatar sign gesture sequences.
 72. **`frontend/src/components/TopNavbar.tsx`**: Header navigation bar displaying the SETU brand, active model selector, backend health badge, and modal triggers.
 73. **`frontend/src/components/TranslationPanel.tsx`**: Dynamic subtitle dock rendering stabilized sentences, gloss history, and one-click speech playback buttons.
-74. **`frontend/src/components/VocabularyModal.tsx`**: Catalog modal displaying the complete list of supported signs and phrases for the currently active model.
-75. **`frontend/src/components/WebcamAlphabetRecognition.tsx`**: Specialized client-side recognition panel running live alphabet classification directly in the browser.
+74. **`frontend/src/components/VisualFramingGuide.tsx`**: Proactive visual framing overlay rendering semi-transparent upper body silhouette, signing-space reticles, and real-time HUD status badge.
+75. **`frontend/src/components/VocabularyModal.tsx`**: Catalog modal displaying the complete list of supported signs and phrases for the currently active model.
+76. **`frontend/src/components/WebcamAlphabetRecognition.tsx`**: Specialized client-side recognition panel running live alphabet classification directly in the browser.
 
 #### `/frontend/src/hooks` (Custom Reactive Hooks)
 * **Why the Folder Exists:** Decouples complex asynchronous operations (WebSocket duplex streaming, speech synthesis, text accumulation) from UI component rendering.
 
-76. **`frontend/src/hooks/useRecognitionStream.ts`**: Custom hook managing WebSocket connection lifecycle, frame dispatching, and streaming prediction ingestion.
-77. **`frontend/src/hooks/useSentenceBuilder.ts`**: Reactive hook translating raw sign glosses into finalized English sentences with cooldown timers.
-78. **`frontend/src/hooks/useTextBuffer.ts`**: State buffer hook managing letter-by-letter alphabet typing, space insertion, and backspace editing.
-79. **`frontend/src/hooks/useTTS.ts`**: Browser SpeechSynthesis API wrapper delivering natural text-to-speech audio with language and pitch configuration.
+77. **`frontend/src/hooks/useRecognitionStream.ts`**: Custom hook managing WebSocket connection lifecycle, frame dispatching, and streaming prediction ingestion with framing gating.
+78. **`frontend/src/hooks/useSentenceBuilder.ts`**: Reactive hook translating raw sign glosses into finalized English sentences with cooldown timers.
+79. **`frontend/src/hooks/useTextBuffer.ts`**: State buffer hook managing letter-by-letter alphabet typing, space insertion, and backspace editing.
+80. **`frontend/src/hooks/useTTS.ts`**: Browser SpeechSynthesis API wrapper delivering natural text-to-speech audio with language and pitch configuration.
 
 #### `/frontend/src/services` (Centralized API Client)
 * **Why the Folder Exists:** Centralizes all outgoing HTTP requests into a strongly-typed, predictable service layer with automatic error handling.
 
-80. **`frontend/src/services/apiService.ts`**: Centralized API client invoking backend REST endpoints (`/health`, `/models`, `/predict`, `/vocabulary`, `/video`).
+81. **`frontend/src/services/apiService.ts`**: Centralized API client invoking backend REST endpoints (`/health`, `/models`, `/predict`, `/vocabulary`, `/video`).
 
 #### `/frontend/src/utils` (Canvas Geometry & Drawing)
 * **Why the Folder Exists:** Provides ultra-fast, pure TypeScript algorithms for drawing MediaPipe skeletal meshes, calculating joint angles, and parsing raw landmarks.
 
-81. **`frontend/src/utils/landmarkProcessor.ts`**: Utility functions formatting landmark coordinate tuples and calculating geometric hand properties.
-82. **`frontend/src/utils/landmarksDrawer.ts`**: High-performance HTML5 Canvas renderer drawing hand bones, palm joints, and facial landmarks with custom neon color palettes.
+82. **`frontend/src/utils/framingEvaluator.ts`**: High-performance, zero-allocation client-side CV evaluator computing shoulder distance, centering, headroom, and hand positioning heuristics.
+83. **`frontend/src/utils/landmarkProcessor.ts`**: Utility functions formatting landmark coordinate tuples and calculating geometric hand properties.
+84. **`frontend/src/utils/landmarksDrawer.ts`**: High-performance HTML5 Canvas renderer drawing hand bones, palm joints, and facial landmarks with custom neon color palettes.
 
 ---
 
@@ -601,7 +625,8 @@ c:/MINI PROJ-SETU/
 165. **`scripts/build_overview_notebook.py`**: Generator script programmatically assembling `notebooks/overview_of_setu.ipynb`.
 166. **`scripts/calibrate_and_train_webcam_alphabet.py`**: Interactive webcam calibration tool fine-tuning alphabet models on user-specific hand shapes.
 167. **`scripts/check_dataset_sources.py`**: Network checker probing availability of external dataset mirror URLs.
-168. **`scripts/clean_realsign_split.py`**: Data sanitization script generating leak-free train/val/test split manifests.
+168. **`scripts/check_framing_evaluator.js`**: Node test runner validating 8 client-side framing constraints, distance heuristics, and hand-presence gating checks.
+169. **`scripts/clean_realsign_split.py`**: Data sanitization script generating leak-free train/val/test split manifests.
 169. **`scripts/demo_conversational_5sign_webcam.py`**: Standalone OpenCV demo executing live 5-class conversational sign classification.
 170. **`scripts/demo_realsign_26class_webcam.py`**: Standalone OpenCV demo running live 26-class alphabet recognition with HUD overlays.
 171. **`scripts/demo_roboflow_yolov11_webcam.py`**: Standalone demo executing sign inference via the reference YOLOv11 model.
@@ -626,24 +651,26 @@ c:/MINI PROJ-SETU/
 ---
 
 ### `/tests` (Automated Pytest Suite)
-* **Why the Folder Exists:** Contains modular, automated unit and integration tests enforcing mathematical correctness, API contracts, WebSocket protocols, and model inference fidelity.
+* **Why the Folder Exists:** Contains modular, automated unit and integration tests enforcing mathematical correctness, API contracts, WebSocket protocols, and model inference fidelity (133/133 passing).
 
 189. **`tests/__init__.py`**: Pytest test suite root package initializer.
 190. **`tests/test_api.py`**: Integration tests asserting HTTP endpoints, health checks, and WebSocket handshake behavior.
-191. **`tests/test_backend_app_modular.py`**: Unit tests verifying modular FastAPI endpoints, Pydantic schemas, and inference services.
-192. **`tests/test_camera_and_holistic_vision.py`**: Computer vision tests validating OpenCV camera capture, fallback modes, and MediaPipe landmark detection.
-193. **`tests/test_config_exceptions.py`**: Unit tests confirming configuration validation, boundary checks, and custom domain exceptions.
-194. **`tests/test_custom_sign_pipeline.py`**: Pipeline tests verifying interactive sign calibration, landmark recording, and feature serialization.
-195. **`tests/test_feature_extraction_and_manifest_pipeline.py`**: End-to-end integration tests asserting complete flow from video frames to translated English sentences.
-196. **`tests/test_feature_schema.py`**: Schema validation tests asserting exact array dimensions and bounds across 158-D and 126-D features.
-197. **`tests/test_include_model.py`**: Model tests validating inference accuracy and weight integrity for the 263-class INCLUDE classifier.
-198. **`tests/test_invariant_features_and_segmentation.py`**: Mathematical unit tests proving scale and rotation invariance across arbitrary hand poses.
-199. **`tests/test_isl_mvp_model.py`**: Unit tests asserting numerical correctness and classification speed of the 5-class NumPy Ridge model.
-200. **`tests/test_isl_sequence_lstm_classifier.py`**: Unit tests asserting output shape and temporal sliding-window behavior of the BiLSTM model.
-201. **`tests/test_nlp_pipeline.py`**: NLP tests verifying streak accumulation, refractory delays, and SOV-to-SVO grammar parsing.
-202. **`tests/test_real_data_readiness.py`**: Data readiness tests checking file existence, feature dimensions, and manifest schemas.
-203. **`tests/test_realsign_classifier.py`**: Classifier tests asserting 99%+ accuracy and ONNX runtime parity for the RealSign alphabet model.
-204. **`tests/test_rf_uv11_adapter.py`**: Compatibility tests validating prediction outputs from the external RF-UV-11 reference adapter.
+191. **`tests/test_api_v1_alignment.py`**: Route alignment tests asserting strict `/api/v1/` prefixing and deprecation guards.
+192. **`tests/test_backend_app_modular.py`**: Unit tests verifying modular FastAPI endpoints, Pydantic schemas, and inference services.
+193. **`tests/test_camera_and_holistic_vision.py`**: Computer vision tests validating OpenCV camera capture, fallback modes, and MediaPipe landmark detection.
+194. **`tests/test_config_exceptions.py`**: Unit tests confirming configuration validation, boundary checks, and custom domain exceptions.
+195. **`tests/test_custom_sign_pipeline.py`**: Pipeline tests verifying interactive sign calibration, landmark recording, and feature serialization.
+196. **`tests/test_feature_extraction_and_manifest_pipeline.py`**: End-to-end integration tests asserting complete flow from video frames to translated English sentences.
+197. **`tests/test_feature_schema.py`**: Schema validation tests asserting exact array dimensions and bounds across 158-D and 126-D features.
+198. **`tests/test_include_model.py`**: Model tests validating inference accuracy and weight integrity for the 263-class INCLUDE classifier.
+199. **`tests/test_invariant_features_and_segmentation.py`**: Mathematical unit tests proving scale and rotation invariance across arbitrary hand poses.
+200. **`tests/test_isl_mvp_model.py`**: Unit tests asserting numerical correctness and classification speed of the 5-class NumPy Ridge model.
+201. **`tests/test_isl_sequence_lstm_classifier.py`**: Unit tests asserting output shape and temporal sliding-window behavior of the BiLSTM model.
+202. **`tests/test_nlp_pipeline.py`**: NLP tests verifying streak accumulation, refractory delays, and SOV-to-SVO grammar parsing.
+203. **`tests/test_real_data_readiness.py`**: Data readiness tests checking file existence, feature dimensions, and manifest schemas.
+204. **`tests/test_realsign_classifier.py`**: Classifier tests asserting 99%+ accuracy and ONNX runtime parity for the RealSign alphabet model.
+205. **`tests/test_rf_uv11_adapter.py`**: Compatibility tests validating prediction outputs from the external RF-UV-11 reference adapter.
+206. **`tests/test_ui_audit_and_contract.py`**: Contract tests validating UI payload compatibility, subtitle zone flags, and WebSocket schemas.
 
 ---
 

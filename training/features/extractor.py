@@ -21,6 +21,7 @@ from training.features.geometry import (
     extract_invariant_hand_features,
     compute_euclidean_distance,
     compute_contact_score,
+    extract_body_anchored_features,
 )
 from training.features.schema import (
     FEATURE_DIM,
@@ -47,6 +48,10 @@ from training.features.schema import (
     FACIAL_RATIOS_SLICE,
     VELOCITY_FEATURE_DIM_316,
     VELOCITY_FEATURE_DIM_328,
+    BODY_ANCHOR_DIM,
+    MULTIMODAL_FEATURE_DIM,
+    BODY_ANCHORS_SLICE,
+    VELOCITY_FEATURE_DIM_352,
 )
 
 def _to_numpy_21x3(landmarks: Optional[Union[np.ndarray, List[Any]]]) -> Optional[np.ndarray]:
@@ -94,6 +99,7 @@ class FeatureExtractor158:
     def __init__(self) -> None:
         self._feature_buffer_158 = np.zeros(FEATURE_DIM, dtype=np.float32)
         self._feature_buffer_164 = np.zeros(EXPANDED_FEATURE_DIM, dtype=np.float32)
+        self._feature_buffer_176 = np.zeros(MULTIMODAL_FEATURE_DIM, dtype=np.float32)
         self._realsign_buffer_63 = np.zeros(63, dtype=np.float32)
     
     @classmethod
@@ -187,14 +193,23 @@ class FeatureExtractor158:
         cls,
         mp_result: Any,
         include_facial: bool = False,
+        include_body_anchors: bool = False,
         out: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """
         Direct adapter for MediaPipe Tasks HolisticLandmarkerResult or HandLandmarkerResult.
         Maps detected hands to Right and Left slots correctly based on handedness labels.
-        When include_facial=False (default): returns standard (158,) vector.
-        When include_facial=True: appends 6-D facial ratios forming a (164,) vector.
+        When include_facial=False and include_body_anchors=False (default): returns standard (158,) vector.
+        When include_facial=True and include_body_anchors=False: appends 6-D facial ratios forming a (164,) vector.
+        When include_body_anchors=True: appends 6-D facial ratios and 12-D body-anchored features forming a (176,) vector.
         """
+        if out is not None:
+            if out.shape == (MULTIMODAL_FEATURE_DIM,):
+                include_facial = True
+                include_body_anchors = True
+            elif out.shape == (EXPANDED_FEATURE_DIM,):
+                include_facial = True
+                include_body_anchors = False
         rh = None
         lh = None
 
@@ -237,11 +252,31 @@ class FeatureExtractor158:
             if len(hands) > 1:
                 lh = hands[1]
 
-        if not include_facial:
+        if not include_facial and not include_body_anchors:
             return cls.extract_from_hands(right_hand=rh, left_hand=lh, out=out)
 
         face_lms = getattr(mp_result, 'face_landmarks', None)
         facial_ratios = extract_facial_expression_features(face_lms)
+
+        if include_body_anchors:
+            pose_lms = getattr(mp_result, 'pose_landmarks', None)
+            if pose_lms is None and isinstance(mp_result, dict):
+                pose_lms = mp_result.get('pose_landmarks') or mp_result.get('pose')
+            body_anchors = extract_body_anchored_features(pose_lms, left_hand=lh, right_hand=rh)
+
+            if out is not None and out.shape == (MULTIMODAL_FEATURE_DIM,) and out.dtype == np.float32:
+                cls.extract_from_hands(right_hand=rh, left_hand=lh, out=out[:FEATURE_DIM])
+                out[FACIAL_RATIOS_SLICE] = facial_ratios
+                out[BODY_ANCHORS_SLICE] = body_anchors
+                validate_schema_vector(out)
+                return out
+
+            vec_176 = np.zeros(MULTIMODAL_FEATURE_DIM, dtype=np.float32)
+            cls.extract_from_hands(right_hand=rh, left_hand=lh, out=vec_176[:FEATURE_DIM])
+            vec_176[FACIAL_RATIOS_SLICE] = facial_ratios
+            vec_176[BODY_ANCHORS_SLICE] = body_anchors
+            validate_schema_vector(vec_176)
+            return vec_176
 
         if out is not None and out.shape == (EXPANDED_FEATURE_DIM,) and out.dtype == np.float32:
             cls.extract_from_hands(right_hand=rh, left_hand=lh, out=out[:FEATURE_DIM])
@@ -255,10 +290,22 @@ class FeatureExtractor158:
         validate_schema_vector(expanded_vec)
         return expanded_vec
 
-    def extract_mediapipe_fast(self, mp_result: Any, include_facial: bool = False) -> np.ndarray:
-        """Extracts features into the pre-allocated instance buffer (158-D or 164-D)."""
+    def extract_mediapipe_fast(
+        self,
+        mp_result: Any,
+        include_facial: bool = False,
+        include_body_anchors: bool = False,
+    ) -> np.ndarray:
+        """Extracts features into the pre-allocated instance buffer (158-D, 164-D, or 176-D)."""
+        if include_body_anchors:
+            buf = self._feature_buffer_176
+            return self.extract_from_mediapipe_result(
+                mp_result, include_facial=True, include_body_anchors=True, out=buf
+            )
         buf = self._feature_buffer_164 if include_facial else self._feature_buffer_158
-        return self.extract_from_mediapipe_result(mp_result, include_facial=include_facial, out=buf)
+        return self.extract_from_mediapipe_result(
+            mp_result, include_facial=include_facial, include_body_anchors=False, out=buf
+        )
 
     def extract_realsign_fast(self, hand_landmarks_or_result: Any, dominant_hand: str = "right") -> Optional[np.ndarray]:
         """Extracts 63-D features into the pre-allocated instance buffer."""
@@ -366,7 +413,9 @@ def compute_velocity_features(
         raise ValueError(f"Expected 2D numpy array, got {getattr(seq, 'shape', type(seq))}")
 
     T, D = seq.shape
-    if D == 328:
+    if D == 352 and target_dim == 352:
+        return seq.astype(np.float32)
+    if D == 328 and target_dim in (328, None):
         return seq.astype(np.float32)
 
     # Determine per-frame dt values for T - 1 intervals
@@ -391,11 +440,29 @@ def compute_velocity_features(
     else:
         dt_vals = 1.0
 
-    if D == 164:
+    if D == 176:
         vel = np.zeros_like(seq, dtype=np.float32)
         if T > 1:
             vel[1:] = (seq[1:] - seq[:-1]) / dt_vals
+        if target_dim == 328:
+            coords = seq[:, :164]
+            vel_164 = vel[:, :164]
+            return np.concatenate([coords, vel_164], axis=-1).astype(np.float32)
         return np.concatenate([seq.astype(np.float32), vel], axis=-1)
+
+    if D == 164:
+        if target_dim == 352:
+            anchor_pad = np.zeros((T, 12), dtype=np.float32)
+            seq_176 = np.concatenate([seq.astype(np.float32), anchor_pad], axis=-1)
+            vel = np.zeros_like(seq_176, dtype=np.float32)
+            if T > 1:
+                vel[1:] = (seq_176[1:] - seq_176[:-1]) / dt_vals
+            return np.concatenate([seq_176, vel], axis=-1)
+        else:
+            vel = np.zeros_like(seq, dtype=np.float32)
+            if T > 1:
+                vel[1:] = (seq[1:] - seq[:-1]) / dt_vals
+            return np.concatenate([seq.astype(np.float32), vel], axis=-1)
 
     if D == 158:
         if target_dim == 316:
@@ -403,6 +470,13 @@ def compute_velocity_features(
             if T > 1:
                 vel[1:] = (seq[1:] - seq[:-1]) / dt_vals
             return np.concatenate([seq.astype(np.float32), vel], axis=-1)
+        elif target_dim == 352:
+            pad = np.zeros((T, 18), dtype=np.float32)
+            seq_176 = np.concatenate([seq.astype(np.float32), pad], axis=-1)
+            vel = np.zeros_like(seq_176, dtype=np.float32)
+            if T > 1:
+                vel[1:] = (seq_176[1:] - seq_176[:-1]) / dt_vals
+            return np.concatenate([seq_176, vel], axis=-1)
         else:
             facial_pad = np.zeros((T, 6), dtype=np.float32)
             seq_164 = np.concatenate([seq.astype(np.float32), facial_pad], axis=-1)
@@ -411,13 +485,25 @@ def compute_velocity_features(
                 vel[1:] = (seq_164[1:] - seq_164[:-1]) / dt_vals
             return np.concatenate([seq_164, vel], axis=-1)
 
-    if D == 316 and target_dim == 328:
-        coords = seq[:, :158]
-        vel = seq[:, 158:316]
-        pad = np.zeros((T, 6), dtype=np.float32)
+    if D == 316:
+        if target_dim == 352:
+            coords = seq[:, :158]
+            vel = seq[:, 158:316]
+            pad = np.zeros((T, 18), dtype=np.float32)
+            return np.concatenate([coords, pad, vel, pad], axis=-1)
+        elif target_dim == 328:
+            coords = seq[:, :158]
+            vel = seq[:, 158:316]
+            pad = np.zeros((T, 6), dtype=np.float32)
+            return np.concatenate([coords, pad, vel, pad], axis=-1)
+
+    if D == 328 and target_dim == 352:
+        coords = seq[:, :164]
+        vel = seq[:, 164:328]
+        pad = np.zeros((T, 12), dtype=np.float32)
         return np.concatenate([coords, pad, vel, pad], axis=-1)
 
-    raise ValueError(f"Cannot compute velocity features for unexpected shape {seq.shape}")
+    raise ValueError(f"Cannot compute velocity features for unexpected shape {seq.shape} and target_dim={target_dim}")
 
 
 FeatureExtractor158.compute_velocity_features = staticmethod(compute_velocity_features)
@@ -427,6 +513,7 @@ def extract_realsign_hand_features(
     hand_landmarks_or_result: Optional[Union[np.ndarray, List[Any], Any]],
     dominant_hand: str = "right",
     out: Optional[np.ndarray] = None,
+    return_89d: bool = False,
 ) -> Optional[np.ndarray]:
     """
     Dedicated wrist-centered scale and rotation invariant feature extraction
@@ -583,14 +670,23 @@ def extract_realsign_hand_features(
     if not np.all(np.isfinite(pts)):
         return None
 
-    # If only a Left hand is present, mirror/flip its X coordinates (1.0 - x)
+    # If only a Left hand is present, mirror/reflect its X coordinates across the wrist
     # so it matches canonical right-hand landmark geometry before passing to RealSign
     if is_left_hand:
-        pts[:, 0] = 1.0 - pts[:, 0]
+        wrist_x = pts[0, 0]
+        pts[:, 0] = 2.0 * wrist_x - pts[:, 0]
 
     norm_pts, scale = normalize_wrist_coordinates(pts)
     if scale < 1e-6:
         return None
+
+    if return_89d or (out is not None and out.shape == (89,)):
+        from training.features.geometry import extract_realsign_89d_features
+        feat_89 = extract_realsign_89d_features(norm_pts)
+        if out is not None and out.shape == (89,) and out.dtype == np.float32:
+            out[:] = feat_89
+            return out
+        return feat_89
 
     if out is not None and out.shape == (63,) and out.dtype == np.float32:
         out[:] = norm_pts.ravel()

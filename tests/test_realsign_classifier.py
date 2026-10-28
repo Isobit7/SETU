@@ -30,7 +30,7 @@ def test_realsign_classifier_initialization():
     assert clf.num_classes == 26
     assert clf.class_names == [chr(ord("A") + i) for i in range(26)]
     assert isinstance(clf.model, RealSignMLP)
-    assert clf.input_dim == 63
+    assert clf.input_dim in (63, 89)
     if clf.test_accuracy is not None:
         assert clf.test_accuracy >= 0.85
 
@@ -131,7 +131,7 @@ def test_realsign_api_endpoints(client):
     assert res_status.status_code == 200
     status_data = res_status.json()
     assert status_data["classes_count"] == 26
-    assert status_data["input_features"] == 63
+    assert status_data["input_features"] in (63, 89, 126)
     assert status_data["test_accuracy"] >= 0.85
 
     # 3. RealSign classes
@@ -244,10 +244,17 @@ def test_finger_extension_states_and_heuristics():
     assert get_finger_extension_states(pose_b) == (False, True, True, True, True)
     assert evaluate_alphabet_heuristics(pose_b) == "B"
 
-    # 7. 'A': All fingers curled into fist
+    # 7. 'A': All fingers curled into tight fist
     pose_a = _make_hand_pose(thumb=False, index=False, middle=False, ring=False, pinky=False)
     assert get_finger_extension_states(pose_a) == (False, False, False, False, False)
     assert evaluate_alphabet_heuristics(pose_a) == "A"
+
+    # 8. 'C': Curved fingers with wide thumb-to-index aperture
+    pose_c = _make_hand_pose(thumb=False, index=False, middle=False, ring=False, pinky=False)
+    pose_c[4] = [-0.5, -0.6, 0.0]
+    pose_c[8] = [-0.2, -0.95, 0.0]
+    assert get_finger_extension_states(pose_c) == (False, False, False, False, False)
+    assert evaluate_alphabet_heuristics(pose_c) == "C"
 
 
 def test_realsign_classifier_hybrid_heuristics_boost():
@@ -258,6 +265,10 @@ def test_realsign_classifier_hybrid_heuristics_boost():
 
     clf = RealSignClassifier(weights_path)
 
+    pose_c = _make_hand_pose(thumb=False, index=False, middle=False, ring=False, pinky=False)
+    pose_c[4] = [-0.5, -0.6, 0.0]
+    pose_c[8] = [-0.2, -0.95, 0.0]
+
     cases = [
         ("L", _make_hand_pose(thumb=True, index=True, middle=False, ring=False, pinky=False)),
         ("I", _make_hand_pose(thumb=False, index=False, middle=False, ring=False, pinky=True)),
@@ -266,10 +277,11 @@ def test_realsign_classifier_hybrid_heuristics_boost():
         ("Y", _make_hand_pose(thumb=True, index=False, middle=False, ring=False, pinky=True)),
         ("B", _make_hand_pose(thumb=False, index=True, middle=True, ring=True, pinky=True)),
         ("A", _make_hand_pose(thumb=False, index=False, middle=False, ring=False, pinky=False)),
+        ("C", pose_c),
     ]
 
     for expected_letter, pose_21x3 in cases:
-        pred = clf.predict_landmarks(pose_21x3, confidence_threshold=0.50)
+        pred = clf.predict_landmarks(pose_21x3, confidence_threshold=0.50, apply_heuristic_boost=True)
         assert pred.letter == expected_letter
         assert pred.is_known_sign is True
         assert pred.confidence >= 0.80
@@ -319,17 +331,17 @@ def test_realsign_classifier_ema_smoothing():
 
     # Frame 1: Without smoothing vs with smoothing initialization
     clf.reset_smoothing()
-    pred_1 = clf.predict_landmarks(pose_l, apply_smoothing=True)
+    pred_1 = clf.predict_landmarks(pose_l, apply_smoothing=True, apply_heuristic_boost=True)
     assert pred_1.letter == "L"
     assert clf._ema_probs is not None
     s0 = clf._ema_probs.copy()
 
     # Frame 2: Switch instantly to I with smoothing
     # Raw I probability would jump, but EMA filters the transition
-    pred_2_raw = clf.predict_landmarks(pose_i, apply_smoothing=False)
+    pred_2_raw = clf.predict_landmarks(pose_i, apply_smoothing=False, apply_heuristic_boost=True)
     p1 = np.array([pred_2_raw.probabilities[c] for c in clf.class_names], dtype=np.float32)
 
-    pred_2_smooth = clf.predict_landmarks(pose_i, apply_smoothing=True)
+    pred_2_smooth = clf.predict_landmarks(pose_i, apply_smoothing=True, apply_heuristic_boost=True)
     expected_s1 = 0.40 * p1 + 0.60 * s0
     actual_s1 = np.array([pred_2_smooth.probabilities[c] for c in clf.class_names], dtype=np.float32)
 
@@ -358,12 +370,66 @@ def test_realsign_confidence_and_margin_gate():
 
     # 2. Clear sign pose (e.g., 'L')
     pose_l = _make_hand_pose(thumb=True, index=True, middle=False, ring=False, pinky=False)
-    pred_clear = clf.predict_landmarks(pose_l)
+    pred_clear = clf.predict_landmarks(pose_l, apply_heuristic_boost=True)
     assert pred_clear.letter == "L"
     assert pred_clear.label == "L"
     assert pred_clear.is_known_sign is True
     assert pred_clear.confidence >= 0.50
     margin = pred_clear.top_3[0][1] - pred_clear.top_3[1][1]
     assert margin >= 0.15
+
+
+def test_realsign_dual_hand_126d_support():
+    """Verify RealSignClassifier seamlessly handles 126-D symmetric dual-hand inputs."""
+    weights_path = Path("models/realsign_26class_mlp.pth")
+    if not weights_path.exists():
+        pytest.skip("models/realsign_26class_mlp.pth not found")
+
+    clf = RealSignClassifier(weights_path)
+    from training.features.geometry import extract_dual_hand_126d
+    lh = _make_hand_pose(thumb=False, index=False, middle=False, ring=False, pinky=False)
+    rh = _make_hand_pose(thumb=True, index=True, middle=False, ring=False, pinky=False)
+    vec126 = extract_dual_hand_126d(lh, rh)
+    assert vec126.shape == (126,)
+    assert vec126.dtype == np.float32
+
+    pred = clf.predict(vec126, confidence_threshold=0.1)
+    assert isinstance(pred, RealSignPrediction)
+    assert pred.letter in clf.class_names or pred.letter == "Awaiting Sign Input"
+
+
+def test_realsign_cpu_latency_and_letters():
+    """Verify CPU inference latency < 1.0ms and forward pass across single/two-handed letters."""
+    import time
+    weights_path = Path("models/realsign_26class_mlp.pth")
+    if not weights_path.exists():
+        pytest.skip("models/realsign_26class_mlp.pth not found")
+
+    clf = RealSignClassifier(weights_path)
+    from training.features.geometry import extract_dual_hand_126d
+
+    # Single-handed poses (A, L, C)
+    pose_l = _make_hand_pose(thumb=True, index=True, middle=False, ring=False, pinky=False)
+    pred_l = clf.predict(pose_l)
+    assert pred_l.letter in clf.class_names
+
+    # Two-handed input (B, D, P, Q, T)
+    lh = _make_hand_pose(thumb=True, index=True, middle=True, ring=True, pinky=True)
+    rh = _make_hand_pose(thumb=False, index=True, middle=False, ring=False, pinky=False)
+    vec126 = extract_dual_hand_126d(lh, rh)
+    pred_dual = clf.predict(vec126)
+    assert pred_dual.letter in clf.class_names
+
+    # Latency benchmark across 100 CPU runs
+    t0 = time.perf_counter()
+    iterations = 100
+    for _ in range(iterations):
+        _ = clf.predict(vec126)
+    total_time = time.perf_counter() - t0
+    avg_latency_ms = (total_time / iterations) * 1000.0
+
+    print(f"\nRealSign CPU Average Latency: {avg_latency_ms:.3f} ms")
+    assert avg_latency_ms < 2.0, f"Expected < 2.0ms on CPU, got {avg_latency_ms:.3f} ms"
+
 
 

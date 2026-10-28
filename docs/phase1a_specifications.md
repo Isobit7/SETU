@@ -14,22 +14,22 @@ SETU solves this with a **hybrid 158-feature schema**:
 4. **Inter-Hand Relational Features (10 features):** Preserves relative hand displacement, distance, and physical contact.
 
 ### 1.2 Immutable Slice Layout Table
-| Feature Range | Slice Notation | Count | Description | Normalization / Units |
-| :--- | :--- | :---: | :--- | :--- |
-| `[0:63]` | `RIGHT_HAND_COORDS_SLICE` | 63 | Right Hand 21 landmarks $\times (x, y, z)$ | Centered at wrist (0); divided by palm span |
-| `[63:68]` | `RIGHT_HAND_DISTANCES_SLICE` | 5 | Right Hand fingertip-to-wrist Euclidean distances | Normalized by palm span |
-| `[68:73]` | `RIGHT_HAND_ANGLES_SLICE` | 5 | Right Hand finger PIP flexion bend angles | In radians, normalized to $[0.0, 1.0]$ ($\theta / \pi$) |
-| `[73:136]` | `LEFT_HAND_COORDS_SLICE` | 63 | Left Hand 21 landmarks $\times (x, y, z)$ | Centered at wrist (0); divided by palm span |
-| `[136:141]` | `LEFT_HAND_DISTANCES_SLICE` | 5 | Left Hand fingertip-to-wrist Euclidean distances | Normalized by palm span |
-| `[141:146]` | `LEFT_HAND_ANGLES_SLICE` | 5 | Left Hand finger PIP flexion bend angles | In radians, normalized to $[0.0, 1.0]$ ($\theta / \pi$) |
-| `[146:148]` | `PRESENCE_FLAGS_SLICE` | 2 | Hand presence flags: `[is_right_present, is_left_present]` | Binary: `0.0` (missing) or `1.0` (detected) |
-| `[148:151]` | `INTER_WRIST_VECTOR_SLICE` | 3 | Relative wrist displacement vector: $\text{Wrist}_R - \text{Wrist}_L$ | Normalized camera space $(\Delta x, \Delta y, \Delta z)$ |
-| `[151:152]` | `INTER_WRIST_DISTANCE_INDEX` | 1 | Euclidean distance between wrists: $\|\vec{\Delta}_{\text{wrist}}\|_2$ | Scalar Euclidean distance in $[0, \sqrt{3}]$ |
-| `[152:155]` | `INTER_INDEX_VECTOR_SLICE` | 3 | Relative index tip displacement: $\text{Index}_R - \text{Index}_L$ | Normalized camera space $(\Delta x, \Delta y, \Delta z)$ |
-| `[155:156]` | `INTER_INDEX_DISTANCE_INDEX` | 1 | Euclidean distance between index fingertips: $\|\vec{\Delta}_{\text{index}}\|_2$ | Scalar Euclidean distance |
-| `[156:157]` | `INTER_THUMB_DISTANCE_INDEX` | 1 | Euclidean distance between thumb tips: $\|\vec{\Delta}_{\text{thumb}}\|_2$ | Scalar Euclidean distance |
-| `[157:158]` | `CONTACT_SCORE_INDEX` | 1 | Smooth contact indicator: $\exp(-\min(d_i, d_w, d_t)^2 / (2\sigma^2))$ | Smooth scalar in $[0.0, 1.0]$ ($\sigma = 0.05$) |
-| **Total** | | **158** | Complete Feature Dimension | All values float32, zero-padded when hand missing |
+| Feature Range | Slice Name | Dims | Description & Normalization |
+| :--- | :--- | :---: | :--- |
+| `[0:63]` | `RIGHT_HAND_COORDS_SLICE` | 63 | Right Hand 21 landmarks $\times (x, y, z)$ (wrist-centered, palm-span normalized) |
+| `[63:68]` | `RIGHT_HAND_DISTANCES_SLICE` | 5 | Right Hand fingertip-to-wrist Euclidean distances (palm-span scaled) |
+| `[68:73]` | `RIGHT_HAND_ANGLES_SLICE` | 5 | Right Hand finger PIP flexion bend angles ($\theta / \pi \in [0.0, 1.0]$) |
+| `[73:136]` | `LEFT_HAND_COORDS_SLICE` | 63 | Left Hand 21 landmarks $\times (x, y, z)$ (wrist-centered, palm-span normalized) |
+| `[136:141]` | `LEFT_HAND_DISTANCES_SLICE` | 5 | Left Hand fingertip-to-wrist Euclidean distances (palm-span scaled) |
+| `[141:146]` | `LEFT_HAND_ANGLES_SLICE` | 5 | Left Hand finger PIP flexion bend angles ($\theta / \pi \in [0.0, 1.0]$) |
+| `[146:148]` | `PRESENCE_FLAGS_SLICE` | 2 | Hand presence flags: `[is_right_present, is_left_present]` (binary `0.0`/`1.0`) |
+| `[148:151]` | `INTER_WRIST_VECTOR_SLICE` | 3 | Relative wrist displacement vector: $\text{Wrist}_R - \text{Wrist}_L$ |
+| `[151:152]` | `INTER_WRIST_DISTANCE_INDEX` | 1 | Euclidean distance between wrists: $\|\vec{\Delta}_{\text{wrist}}\|_2$ |
+| `[152:155]` | `INTER_INDEX_VECTOR_SLICE` | 3 | Relative index tip displacement: $\text{Index}_R - \text{Index}_L$ |
+| `[155:156]` | `INTER_INDEX_DISTANCE_INDEX` | 1 | Euclidean distance between index fingertips: $\|\vec{\Delta}_{\text{index}}\|_2$ |
+| `[156:157]` | `INTER_THUMB_DISTANCE_INDEX` | 1 | Euclidean distance between thumb tips: $\|\vec{\Delta}_{\text{thumb}}\|_2$ |
+| `[157:158]` | `CONTACT_SCORE_INDEX` | 1 | Smooth contact indicator: $\exp(-\min(d_i, d_w, d_t)^2 / (2\sigma^2))$ ($\sigma = 0.05$) |
+| **Total** | `CANONICAL_FEATURE_DIM` | **158** | Complete float32 vector, zero-padded when hand missing |
 
 ---
 
@@ -42,12 +42,12 @@ Unlike American Sign Language (ASL), which uses a single hand for the entire A�
 - **Rule:** Models trained on ASL datasets (like Kaggle ASL Alphabet) fail completely when presented with genuine ISL two-handed signs. SETU must only train on authentic ISL data.
 
 ### 2.2 Audited Public Datasets for Phase 1
-| Dataset Name | Source / Institution | Content & Scope | License | Accessibility & URL |
-| :--- | :--- | :--- | :--- | :--- |
-| **AI4Bharat INCLUDE** | IIT Madras / AI4Bharat | 263 dynamic sign words, 4,287 videos, 15 categories | **CC-BY 4.0** | Zenodo Record [4010759](https://zenodo.org/records/4010759) |
-| **MaitreeVaria ISL** | Open Source Community | 26 static ISL alphabets (A–Z) + 10 numbers (0–9) | **MIT License** | [GitHub: MaitreeVaria](https://github.com/MaitreeVaria/Indian-Sign-Language-Detection) |
-| **ISL-CSLTR** | IIT Guwahati / IIIT | Isolated static ISL signs & numbers | Academic Research | IITG Repository |
-| **Mendeley ISL Dataset** | Rastogi et al. (Mendeley Data) | Static ISL alphabet & digit collection | **CC-BY 4.0** | Mendeley Data Portal |
+| Dataset Name | Source / Institution | License | Content & URL |
+| :--- | :--- | :--- | :--- |
+| **AI4Bharat INCLUDE** | IIT Madras / AI4Bharat | **CC-BY 4.0** | 263 sign words, 4,287 videos ([Zenodo 4010759](https://zenodo.org/records/4010759)) |
+| **MaitreeVaria ISL** | Open Source Community | **MIT License** | 26 static ISL alphabets (A–Z) + 10 digits ([GitHub](https://github.com/MaitreeVaria/Indian-Sign-Language-Detection)) |
+| **ISL-CSLTR** | IIT Guwahati / IIIT | Academic Research | Isolated static ISL signs & numbers (IITG Repository) |
+| **Mendeley ISL Dataset**| Rastogi et al. | **CC-BY 4.0** | Static ISL alphabet & digit collection (Mendeley Data) |
 
 ### 2.3 Supported Target Label Set for SETU MVP
 1. **Static Alphabet (29 Classes):**

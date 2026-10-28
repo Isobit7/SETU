@@ -111,6 +111,8 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
               ? 'Alphabet'
               : currentResult?.active_model === 'isl_sequence_lstm'
               ? 'Sequence'
+              : currentResult?.active_model === 'include_stream'
+              ? 'INCLUDE 263'
               : 'Phrases'}
           </span>
         </div>
@@ -126,6 +128,8 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
                 ? 'RealSign ISL Letter'
                 : currentResult?.active_model === 'isl_sequence_lstm'
                 ? 'Dynamic ISL Gesture'
+                : currentResult?.active_model === 'include_stream'
+                ? 'AI4Bharat 263 Sign'
                 : 'Common ISL Phrase'}
             </span>
           </div>

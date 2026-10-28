@@ -175,3 +175,34 @@ def test_api_recognize_video_rejects_invalid_extension(client):
     )
     assert res.status_code == 400
     assert "Unsupported video extension" in res.json()["detail"]
+
+
+def test_streaming_include_adapter_sliding_window_buffer():
+    from models.adapters.include import StreamingIncludeAdapter
+
+    adapter = StreamingIncludeAdapter(window_size=30, eval_every_n_frames=3, min_frames=15)
+    adapter.load()
+
+    # Stream 45 synthetic frames to ensure buffer caps at 30
+    rng = np.random.RandomState(42)
+    for i in range(45):
+        dummy_feat = rng.randn(134).astype(np.float32)
+        adapter.append_vector(dummy_feat)
+
+    # 1. Verify buffer bound (zero memory leak under continuous streaming)
+    assert len(adapter.frame_buffer) == 30
+    assert adapter.frame_buffer.maxlen == 30
+    assert adapter.frame_counter == 45
+
+    # 2. Verify window prediction & entropy evaluation
+    res = adapter.predict_window(confidence_threshold=0.01)
+    assert res.feature_dimension == 134
+    assert res.entropy is not None
+    assert isinstance(res.entropy, float)
+    assert len(res.top5_candidates) == 5
+
+    # 3. Test reset
+    adapter.reset()
+    assert len(adapter.frame_buffer) == 0
+    assert adapter.frame_counter == 0
+

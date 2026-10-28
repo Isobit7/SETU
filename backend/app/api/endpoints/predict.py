@@ -19,8 +19,12 @@ router = APIRouter(tags=["prediction"])
 @router.post(
     "/predict",
     response_model=PredictionResponse,
-    summary="Predict sign language alphabet letter",
-    description="Accepts 63-D normalized feature vector or 21 3D hand landmarks and returns predicted letter and top-3 candidates.",
+    summary="Predict Indian Sign Language alphabet letter (A–Z)",
+    description=(
+        "Accepts single-hand (63-D, 89-D) or dual-hand (126-D) normalized feature vectors, "
+        "or MediaPipe 3D hand landmarks (primary + optional secondary hand for bimanual ISL letters B, D, P, Q, T). "
+        "Returns top-ranked predicted letter (A–Z) and top-3 candidates with confidence scores."
+    ),
 )
 def predict_letter(payload: LandmarkRequest) -> PredictionResponse:
     """Classifies single-frame hand pose into one of 26 alphabet letters (A-Z)."""

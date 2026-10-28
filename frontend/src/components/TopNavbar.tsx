@@ -31,6 +31,7 @@ interface TopNavbarProps {
   onOpenSaved?: () => void;
   onOpenHelp: () => void;
   onOpenIncludeModal?: () => void;
+  onOpenRecordModal?: () => void;
   historyCount?: number;
   autoSpeakEnabled?: boolean;
   onToggleAutoSpeak?: () => void;
@@ -43,8 +44,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   activeTab,
   setActiveTab,
   isBackendConnected,
-  fps: _fps = 0,
-  latencyMs: _latencyMs = 0,
+  fps = 0,
+  latencyMs = 0,
   onOpenSettings,
   onOpenVocabulary,
   onOpenAlphabetModal,
@@ -52,6 +53,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   onOpenSaved,
   onOpenHelp,
   onOpenIncludeModal,
+  onOpenRecordModal,
   historyCount = 0,
   autoSpeakEnabled = true,
   onToggleAutoSpeak,
@@ -295,6 +297,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <Settings size={14} className="nav-icon" />
           <span>Settings</span>
         </button>
+
+        {/* 7. Record Custom Sign Button */}
+        {onOpenRecordModal && (
+          <button
+            className="nav-link-btn record-nav-link"
+            onClick={onOpenRecordModal}
+            title="Custom Gesture Recording Studio"
+          >
+            <Video size={14} className="nav-icon text-danger" />
+            <span>Record Sign</span>
+          </button>
+        )}
       </nav>
 
       {/* 7. Right: Status Badges & Quick Toggles */}
@@ -327,17 +341,21 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </button>
         )}
 
-        {/* Connection status pill - Clean Single-Indicator Minimalist Badge */}
+        {/* Consolidated System Status Pill */}
         <div
           className={`connection-pill ${isBackendConnected ? 'connected' : 'disconnected'}`}
-          title={
-            isBackendConnected
-              ? 'Connected to SETU Engine (Active WebSocket)'
-              : 'Backend disconnected (ws://localhost:8000)'
-          }
+          title={`SETU Engine WebSocket: ${
+            isBackendConnected ? 'Connected (ws://localhost:8000)' : 'Disconnected'
+          }${fps > 0 ? ` · ${fps} FPS` : ''}${latencyMs > 0 ? ` · ${latencyMs}ms` : ''}`}
         >
           <span className="connection-status-dot" aria-hidden="true" />
-          <span className="status-label">{isBackendConnected ? 'Online' : 'Offline'}</span>
+          <span className="status-label">{isBackendConnected ? 'Connected' : 'Offline'}</span>
+          {isBackendConnected && fps > 0 && (
+            <span className="status-telemetry-text">· {fps} FPS</span>
+          )}
+          {isBackendConnected && latencyMs > 0 && (
+            <span className="status-telemetry-latency">· {latencyMs}ms</span>
+          )}
         </div>
 
         {/* Privacy Pill */}

@@ -13,19 +13,19 @@ For an achievable, highly reliable college mini-project implementation, an initi
 
 Every selected sign corresponds to genuine, standardized gestures documented by the **Indian Sign Language Research and Training Centre (ISLRTC)**, avoiding the historical hackathon failure of mixing American Sign Language (ASL) fingerspelling with Indian signs.
 
-| Class ID | Label Name | Sign Type | Authentic ISL Gesture Description (ISLRTC Standard) | Source Dataset & Category |
-| :---: | :--- | :---: | :--- | :--- |
-| **0** | `hello` | 1-Hand | Open dominant palm facing forward, slight outward lateral greeting movement. | INCLUDE: `Greetings/48. Hello/` |
-| **1** | `thank_you` | 1-Hand | Flat dominant hand moves gently from chin forward towards recipient with slight nod. | INCLUDE: `Greetings/86. Thank you/` |
-| **2** | `help` | 2-Hand | Dominant closed fist rests on open flat non-dominant palm, both lifting upward together. | INCLUDE: `Society/38. Help/` |
-| **3** | `water` | 1-Hand | Three fingers extended ('W' handform) tapping near the mouth or chin. | INCLUDE: `Home/72. Water/` |
-| **4** | `father` | 1-Hand | Extended index and middle fingers tapping side of forehead. | INCLUDE: `People/14. Father/` |
-| **5** | `mother` | 1-Hand | Open flat hand or thumb/index touching side of chin. | INCLUDE: `People/47. Mother/` |
-| **6** | `yes` | 1-Hand | Dominant fist mimics nodding head (vertical wrist bend up and down). | INCLUDE: `Adjectives/118. Yes/` |
-| **7** | `no` | 1-Hand / 2-Hand | Dominant index and middle finger snap to thumb, or flat hand waving laterally. | INCLUDE: `Adjectives/119. No/` |
-| **8** | `home` | 2-Hand | Both flat hands touch at fingertips forming a triangular roof shape. | INCLUDE: `Home/40. Home/` |
-| **9** | `work` | 2-Hand | Dominant wrist gently taps top of non-dominant fist repeatedly. | INCLUDE: `Jobs/18. Work/` & Mendeley `work.zip` |
-| **10** | `no_sign` | Background | Hands resting in lap, on table, typing, adjusting face/glasses, or frame empty. | SETU Controlled Generator & Baseline Feed |
+| Sign Label | Type | Authentic ISL Gesture (ISLRTC) | Dataset Source |
+| :--- | :---: | :--- | :--- |
+| **`hello`** | 1-Hand | Open dominant palm facing forward, slight outward lateral greeting movement. | INCLUDE: `Greetings/48. Hello/` |
+| **`thank_you`** | 1-Hand | Flat dominant hand moves gently from chin forward towards recipient with slight nod. | INCLUDE: `Greetings/86. Thank you/` |
+| **`help`** | 2-Hand | Dominant closed fist rests on open flat non-dominant palm, both lifting upward together. | INCLUDE: `Society/38. Help/` |
+| **`water`** | 1-Hand | Three fingers extended ('W' handform) tapping near the mouth or chin. | INCLUDE: `Home/72. Water/` |
+| **`father`** | 1-Hand | Extended index and middle fingers tapping side of forehead. | INCLUDE: `People/14. Father/` |
+| **`mother`** | 1-Hand | Open flat hand or thumb/index touching side of chin. | INCLUDE: `People/47. Mother/` |
+| **`yes`** | 1-Hand | Dominant fist mimics nodding head (vertical wrist bend up and down). | INCLUDE: `Adjectives/118. Yes/` |
+| **`no`** | 1/2-Hand | Dominant index and middle finger snap to thumb, or flat hand waving laterally. | INCLUDE: `Adjectives/119. No/` |
+| **`home`** | 2-Hand | Both flat hands touch at fingertips forming a triangular roof shape. | INCLUDE: `Home/40. Home/` |
+| **`work`** | 2-Hand | Dominant wrist gently taps top of non-dominant fist repeatedly. | INCLUDE: `Jobs/18. Work/` |
+| **`no_sign`** | Resting | Hands resting in lap, on table, typing, adjusting glasses, or frame empty. | SETU Negative Generator |
 
 ---
 

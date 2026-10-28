@@ -35,23 +35,24 @@ export function useSentenceBuilder({
   const handlePredictionChange = useCallback((data: any) => {
     if (!data) return;
 
-    // Directly synchronize sentence buffer from backend SentenceAccumulator if provided
+    // Directly synchronize sentence buffer from backend SentenceAccumulator if provided (Single Source of Truth)
     if (data.sentence_buffer !== undefined) {
       setSentence(data.sentence_buffer);
-    }
 
-    // Auto-Speak trigger on sentence completion:
-    // When translated_text updates and differs from lastSpokenSentenceRef.current
-    if (data.translated_text && typeof data.translated_text === 'string') {
-      const translated = data.translated_text.trim();
-      if (translated && translated !== lastSpokenSentenceRef.current) {
-        lastSpokenSentenceRef.current = translated;
-        if (autoSpeakEnabled) {
-          speak(translated);
+      // Auto-Speak trigger on sentence completion:
+      // When translated_text updates and differs from lastSpokenSentenceRef.current
+      if (data.translated_text && typeof data.translated_text === 'string') {
+        const translated = data.translated_text.trim();
+        if (translated && translated !== lastSpokenSentenceRef.current) {
+          lastSpokenSentenceRef.current = translated;
+          if (autoSpeakEnabled) {
+            speak(translated);
+          }
         }
+      } else if (!data.sentence_buffer && !data.translated_text) {
+        lastSpokenSentenceRef.current = '';
       }
-    } else if (!data.sentence_buffer && !data.translated_text) {
-      lastSpokenSentenceRef.current = '';
+      return;
     }
 
     const isHand = data.hand_detected ?? false;
@@ -83,8 +84,8 @@ export function useSentenceBuilder({
 
     if (!signText || signText === 'NO_SIGN' || signText === 'UNKNOWN' || signText === 'AWAITING SIGN INPUT') return;
 
-    // Temporal Streak Counter: 2 consecutive frames for Alphabet, 3 for Sequence
-    const requiredStreak = data.active_model === 'realsign' ? 2 : 3;
+    // Temporal Streak Counter: 2 consecutive frames for Alphabet, 2 for Sequence
+    const requiredStreak = data.required_streak ?? (data.active_model === 'realsign' ? 2 : 2);
 
     if (candidateStreakRef.current.sign === signText) {
       candidateStreakRef.current.count += 1;

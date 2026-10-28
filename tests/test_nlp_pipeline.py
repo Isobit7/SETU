@@ -274,3 +274,63 @@ def test_server_websocket_emits_sentence_buffer_and_translated_text(api_client):
         backspace_resp = ws.receive_json()
         assert backspace_resp["type"] == "info"
         assert "Backspace applied" in backspace_resp["message"]
+
+
+def test_accumulator_continuous_ctc_fluid_signing():
+    """Verifies that continuous streaming frame emissions decode into clean sentences via CTC without manual pauses."""
+    acc = SentenceAccumulator(ctc_blank_token="no_sign", ctc_min_confidence=0.40)
+
+    # Simulated continuous frame emissions:
+    # 3 frames idle resting -> 4 frames HELLO -> 2 frames inter-sign transition -> 4 frames YOU -> 2 frames idle
+    frame_stream = [
+        ("no_sign", 0.95),
+        ("no_sign", 0.90),
+        ("no_sign", 0.92),
+        ("HELLO", 0.88),
+        ("HELLO", 0.91),
+        ("HELLO", 0.89),
+        ("HELLO", 0.93),
+        ("no_sign", 0.60),  # transitional movement
+        ("no_sign", 0.75),
+        ("YOU", 0.85),
+        ("YOU", 0.89),
+        ("YOU", 0.87),
+        ("no_sign", 0.95),
+    ]
+
+    emitted_tokens = []
+    for tok, conf in frame_stream:
+        committed = acc.add_continuous_token(tok, confidence=conf, token_type="phrase")
+        if committed:
+            emitted_tokens.append(committed)
+
+    # Exactly 2 tokens should be emitted despite 13 total frames
+    assert emitted_tokens == ["hello", "you"]
+    assert acc.sentence_buffer == "HELLO YOU"
+
+    # Translation runs smoothly
+    translated = acc.translate_sentence()
+    assert "Hello" in translated or "Greetings" in translated
+
+
+def test_continuous_multi_sign_transitions_without_manual_pauses():
+    """Verification Gate 4: Continuous co-articulated signing transitions emit clean word boundaries without freeze holds."""
+    acc = SentenceAccumulator()
+
+    continuous_gestures = [
+        ("THANK_YOU", 0.90),
+        ("THANK_YOU", 0.92),
+        ("no_sign", 0.80),
+        ("I", 0.85),
+        ("I", 0.88),
+        ("no_sign", 0.70),
+        ("HELP", 0.89),
+        ("HELP", 0.92),
+    ]
+
+    for gesture, conf in continuous_gestures:
+        acc.add_continuous_token(gesture, confidence=conf, token_type="phrase")
+
+    assert acc.sentence_tokens == ["THANK_YOU", "I", "HELP"]
+    assert acc.sentence_buffer == "THANK_YOU I HELP"
+

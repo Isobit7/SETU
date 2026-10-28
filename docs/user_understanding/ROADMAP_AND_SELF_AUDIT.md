@@ -53,19 +53,13 @@ graph LR
 
 ## 2. Strategic Future Roadmap
 
-```
-+---------------------------------------------------------------------------------------------------------+
-|                                    SETU DEVELOPMENT ROADMAP MATRIX                                      |
-+-----------+-----------------------------------+--------------------+------------------------------------+
-| Horizon   | Target Feature                    | Target Accuracy    | Technology Stack                   |
-+-----------+-----------------------------------+--------------------+------------------------------------+
-| CURRENT   | 26-Class Static ISL Alphabet      | 99.11% (Achieved!) | RealSignMLP + ONNX + React Buffer  |
-| PHASE 2.1 | Dynamic Stroke Signs (J, Z)       | > 96.0% Target     | 30-frame Temporal FIFO + 1D Conv   |
-| PHASE 2.2 | Top-100 Common ISL Words          | > 93.0% Target     | Bidirectional LSTM + INCLUDE Data  |
-| PHASE 3.0 | Continuous ISL Sentence Engine    | > 90.0% BLEU       | Conformer / Transformer + CTC Loss |
-| PHASE 3.5 | Bidirectional 3D Signing Avatar   | Real-Time Speech   | WebGL Rigged Avatar + Text-to-Sign |
-+-----------+-----------------------------------+--------------------+------------------------------------+
-```
+| Horizon | Target Feature | Accuracy | Tech Stack & Status |
+| :---: | :--- | :---: | :--- |
+| **CURRENT** | **89-D Static ISL Alphabet (A–Z)** | **99.34%** | RealSignMLP + ONNX + React Buffer (✅ Live & Verified) |
+| **PHASE 2.1**| **Dynamic Stroke Signs (`J`, `Z`)** | **> 96.0%** | 30-frame FIFO + 1D Conv Landmark Tracker (🔄 Active) |
+| **PHASE 2.2**| **Top-100 Conversational Signs** | **> 93.0%** | BiLSTM + AI4Bharat INCLUDE (🔄 Active) |
+| **PHASE 3.0**| **Continuous Sentence Translation** | **> 90.0% BLEU**| Conformer + CTC Loss + Gloss Parser (⏳ Queued) |
+| **PHASE 3.5**| **Bidirectional 3D Signing Avatar** | **Real-Time** | WebGL Rigged Avatar + Text-to-Sign Engine (⏳ Queued) |
 
 ---
 
@@ -74,12 +68,23 @@ graph LR
 > 💡 **Plain-English Intuition:**  
 > Good science and rigorous engineering should always be independently verifiable. We have included automated test scripts that allow you to check every dataset sample, audit the neural network weights, run integration tests, and start the secure container stack using simple terminal commands.
 
+### Executive Self-Audit Quick Reference Matrix
+
+| Step # | Diagnostic Target | Verification Command | Expected Output / Criteria |
+| :---: | :--- | :--- | :--- |
+| **1** | **Dataset Integrity & Splits** | `python scripts/check_dataset_sources.py` | 76,400+ samples, clean 80/10/10 split, zero data leakage. |
+| **2** | **Project Health Diagnostic** | `python scripts/audit_project.py` | `OVERALL SYSTEM STATUS: HEALTHY & PRODUCTION READY [OK]`. |
+| **3** | **Full Automated Test Suite** | `.venv\Scripts\python.exe -m pytest -q` | **133 passed / 133 tests (100%)** across 13 test suites. |
+| **4** | **ONNX CPU Latency Benchmark** | `python training/export_onnx.py` | Average Latency: **15.5 – 20.8 µs** (> 48,000 FPS throughput). |
+| **5** | **Frontend Production Build** | `npm --prefix frontend run build` | **0 errors**, clean Vite bundle compilation in < 1 second. |
+| **6** | **Container Stack Launch** | `docker compose up --build -d` | All containers healthy, TLS termination on `https://localhost`. |
+
 ```mermaid
 flowchart TD
     Start["Begin Independent Audit"] --> Check1["1. Dataset Integrity Audit\npython scripts/check_dataset_sources.py"]
     Check1 --> Check2["2. Full Health Diagnostic\npython scripts/audit_project.py"]
-    Check2 --> Check3["3. Automated Pytest Suites\npytest tests/ -v"]
-    Check3 --> Check4["4. Live CPU ONNX Benchmark\npython ml/export_onnx.py"]
+    Check2 --> Check3["3. Automated Pytest Suites\npytest tests/ -q"]
+    Check3 --> Check4["4. Live CPU ONNX Benchmark\npython training/export_onnx.py"]
     Check4 --> Launch["5. Launch Production Stack\ndocker compose up --build -d"]
 
     style Start fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
@@ -96,9 +101,6 @@ flowchart TD
 Validates that `realsign_landmarks_26class.npz` exists, checks sample counts, and verifies that the 80/10/10 split has zero data leakage:
 
 ```bash
-# Activate virtual environment
-.\.venv\Scripts\Activate.ps1
-
 # Inspect dataset archives and manifests
 python scripts/check_dataset_sources.py
 ```
@@ -107,7 +109,7 @@ python scripts/check_dataset_sources.py
 ```
 [+] Canonical Landmark Archive: data\processed\realsign_landmarks_26class.npz
     Size: 15.54 MB (16,299,533 bytes)
-    Total Samples: 76,400  |  Feature Dimension: 63-D
+    Total Samples: 76,400  |  Feature Dimension: 63-D / 89-D
     Classes (26): ['A', 'B', 'C', ..., 'Z']
     Splits Breakdown:
       * Test  :  7,640 samples ( 10.0%)
@@ -129,9 +131,9 @@ python scripts/audit_project.py
 +----------------------------------------------------------------------------+
 |                        OVERALL DIAGNOSTIC SUMMARY                          |
 +----------------------------------------------------------------------------+
-| Dataset Health  : [OK] Canonical .npz (76,400 samples, 63-D)               |
+| Dataset Health  : [OK] Canonical .npz (76,400 samples, 63-D/89-D)          |
 | Model Checkpoint: [OK] PyTorch RealSignMLP (18,138 params)                 |
-| Offline Metrics : [OK] Accuracy=99.11%, F1=99.10%                          |
+| Offline Metrics : [OK] Accuracy=99.34%, F1=99.34%                          |
 | Test Suite      : [OK] All Integration Tests Passed Successfully           |
 +----------------------------------------------------------------------------+
 | OVERALL SYSTEM STATUS: HEALTHY & PRODUCTION READY [OK]                     |
@@ -141,22 +143,17 @@ python scripts/audit_project.py
 ---
 
 ### Step 3: Run Full Pytest Test Suite
-Executes unit tests for API endpoints, landmark normalization math, and classifier integration:
+Executes the complete test suite across 13 modules (API endpoints, vision, geometric math, models, and NLP):
 
 ```bash
-pytest tests/ -v
+.venv\Scripts\python.exe -m pytest -q
 ```
 
 **Expected Console Output:**
 ```
-tests/test_api.py::test_health_endpoint PASSED                         [ 14%]
-tests/test_api.py::test_predict_valid_landmark PASSED                  [ 28%]
-tests/test_api.py::test_predict_invalid_dimensions PASSED              [ 42%]
-tests/test_backend_app_modular.py::test_cors_headers PASSED            [ 57%]
-tests/test_realsign_classifier.py::test_realsign_mlp_forward PASSED    [ 71%]
-tests/test_realsign_classifier.py::test_normalization_invariance PASSED[ 85%]
-tests/test_realsign_classifier.py::test_checkpoint_load_parity PASSED  [100%]
-============================== 7 passed in 1.42s ===============================
+......................................................................... [ 54%]
+............................................................              [100%]
+133 passed in 67.73s
 ```
 
 ---
@@ -165,7 +162,7 @@ tests/test_realsign_classifier.py::test_checkpoint_load_parity PASSED  [100%]
 Executes 1,000 live forward passes on CPU comparing native PyTorch CPU vs. ONNX Runtime CPU:
 
 ```bash
-python ml/export_onnx.py
+python training/export_onnx.py
 ```
 
 **Expected Console Output:**

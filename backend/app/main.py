@@ -125,6 +125,19 @@ async def recognize_ws(
     await websocket_recognize(websocket, model=model, threshold=threshold)
 
 
+@app.get("/")
+async def root():
+    """Root endpoint welcoming users and directing them to frontend app and API documentation."""
+    return {
+        "name": "SETU Sign Language Recognition & Translation Engine",
+        "status": "online",
+        "frontend_url": "http://localhost:5173",
+        "docs_url": "/docs",
+        "health_url": "/health",
+        "models_url": "/api/v1/models",
+    }
+
+
 @app.get("/health", response_model=HealthResponse)
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check():

@@ -240,12 +240,16 @@ class INCLUDEResult:
     feature_dimension: int
     inference_time_ms: float
     model_name: str = "AI4Bharat-INCLUDE-263-LSTM"
+    is_known_sign: bool = True
+    entropy: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "label": self.label,
             "display_name": self.display_name,
             "confidence": round(self.confidence, 4),
+            "is_known_sign": self.is_known_sign,
+            "entropy": round(self.entropy, 4),
             "top5_candidates": [
                 {
                     "label": c.label,
@@ -370,12 +374,167 @@ class INCLUDEInferenceService:
             sequence_length=seq_len,
             feature_dimension=134,
             inference_time_ms=inference_time_ms,
+            is_known_sign=True,
         )
 
     def predict_video(self, video_path: Path, landmarker: HolisticLandmarkerWrapper) -> INCLUDEResult:
         """Extracts 134-D keypoints from video and runs inference."""
         feats = extract_include_134_features(video_path, landmarker)
         return self.predict_features(feats)
+
+
+class StreamingIncludeAdapter:
+    """
+    Maintains a 30-frame rolling FIFO landmark queue for real-time live webcam streaming inference
+    with the official AI4Bharat INCLUDE 263-class LSTM model.
+    """
+
+    def __init__(
+        self,
+        service: Optional[INCLUDEInferenceService] = None,
+        buffer_size: int = 30,
+        eval_every_n_frames: int = 3,
+        min_frames: int = 12,
+        entropy_threshold: float = 4.8,
+        target_width: float = 1920.0,
+        target_height: float = 1080.0,
+        window_size: Optional[int] = None,
+    ) -> None:
+        from collections import deque
+        self.service = service or INCLUDEInferenceService.get_instance()
+        self.buffer_size = window_size if window_size is not None else buffer_size
+        self.eval_every_n_frames = eval_every_n_frames
+        self.min_frames = min_frames
+        self.entropy_threshold = entropy_threshold
+        self.target_width = target_width
+        self.target_height = target_height
+        self.frame_buffer: deque = deque(maxlen=self.buffer_size)
+        self.frame_counter: int = 0
+        self.last_result: Optional[INCLUDEResult] = None
+
+    def load(self) -> None:
+        """Loads underlying INCLUDE inference service model and labels."""
+        self.service.load()
+
+    def reset(self) -> None:
+        """Clears the rolling buffer and resets frame counter."""
+        self.frame_buffer.clear()
+        self.frame_counter = 0
+        self.last_result = None
+
+    def extract_frame_134d(
+        self,
+        pose_landmarks: Optional[List[Any]],
+        left_hand_landmarks: Optional[List[Any]],
+        right_hand_landmarks: Optional[List[Any]],
+    ) -> np.ndarray:
+        """
+        Constructs a 134-D vector from raw or serialized landmarks:
+        - 25 pose landmarks (x, y) * (target_width, target_height) -> 50 features
+        - 21 left hand landmarks (x, y) * (target_width, target_height) -> 42 features
+        - 21 right hand landmarks (x, y) * (target_width, target_height) -> 42 features
+        Missing landmarks are padded with 0.0.
+        """
+        vec = np.zeros(134, dtype=np.float32)
+
+        def get_xy(lm: Any) -> Tuple[float, float]:
+            if isinstance(lm, dict):
+                return float(lm.get("x", 0.0)), float(lm.get("y", 0.0))
+            return float(getattr(lm, "x", 0.0)), float(getattr(lm, "y", 0.0))
+
+        # 1. Pose: 25 landmarks (0 to 24) -> 50 coords
+        if pose_landmarks:
+            first_pose = pose_landmarks[0] if (len(pose_landmarks) > 0 and isinstance(pose_landmarks[0], list)) else pose_landmarks
+            for i, lm in enumerate(first_pose[:25]):
+                x, y = get_xy(lm)
+                vec[i * 2] = x * self.target_width
+                vec[i * 2 + 1] = y * self.target_height
+
+        # 2. Left Hand: 21 landmarks -> 42 coords (offset 50)
+        if left_hand_landmarks:
+            first_lh = left_hand_landmarks[0] if (len(left_hand_landmarks) > 0 and isinstance(left_hand_landmarks[0], list)) else left_hand_landmarks
+            for i, lm in enumerate(first_lh[:21]):
+                x, y = get_xy(lm)
+                vec[50 + i * 2] = x * self.target_width
+                vec[50 + i * 2 + 1] = y * self.target_height
+
+        # 3. Right Hand: 21 landmarks -> 42 coords (offset 92)
+        if right_hand_landmarks:
+            first_rh = right_hand_landmarks[0] if (len(right_hand_landmarks) > 0 and isinstance(right_hand_landmarks[0], list)) else right_hand_landmarks
+            for i, lm in enumerate(first_rh[:21]):
+                x, y = get_xy(lm)
+                vec[92 + i * 2] = x * self.target_width
+                vec[92 + i * 2 + 1] = y * self.target_height
+
+        return vec
+
+    def append_frame(
+        self,
+        pose_landmarks: Optional[List[Any]],
+        left_hand_landmarks: Optional[List[Any]],
+        right_hand_landmarks: Optional[List[Any]],
+    ) -> None:
+        """Appends landmarks of current frame into rolling FIFO queue."""
+        feat_134 = self.extract_frame_134d(pose_landmarks, left_hand_landmarks, right_hand_landmarks)
+        self.frame_buffer.append(feat_134)
+        self.frame_counter += 1
+
+    def append_vector(self, feat_134: np.ndarray) -> None:
+        """Appends precomputed 134-D vector into rolling FIFO queue."""
+        if feat_134.shape != (134,):
+            raise ValueError(f"Expected 134-D vector, got {feat_134.shape}")
+        self.frame_buffer.append(feat_134.astype(np.float32))
+        self.frame_counter += 1
+
+    def should_evaluate(self) -> bool:
+        """Evaluates every eval_every_n_frames once min_frames have accumulated."""
+        return len(self.frame_buffer) >= self.min_frames and (self.frame_counter % self.eval_every_n_frames == 0)
+
+    def predict_window(self, confidence_threshold: float = 0.35) -> INCLUDEResult:
+        """
+        Runs sliding-window LSTM inference over the buffered sequence.
+        Gated by confidence, top1-top2 margin, and softmax entropy.
+        """
+        if len(self.frame_buffer) < self.min_frames:
+            return self._empty_result()
+
+        arr = np.array(self.frame_buffer, dtype=np.float32)
+        res = self.service.predict_features(arr)
+
+        if res.top5_candidates:
+            top_probs = np.array([c.confidence for c in res.top5_candidates], dtype=np.float32)
+            entropy = float(-np.sum(top_probs * np.log(np.clip(top_probs, 1e-9, 1.0))))
+        else:
+            entropy = 10.0
+
+        res.entropy = entropy
+        margin = (res.top5_candidates[0].confidence - res.top5_candidates[1].confidence) if len(res.top5_candidates) > 1 else res.confidence
+
+        is_valid = (
+            res.confidence >= confidence_threshold
+            and margin >= 0.04
+            and entropy <= self.entropy_threshold
+        )
+        res.is_known_sign = is_valid
+        if not is_valid:
+            res.label = "awaiting_sign"
+            res.display_name = "Awaiting Sign..."
+
+        self.last_result = res
+        return res
+
+    def _empty_result(self) -> INCLUDEResult:
+        return INCLUDEResult(
+            label="awaiting_sign",
+            display_name="Awaiting Sign...",
+            confidence=0.0,
+            top5_candidates=[],
+            sequence_length=len(self.frame_buffer),
+            feature_dimension=134,
+            inference_time_ms=0.0,
+            is_known_sign=False,
+            entropy=10.0,
+        )
 
 
 # Compatibility aliases
@@ -390,5 +549,7 @@ __all__ = [
     "IncludePrediction",
     "INCLUDEInferenceService",
     "IncludeClassifier",
+    "StreamingIncludeAdapter",
     "extract_include_134_features",
 ]
+

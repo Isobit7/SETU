@@ -81,7 +81,23 @@ gantt
 
 ---
 
-## 3. Step-by-Step Data Lifecycle Narrative
+## 3. Executive Stage Breakdown & Latency Budget Table
+
+| Stage | Component & Environment | Latency | Data Transformation |
+| :---: | :--- | :---: | :--- |
+| **1** | MediaPipe Hands (Client WASM) | **15.00 ms** | 1080p RGB pixels $\rightarrow$ 21 skeletal 3D joints (pixels dropped from RAM). |
+| **2** | `landmarkProcessor.ts` (Client JS) | **0.50 ms** | 21 joints $\rightarrow$ 63-D centered, scaled, rotated float vector (252 bytes). |
+| **3** | Network Ingress (Nginx / WS) | **5.00 ms** | Client JSON payload $\rightarrow$ FastAPI ASGI server event loop. |
+| **4** | Pydantic Validation (FastAPI) | **0.10 ms** | Validates exact 63 float coordinates within array bounds. |
+| **5** | ONNX Runtime CPU (SIMD AVX2) | **0.02 ms** | (1, 63) NumPy tensor $\rightarrow$ 26 unnormalized class logits (20.8 µs). |
+| **6** | Softmax Packaging (FastAPI) | **0.10 ms** | Logits $\rightarrow$ Top-3 probabilities + active letter JSON response. |
+| **7** | Network Egress (HTTP / WS) | **4.80 ms** | Server packet delivered back to client `fetch()` / WebSocket callback. |
+| **8** | Text Buffer Gate (`useTextBuffer.ts`)| **2.00 ms** | Evaluates 600ms hold & 400ms cooldown; commits letter to DOM buffer. |
+| **TOTAL** | **Full Synchronized Pipeline** | **27.52 ms** | **Under 33.33 ms frame budget (+5.81 ms safety margin / 0% stutter)** |
+
+---
+
+## 4. Step-by-Step Data Lifecycle Narrative
 
 ### Phase 1: Optical Acquisition & Edge Mesh Regression ($t = 0.00 \rightarrow 15.00\text{ ms}$)
 * **Physical Origin:** The user positions their hand in front of their webcam. Photons strike the CMOS camera sensor, which captures a raw $1920 \times 1080$ RGB pixel buffer at 30 frames per second.

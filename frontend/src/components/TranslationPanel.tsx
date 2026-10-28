@@ -176,33 +176,27 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                 <span className="sentence-cursor" aria-hidden="true">|</span>
               </div>
             ) : (
-              <div className="sentence-shimmer-state" aria-live="polite">
-                <div className="shimmer-scanner-track" aria-hidden="true">
-                  <div className="shimmer-scanner-beam" />
-                </div>
-                <div className="shimmer-lines-wrap" aria-hidden="true">
-                  <div className="shimmer-line line-wide" />
-                  <div className="shimmer-line line-medium" />
-                </div>
-                <div className="shimmer-status-caption">
-                  <span className="shimmer-status-dot" aria-hidden="true" />
-                  <span className="shimmer-status-text">
-                    Awaiting sign inputs to assemble sentence...
-                  </span>
-                </div>
+              <div className="sentence-calm-empty-state" aria-live="polite">
+                <p className="sentence-calm-placeholder">
+                  Signed letters and words will assemble here...
+                  <span className="sentence-cursor" aria-hidden="true">|</span>
+                </p>
+                <span className="sentence-shortcut-hint">
+                  Press <kbd className="hint-kbd">Space</kbd> for word break · <kbd className="hint-kbd">⌫</kbd> to delete · <kbd className="hint-kbd">S</kbd> to speak
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* 4. Single Action Row: Exactly 4 Compact Icon/Text Buttons */}
+        {/* 4. Single Action Row: Exactly 4 Compact Pill Buttons with Keyboard Badges */}
         <div className="unified-actions-row" role="toolbar" aria-label="Translation Actions">
           {/* Button 1: Speak */}
           <button
             className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
             disabled={!hasSentenceContent}
             onClick={handleSpeak}
-            title={speaking ? 'Stop audio playback' : 'Speak text aloud (TTS)'}
+            title={speaking ? 'Stop audio playback [S]' : 'Speak text aloud (TTS) [S]'}
             aria-label={speaking ? 'Stop speech' : 'Speak text'}
           >
             {speaking ? (
@@ -213,27 +207,29 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                   <span className="soundwave-bar" />
                   <span className="soundwave-bar" />
                 </div>
-                <VolumeX size={15} />
+                <VolumeX size={14} />
                 <span>Stop</span>
               </>
             ) : (
               <>
-                <Volume2 size={15} />
+                <Volume2 size={14} />
                 <span>Speak</span>
               </>
             )}
+            <kbd className="action-kbd-badge">S</kbd>
           </button>
 
           {/* Button 2: Copy */}
           <button
-            className="action-btn copy-action-btn"
+            className={`action-btn copy-action-btn ${copied ? 'copy-success' : ''}`}
             disabled={!hasTextToOperate}
             onClick={handleCopy}
-            title="Copy text to clipboard"
+            title="Copy text to clipboard [C]"
             aria-label="Copy text"
           >
-            {copied ? <Check size={15} className="text-success" /> : <Copy size={15} />}
-            <span>{copied ? 'Copied' : 'Copy'}</span>
+            {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            <kbd className="action-kbd-badge">C</kbd>
           </button>
 
           {/* Button 3: Backspace */}
@@ -241,11 +237,12 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             className="action-btn backspace-action-btn"
             disabled={!activeSentence}
             onClick={onBackspaceSentence}
-            title="Delete last letter"
+            title="Delete last letter or word [Backspace]"
             aria-label="Backspace last character"
           >
-            <Delete size={15} />
+            <Delete size={14} />
             <span>Backspace</span>
+            <kbd className="action-kbd-badge">⌫</kbd>
           </button>
 
           {/* Button 4: Clear */}
@@ -253,11 +250,12 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             className="action-btn clear-action-btn"
             disabled={!hasTextToOperate}
             onClick={handleClear}
-            title="Clear text buffer"
+            title="Clear all text from buffer"
             aria-label="Clear all text"
           >
-            <Trash2 size={15} />
+            <Trash2 size={14} />
             <span>Clear</span>
+            <kbd className="action-kbd-badge">Del</kbd>
           </button>
         </div>
       </div>

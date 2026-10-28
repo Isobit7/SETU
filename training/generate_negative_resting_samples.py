@@ -82,11 +82,64 @@ class NoSignGenerator:
 
         return seq
 
+    def generate_inter_sign_transition_sequence(self, seed: Optional[int] = None) -> np.ndarray:
+        """
+        Scenario 4: Rapid transitional movement between signs (co-articulation transitions).
+        Hands moving linearly across the frame without forming held phonemes.
+        """
+        rng = np.random.default_rng(seed)
+        seq = np.zeros((self.sequence_length, FEATURE_DIM), dtype=np.float32)
+
+        start_r = np.array([0.45, 0.50, 0.0], dtype=np.float32)
+        end_r = np.array([0.70, 0.85, 0.05], dtype=np.float32)
+
+        for t in range(self.sequence_length):
+            alpha = t / max(1, self.sequence_length - 1)
+            wrist_pos = (1.0 - alpha) * start_r + alpha * end_r
+            rh = np.zeros((21, 3), dtype=np.float32)
+            rh[0] = wrist_pos
+            for i in range(1, 21):
+                rh[i] = rh[0] + rng.normal(0, 0.025, size=3).astype(np.float32)
+
+            vec = FeatureExtractor158.extract_from_hands(
+                right_hand=rh,
+                left_hand=None,
+            )
+            seq[t] = vec
+
+        return seq
+
+    def generate_ambient_gesture_sequence(self, seed: Optional[int] = None) -> np.ndarray:
+        """
+        Scenario 5: Ambient non-signing gestures (adjusting glasses, collar, fidgeting).
+        """
+        rng = np.random.default_rng(seed)
+        seq = np.zeros((self.sequence_length, FEATURE_DIM), dtype=np.float32)
+
+        rh_head = np.array([0.52, 0.28, -0.05], dtype=np.float32)
+        for t in range(self.sequence_length):
+            rh = np.zeros((21, 3), dtype=np.float32)
+            jitter = rng.normal(0, 0.015, size=3).astype(np.float32)
+            rh[0] = rh_head + jitter
+            for i in range(1, 21):
+                rh[i] = rh[0] + rng.normal(0, 0.02, size=3).astype(np.float32)
+
+            vec = FeatureExtractor158.extract_from_hands(
+                right_hand=rh,
+                left_hand=None,
+            )
+            seq[t] = vec
+
+        return seq
+
     def generate_batch(self, count_per_scenario: int = 5, base_seed: int = 42) -> List[np.ndarray]:
         """Generates a balanced batch of NO_SIGN sequences across diverse scenarios."""
         samples = []
         for i in range(count_per_scenario):
             samples.append(self.generate_empty_sequence())
-            samples.append(self.generate_resting_hands_sequence(seed=base_seed + i * 2))
-            samples.append(self.generate_face_touch_sequence(seed=base_seed + i * 2 + 1))
+            samples.append(self.generate_resting_hands_sequence(seed=base_seed + i * 5))
+            samples.append(self.generate_face_touch_sequence(seed=base_seed + i * 5 + 1))
+            samples.append(self.generate_inter_sign_transition_sequence(seed=base_seed + i * 5 + 2))
+            samples.append(self.generate_ambient_gesture_sequence(seed=base_seed + i * 5 + 3))
         return samples
+

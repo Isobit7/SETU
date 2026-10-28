@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { TopNavbar } from './components/TopNavbar';
 import { CameraWorkspace } from './components/CameraWorkspace';
 import { CameraControls } from './components/CameraControls';
@@ -10,11 +10,12 @@ import { HistoryModal } from './components/HistoryModal';
 import { SavedModal } from './components/SavedModal';
 import { HelpModal } from './components/HelpModal';
 import { IncludeVideoModal } from './components/IncludeVideoModal';
+import { RecordSignModal } from './components/RecordSignModal';
 import { TextToSignWorkspace } from './components/TextToSignWorkspace';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
 import { useSentenceBuilder } from './hooks/useSentenceBuilder';
-import type { LandmarkStyles, SubtitleSize } from './types';
+import type { FramingFeedback, LandmarkStyles, SubtitleSize } from './types';
 import './index.css';
 
 export const App: React.FC = () => {
@@ -34,11 +35,25 @@ export const App: React.FC = () => {
   const [isSavedModalOpen, setIsSavedModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(false);
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
 
   // Subtitle & Overlay Preferences
   const [subtitleVisible, setSubtitleVisible] = useState<boolean>(true);
   const [subtitleSize, setSubtitleSize] = useState<SubtitleSize>('medium');
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.35);
+
+  // Proactive Framing Guide & Recognition Gating State
+  const [showFramingGuide, setShowFramingGuide] = useState<boolean>(false);
+  const [enforceFraming, setEnforceFraming] = useState<boolean>(false);
+  const [framingFeedback, setFramingFeedback] = useState<FramingFeedback>({
+    status: 'searching',
+    message: 'Position yourself within the guide',
+    isOptimal: false,
+    score: 0,
+    handsDetected: false,
+  });
+
+  const isFramingGated = enforceFraming && !framingFeedback.isOptimal;
 
   // Browser-Native Text-to-Speech (TTS) Hook
   const {
@@ -46,6 +61,8 @@ export const App: React.FC = () => {
     autoSpeakEnabled,
     availableVoices,
     selectedVoice,
+    targetLanguage,
+    setTargetLanguage,
     speak,
     stop,
     toggleAutoSpeak,
@@ -67,6 +84,14 @@ export const App: React.FC = () => {
     onClearBackend: () => clearSentence(),
     onBackspaceBackend: () => backspaceSentence(),
   });
+
+  // Filtered prediction callback: passes clean predictions to sentence builder
+  const handleFilteredPredictionChange = useCallback(
+    (pred: any) => {
+      handlePredictionChange(pred);
+    },
+    [handlePredictionChange]
+  );
 
   // Hand-only landmark layer styles (Pose and Face permanently excluded)
   const [landmarkStyles, setLandmarkStyles] = useState<LandmarkStyles>({
@@ -95,10 +120,13 @@ export const App: React.FC = () => {
     clearSentence,
     backspaceSentence,
     clearHistory,
+    resolveDisambiguation,
+    acceptPrediction,
   } = useRecognitionStream({
     videoRef,
     confidenceThreshold,
-    onPredictionChange: handlePredictionChange,
+    onPredictionChange: handleFilteredPredictionChange,
+    isFramingGated,
   });
 
   // Toggle hand landmarks on/off together
@@ -144,9 +172,70 @@ export const App: React.FC = () => {
     resetSession();
   };
 
-  const handleAddSpaceSentence = () => {
+  const handleAddSpaceSentence = useCallback(() => {
     setSentence((prev) => (prev.length > 0 && !prev.endsWith(' ') ? prev + ' ' : prev));
-  };
+  }, [setSentence]);
+
+  // Global assistive keyboard shortcuts (Space to separate words, Backspace to delete, S to speak)
+  React.useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || '').toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+      if (
+        isVocabModalOpen ||
+        isAlphabetModalOpen ||
+        isSettingsModalOpen ||
+        isHistoryModalOpen ||
+        isSavedModalOpen ||
+        isHelpModalOpen ||
+        isIncludeModalOpen ||
+        isRecordModalOpen
+      ) {
+        return;
+      }
+
+      if (translationDirection !== 'isl-to-en') return;
+
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        handleAddSpaceSentence();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspaceSentence();
+      } else if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        const textToSpeak = (currentResult?.translated_text || sentence || '').trim();
+        if (textToSpeak) {
+          if (isSpeaking) {
+            stop();
+          } else {
+            speak(textToSpeak);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [
+    sentence,
+    currentResult?.translated_text,
+    isSpeaking,
+    speak,
+    stop,
+    handleAddSpaceSentence,
+    handleBackspaceSentence,
+    translationDirection,
+    isVocabModalOpen,
+    isAlphabetModalOpen,
+    isSettingsModalOpen,
+    isHistoryModalOpen,
+    isSavedModalOpen,
+    isHelpModalOpen,
+    isIncludeModalOpen,
+    isRecordModalOpen,
+  ]);
 
   return (
     <div className="app-container">
@@ -164,6 +253,7 @@ export const App: React.FC = () => {
         onOpenSaved={() => setIsSavedModalOpen(true)}
         onOpenHelp={() => setIsHelpModalOpen(true)}
         onOpenIncludeModal={() => setIsIncludeModalOpen(true)}
+        onOpenRecordModal={() => setIsRecordModalOpen(true)}
         historyCount={history.length}
         autoSpeakEnabled={autoSpeakEnabled}
         onToggleAutoSpeak={toggleAutoSpeak}
@@ -188,8 +278,16 @@ export const App: React.FC = () => {
                 landmarkStyles={landmarkStyles}
                 subtitleVisible={subtitleVisible}
                 subtitleSize={subtitleSize}
+                showFramingGuide={showFramingGuide}
+                onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
+                enforceFraming={enforceFraming}
+                onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
+                onFramingChange={setFramingFeedback}
                 onStartCamera={startCamera}
                 onRetry={startCamera}
+                onOpenVocabulary={() => setIsVocabModalOpen(true)}
+                onResolveDisambiguation={resolveDisambiguation}
+                onAcceptPrediction={acceptPrediction}
               />
 
               {/* Under-Camera Controls */}
@@ -205,6 +303,10 @@ export const App: React.FC = () => {
                 onToggleAutoSpeak={toggleAutoSpeak}
                 landmarkStyles={landmarkStyles}
                 subtitleVisible={subtitleVisible}
+                showFramingGuide={showFramingGuide}
+                onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
+                enforceFraming={enforceFraming}
+                onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
                 onStart={startCamera}
                 onPause={pauseDetection}
                 onResume={resumeDetection}
@@ -215,6 +317,7 @@ export const App: React.FC = () => {
                 onToggleMirror={handleToggleMirror}
                 onToggleSubtitles={() => setSubtitleVisible(!subtitleVisible)}
                 onOpenIncludeModal={() => setIsIncludeModalOpen(true)}
+                onOpenRecordModal={() => setIsRecordModalOpen(true)}
               />
             </section>
 
@@ -263,10 +366,14 @@ export const App: React.FC = () => {
         setConfidenceThreshold={setConfidenceThreshold}
         autoSpeakEnabled={autoSpeakEnabled}
         onToggleAutoSpeak={toggleAutoSpeak}
+        targetLanguage={targetLanguage}
+        onSelectLanguage={setTargetLanguage}
         availableVoices={availableVoices}
         selectedVoice={selectedVoice}
         onSelectVoice={setSelectedVoice}
         isSpeaking={isSpeaking}
+        enforceFraming={enforceFraming}
+        onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
       />
 
       <HistoryModal
@@ -290,6 +397,13 @@ export const App: React.FC = () => {
       <IncludeVideoModal
         isOpen={isIncludeModalOpen}
         onClose={() => setIsIncludeModalOpen(false)}
+      />
+
+      <RecordSignModal
+        isOpen={isRecordModalOpen}
+        onClose={() => setIsRecordModalOpen(false)}
+        currentLandmarks={currentResult?.landmarks}
+        isCameraActive={cameraStatus === 'detecting'}
       />
     </div>
   );

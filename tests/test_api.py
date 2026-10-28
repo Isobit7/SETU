@@ -161,6 +161,34 @@ def test_record_sample_endpoint_valid_and_list(client):
             created_file.unlink()
 
 
+def test_record_sample_with_landmarks_sequence(client):
+    """Verifies POST /api/v1/dataset/record_sample with 30-frame landmarks_sequence."""
+    test_label = "test_custom_landmark_sign"
+    dummy_hand = [{"x": 0.5, "y": 0.5, "z": 0.0} for _ in range(21)]
+    landmarks_seq = [{"right_hand": dummy_hand, "left_hand": None} for _ in range(30)]
+
+    response = client.post(
+        "/api/v1/dataset/record_sample",
+        json={"label": test_label, "landmarks_sequence": landmarks_seq},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["label"] == test_label
+    assert data["frames"] == 30
+    assert data["feature_dim"] == 164
+    created_file = Path(data["file_path"])
+    assert created_file.exists()
+
+    try:
+        with np.load(created_file) as npz:
+            assert npz["features"].shape == (30, 164)
+            assert str(npz["label"]) == test_label
+    finally:
+        if created_file.exists():
+            created_file.unlink()
+
+
 def test_record_sample_validation_errors(client):
     """Verifies POST /api/v1/dataset/record_sample validation gates."""
     # 1. Empty label
@@ -254,4 +282,47 @@ def test_backend_main_standalone_app():
         assert "letter" in pred_data
         assert "confidence" in pred_data
         assert "top_3" in pred_data
+
+
+def test_websocket_word_model_switching_and_streaming(client):
+    """Verifies WebSocket endpoint supports word-level models (isl_mvp, isl_sequence_lstm, include_stream)."""
+    blank = np.zeros((480, 640, 3), dtype=np.uint8)
+    _, encoded = cv2.imencode(".jpg", blank)
+    jpeg_bytes = encoded.tobytes()
+
+    with client.websocket_connect("/api/v1/ws/recognize?model=isl_mvp") as ws:
+        # First frame under isl_mvp
+        ws.send_bytes(jpeg_bytes)
+        resp_mvp = ws.receive_json()
+        assert resp_mvp["type"] == "prediction"
+        assert resp_mvp["active_model"] == "isl_mvp"
+        assert "confidence" in resp_mvp
+        assert "hand_detected" in resp_mvp
+        assert "is_known_sign" in resp_mvp
+
+        # Switch to isl_sequence_lstm
+        ws.send_text('{"action": "set_model", "model": "isl_sequence_lstm"}')
+        info = ws.receive_json()
+        assert info["type"] == "info"
+        assert info["active_model"] == "isl_sequence_lstm"
+
+        # Frame under isl_sequence_lstm
+        ws.send_bytes(jpeg_bytes)
+        resp_lstm = ws.receive_json()
+        assert resp_lstm["type"] == "prediction"
+        assert resp_lstm["active_model"] == "isl_sequence_lstm"
+        assert "required_streak" in resp_lstm
+        assert resp_lstm["required_streak"] == 2
+
+        # Switch to include_stream
+        ws.send_text('{"action": "set_model", "model": "include_stream"}')
+        info_inc = ws.receive_json()
+        assert info_inc["type"] == "info"
+        assert info_inc["active_model"] == "include_stream"
+
+        # Frame under include_stream
+        ws.send_bytes(jpeg_bytes)
+        resp_inc = ws.receive_json()
+        assert resp_inc["type"] == "prediction"
+        assert resp_inc["active_model"] == "include_stream"
 

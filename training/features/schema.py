@@ -56,10 +56,24 @@ FACIAL_RATIOS_SLICE: Final[slice] = slice(158, 164)
 VELOCITY_FEATURE_DIM_316: Final[int] = 316
 VELOCITY_FEATURE_DIM_328: Final[int] = 328  # 164 base + 164 frame velocities
 
+# 12-D Body-Anchored Torso/Shoulder Spatial Vectors
+BODY_ANCHOR_DIM: Final[int] = 12
+MULTIMODAL_FEATURE_DIM: Final[int] = 176  # 158 base + 6 facial + 12 body anchors
+BODY_ANCHORS_SLICE: Final[slice] = slice(164, 176)
+VELOCITY_FEATURE_DIM_352: Final[int] = 352  # 176 base + 176 frame velocities
+
+# Dual-Hand 126-D Symmetric ISL Feature Specification
+DUAL_HAND_DIM: Final[int] = 126
+DUAL_HAND_LEFT_SLICE: Final[slice] = slice(0, 63)
+DUAL_HAND_RIGHT_SLICE: Final[slice] = slice(63, 126)
+
+VALID_FEATURE_DIMS = (FEATURE_DIM, EXPANDED_FEATURE_DIM, MULTIMODAL_FEATURE_DIM)
+
+
 def validate_schema_vector(vec: np.ndarray) -> bool:
     """
     Validates that a NumPy vector matches the feature schema contract:
-    - 1D array of length 158 or 164 (or 2D (T, 158) or (T, 164))
+    - 1D array of length in (158, 164, 176) or 2D (T, D) with D in (158, 164, 176)
     - Correct data type (floating point)
     - No NaN or Inf values
     - Presence flags in {0.0, 1.0}
@@ -67,25 +81,25 @@ def validate_schema_vector(vec: np.ndarray) -> bool:
     """
     if not isinstance(vec, np.ndarray):
         raise TypeError(f"Expected numpy.ndarray, got {type(vec)}")
-        
+
     if vec.ndim == 1:
-        if vec.shape[0] not in (FEATURE_DIM, EXPANDED_FEATURE_DIM):
-            raise FeatureValidationError(f"Feature vector must have length {FEATURE_DIM} or {EXPANDED_FEATURE_DIM}, got {vec.shape[0]}")
+        if vec.shape[0] not in VALID_FEATURE_DIMS:
+            raise FeatureValidationError(f"Feature vector must have length 158 (or in {VALID_FEATURE_DIMS}), got {vec.shape[0]}")
     elif vec.ndim == 2:
-        if vec.shape[1] not in (FEATURE_DIM, EXPANDED_FEATURE_DIM):
-            raise FeatureValidationError(f"Feature sequence must have feature dimension {FEATURE_DIM} or {EXPANDED_FEATURE_DIM}, got {vec.shape[1]}")
+        if vec.shape[1] not in VALID_FEATURE_DIMS:
+            raise FeatureValidationError(f"Feature sequence must have feature dimension in {VALID_FEATURE_DIMS}, got {vec.shape[1]}")
     else:
         raise FeatureValidationError(f"Vector must be 1D or 2D, got shape {vec.shape}")
-        
+
     if not np.issubdtype(vec.dtype, np.floating):
         raise TypeError(f"Vector must have floating dtype, got {vec.dtype}")
-        
+
     if np.isnan(vec).any():
         raise FeatureValidationError("Feature vector contains NaN values")
-        
+
     if np.isinf(vec).any():
         raise FeatureValidationError("Feature vector contains Inf values")
-        
+
     # Check bounds on 1D vector
     if vec.ndim == 1:
         rp = vec[RIGHT_PRESENCE_INDEX]
@@ -94,9 +108,9 @@ def validate_schema_vector(vec: np.ndarray) -> bool:
             raise FeatureValidationError(f"Right presence flag must be 0.0 or 1.0, got {rp}")
         if lp not in (0.0, 1.0):
             raise FeatureValidationError(f"Left presence flag must be 0.0 or 1.0, got {lp}")
-            
+
         c_score = vec[CONTACT_SCORE_INDEX]
         if not (0.0 <= c_score <= 1.0001):
             raise FeatureValidationError(f"Contact score must be in [0.0, 1.0], got {c_score}")
-            
+
     return True

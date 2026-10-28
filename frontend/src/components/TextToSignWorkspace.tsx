@@ -27,19 +27,31 @@ interface HandPose {
   isTwoHanded?: boolean;
   leftHandX?: number;
   leftHandY?: number;
+  leftFingers?: number[];
+  leftWristAngle?: number;
 }
 
-// Hand gesture poses for Alphabet and Common Signs
+// Hand gesture poses for Alphabet and Common Signs (with authentic Indian Sign Language bimanual forms)
 const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPose }> = {
   A: {
     label: 'Letter A',
-    desc: 'Closed fist with thumb extended upright along side of index finger.',
+    desc: 'Closed fist with thumb upright along side of index finger.',
     pose: { x: 340, y: 260, fingers: [1, 0, 0, 0, 0], wristAngle: -0.1 },
   },
   B: {
-    label: 'Letter B',
-    desc: 'Flat hand held vertically with four fingers together and thumb folded across palm.',
-    pose: { x: 340, y: 230, fingers: [0, 1, 1, 1, 1], wristAngle: 0 },
+    label: 'Letter B (ISL Two-Handed)',
+    desc: 'Two-handed: Left hand held upright flat palm facing right; right hand open palm touching left palm.',
+    pose: {
+      x: 325,
+      y: 235,
+      fingers: [0.3, 1, 1, 1, 1],
+      wristAngle: -0.15,
+      isTwoHanded: true,
+      leftHandX: 275,
+      leftHandY: 235,
+      leftFingers: [0.3, 1, 1, 1, 1],
+      leftWristAngle: 0.15,
+    },
   },
   C: {
     label: 'Letter C',
@@ -47,9 +59,19 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
     pose: { x: 340, y: 250, fingers: [0.6, 0.6, 0.6, 0.6, 0.6], wristAngle: -0.2 },
   },
   D: {
-    label: 'Letter D',
-    desc: 'Index finger pointing straight up, while thumb touches middle and ring fingers.',
-    pose: { x: 340, y: 230, fingers: [0.3, 1, 0, 0, 0], wristAngle: 0 },
+    label: 'Letter D (ISL Two-Handed)',
+    desc: 'Two-handed: Left index points straight upright (stem); right index and thumb curve to meet left index tip and base.',
+    pose: {
+      x: 315,
+      y: 230,
+      fingers: [0.8, 0.8, 0, 0, 0],
+      wristAngle: -0.3,
+      isTwoHanded: true,
+      leftHandX: 275,
+      leftHandY: 230,
+      leftFingers: [0, 1, 0, 0, 0],
+      leftWristAngle: 0,
+    },
   },
   E: {
     label: 'Letter E',
@@ -107,14 +129,34 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
     pose: { x: 340, y: 250, fingers: [0.5, 0.5, 0.5, 0.5, 0.5], wristAngle: 0 },
   },
   P: {
-    label: 'Letter P',
-    desc: 'K hand shape angled downwards towards the floor.',
-    pose: { x: 340, y: 280, fingers: [0.8, 1, 0.8, 0, 0], wristAngle: 1.2 },
+    label: 'Letter P (ISL Two-Handed)',
+    desc: 'Two-handed: Left index points upright (stem); right index and thumb form an upper circular loop touching left index tip.',
+    pose: {
+      x: 310,
+      y: 215,
+      fingers: [0.8, 0.8, 0, 0, 0],
+      wristAngle: -0.5,
+      isTwoHanded: true,
+      leftHandX: 280,
+      leftHandY: 235,
+      leftFingers: [0, 1, 0, 0, 0],
+      leftWristAngle: 0,
+    },
   },
   Q: {
-    label: 'Letter Q',
-    desc: 'G hand shape pointing downwards.',
-    pose: { x: 340, y: 280, fingers: [0.8, 0.8, 0, 0, 0], wristAngle: 1.3 },
+    label: 'Letter Q (ISL Two-Handed)',
+    desc: 'Two-handed: Left index finger points downwards; right index and thumb circle around left wrist base.',
+    pose: {
+      x: 320,
+      y: 235,
+      fingers: [0.8, 0.8, 0, 0, 0],
+      wristAngle: 0.8,
+      isTwoHanded: true,
+      leftHandX: 280,
+      leftHandY: 255,
+      leftFingers: [0, 1, 0, 0, 0],
+      leftWristAngle: 3.14,
+    },
   },
   R: {
     label: 'Letter R',
@@ -127,9 +169,19 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
     pose: { x: 340, y: 260, fingers: [0, 0, 0, 0, 0], wristAngle: 0 },
   },
   T: {
-    label: 'Letter T',
-    desc: 'Thumb tucked between index and middle fingers.',
-    pose: { x: 340, y: 260, fingers: [0.3, 0.3, 0, 0, 0], wristAngle: 0 },
+    label: 'Letter T (ISL Two-Handed)',
+    desc: 'Two-handed: Left index finger points upright; right index held horizontally across top of left index forming a T crossbar.',
+    pose: {
+      x: 295,
+      y: 205,
+      fingers: [0, 1, 0, 0, 0],
+      wristAngle: 1.57,
+      isTwoHanded: true,
+      leftHandX: 285,
+      leftHandY: 235,
+      leftFingers: [0, 1, 0, 0, 0],
+      leftWristAngle: 0,
+    },
   },
   U: {
     label: 'Letter U',
@@ -161,10 +213,50 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
     desc: 'Index finger extended and tracing a Z pattern in the air.',
     pose: { x: 340, y: 240, fingers: [0, 1, 0, 0, 0], wristAngle: 0.2 },
   },
+  NAMASTE: {
+    label: 'Namaste (ISL Greeting)',
+    desc: 'Two-handed respectful greeting: both flat palms pressed together at center chest in Anjali Mudra.',
+    pose: {
+      x: 314,
+      y: 228,
+      fingers: [1, 1, 1, 1, 1],
+      wristAngle: -0.1,
+      isTwoHanded: true,
+      leftHandX: 286,
+      leftHandY: 228,
+      leftFingers: [1, 1, 1, 1, 1],
+      leftWristAngle: 0.1,
+    },
+  },
   HELLO: {
     label: 'Hello (Greeting)',
     desc: 'Open flat hand near temple moving outward in a friendly wave/salute.',
     pose: { x: 350, y: 190, fingers: [1, 1, 1, 1, 1], wristAngle: -0.3 },
+  },
+  HELP: {
+    label: 'Help (ISL Two-Handed)',
+    desc: 'Two-handed: Left hand flat palm held open facing up; right fist with thumb up placed on left palm.',
+    pose: {
+      x: 315,
+      y: 245,
+      fingers: [1, 0, 0, 0, 0],
+      wristAngle: 0,
+      isTwoHanded: true,
+      leftHandX: 275,
+      leftHandY: 260,
+      leftFingers: [1, 1, 1, 1, 1],
+      leftWristAngle: 0.25,
+    },
+  },
+  WATER: {
+    label: 'Water (Drink)',
+    desc: 'W-hand shape (three middle fingers upright) tapped gently against side of chin/mouth.',
+    pose: { x: 325, y: 160, fingers: [0, 1, 1, 1, 0], wristAngle: -0.25, isTwoHanded: false },
+  },
+  FOOD: {
+    label: 'Food (Eat)',
+    desc: 'Fingertips clustered together with thumb touching tips and brought gently toward mouth.',
+    pose: { x: 315, y: 160, fingers: [0.3, 0.3, 0.3, 0.3, 0.3], wristAngle: -0.35, isTwoHanded: false },
   },
   THANK_YOU: {
     label: 'Thank You (Gratitude)',
@@ -182,6 +274,8 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
       isTwoHanded: true,
       leftHandX: 250,
       leftHandY: 280,
+      leftFingers: [0.8, 0.8, 0.8, 0.8, 0.8],
+      leftWristAngle: 0.1,
     },
   },
   YOU: {
@@ -210,6 +304,8 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
       isTwoHanded: true,
       leftHandX: 240,
       leftHandY: 260,
+      leftFingers: [1, 1, 1, 1, 1],
+      leftWristAngle: -0.2,
     },
   },
 };
@@ -225,8 +321,16 @@ function convertEnglishToISLGloss(text: string): { glossTokens: string[]; words:
 
   rawWords.forEach((word) => {
     // Check known compound words/phrases
-    if (word === 'HELLO' || word === 'HI') {
+    if (word === 'NAMASTE' || word === 'VANAKKAM' || word === 'NAMASKAR') {
+      glossTokens.push('NAMASTE');
+    } else if (word === 'HELLO' || word === 'HI') {
       glossTokens.push('HELLO');
+    } else if (word === 'HELP') {
+      glossTokens.push('HELP');
+    } else if (word === 'WATER' || word === 'DRINK') {
+      glossTokens.push('WATER');
+    } else if (word === 'FOOD' || word === 'EAT') {
+      glossTokens.push('FOOD');
     } else if (word === 'THANK' || word === 'THANKS') {
       glossTokens.push('THANK_YOU');
     } else if (word === 'YOU' || word === 'YOUR') {
@@ -266,12 +370,16 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
   const activeToken = glossTokens[activeTokenIndex] || 'HELLO';
   const activeSignData = SIGN_DATABASE[activeToken] || SIGN_DATABASE['HELLO'];
 
-  // Current interpolated hand position
-  const currentHandPosRef = useRef<HandPose>({
-    x: 340,
-    y: 240,
-    fingers: [1, 1, 1, 1, 1],
-    wristAngle: 0,
+  // Current interpolated hand position (Right and Left hands for authentic bimanual rendering)
+  const currentHandPosRef = useRef({
+    rx: 340,
+    ry: 240,
+    rWristAngle: 0,
+    rFingers: [1, 1, 1, 1, 1],
+    lx: 230,
+    ly: 310,
+    lWristAngle: 0.1,
+    lFingers: [0.3, 0.3, 0.3, 0.3, 0.3],
   });
 
   // Cycle through gloss tokens
@@ -291,7 +399,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
     setActiveTokenIndex(0);
   }, [inputText]);
 
-  // Animated Avatar Canvas Loop
+  // Animated 3D Articulated Humanoid Avatar Canvas Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -300,184 +408,339 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
 
     let time = 0;
 
+    // Helper: Draw Volumetric 3D Joint Sphere with specular highlight
+    const drawJointSphere = (
+      x: number,
+      y: number,
+      radius: number,
+      baseColor: string,
+      highlightColor = '#ffffff'
+    ) => {
+      const grad = ctx.createRadialGradient(
+        x - radius * 0.35,
+        y - radius * 0.35,
+        radius * 0.1,
+        x,
+        y,
+        radius
+      );
+      grad.addColorStop(0, highlightColor);
+      grad.addColorStop(0.35, baseColor);
+      grad.addColorStop(1, '#090d16');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subtle outer glow ring
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    };
+
+    // Helper: Draw 3D Articulated Multi-Phalange Hand
+    const drawArticulatedHand = (
+      handX: number,
+      handY: number,
+      wristAngle: number,
+      fingers: number[],
+      isLeft: boolean
+    ) => {
+      ctx.save();
+      ctx.translate(handX, handY);
+      ctx.rotate(wristAngle);
+
+      const themeColor = isLeft ? '#34d399' : '#38bdf8'; // Emerald Left Hand, Cyan Right Hand
+      const dimColor = '#1f2937';
+
+      // 1. Scaled Volumetric Palm Plate (46 x 42 px for high legibility)
+      const pW = 46;
+      const pH = 42;
+      const palmGrad = ctx.createLinearGradient(0, -pH / 2, 0, pH / 2);
+      palmGrad.addColorStop(0, '#334155');
+      palmGrad.addColorStop(0.7, '#1e293b');
+      palmGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = palmGrad;
+      ctx.strokeStyle = themeColor;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(-pW / 2, -pH / 2, pW, pH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Bio-Luminescent Palm Core Sensor
+      const palmCoreGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, 10);
+      palmCoreGrad.addColorStop(0, '#ffffff');
+      palmCoreGrad.addColorStop(0.5, themeColor);
+      palmCoreGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = palmCoreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. High-Fidelity Multi-Phalange Fingers (Enlarged lengths, pronounced curling)
+      const fingerAngles = isLeft ? [0.65, 0.32, 0, -0.32, -0.65] : [-0.65, -0.32, 0, 0.32, 0.65];
+      const fingerLengths = [22, 34, 38, 34, 26];
+      const knuckleSpacing = isLeft ? [16, 8, 0, -8, -16] : [-16, -8, 0, 8, 16];
+
+      for (let f = 0; f < 5; f++) {
+        const ext = Math.max(0, Math.min(1, fingers[f] ?? 1));
+        const baseAngle = fingerAngles[f];
+        const totalLen = fingerLengths[f];
+        const seg1Len = totalLen * 0.55;
+        const seg2Len = totalLen * 0.52;
+
+        // Metacarpal base knuckle
+        const kX = knuckleSpacing[f];
+        const kY = -pH / 2 + 2;
+        drawJointSphere(kX, kY, 4.5, themeColor);
+
+        // Proximal segment (segment 1)
+        const p1X = kX + Math.sin(baseAngle) * seg1Len;
+        const p1Y = kY - Math.cos(baseAngle) * seg1Len;
+
+        ctx.strokeStyle = ext > 0.4 ? themeColor : dimColor;
+        ctx.lineWidth = 4.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(kX, kY);
+        ctx.lineTo(p1X, p1Y);
+        ctx.stroke();
+
+        // Intermediate joint sphere (shows amber highlight when curled)
+        const jointHighlight = ext > 0.5 ? themeColor : '#f59e0b';
+        drawJointSphere(p1X, p1Y, 3.5, jointHighlight);
+
+        // Distal segment (curls inward into palm when closed, straightens when open)
+        const curlOffset = (1 - ext) * 1.8 * (isLeft ? -1 : 1);
+        const distalAngle = baseAngle + curlOffset;
+        const p2X = p1X + Math.sin(distalAngle) * (seg2Len * (0.35 + ext * 0.65));
+        const p2Y = p1Y - Math.cos(distalAngle) * (seg2Len * (0.35 + ext * 0.65));
+
+        ctx.strokeStyle = ext > 0.4 ? themeColor : '#475569';
+        ctx.lineWidth = 3.8;
+        ctx.beginPath();
+        ctx.moveTo(p1X, p1Y);
+        ctx.lineTo(p2X, p2Y);
+        ctx.stroke();
+
+        // Fingertip radiant glowing node
+        drawJointSphere(p2X, p2Y, 3.5, ext > 0.5 ? '#ffffff' : '#94a3b8', '#ffffff');
+      }
+
+      ctx.restore();
+    };
+
     const render = () => {
       time += 0.05 * playbackSpeed;
       const targetPose = activeSignData.pose;
-
-      // Smooth interpolation towards target pose
       const curr = currentHandPosRef.current;
-      curr.x += (targetPose.x - curr.x) * 0.15;
-      curr.y += (targetPose.y - curr.y) * 0.15;
-      curr.wristAngle += (targetPose.wristAngle - curr.wristAngle) * 0.15;
 
+      // 1. Right Hand Target Interpolation
+      const rxTarget = targetPose.x;
+      const ryTarget = targetPose.y;
+      const rAngleTarget = targetPose.wristAngle;
+      const rFingersTarget = targetPose.fingers;
+
+      curr.rx += (rxTarget - curr.rx) * 0.18;
+      curr.ry += (ryTarget - curr.ry) * 0.18;
+      curr.rWristAngle += (rAngleTarget - curr.rWristAngle) * 0.18;
       for (let i = 0; i < 5; i++) {
-        const targetFinger = targetPose.fingers[i] ?? 1;
-        curr.fingers[i] += (targetFinger - curr.fingers[i]) * 0.2;
+        curr.rFingers[i] += ((rFingersTarget[i] ?? 1) - curr.rFingers[i]) * 0.22;
+      }
+
+      // 2. Left Hand Target Interpolation (Supports authentic dual-handed ISL signing)
+      const centerX = canvas.width / 2;
+      const headY = 120 + Math.sin(time * 0.8) * 1.5;
+
+      const lxTarget = targetPose.isTwoHanded ? (targetPose.leftHandX ?? 270) : centerX - 75;
+      const lyTarget = targetPose.isTwoHanded ? (targetPose.leftHandY ?? 240) : headY + 185;
+      const lAngleTarget = targetPose.isTwoHanded ? (targetPose.leftWristAngle ?? 0) : 0.15;
+      const lFingersTarget = targetPose.isTwoHanded ? (targetPose.leftFingers ?? [1, 1, 1, 1, 1]) : [0.3, 0.3, 0.3, 0.3, 0.3];
+
+      curr.lx += (lxTarget - curr.lx) * 0.18;
+      curr.ly += (lyTarget - curr.ly) * 0.18;
+      curr.lWristAngle += (lAngleTarget - curr.lWristAngle) * 0.18;
+      for (let i = 0; i < 5; i++) {
+        curr.lFingers[i] += ((lFingersTarget[i] ?? 1) - curr.lFingers[i]) * 0.22;
       }
 
       // Clear Canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. Draw Subtle Architectural Grid / Floor
-      ctx.strokeStyle = '#232528';
+      // 3. Volumetric Studio Vignette Backdrop
+      const bgGrad = ctx.createRadialGradient(
+        centerX,
+        220,
+        40,
+        centerX,
+        220,
+        canvas.width * 0.65
+      );
+      bgGrad.addColorStop(0, '#151922');
+      bgGrad.addColorStop(0.6, '#0d1117');
+      bgGrad.addColorStop(1, '#05070a');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Cyber Studio Floor Grid
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
       ctx.lineWidth = 1;
-      for (let y = 380; y < canvas.height; y += 25) {
+      for (let y = 370; y < canvas.height; y += 22) {
         ctx.beginPath();
-        ctx.moveTo(40, y);
-        ctx.lineTo(canvas.width - 40, y);
+        ctx.moveTo(30, y);
+        ctx.lineTo(canvas.width - 30, y);
         ctx.stroke();
       }
 
-      // 2. Avatar Center Coordinates
-      const centerX = canvas.width / 2;
-      const headY = 120 + Math.sin(time * 0.8) * 1.5;
-
-      // 3. Draw Stylized Head (Avatar Silhouette)
-      ctx.fillStyle = '#1E1F20';
-      ctx.strokeStyle = '#323538';
-      ctx.lineWidth = 2;
+      // 4. Volumetric Head (Avatar Silhouette with 3D Shader Gradient)
+      const headGrad = ctx.createRadialGradient(
+        centerX - 10,
+        headY - 12,
+        4,
+        centerX,
+        headY,
+        42
+      );
+      headGrad.addColorStop(0, '#334155');
+      headGrad.addColorStop(0.5, '#1e293b');
+      headGrad.addColorStop(1, '#0b0f19');
+      ctx.fillStyle = headGrad;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(centerX, headY, 38, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Stylized Eye & Face Line
-      ctx.fillStyle = '#8AB4F8';
+      // Cyber Visor / Face Illumination Band
+      const visorGrad = ctx.createLinearGradient(centerX - 24, headY - 4, centerX + 24, headY - 4);
+      visorGrad.addColorStop(0, 'rgba(56, 189, 248, 0.1)');
+      visorGrad.addColorStop(0.5, '#38bdf8');
+      visorGrad.addColorStop(1, 'rgba(56, 189, 248, 0.1)');
+      ctx.fillStyle = visorGrad;
       ctx.beginPath();
-      ctx.arc(centerX - 10, headY - 4, 3, 0, Math.PI * 2);
-      ctx.arc(centerX + 10, headY - 4, 3, 0, Math.PI * 2);
+      ctx.roundRect(centerX - 22, headY - 6, 44, 8, 4);
       ctx.fill();
 
-      // 4. Draw Neck & Torso
+      // 5. Neck & Anatomical Torso
       ctx.beginPath();
-      ctx.moveTo(centerX - 12, headY + 36);
-      ctx.lineTo(centerX - 12, headY + 54);
-      ctx.lineTo(centerX - 65, headY + 70); // Left shoulder
-      ctx.lineTo(centerX - 50, headY + 220); // Left hip
-      ctx.lineTo(centerX + 50, headY + 220); // Right hip
-      ctx.lineTo(centerX + 65, headY + 70); // Right shoulder
-      ctx.lineTo(centerX + 12, headY + 54);
-      ctx.lineTo(centerX + 12, headY + 36);
+      ctx.moveTo(centerX - 14, headY + 36);
+      ctx.lineTo(centerX - 14, headY + 52);
+      ctx.lineTo(centerX - 68, headY + 70); // Left shoulder
+      ctx.lineTo(centerX - 52, headY + 220); // Left hip
+      ctx.lineTo(centerX + 52, headY + 220); // Right hip
+      ctx.lineTo(centerX + 68, headY + 70); // Right shoulder
+      ctx.lineTo(centerX + 14, headY + 52);
+      ctx.lineTo(centerX + 14, headY + 36);
       ctx.closePath();
-      ctx.fillStyle = '#1A1B1D';
-      ctx.strokeStyle = '#323538';
+
+      const torsoGrad = ctx.createLinearGradient(centerX, headY + 50, centerX, headY + 220);
+      torsoGrad.addColorStop(0, '#1e293b');
+      torsoGrad.addColorStop(0.5, '#111827');
+      torsoGrad.addColorStop(1, '#090d16');
+      ctx.fillStyle = torsoGrad;
+      ctx.strokeStyle = '#334155';
       ctx.lineWidth = 2;
       ctx.fill();
       ctx.stroke();
 
-      // Chest Emblem / Center Bridge Arc
-      ctx.strokeStyle = 'rgba(138, 180, 248, 0.4)';
-      ctx.lineWidth = 1.5;
+      // Center Cyber Arc Reactor / Emblem
+      const coreGrad = ctx.createRadialGradient(
+        centerX,
+        headY + 115,
+        2,
+        centerX,
+        headY + 115,
+        20
+      );
+      coreGrad.addColorStop(0, '#ffffff');
+      coreGrad.addColorStop(0.3, '#38bdf8');
+      coreGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.arc(centerX, headY + 110, 24, 0.2 * Math.PI, 0.8 * Math.PI, false);
-      ctx.stroke();
+      ctx.arc(centerX, headY + 115, 20, 0, Math.PI * 2);
+      ctx.fill();
 
-      // 5. Draw Right Arm (Connected to Sign Hand)
-      const rightShoulderX = centerX + 65;
+      // 6. Dual-Arm Articulated Kinematics (Right Arm & Left Arm)
+      const rightShoulderX = centerX + 68;
       const rightShoulderY = headY + 70;
-      const handX = curr.x;
-      const handY = curr.y + Math.sin(time * 1.5) * 3;
+      const leftShoulderX = centerX - 68;
+      const leftShoulderY = headY + 70;
 
-      const elbowX = (rightShoulderX + handX) / 2 + 25;
-      const elbowY = (rightShoulderY + handY) / 2 + 30;
+      // Draw Shoulders (Volumetric Joint Spheres)
+      drawJointSphere(rightShoulderX, rightShoulderY, 8, '#38bdf8');
+      drawJointSphere(leftShoulderX, leftShoulderY, 8, '#34d399');
 
-      ctx.strokeStyle = '#8AB4F8';
-      ctx.lineWidth = 4;
+      // Right Arm Kinematics
+      const rHandX = curr.rx;
+      const rHandY = curr.ry + Math.sin(time * 1.5) * 2;
+      const rElbowX = (rightShoulderX + rHandX) / 2 + 26;
+      const rElbowY = (rightShoulderY + rHandY) / 2 + 28;
+
+      // Right Upper Arm & Forearm
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 5;
       ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      // Upper arm
       ctx.beginPath();
       ctx.moveTo(rightShoulderX, rightShoulderY);
-      ctx.lineTo(elbowX, elbowY);
+      ctx.lineTo(rElbowX, rElbowY);
+      ctx.lineTo(rHandX, rHandY);
       ctx.stroke();
 
-      // Forearm
+      // Right Elbow & Wrist Joints
+      drawJointSphere(rElbowX, rElbowY, 6, '#38bdf8');
+      drawJointSphere(rHandX, rHandY, 6, '#38bdf8');
+
+      // Left Arm Kinematics
+      const lHandX = curr.lx;
+      const lHandY = curr.ly + Math.sin(time * 1.5 + 1) * 2;
+      const lElbowX = (leftShoulderX + lHandX) / 2 - 26;
+      const lElbowY = (leftShoulderY + lHandY) / 2 + 28;
+
+      // Left Upper Arm & Forearm
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(elbowX, elbowY);
-      ctx.lineTo(handX, handY);
+      ctx.moveTo(leftShoulderX, leftShoulderY);
+      ctx.lineTo(lElbowX, lElbowY);
+      ctx.lineTo(lHandX, lHandY);
       ctx.stroke();
 
-      // Joint circle on elbow
-      ctx.fillStyle = '#1E1F20';
-      ctx.strokeStyle = '#8AB4F8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(elbowX, elbowY, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      // Left Elbow & Wrist Joints
+      drawJointSphere(lElbowX, lElbowY, 6, '#34d399');
+      drawJointSphere(lHandX, lHandY, 6, '#34d399');
 
-      // 6. Draw Detailed ISL Hand Pose (Palm + 5 Articulated Fingers)
-      ctx.save();
-      ctx.translate(handX, handY);
-      ctx.rotate(curr.wristAngle);
+      // 7. Bimanual Proximity & Dynamic Contact Aura
+      const dx = rHandX - lHandX;
+      const dy = rHandY - lHandY;
+      const handDist = Math.sqrt(dx * dx + dy * dy);
 
-      // Palm base
-      ctx.fillStyle = '#282A2C';
-      ctx.strokeStyle = '#8AB4F8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(-14, -14, 28, 26, 6);
-      ctx.fill();
-      ctx.stroke();
-
-      // 5 Fingers
-      const fingerAngles = [-0.7, -0.3, 0, 0.3, 0.6];
-      const fingerLengths = [18, 24, 26, 23, 19];
-
-      for (let f = 0; f < 5; f++) {
-        const ext = curr.fingers[f];
-        const angle = fingerAngles[f];
-        const len = fingerLengths[f] * (0.35 + ext * 0.65);
-
-        const startX = -10 + f * 5;
-        const startY = -12;
-        const endX = startX + Math.sin(angle) * len;
-        const endY = startY - Math.cos(angle) * len;
-
-        // Bone
-        ctx.strokeStyle = ext > 0.6 ? '#8AB4F8' : '#5E6260';
-        ctx.lineWidth = 3;
+      if (targetPose.isTwoHanded && handDist < 70) {
+        const midX = (rHandX + lHandX) / 2;
+        const midY = (rHandY + lHandY) / 2;
+        const auraGrad = ctx.createRadialGradient(midX, midY, 4, midX, midY, 45);
+        auraGrad.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+        auraGrad.addColorStop(0.5, 'rgba(52, 211, 153, 0.25)');
+        auraGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = auraGrad;
         ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
-
-        // Joint knuckle
-        ctx.fillStyle = ext > 0.6 ? '#E3E3E3' : '#323538';
-        ctx.beginPath();
-        ctx.arc(endX, endY, 3.5, 0, Math.PI * 2);
+        ctx.arc(midX, midY, 45, 0, Math.PI * 2);
         ctx.fill();
-      }
 
-      ctx.restore();
-
-      // 7. If Two-Handed Sign, Draw Left Arm & Hand
-      if (targetPose.isTwoHanded) {
-        const leftShoulderX = centerX - 65;
-        const leftShoulderY = headY + 70;
-        const lHandX = targetPose.leftHandX || 250;
-        const lHandY = targetPose.leftHandY || 260;
-        const lElbowX = (leftShoulderX + lHandX) / 2 - 25;
-        const lElbowY = (leftShoulderY + lHandY) / 2 + 30;
-
-        ctx.strokeStyle = '#81C995'; // Secondary calm green hand
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(leftShoulderX, leftShoulderY);
-        ctx.lineTo(lElbowX, lElbowY);
-        ctx.lineTo(lHandX, lHandY);
-        ctx.stroke();
-
-        // Left palm
-        ctx.fillStyle = '#282A2C';
-        ctx.strokeStyle = '#81C995';
+        // High-energy contact bridge arc
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(lHandX, lHandY, 12, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(lHandX, lHandY);
+        ctx.lineTo(rHandX, rHandY);
         ctx.stroke();
       }
+
+      // 8. Draw Multi-Phalange Articulated Hands (Left and Right)
+      drawArticulatedHand(lHandX, lHandY, curr.lWristAngle, curr.lFingers, true);
+      drawArticulatedHand(rHandX, rHandY, curr.rWristAngle, curr.rFingers, false);
 
       animationFrameRef.current = requestAnimationFrame(render);
     };
@@ -708,13 +971,16 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
             <span className="chips-label">Quick Phrases:</span>
             <div className="chips-wrap">
               {[
+                'Namaste',
                 'Hello',
+                'Help',
+                'Water',
+                'Food',
                 'Thank you',
                 'Good morning',
-                'You',
-                'Please help me',
+                'Please',
                 'Welcome',
-                'A B C',
+                'B D P Q T',
               ].map((phrase) => (
                 <button
                   key={phrase}

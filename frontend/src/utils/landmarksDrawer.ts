@@ -34,13 +34,13 @@ export function drawLandmarksOnCanvas(
     return [normX * width, p.y * height];
   };
 
-  // 1. Draw Left Hand (Calm Natural Sage Green)
+  // 1. Draw Left Hand (Vibrant Cyan / Sky Blue: #38bdf8)
   if (styles.showLeftHand && landmarks.left_hand && landmarks.left_hand.length > 0) {
     const pts = landmarks.left_hand;
 
     // Hand skeleton connections
-    ctx.lineWidth = 2.0;
-    ctx.strokeStyle = '#4E9F76';
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#38bdf8';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -63,22 +63,22 @@ export function drawLandmarksOnCanvas(
 
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = isFingertip ? '#6EE7B7' : '#3B7A57';
+      ctx.fillStyle = isFingertip ? '#7dd3fc' : '#0284c7';
       ctx.fill();
 
       ctx.lineWidth = 1.0;
-      ctx.strokeStyle = '#1A3324';
+      ctx.strokeStyle = '#082f49';
       ctx.stroke();
     }
   }
 
-  // 2. Draw Right Hand (Warm Slate & Bone White)
+  // 2. Draw Right Hand (Vibrant Emerald / Mint Green: #34d399)
   if (styles.showRightHand && landmarks.right_hand && landmarks.right_hand.length > 0) {
     const pts = landmarks.right_hand;
 
     // Hand skeleton connections
-    ctx.lineWidth = 2.0;
-    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#34d399';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -101,12 +101,65 @@ export function drawLandmarksOnCanvas(
 
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = isFingertip ? '#E2E8F0' : '#64748B';
+      ctx.fillStyle = isFingertip ? '#a7f3d0' : '#059669';
       ctx.fill();
 
       ctx.lineWidth = 1.0;
-      ctx.strokeStyle = '#1E293B';
+      ctx.strokeStyle = '#022c22';
       ctx.stroke();
+    }
+  }
+
+  // 3. Inter-Hand Contact & Proximity Indicator (Crucial for B, D, P, Q, T Two-Handed ISL Gestures)
+  if (
+    styles.showLeftHand &&
+    styles.showRightHand &&
+    landmarks.left_hand &&
+    landmarks.left_hand.length > 0 &&
+    landmarks.right_hand &&
+    landmarks.right_hand.length > 0
+  ) {
+    const leftPts = landmarks.left_hand;
+    const rightPts = landmarks.right_hand;
+    const CONTACT_DIST_PX = 32.0;
+    const keyIndices = [0, 4, 8, 12, 16, 20]; // Wrists and fingertips
+
+    for (const li of keyIndices) {
+      if (li >= leftPts.length) continue;
+      const [lx, ly] = getPt(leftPts[li]);
+
+      for (const ri of keyIndices) {
+        if (ri >= rightPts.length) continue;
+        const [rx, ry] = getPt(rightPts[ri]);
+        const dist = Math.hypot(lx - rx, ly - ry);
+
+        if (dist <= CONTACT_DIST_PX) {
+          const midX = (lx + rx) / 2;
+          const midY = (ly + ry) / 2;
+
+          // Glowing contact pulse indicator
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(midX, midY, 8.0, 0, 2 * Math.PI);
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.45)'; // Vibrant Rose pulse
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(midX, midY, 3.5, 0, 2 * Math.PI);
+          ctx.fillStyle = '#f43f5e';
+          ctx.fill();
+
+          // Delicate connecting bridge
+          ctx.beginPath();
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#f43f5e';
+          ctx.moveTo(lx, ly);
+          ctx.lineTo(rx, ry);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
     }
   }
 

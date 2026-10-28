@@ -1,0 +1,254 @@
+{
+  "timestamp": "2026-10-28T19:42:05Z",
+  "frontend": {
+    "status": "PASS",
+    "html_kb": 1.54,
+    "js_bundle_kb": 377.28,
+    "css_bundle_kb": 71.29,
+    "zero_scroll_design": true
+  },
+  "backend_api": {
+    "status": "PASS",
+    "health_code": 200,
+    "models_code": 200,
+    "lstm_status_code": 200,
+    "predict_code": 200,
+    "dataset_sessions_code": 200,
+    "websocket": "PASS"
+  },
+  "model_weights": {
+    "realsign_mlp": {
+      "path": "models\\weights\\realsign_26class_mlp.pth",
+      "parameters": 26972,
+      "size_kb": 111.54,
+      "nan_count": 0,
+      "inf_count": 0,
+      "sparsity_pct": 0.0,
+      "layers_count": 16,
+      "numerical_stability": "EXCELLENT (0 NaN, 0 Inf)"
+    },
+    "sequence_lstm": {
+      "path": "models\\weights\\isl_sequence_lstm.pth",
+      "parameters": 964631,
+      "size_kb": 3775.03,
+      "nan_count": 0,
+      "inf_count": 0,
+      "sparsity_pct": 0.0,
+      "layers_count": 29,
+      "numerical_stability": "EXCELLENT (0 NaN, 0 Inf)"
+    },
+    "hf_isl_mlp": {
+      "path": "models\\weights\\hf_isl_26class_mlp.pth",
+      "parameters": 26972,
+      "size_kb": 111.5,
+      "nan_count": 0,
+      "inf_count": 0,
+      "sparsity_pct": 0.0,
+      "layers_count": 16,
+      "numerical_stability": "EXCELLENT (0 NaN, 0 Inf)"
+    }
+  },
+  "overfitting_analysis": {
+    "total_dataset_samples": 14738,
+    "train_samples": 11791,
+    "test_samples": 2947,
+    "parameters": 26972,
+    "sample_to_parameter_ratio": 0.55,
+    "holdout_accuracy": 0.983,
+    "avg_confidence": 0.9437,
+    "overfitting_diagnosis": "LOW RISK (Tight capacity, sample ratio > 0.5x, strong generalization)"
+  },
+  "hallucination_stress_test": {
+    "zero_vector_confidence": 0.0,
+    "low_noise_mean_confidence": 0.5647,
+    "high_noise_rejection_rate_pct": 4.0,
+    "false_alarm_rate_pct": 96.0,
+    "negative_samples_tested": 90,
+    "negative_suppression_rate_pct": 62.22,
+    "hallucination_resilience": "HIGH (Confidence gating suppresses false commitments)"
+  },
+  "evaluation_metrics": {
+    "overall_accuracy": 0.983,
+    "macro_precision": 0.9843,
+    "macro_recall": 0.984,
+    "macro_f1": 0.9836,
+    "mean_top1_top2_margin": 0.9188,
+    "ambiguous_rate_pct": 1.46,
+    "per_class_summary": {
+      "A": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 116
+      },
+      "B": {
+        "precision": 1.0,
+        "recall": 0.9914,
+        "f1": 0.9957,
+        "support": 116
+      },
+      "C": {
+        "precision": 0.9672,
+        "recall": 0.9752,
+        "f1": 0.9712,
+        "support": 121
+      },
+      "D": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 109
+      },
+      "E": {
+        "precision": 1.0,
+        "recall": 0.9918,
+        "f1": 0.9959,
+        "support": 122
+      },
+      "F": {
+        "precision": 0.9919,
+        "recall": 1.0,
+        "f1": 0.996,
+        "support": 123
+      },
+      "G": {
+        "precision": 0.9798,
+        "recall": 1.0,
+        "f1": 0.9898,
+        "support": 97
+      },
+      "H": {
+        "precision": 0.9868,
+        "recall": 1.0,
+        "f1": 0.9934,
+        "support": 75
+      },
+      "I": {
+        "precision": 1.0,
+        "recall": 0.9778,
+        "f1": 0.9888,
+        "support": 135
+      },
+      "J": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 81
+      },
+      "K": {
+        "precision": 1.0,
+        "recall": 0.9911,
+        "f1": 0.9955,
+        "support": 112
+      },
+      "L": {
+        "precision": 0.992,
+        "recall": 0.9764,
+        "f1": 0.9841,
+        "support": 127
+      },
+      "M": {
+        "precision": 1.0,
+        "recall": 0.984,
+        "f1": 0.9919,
+        "support": 125
+      },
+      "N": {
+        "precision": 1.0,
+        "recall": 0.8538,
+        "f1": 0.9212,
+        "support": 130
+      },
+      "O": {
+        "precision": 0.977,
+        "recall": 0.9551,
+        "f1": 0.9659,
+        "support": 89
+      },
+      "P": {
+        "precision": 0.984,
+        "recall": 0.9919,
+        "f1": 0.988,
+        "support": 124
+      },
+      "Q": {
+        "precision": 0.9832,
+        "recall": 0.9915,
+        "f1": 0.9873,
+        "support": 118
+      },
+      "R": {
+        "precision": 0.85,
+        "recall": 1.0,
+        "f1": 0.9189,
+        "support": 119
+      },
+      "S": {
+        "precision": 0.9922,
+        "recall": 0.9922,
+        "f1": 0.9922,
+        "support": 128
+      },
+      "T": {
+        "precision": 0.9917,
+        "recall": 1.0,
+        "f1": 0.9958,
+        "support": 119
+      },
+      "U": {
+        "precision": 0.9907,
+        "recall": 0.9464,
+        "f1": 0.968,
+        "support": 112
+      },
+      "V": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 84
+      },
+      "W": {
+        "precision": 0.972,
+        "recall": 0.9811,
+        "f1": 0.9765,
+        "support": 106
+      },
+      "X": {
+        "precision": 0.9917,
+        "recall": 1.0,
+        "f1": 0.9959,
+        "support": 120
+      },
+      "Y": {
+        "precision": 0.9919,
+        "recall": 0.984,
+        "f1": 0.988,
+        "support": 125
+      },
+      "Z": {
+        "precision": 0.95,
+        "recall": 1.0,
+        "f1": 0.9744,
+        "support": 114
+      }
+    }
+  },
+  "latency_throughput": {
+    "device": "cpu",
+    "realsign_mlp": {
+      "p50_ms": 0.1527,
+      "p95_ms": 0.2512,
+      "p99_ms": 0.3431,
+      "throughput_fps": 6549.0
+    },
+    "coco_object_detector": {
+      "device": "cuda",
+      "p50_ms": 152.55,
+      "throughput_fps": 6.6
+    },
+    "low_light_clahe": {
+      "p50_ms": 3.48,
+      "throughput_fps": 287.0
+    }
+  }
+}

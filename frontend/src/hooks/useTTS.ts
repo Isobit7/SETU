@@ -1,28 +1,51 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { TTSState, TTSControls } from '../types';
 
+export interface SupportedLanguage {
+  code: string;
+  label: string;
+  nativeName: string;
+}
+
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
+  { code: 'en-IN', label: 'Indian English', nativeName: 'English (India)' },
+  { code: 'hi-IN', label: 'Hindi', nativeName: 'हिन्दी' },
+  { code: 'ta-IN', label: 'Tamil', nativeName: 'தமிழ்' },
+  { code: 'te-IN', label: 'Telugu', nativeName: 'తెలుగు' },
+  { code: 'kn-IN', label: 'Kannada', nativeName: 'ಕನ್ನಡ' },
+];
+
 /**
- * Helper to select the most appropriate English voice.
- * Prioritizes: Indian English (en-IN), US English (en-US), British English (en-GB), or any English.
+ * Helper to select the most appropriate regional voice.
+ * Prioritizes: requested target language (e.g. hi-IN, ta-IN, te-IN, kn-IN, en-IN), then prefix match, then English fallback.
  */
-function selectBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+export function selectBestVoice(
+  voices: SpeechSynthesisVoice[],
+  targetLang: string = 'en-IN'
+): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null;
 
+  const targetPrefix = targetLang.split('-')[0].toLowerCase();
+
+  // 1. Exact language match
+  const exact = voices.find(
+    (v) => v.lang.replace('_', '-').toLowerCase() === targetLang.toLowerCase()
+  );
+  if (exact) return exact;
+
+  // 2. Prefix match (e.g. hi, ta, te, kn, en)
+  const prefixMatch = voices.find((v) =>
+    v.lang.toLowerCase().startsWith(targetPrefix)
+  );
+  if (prefixMatch) return prefixMatch;
+
+  // 3. Fallback to Indian English
   const inVoice = voices.find(
     (v) => v.lang === 'en-IN' || v.lang.replace('_', '-').toLowerCase() === 'en-in'
   );
   if (inVoice) return inVoice;
 
-  const usVoice = voices.find(
-    (v) => v.lang === 'en-US' || v.lang.replace('_', '-').toLowerCase() === 'en-us'
-  );
-  if (usVoice) return usVoice;
-
-  const gbVoice = voices.find(
-    (v) => v.lang === 'en-GB' || v.lang.replace('_', '-').toLowerCase() === 'en-gb'
-  );
-  if (gbVoice) return gbVoice;
-
+  // 4. Any English
   const anyEn = voices.find((v) => v.lang.toLowerCase().startsWith('en'));
   if (anyEn) return anyEn;
 
@@ -30,16 +53,27 @@ function selectBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice |
 }
 
 export interface UseTTSReturn extends TTSState, TTSControls {
+  targetLanguage: string;
+  setTargetLanguage: (lang: string) => void;
   setAutoSpeakEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /**
- * Custom hook for browser-native Text-to-Speech (TTS) integration using window.speechSynthesis.
+ * Custom hook for browser-native Text-to-Speech (TTS) integration using window.speechSynthesis
+ * with full multi-lingual regional Indian language voice synthesis support.
  */
 export function useTTS(): UseTTSReturn {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [targetLanguage, setTargetLanguageState] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'en-IN';
+    try {
+      return localStorage.getItem('setu_tts_lang') || 'en-IN';
+    } catch {
+      return 'en-IN';
+    }
+  });
 
   // Initialize autoSpeakEnabled from localStorage, defaulting to true
   const [autoSpeakEnabled, setAutoSpeakEnabled] = useState<boolean>(() => {
@@ -74,7 +108,7 @@ export function useTTS(): UseTTSReturn {
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length > 0) {
         setAvailableVoices(voices);
-        setSelectedVoice((current) => current || selectBestVoice(voices));
+        setSelectedVoice((current) => current || selectBestVoice(voices, targetLanguage));
       }
     };
 
@@ -92,6 +126,19 @@ export function useTTS(): UseTTSReturn {
         }
       }
     };
+  }, [targetLanguage]);
+
+  const setTargetLanguage = useCallback((lang: string) => {
+    setTargetLanguageState(lang);
+    try {
+      localStorage.setItem('setu_tts_lang', lang);
+    } catch (e) {
+      console.warn('Could not save TTS language:', e);
+    }
+    const best = selectBestVoice(availableVoicesRef.current, lang);
+    if (best) {
+      setSelectedVoice(best);
+    }
   }, []);
 
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -109,9 +156,9 @@ export function useTTS(): UseTTSReturn {
     setIsSpeaking(false);
   }, []);
 
-  // Speak specified text string
+  // Speak specified text string with regional language voice
   const speak = useCallback(
-    (text: string) => {
+    (text: string, language?: string) => {
       if (!text || !text.trim() || typeof window === 'undefined' || !('speechSynthesis' in window)) {
         return;
       }
@@ -127,12 +174,19 @@ export function useTTS(): UseTTSReturn {
         utterance.pitch = 1.0;
         utterance.rate = 1.0;
 
-        const voiceToUse = selectedVoiceRef.current || selectBestVoice(availableVoicesRef.current);
+        const langToUse = language || targetLanguage;
+        const currentVoice = selectedVoiceRef.current;
+        const matchesTarget = currentVoice && currentVoice.lang.toLowerCase().startsWith(langToUse.split('-')[0].toLowerCase());
+
+        const voiceToUse = matchesTarget
+          ? currentVoice
+          : selectBestVoice(availableVoicesRef.current, langToUse);
+
         if (voiceToUse) {
           utterance.voice = voiceToUse;
           utterance.lang = voiceToUse.lang;
         } else {
-          utterance.lang = 'en-US';
+          utterance.lang = langToUse;
         }
 
         utterance.onstart = () => {
@@ -159,7 +213,7 @@ export function useTTS(): UseTTSReturn {
         setIsSpeaking(false);
       }
     },
-    []
+    [targetLanguage]
   );
 
   // Toggle autoSpeakEnabled with persistent localStorage
@@ -180,6 +234,8 @@ export function useTTS(): UseTTSReturn {
     autoSpeakEnabled,
     availableVoices,
     selectedVoice,
+    targetLanguage,
+    setTargetLanguage,
     speak,
     stop,
     toggleAutoSpeak,
@@ -187,3 +243,4 @@ export function useTTS(): UseTTSReturn {
     setAutoSpeakEnabled,
   };
 }
+

@@ -246,12 +246,8 @@ class HandLandmarkerWrapper:
             from mediapipe.tasks import python
             from mediapipe.tasks.python import vision
 
-            import os
-            try:
-                asset_path_str = os.path.relpath(self.task_model_path)
-            except ValueError:
-                asset_path_str = str(self.task_model_path)
-            base_opts = python.BaseOptions(model_asset_path=asset_path_str)
+            task_model_bytes = self.task_model_path.read_bytes()
+            base_opts = python.BaseOptions(model_asset_buffer=task_model_bytes)
             opts = vision.HandLandmarkerOptions(
                 base_options=base_opts,
                 running_mode=vision.RunningMode.IMAGE,

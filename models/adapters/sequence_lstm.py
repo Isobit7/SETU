@@ -43,6 +43,8 @@ class ISLSequencePrediction:
     probabilities: Dict[str, float]
     top_3: List[Tuple[str, float]]
     raw_class_idx: int
+    is_ambiguous: bool = False
+    margin: float = 1.0
 
 
 class ISLSequenceLSTM(nn.Module):
@@ -144,6 +146,7 @@ class ISLSequenceLSTMClassifier:
     """
 
     DEFAULT_CONFIDENCE_THRESHOLD = 0.50
+    DEFAULT_MARGIN_THRESHOLD = 0.20
 
     def __init__(
         self,
@@ -208,6 +211,8 @@ class ISLSequenceLSTMClassifier:
             probabilities=probs,
             top_3=[("no_sign", 1.0)],
             raw_class_idx=no_sign_idx,
+            is_ambiguous=False,
+            margin=1.0,
         )
 
     def warmup(self) -> None:
@@ -220,6 +225,7 @@ class ISLSequenceLSTMClassifier:
         self,
         features: np.ndarray,
         confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
+        margin_threshold: float = DEFAULT_MARGIN_THRESHOLD,
     ) -> ISLSequencePrediction:
         """
         Runs sequence inference over a temporal sequence of Holistic landmark feature vectors.
@@ -238,11 +244,11 @@ class ISLSequenceLSTMClassifier:
                 f"Expected 2D feature array of shape (T, 158), (T, 164), (T, 316), or (T, {self.input_size}), got {features.shape}"
             )
 
-        if features.shape[1] in (158, 164, 316, 328):
+        if features.shape[1] in (158, 164, 176, 316, 328, 352):
             seq_features = compute_velocity_features(features, target_dim=self.input_size)
         else:
             raise ValueError(
-                f"Expected feature shape (T, 158), (T, 164), (T, 316), or (T, {self.input_size}), got {features.shape}"
+                f"Expected feature shape (T, 158), (T, 164), (T, 176), (T, 316), or (T, {self.input_size}), got {features.shape}"
             )
 
         T = seq_features.shape[0]
@@ -270,8 +276,12 @@ class ISLSequenceLSTMClassifier:
         best_idx = int(sorted_indices[0])
         best_label = self.class_names[best_idx]
         best_conf = float(probs[best_idx])
+        second_conf = float(probs[sorted_indices[1]]) if len(sorted_indices) > 1 else 0.0
+        margin = float(best_conf - second_conf)
 
         is_known = (best_conf >= confidence_threshold) and (best_label != "no_sign")
+        is_ambiguous = bool(is_known and margin < margin_threshold)
+
         top_3 = [(self.class_names[int(i)], float(probs[int(i)])) for i in sorted_indices[:3]]
         probs_dict = {name: float(probs[i]) for i, name in enumerate(self.class_names)}
 
@@ -289,7 +299,105 @@ class ISLSequenceLSTMClassifier:
             probabilities=probs_dict,
             top_3=top_3,
             raw_class_idx=best_idx,
+            is_ambiguous=is_ambiguous,
+            margin=round(margin, 4),
         )
+
+    def create_ctc_decoder(
+        self,
+        blank_token: str = "no_sign",
+        min_confidence: float = 0.40,
+    ) -> CTCGreedyDecoder:
+        """Returns an instance of CTCGreedyDecoder configured for continuous sign language recognition."""
+        return CTCGreedyDecoder(blank_token=blank_token, min_confidence=min_confidence)
+
+
+class CTCGreedyDecoder:
+    """
+    Connectionist Temporal Classification (CTC) Greedy Decoder for Continuous Sign Language Recognition (CSLR).
+
+    Transforms continuous frame-level class emission tokens into clean sign sequences:
+    1. Compresses consecutive duplicate tokens.
+    2. Removes blank / resting tokens (e.g. 'no_sign', 'blank', '').
+    3. Respects confidence threshold gating.
+
+    Supports both batch/sequence decoding:
+        decode(['blank', 'hello', 'hello', 'blank', 'you']) -> ['hello', 'you']
+    and real-time streaming decoding via step(token, confidence).
+    """
+
+    def __init__(self, blank_token: str = "no_sign", min_confidence: float = 0.40) -> None:
+        self.blank_token = blank_token.lower()
+        self.min_confidence = min_confidence
+        self.last_token: Optional[str] = None
+        self.decoded_history: List[str] = []
+
+    def decode(
+        self,
+        token_sequence: List[str],
+        blank_token: Optional[str] = None,
+    ) -> List[str]:
+        """
+        Classic CTC greedy collapse over a full token sequence.
+        1. Collapse consecutive duplicates: [A, A, blank, B, B] -> [A, blank, B]
+        2. Remove blanks: [A, blank, B] -> [A, B]
+        """
+        blank = (blank_token or self.blank_token).lower()
+        collapsed: List[str] = []
+        prev: Optional[str] = None
+
+        for raw_tok in token_sequence:
+            tok = str(raw_tok).strip().lower()
+            if tok != prev:
+                collapsed.append(tok)
+                prev = tok
+
+        return [tok for tok in collapsed if tok != blank and tok != ""]
+
+    def decode_logits(
+        self,
+        logits: Union[torch.Tensor, np.ndarray],
+        class_names: List[str],
+        blank_token: Optional[str] = None,
+    ) -> List[str]:
+        """
+        Decodes a (T, num_classes) or (Batch, T, num_classes) array/tensor of frame logits.
+        """
+        if isinstance(logits, torch.Tensor):
+            arr = logits.detach().cpu().numpy()
+        else:
+            arr = np.asarray(logits)
+
+        if arr.ndim == 3:
+            arr = arr[0]
+
+        pred_indices = np.argmax(arr, axis=-1)
+        raw_tokens = [class_names[idx] for idx in pred_indices]
+        return self.decode(raw_tokens, blank_token=blank_token)
+
+    def step(self, token: str, confidence: float = 1.0) -> Optional[str]:
+        """
+        Online streaming CTC step:
+        Processes current frame token. If transition to a new non-blank token occurs,
+        returns the newly emitted token.
+        """
+        tok = str(token).strip().lower()
+        if confidence < self.min_confidence:
+            tok = self.blank_token
+
+        emitted: Optional[str] = None
+        if tok != self.last_token:
+            if tok != self.blank_token and tok != "":
+                emitted = tok
+                self.decoded_history.append(tok)
+            self.last_token = tok
+
+        return emitted
+
+    def reset(self) -> None:
+        """Resets streaming state."""
+        self.last_token = None
+        self.decoded_history.clear()
 
 
 # Compatibility alias
@@ -300,4 +408,6 @@ __all__ = [
     "ISLSequencePrediction",
     "SequencePrediction",
     "ISLSequenceLSTMClassifier",
+    "CTCGreedyDecoder",
 ]
+

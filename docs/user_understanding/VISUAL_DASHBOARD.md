@@ -84,16 +84,16 @@ Total Frame Time Budget: 33.33 ms (100.0%)
 
 ### Frame Budget Stage Breakdown
 
-| Stage | Subsystem / Component | Execution Environment | Latency (ms) | % of 33.3ms Budget | Description & Optimization |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Vision** | MediaPipe Hands JS | Browser Client (WASM/WebGL) | **15.00 ms** | 45.0% | Detects palm bounding box and tracks 21 skeletal landmarks on GPU/WASM. |
-| **2. Geometry** | `landmarkProcessor.ts` | Browser Client (V8 / JS Thread) | **0.50 ms** | 1.5% | Applies wrist translation, scale normalization, and 2-stage rotation. |
-| **3. Ingress** | HTTP POST `/api/predict` | Local / Container Virtual Net | **5.00 ms** | 15.0% | Transmits 252-byte JSON payload across internal network socket. |
-| **4. Inference** | ONNX Runtime CPU | Backend Container (Python C++) | **0.02 ms** | 0.06% | Forward pass of `RealSignMLP` with constant folding and SIMD acceleration. |
-| **5. Egress** | JSON Serialization | Backend Container (FastAPI) | **0.20 ms** | 0.6% | Formats top prediction and top-3 probability distribution. |
-| **6. Return** | HTTP Response Delivery | Local / Container Virtual Net | **4.80 ms** | 14.4% | Packet transfer back to client fetch promise. |
-| **7. UX Render** | React Component & Canvas | Browser Client (UI Main Thread) | **2.00 ms** | 6.0% | Updates letter badge, confidence bar, hold progress meter, and text box. |
-| **Headroom** | **Safety Margin** | **Idle Time** | **5.81 ms** | **17.44%** | **Guarantees zero dropped frames or UI stutter at 30 FPS.** |
+| Stage | Subsystem | Latency & Share | Description & Optimization |
+| :--- | :--- | :---: | :--- |
+| **1. Vision** | MediaPipe Hands (Client WASM) | **15.00 ms** (45.0%) | Detects palm bounding box and tracks 21 skeletal landmarks on GPU/WASM. |
+| **2. Geometry** | `landmarkProcessor.ts` (Client JS) | **0.50 ms** (1.5%) | Applies wrist translation, scale normalization, and 2-stage rotation. |
+| **3. Ingress** | HTTP POST `/api/predict` (Network) | **5.00 ms** (15.0%) | Transmits 252-byte JSON payload across internal network socket. |
+| **4. Inference**| ONNX Runtime CPU (Backend SIMD) | **0.02 ms** (0.06%) | Forward pass of `RealSignMLP` with constant folding (20.8 µs). |
+| **5. Egress** | JSON Serialization (FastAPI) | **0.20 ms** (0.6%) | Formats top prediction and top-3 probability distribution. |
+| **6. Return** | HTTP Response Delivery (Network) | **4.80 ms** (14.4%) | Packet transfer back to client fetch promise. |
+| **7. UX Render**| React Component & Canvas (Client) | **2.00 ms** (6.0%) | Updates letter badge, confidence bar, hold progress meter, and text box. |
+| **Headroom** | **Spare Safety Margin (Idle Time)** | **5.81 ms** (17.4%) | **Guarantees zero dropped frames or UI stutter at 30 FPS.** |
 
 ---
 
@@ -139,13 +139,13 @@ graph TD
 
 ---
 
-## 5. Summary of Achievements & Standards Compliance
+## 5. System Standards & Production Compliance Matrix
 
-```
-[✓] ACCURACY      : 99.11% Top-1 Accuracy across all 26 ISL alphabet signs
-[✓] PRIVACY       : 100% Zero-Pixel Leakage (Edge skeletal feature extraction)
-[✓] LATENCY       : 20.8 microseconds CPU execution (Real-time capability: > 48,000 FPS)
-[✓] ACCESSIBILITY : WCAG 2.1 AA Compliant (High contrast badges, hold meter, TTS)
-[✓] SECURITY      : End-to-End TLS/SSL Encrypted Context for WebRTC camera enablement
-[✓] PORTABILITY   : Single-command deployment via Docker Compose
-```
+| Compliance Pillar | Measured Metric & Result | Production Guarantee | Verification Reference |
+| :--- | :--- | :--- | :--- |
+| **Top-1 Recognition Accuracy** | **99.34%** (89-D MLP) / **98.44%** (Custom Data) | High-fidelity sign detection across varied lighting, hand sizes, and skin tones. | `reports/realsign_26class_evaluation_report.json` |
+| **Biometric User Privacy** | **100% Zero-Pixel Leakage** | Raw camera pixels are discarded instantly in RAM; only 3D bone coordinates stream. | Client-side MediaPipe WASM edge execution |
+| **Microsecond CPU Latency** | **15.5 µs – 20.8 µs** per prediction | Over 48,000 FPS throughput on standard CPUs with negligible host load (< 0.5%). | Verified via `training/export_onnx.py` |
+| **WCAG 2.1 AA Accessibility** | **Full Standards Compliance** | High-contrast dark tokens, tactile touch physics, hold-gate progress, Web Speech TTS. | `frontend/src/index.css`, `useTextBuffer.ts` |
+| **WebRTC Browser Security** | **End-to-End TLS/SSL Termination** | Secure HTTPS origin guaranteed for instant camera `getUserMedia` permission. | `certs/fullchain.pem`, `nginx.conf` |
+| **Cross-Platform Portability** | **Containerized Microservices** | Deterministic deployment across Windows, macOS, and Linux via Docker Compose. | `docker-compose.yml` |

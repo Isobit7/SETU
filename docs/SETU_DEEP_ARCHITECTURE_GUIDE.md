@@ -420,25 +420,70 @@ Used for dynamic sequence modeling (LSTM) and phrase recognition. It represents 
 
 ---
 
-### Model Classifier Ecosystem (`setu/models/`)
+### Model Classifier Ecosystem (`models/adapters/` & `models/weights/`)
 
 SETU is designed with four complementary classifiers, each tailored to a specific operational requirement:
 
-| Feature / Attribute | `realsign_classifier.py` | `isl_sequence_lstm_classifier.py` | `isl_mvp_classifier.py` | `include_model.py` |
-| :--- | :--- | :--- | :--- | :--- |
-| **Model Architecture** | PyTorch 3-layer MLP | PyTorch 2-layer LSTM + FC Head | Deterministic NumPy Dot-Product | 5-layer Bidirectional LSTM |
-| **Hardware Target** | CPU / CUDA | NVIDIA RTX 3050 GPU (CUDA) | Pure CPU (No Torch required) | PyTorch CPU / CUDA |
-| **Input Representation** | 63-D Normalized Hand Vector | (30, 158) Rolling Temporal Tensor | 1,264-D Statistical Pooled Vector | (200, 134) Upper-Body Keypoints |
-| **Target Vocabulary** | 26 English Alphabet Letters (A–Z) | 6 Dynamic Classes (5 phrases + no-sign) | 6 Classes (5 phrases + no-sign) | 263 Pre-trained Sign Classes |
-| **Vocabulary Examples** | A, B, C, D, ... Z | Hello, Thank You, Good Morning, I, You | Hello, Thank You, Good Morning, I, You | Full conversational sign dictionary |
-| **Inference Latency** | **< 1.5 ms** | **~ 4.2 ms** | **< 0.8 ms** | **~ 45.0 ms** |
-| **Temporal Window** | 1 Frame (Instantaneous) | 30 Frames (~1.0 second rolling) | 30 Frames (Statistical aggregate) | Full Video Clip (up to 200 frames) |
-| **Weights File** | `realsign_26class_mlp.pth` (76 KB) | `isl_sequence_lstm.pth` (1.16 MB) | `isl_mvp_model.npz` (38 KB) | `include_no_cnn_lstm.pth` (86.9 MB) |
-| **Primary Use Case** | Real-time fingerspelling & words | Conversational dynamic gestures | Edge devices / low-power hardware | Video batch classification & verification |
+| Model Identifier | Architecture | Vocabulary | Key Metric & Latency |
+| :--- | :--- | :--- | :--- |
+| **`realsign_mlp`** | PyTorch 3-Layer BatchNorm MLP | 26 Alphabet Letters (A–Z) | **99.11%** Val Acc (**< 1.5 ms**) |
+| **`isl_sequence_lstm`** | 2-Layer BiLSTM + FC Head | 6 Dynamic Signs / Phrases | **82.4%** Sequence Acc (**~ 4.2 ms**) |
+| **`isl_mvp`** | L2-Regularized Ridge Matrix | 6 Classes (5 signs + no-sign) | **80.0%** Signer Split (**< 0.8 ms**) |
+| **`include_bilstm`** | 5-Layer Bidirectional LSTM | 263 Pretrained Words | **86.1%** Top-5 Acc (**~ 12.5 ms**) |
+
+#### Detailed Model Specifications
+
+##### 1. RealSign MLP Classifier (`models/adapters/realsign.py`)
+| Parameter | Specification |
+| :--- | :--- |
+| **Architecture** | PyTorch 3-layer MLP with BatchNorm and Dropout |
+| **Hardware Target** | CPU / CUDA (ONNX Runtime accelerated) |
+| **Input Representation** | 126-D Dual-Hand Wrist-Centered Normalized Vector |
+| **Target Vocabulary** | 26 English Alphabet Letters (A–Z) |
+| **Inference Latency** | < 1.5 ms (CPU) / 0.6 ms (ONNX) |
+| **Temporal Window** | 1 Frame (Instantaneous / Frame-by-Frame) |
+| **Weights Binary** | `models/weights/realsign_mlp.pth` & `realsign_mlp.onnx` |
+| **Primary Use Case** | Real-time finger-spelling, alphabet synthesis, and spelling correction |
+
+##### 2. ISL Sequence LSTM Classifier (`models/adapters/lstm.py`)
+| Parameter | Specification |
+| :--- | :--- |
+| **Architecture** | PyTorch 2-layer Bidirectional LSTM with Linear Projection Head |
+| **Hardware Target** | NVIDIA RTX GPU (CUDA) or Multi-threaded CPU |
+| **Input Representation** | $(30, 158)$ Rolling Temporal Coordinate Tensor |
+| **Target Vocabulary** | Dynamic conversational signs + `no_sign` idle rejection |
+| **Inference Latency** | ~ 4.2 ms per window evaluation |
+| **Temporal Window** | 30 Frames (~1.0 second sliding window) |
+| **Weights Binary** | `models/weights/isl_sequence_lstm.pt` |
+| **Primary Use Case** | Continuous conversational gestures and multi-frame dynamic signs |
+
+##### 3. ISL MVP Matrix Classifier (`models/adapters/mvp.py`)
+| Parameter | Specification |
+| :--- | :--- |
+| **Architecture** | Pure NumPy Linear Ridge Classifier (Dot Product) |
+| **Hardware Target** | Zero-dependency Ultra-Low-Power CPU / Embedded Devices |
+| **Input Representation** | 1,264-D Statistical Pooled Vector (Mean, Std, Min, Max over window) |
+| **Target Vocabulary** | 5 Conversational Signs (`hello`, `thank_you`, `yes`, `no`, `please`) + `no_sign` |
+| **Inference Latency** | < 0.8 ms (Deterministic linear algebraic evaluation) |
+| **Temporal Window** | 30 Frames statistical aggregation |
+| **Weights Binary** | `models/weights/isl_mvp_weights.npz` |
+| **Primary Use Case** | Instant cold-boot greeting recognition and fallback inference |
+
+##### 4. AI4Bharat INCLUDE Classifier (`models/adapters/include.py`)
+| Parameter | Specification |
+| :--- | :--- |
+| **Architecture** | 5-Layer Bidirectional LSTM Sequence Classifier |
+| **Hardware Target** | PyTorch CPU / CUDA Batch Processing |
+| **Input Representation** | 158-D Holistic Keypoint Sequence |
+| **Target Vocabulary** | 263 Pre-trained Conversational ISL Vocabulary Classes |
+| **Inference Latency** | ~ 12.5 ms (Batch evaluation) |
+| **Temporal Window** | Full Video Clip (up to 200 temporal frames) |
+| **Weights Binary** | `models/pretrained/include_no_cnn_lstm.pth` |
+| **Primary Use Case** | Asynchronous full-video gesture upload classification (`/api/v1/video/upload`) |
 
 ---
 
-### High-Throughput Streaming Server (`setu/api/server.py`)
+### High-Throughput Streaming Server (`backend/app/main.py` & `backend/app/websocket/`)
 
 The backend server is implemented with FastAPI and Uvicorn. It exposes both synchronous REST utility endpoints and a low-latency bidirectional WebSocket endpoint:
 

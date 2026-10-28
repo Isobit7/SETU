@@ -1,4 +1,4 @@
-﻿"""
+"""
 SETU ΓÇö Instant A-Z Webcam Training & Calibration Script
 
 Captures static hand poses for letters AΓÇôZ directly from a live webcam
@@ -473,21 +473,51 @@ def retrain_realsign_mlp(
 
     # Load existing checkpoint architecture & weights if present
     classes = list(ALL_LETTERS)
-    model = RealSignMLP(input_dim=63, hidden1=128, hidden2=64, num_classes=26, dropout=0.2).to(device)
-
+    input_dim = 89
+    use_batchnorm = True
+    ckpt = None
     if base_model_path.exists():
         try:
             ckpt = torch.load(str(base_model_path), map_location=device, weights_only=False)
-            if "model_state_dict" in ckpt:
-                model.load_state_dict(ckpt["model_state_dict"])
-            if "classes" in ckpt:
+            state_dict = ckpt.get("model_state_dict", ckpt) if isinstance(ckpt, dict) else ckpt
+            if "net.0.weight" in state_dict:
+                input_dim = state_dict["net.0.weight"].shape[1]
+            use_batchnorm = any("running_mean" in k for k in state_dict.keys())
+            if isinstance(ckpt, dict) and "classes" in ckpt:
                 classes = ckpt["classes"]
-            logger.info("Loaded base checkpoint from %s", base_model_path)
+            logger.info("Loaded base checkpoint architecture from %s (input_dim=%d, bn=%s)", base_model_path, input_dim, use_batchnorm)
+        except Exception as e:
+            logger.warning("Could not read base checkpoint info (%s).", e)
+
+    model = RealSignMLP(
+        input_dim=input_dim,
+        hidden1=128,
+        hidden2=64,
+        num_classes=len(classes),
+        dropout=0.2,
+        use_batchnorm=use_batchnorm,
+    ).to(device)
+
+    if ckpt is not None:
+        try:
+            state_dict = ckpt.get("model_state_dict", ckpt) if isinstance(ckpt, dict) else ckpt
+            model.load_state_dict(state_dict)
+            logger.info("Loaded base checkpoint weights from %s", base_model_path)
         except Exception as e:
             logger.warning("Could not load base checkpoint (%s). Training from scratch.", e)
 
+    from training.features.geometry import expand_63d_to_89d
+
+    # Align X_new dimension to input_dim
+    if X_new.shape[1] == 63 and input_dim == 89:
+        X_new_aligned = expand_63d_to_89d(X_new)
+    elif X_new.shape[1] == 89 and input_dim == 63:
+        X_new_aligned = X_new[:, :63]
+    else:
+        X_new_aligned = X_new
+
     # Combine with compact subset of base dataset (to prevent catastrophic forgetting)
-    X_train_list = [X_new]
+    X_train_list = [X_new_aligned]
     y_train_list = [y_new]
 
     npz_path = dataset_path or DEFAULT_DATASET_PATH
@@ -495,6 +525,11 @@ def retrain_realsign_mlp(
         try:
             base_data = np.load(str(npz_path), allow_pickle=True)
             X_base, y_base = base_data["X"], base_data["y"]
+            if X_base.shape[1] == 63 and input_dim == 89:
+                X_base = expand_63d_to_89d(X_base)
+            elif X_base.shape[1] == 89 and input_dim == 63:
+                X_base = X_base[:, :63]
+
             # Subsample 40 samples per class from base data
             sub_indices = []
             for c in range(26):

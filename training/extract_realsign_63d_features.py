@@ -47,7 +47,9 @@ def normalize_landmarks_to_63d(
             raise ValueError(f"Invalid landmark at index {i}: {lm}")
 
     if is_left_hand:
-        pts[:, 0] = 1.0 - pts[:, 0]
+        # Wrist-centered sagittal reflection (eliminates arbitrary 1.0 - x camera flip)
+        wrist_x = pts[0, 0]
+        pts[:, 0] = 2.0 * wrist_x - pts[:, 0]
 
     # 1. Translate so wrist (0) is at origin (0, 0, 0)
     wrist = pts[0].copy()
@@ -64,7 +66,8 @@ def normalize_landmarks_to_63d(
     v_x = float(scaled[9, 0])
     v_y = float(scaled[9, 1])
     norm_xy = float(np.hypot(v_x, v_y))
-    if norm_xy > eps:
+    # Safeguard against near-zero division when hand points directly into camera
+    if norm_xy > 0.02:
         theta = float(np.arctan2(-v_x, -v_y))
         cos_t = float(np.cos(theta))
         sin_t = float(np.sin(theta))
@@ -121,21 +124,40 @@ def extract_realsign_hand_features(
     is_left_hand = False
     dom_target = (dominant_hand or "right").lower()
 
-    # Case 1: MediaPipe HandLandmarkerResult (has hand_landmarks and handedness)
-    if hasattr(target, "hand_landmarks") and hasattr(target, "handedness"):
+    # Case 1: MediaPipe Solutions (multi_hand_landmarks), Tasks (hand_landmarks), or Dict
+    hands = None
+    cats = None
+    if hasattr(target, "multi_hand_landmarks") and hasattr(target, "multi_handedness"):
+        hands = target.multi_hand_landmarks
+        cats = target.multi_handedness
+    elif hasattr(target, "hand_landmarks") and hasattr(target, "handedness"):
         hands = target.hand_landmarks
         cats = target.handedness
+    elif isinstance(target, dict):
+        hands = target.get("multi_hand_landmarks") or target.get("hand_landmarks")
+        cats = target.get("multi_handedness") or target.get("handedness")
+
+    if hands is not None:
         if not hands or len(hands) == 0:
             return None
 
         hand_entries = []
         for i, h in enumerate(hands):
             label = "right"
-            if cats and i < len(cats) and len(cats[i]) > 0:
-                c = cats[i][0]
-                label = getattr(c, "category_name", getattr(c, "displayName", "right")).lower()
-            elif isinstance(cats, list) and i < len(cats) and isinstance(cats[i], dict):
-                label = cats[i].get("category_name", cats[i].get("displayName", "right")).lower()
+            if cats and i < len(cats):
+                c = cats[i]
+                if isinstance(c, (list, tuple)) and len(c) > 0:
+                    c = c[0]
+                if hasattr(c, "classification") and len(c.classification) > 0:
+                    label = c.classification[0].label.lower()
+                elif hasattr(c, "category_name"):
+                    label = c.category_name.lower()
+                elif hasattr(c, "label"):
+                    label = c.label.lower()
+                elif isinstance(c, dict):
+                    label = c.get("category_name", c.get("displayName", c.get("label", "right"))).lower()
+                elif isinstance(c, str):
+                    label = c.lower()
             hand_entries.append((label, h))
 
         dom_match = next((h for lbl, h in hand_entries if lbl == dom_target), None)

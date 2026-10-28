@@ -75,17 +75,105 @@ flowchart TD
     style LightweightSETU fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc
 ```
 
-### Comprehensive Framework Comparison
+### Technology Stack at a Glance
 
-| Engineering Layer | Technology Selected | Alternative Analyzed & Rejected | Technical Rationale & Performance Impact |
-| :--- | :--- | :--- | :--- |
-| **Landmark Tracking & Feature Ingress** | **MediaPipe Hands JS (Edge WASM/WebGL)** | Server-Side YOLOv8, OpenPose, or raw CNN video ingestion | **Privacy & Bandwidth:** MediaPipe processes video directly inside the user's browser. Sending raw 30 FPS 1080p video over WebSockets consumes 15–30 Mbps and exposes biometric user data to the cloud. With MediaPipe, only a 63-element float array (252 bytes) is transmitted—a **99.98% bandwidth reduction**. Furthermore, MediaPipe extracts topological bone coordinates, completely eliminating variations in skin tone, background clutter, and room lighting before inference begins. |
-| **Model Architecture** | **RealSignMLP (3-Layer Dense MLP)** | Vision Transformers (ViT), 3D ResNet, MobileNetV3 | **Parametric Economy & Speed:** Because MediaPipe converts raw pixels into canonical 3D coordinates, feature representation is already solved. A 3-layer MLP with 18,138 parameters achieves **99.11% accuracy** with a microscopic 73.8 KB file footprint, eliminating the multi-megabyte weight downloads and hundreds of milliseconds of latency common to heavy vision models. |
-| **Deep Learning Framework** | **PyTorch 2.5** | TensorFlow / Keras 2 / Scikit-Learn | **Ergonomics & Export Pipeline:** PyTorch allows clean object-oriented architecture subclassing (`nn.Module`), native GPU-to-CPU state dict mapping, and seamless operator tracing via `torch.onnx.export` with dynamic batch axes. |
-| **Inference Serving Engine** | **ONNX Runtime (CPU Execution Provider)** | Native PyTorch Python `model.forward()` | **Microsecond Execution & Portability:** ONNX Runtime applies graph optimization, dead-code elimination, and constant folding to the computation graph. Single-frame CPU latency drops from 55 µs to **20.8 µs** (**2.62x speedup**), unlocking over **48,000 FPS throughput** on standard CPUs without any CUDA dependencies. |
-| **Backend API Engine** | **FastAPI + Uvicorn (ASGI)** | Flask (WSGI) / Django REST Framework | **High-Concurrency Async:** FastAPI is built on Starlette and Pydantic, executing non-blocking asynchronous event loops on Uvicorn. It delivers 3–4x higher request throughput than Flask, automatically validates the 63-D landmark float vectors, and auto-generates interactive Swagger/OpenAPI documentation. |
-| **Frontend Framework** | **React 18 + Vite + TypeScript** | Next.js (SSR) / Vue 3 / Plain Vanilla JavaScript | **Strict Type Safety & Reactive Video Loop:** Vite provides sub-second Hot Module Replacement (HMR). TypeScript guarantees compile-time validation for 21-point coordinate arrays and API responses. React's declarative state model cleanly separates continuous camera frame acquisition from the debounced text buffer state. |
-| **Deployment & Gateway** | **Docker Compose + Nginx (SSL/TLS)** | Bare-metal Python scripts / HTTP local servers | **WebRTC Security Compliance:** Modern browsers enforce strict security boundaries: `navigator.mediaDevices.getUserMedia` is permanently disabled on insecure HTTP origins. Nginx terminates TLS/SSL on port 443, proxies `/api/` traffic to bypass browser CORS restrictions, and Docker guarantees 100% reproducible execution across macOS, Linux, and Windows. |
+| Layer | Technology Selected | Key Technical Advantage |
+| :--- | :--- | :--- |
+| **Landmark Tracking** | **MediaPipe Hands JS (Edge WASM)** | 100% privacy; 252 bytes/frame vs 15–30 Mbps video streaming. |
+| **Model Architecture** | **RealSignMLP (3-Layer Dense MLP)** | 18,138 parameters; 71.7 KB footprint; 99.34% test accuracy. |
+| **Deep Learning** | **PyTorch 2.5** | Clean modular architecture; seamless ONNX tracing. |
+| **Inference Engine** | **ONNX Runtime (CPU Execution)** | 20.8 µs per prediction (> 48,000 FPS throughput on CPU). |
+| **Backend API** | **FastAPI + Uvicorn (ASGI)** | High-concurrency async event loop with typed Pydantic contracts. |
+| **Frontend Workstation** | **React 18 + Vite + TypeScript** | Strict type safety for 3D landmarks; sub-second HMR. |
+| **Deployment Gateway** | **Docker Compose + Nginx (SSL/TLS)** | Guarantees HTTPS for WebRTC camera permissions across all OSs. |
+
+---
+
+### Detailed Technology Selection Cards
+
+#### ⚙️ Landmark Tracking: MediaPipe Hands JS (Edge WASM/WebGL)
+> **Client-side skeletal tracking eliminating biometric privacy risks**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | MediaPipe Hands JavaScript (WebAssembly / WebGL runtime) |
+| **Rejected Alternative**| Server-side YOLOv8, OpenPose, or raw CNN video ingestion |
+| **Privacy Impact** | Raw camera video is processed locally in browser RAM and instantly discarded. Zero video frames leave the device. |
+| **Bandwidth Saving** | Transmits a 63-float array (252 bytes) instead of 1080p video (15–30 Mbps)—a **99.98% network reduction**. |
+| **Visual Invariance** | Extracts 3D skeletal bones, ignoring background clutter, lighting variations, and skin tone. |
+
+---
+
+#### ⚙️ Neural Architecture: RealSignMLP (3-Layer Dense Neural Network)
+> **Ultra-lightweight multi-layer perceptron for instant manual alphabet classification**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | 3-Layer Dense MLP (`Linear-BN-ReLU-Dropout`) |
+| **Rejected Alternative**| Heavyweight Vision Transformers (ViT), 3D ResNet, MobileNetV3 |
+| **Parametric Economy** | Only **18,138 parameters**; 71.7 KB ONNX disk footprint. |
+| **Accuracy & Speed** | Achieves **99.34% test accuracy** in **20.8 microseconds** on standard laptop CPUs. |
+| **Design Insight** | Because MediaPipe solves visual feature extraction, heavy CNNs are unnecessary. |
+
+---
+
+#### ⚙️ Deep Learning Engine: PyTorch 2.5
+> **Production-grade machine learning framework for training and export**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | PyTorch 2.5 |
+| **Rejected Alternative**| TensorFlow / Keras 2 / Scikit-Learn |
+| **Ergonomics** | Clean object-oriented subclassing (`nn.Module`) and GPU-to-CPU state dict mapping. |
+| **Export Pipeline** | Seamless operator tracing via `torch.onnx.export` with dynamic batch axes. |
+
+---
+
+#### ⚙️ Inference Engine: ONNX Runtime (CPU Execution Provider)
+> **Microsecond-speed model serving with zero cloud dependencies**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | ONNX Runtime CPU |
+| **Rejected Alternative**| Native PyTorch Python `model.forward()` |
+| **Graph Optimizations**| Dead-code elimination, constant folding, and SIMD AVX2/AVX-512 acceleration. |
+| **Latency Benchmark** | Single-frame latency drops from 55 µs to **20.8 µs** (**2.62x speedup**), delivering > **48,000 FPS**. |
+
+---
+
+#### ⚙️ Backend API & Streaming: FastAPI + Uvicorn (ASGI)
+> **Asynchronous REST endpoints and bidirectional WebSockets**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | FastAPI + Uvicorn (ASGI) |
+| **Rejected Alternative**| Flask (WSGI) / Django REST Framework |
+| **Concurrency** | Non-blocking asynchronous event loop delivers 3–4x higher request throughput than Flask. |
+| **Validation** | Pydantic v2 schemas automatically validate coordinate vectors; generates Swagger/OpenAPI docs. |
+
+---
+
+#### ⚙️ Frontend Workstation: React 18 + Vite + TypeScript
+> **Strict type safety and reactive video processing workstation**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | React 18 + Vite + TypeScript |
+| **Rejected Alternative**| Next.js (SSR) / Vue 3 / Plain Vanilla JavaScript |
+| **Type Safety** | Compile-time validation for 21-point coordinate arrays and API responses. |
+| **Performance** | Sub-second Hot Module Replacement (HMR); declarative separation of video loops from text state. |
+
+---
+
+#### ⚙️ Gateway & Security: Docker Compose + Nginx (SSL/TLS)
+> **WebRTC-compliant secure local origin and container orchestration**
+
+| Property | Rationale & Specifications |
+| :--- | :--- |
+| **Technology** | Docker Compose + Nginx reverse proxy |
+| **Rejected Alternative**| Bare-metal Python scripts / Insecure HTTP local servers |
+| **WebRTC Compliance** | Modern browsers permanently disable `getUserMedia` on insecure HTTP origins; Nginx terminates TLS on 443. |
+| **Portability** | Guarantees 100% reproducible execution across Windows, macOS, and Linux. |
 
 ---
 

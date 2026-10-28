@@ -1,14 +1,10 @@
 /**
- * SETU — RealSign 26-Class Hand Landmark Preprocessor
+ * SETU — RealSign 26-Class Hand Landmark Preprocessor & Real-Time Framing Analyzer
  *
- * Normalizes 21 3D hand landmarks into a 63-D rotation- and scale-invariant vector
- * matching SETU's RealSign 26-class feature extractor logic:
- * 1. Centers landmarks relative to Wrist (landmark 0).
- * 2. Normalizes scale using distance from Wrist (0) to Middle MCP (landmark 9).
- * 3. In-plane rotation around Z axis aligning middle MCP vector with vertical Y-axis.
- * 4. Out-of-plane rotation around X axis aligning depth vector.
- * 5. Mirrors left hand (1.0 - x) when dominant_hand is 'right'.
- * 6. Flattens into a 63-D array [x0, y0, z0, ..., x20, y20, z20].
+ * Provides:
+ * 1. Robust 63-D rotation- and scale-invariant normalization with singularity guards.
+ * 2. Proper wrist-centered sagittal reflection (avoiding image-space 1.0-x offset distortion).
+ * 3. Real-time hand framing, distance, and positioning analysis for UI guidance.
  */
 
 export interface Landmark3D {
@@ -17,40 +13,53 @@ export interface Landmark3D {
   z?: number;
 }
 
+export interface HandFramingAnalysis {
+  palmSpan: number;
+  boxWidth: number;
+  boxHeight: number;
+  centerX: number;
+  centerY: number;
+  distanceStatus: 'too_far' | 'too_close' | 'optimal';
+  framingStatus: 'off_edge' | 'optimal' | 'reposition';
+  isIdeal: boolean;
+  guidanceMessage: string;
+}
+
 /**
  * Normalizes 21 3D hand landmarks into a 63-D rotation- and scale-invariant vector.
  *
  * @param landmarks - Array of 21 hand landmarks ({x, y, z})
- * @param isLeftHand - Whether hand is left hand (to mirror X coordinates for canonical geometry)
+ * @param mirrorSagittal - Whether to mirror X coordinates across wrist (for left-hand signing)
  * @returns 63-element normalized float array
  */
 export function normalizeHandLandmarks63D(
   landmarks: Landmark3D[],
-  isLeftHand: boolean = false
+  mirrorSagittal: boolean = false
 ): number[] {
   if (!landmarks || landmarks.length !== 21) {
     throw new Error(`Expected 21 landmarks, received ${landmarks ? landmarks.length : 0}`);
   }
 
-  // Copy raw points with optional left-hand mirroring
-  const pts = landmarks.map((lm) => ({
-    x: isLeftHand ? 1.0 - (lm.x || 0) : (lm.x || 0),
-    y: lm.y || 0,
-    z: lm.z || 0,
-  }));
-
   // 1. Center on Wrist (landmark 0)
-  const wrist = pts[0];
-  const translated = pts.map((p) => ({
-    x: p.x - wrist.x,
-    y: p.y - wrist.y,
-    z: p.z - wrist.z,
-  }));
+  const wrist = landmarks[0];
+  const wx = wrist.x || 0;
+  const wy = wrist.y || 0;
+  const wz = wrist.z || 0;
+
+  const translated = landmarks.map((p) => {
+    let dx = (p.x || 0) - wx;
+    let dy = (p.y || 0) - wy;
+    let dz = (p.z || 0) - wz;
+    if (mirrorSagittal) {
+      dx = -dx;
+    }
+    return { x: dx, y: dy, z: dz };
+  });
 
   // 2. Scale normalize using Euclidean distance from Wrist (0) to Middle MCP (9)
   const vWristMiddle = translated[9];
   let scale = Math.hypot(vWristMiddle.x, vWristMiddle.y, vWristMiddle.z);
-  if (scale < 1e-6) scale = 1.0;
+  if (scale < 1e-4) scale = 1.0;
 
   const scaled = translated.map((p) => ({
     x: p.x / scale,
@@ -64,7 +73,8 @@ export function normalizeHandLandmarks63D(
   const normXY = Math.hypot(vx, vy);
 
   let rotated = scaled;
-  if (normXY > 1e-6) {
+  // Guard against near-zero singularity when fingers point towards camera
+  if (normXY > 0.02) {
     const theta = Math.atan2(-vx, -vy);
     const cosT = Math.cos(theta);
     const sinT = Math.sin(theta);
@@ -80,7 +90,7 @@ export function normalizeHandLandmarks63D(
   const z9 = rotated[9].z;
   const normYZ = Math.hypot(y9, z9);
 
-  if (normYZ > 1e-6 && Math.abs(z9) > 1e-6) {
+  if (normYZ > 0.02 && Math.abs(z9) > 0.02) {
     const phi = Math.atan2(z9, -y9);
     const cosP = Math.cos(phi);
     const sinP = Math.sin(phi);
@@ -104,4 +114,87 @@ export function normalizeHandLandmarks63D(
   }
 
   return Array.from(features);
+}
+
+/**
+ * Evaluates hand framing, camera distance, and bounding box metrics in real-time.
+ * Used to guide the user into the optimal detection zone.
+ */
+export function analyzeHandFraming(landmarks: Landmark3D[]): HandFramingAnalysis {
+  if (!landmarks || landmarks.length !== 21) {
+    return {
+      palmSpan: 0,
+      boxWidth: 0,
+      boxHeight: 0,
+      centerX: 0.5,
+      centerY: 0.5,
+      distanceStatus: 'too_far',
+      framingStatus: 'off_edge',
+      isIdeal: false,
+      guidanceMessage: 'Position hand inside camera view',
+    };
+  }
+
+  let minX = 1.0;
+  let maxX = 0.0;
+  let minY = 1.0;
+  let maxY = 0.0;
+
+  for (let i = 0; i < 21; i++) {
+    const x = landmarks[i].x || 0;
+    const y = landmarks[i].y || 0;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+
+  const boxWidth = Math.max(0.001, maxX - minX);
+  const boxHeight = Math.max(0.001, maxY - minY);
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
+  // Palm span: distance between Wrist (0) and Middle MCP (9)
+  const w = landmarks[0];
+  const m = landmarks[9];
+  const palmSpan = Math.hypot((m.x || 0) - (w.x || 0), (m.y || 0) - (w.y || 0));
+
+  let distanceStatus: 'too_far' | 'too_close' | 'optimal' = 'optimal';
+  if (palmSpan < 0.12 || boxHeight < 0.20) {
+    distanceStatus = 'too_far';
+  } else if (palmSpan > 0.40 || boxHeight > 0.70) {
+    distanceStatus = 'too_close';
+  }
+
+  let framingStatus: 'off_edge' | 'optimal' | 'reposition' = 'optimal';
+  if (minX < 0.04 || maxX > 0.96 || minY < 0.04 || maxY > 0.96) {
+    framingStatus = 'off_edge';
+  } else if (centerX < 0.20 || centerX > 0.80 || centerY < 0.15 || centerY > 0.85) {
+    framingStatus = 'reposition';
+  }
+
+  const isIdeal = distanceStatus === 'optimal' && framingStatus === 'optimal';
+
+  let guidanceMessage = 'Optimal position — Sign clearly';
+  if (framingStatus === 'off_edge') {
+    guidanceMessage = 'Hand cut off — Keep hand fully in camera view';
+  } else if (distanceStatus === 'too_far') {
+    guidanceMessage = 'Move closer to camera for higher accuracy';
+  } else if (distanceStatus === 'too_close') {
+    guidanceMessage = 'Move slightly back from camera';
+  } else if (framingStatus === 'reposition') {
+    guidanceMessage = 'Center hand in the guide area';
+  }
+
+  return {
+    palmSpan,
+    boxWidth,
+    boxHeight,
+    centerX,
+    centerY,
+    distanceStatus,
+    framingStatus,
+    isIdeal,
+    guidanceMessage,
+  };
 }

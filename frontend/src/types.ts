@@ -11,7 +11,7 @@ export interface LandmarkGroups {
   face: LandmarkPoint[];
 }
 
-export type ActiveModelType = 'realsign' | 'isl_mvp' | 'isl_sequence_lstm';
+export type ActiveModelType = 'realsign' | 'isl_mvp' | 'isl_sequence_lstm' | 'include_stream';
 
 export interface Candidate {
   label: string;
@@ -42,6 +42,14 @@ export interface RecognitionPayload {
     is_known_sign: boolean;
     top_3: [string, number][];
   };
+  include_prediction?: {
+    label: string;
+    display_name: string;
+    confidence: number;
+    is_known_sign: boolean;
+    top_3: [string, number][];
+    entropy?: number;
+  };
   buffer_fill?: number;
   hand_detected?: boolean;
   hands_in_subtitle_zone?: boolean;
@@ -53,6 +61,30 @@ export interface RecognitionPayload {
   translated_text?: string;
   sentence_tokens?: string[];
   message?: string;
+  detected_objects?: Array<{
+    label: string;
+    display_name: string;
+    confidence: number;
+    is_held: boolean;
+    is_interactive: boolean;
+    bbox: [number, number, number, number];
+  }>;
+  fused_multimodal_text?: string | null;
+  disambiguation?: {
+    active: boolean;
+    options: Array<{
+      label: string;
+      display: string;
+      hand: 'left' | 'right';
+    }>;
+    top1?: string;
+    top2?: string;
+  };
+  lighting?: {
+    score: number;
+    enhanced: boolean;
+  };
+  predictive_suggestions?: string[];
 }
 
 export interface HistoryItem {
@@ -88,11 +120,33 @@ export interface TTSState {
   autoSpeakEnabled: boolean;
   availableVoices: SpeechSynthesisVoice[];
   selectedVoice: SpeechSynthesisVoice | null;
+  targetLanguage?: string;
 }
 
 export interface TTSControls {
-  speak: (text: string) => void;
+  speak: (text: string, language?: string) => void;
   stop: () => void;
   toggleAutoSpeak: () => void;
   setSelectedVoice: (voice: SpeechSynthesisVoice | null) => void;
+  setTargetLanguage?: (lang: string) => void;
 }
+
+export type FramingStatus =
+  | 'optimal'
+  | 'step_closer'
+  | 'step_back'
+  | 'center_yourself'
+  | 'raise_hands'
+  | 'hands_too_low'
+  | 'searching';
+
+export interface FramingFeedback {
+  status: FramingStatus;
+  message: string;
+  isOptimal: boolean;
+  score: number; // 0 to 100
+  distanceMetric?: number;
+  centerOffset?: number;
+  handsDetected: boolean;
+}
+

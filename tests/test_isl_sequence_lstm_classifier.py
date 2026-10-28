@@ -9,6 +9,7 @@ from models.adapters.sequence_lstm import (
     ISLSequenceLSTMClassifier,
     ISLSequencePrediction,
     DEFAULT_SEQUENCE_LSTM_MODEL_PATH,
+    CTCGreedyDecoder,
 )
 
 
@@ -101,3 +102,51 @@ def test_classifier_invalid_shape(classifier):
     invalid = np.random.randn(30, 63).astype(np.float32)
     with pytest.raises(ValueError):
         classifier.predict_sequence(invalid)
+
+
+def test_ctc_greedy_decoder_token_collapsing_and_streaming():
+    decoder = CTCGreedyDecoder(blank_token="no_sign", min_confidence=0.45)
+
+    # 1. Test offline batch decoding: collapse duplicates, strip blanks
+    stream = ["no_sign", "hello", "hello", "no_sign", "no_sign", "thank_you", "thank_you", "no_sign"]
+    decoded = decoder.decode(stream)
+    assert decoded == ["hello", "thank_you"]
+
+    # 2. Test online streaming decoding via step()
+    decoder.reset()
+    assert decoder.decoded_history == []
+
+    # Stream 'hello'
+    assert decoder.step("no_sign", 0.9) is None
+    assert decoder.step("hello", 0.85) == "hello"
+    assert decoder.step("hello", 0.82) is None  # Repeated token collapsed
+    assert decoder.step("hello", 0.88) is None  # Repeated token collapsed
+
+    # Stream transition / inter-sign blank
+    assert decoder.step("no_sign", 0.95) is None
+
+    # Stream 'you'
+    assert decoder.step("you", 0.90) == "you"
+    assert decoder.step("you", 0.91) is None
+
+    assert decoder.decoded_history == ["hello", "you"]
+
+
+def test_ctc_decoder_logits_decoding():
+    decoder = CTCGreedyDecoder(blank_token="no_sign")
+    class_names = ["no_sign", "hello", "thank_you", "good_morning"]
+
+    # Logits sequence: [0 (no_sign), 1 (hello), 1 (hello), 0 (no_sign), 2 (thank_you), 2, 0]
+    logits = np.array([
+        [10.0, 1.0, 0.0, 0.0],  # no_sign
+        [1.0, 10.0, 0.0, 0.0],  # hello
+        [0.5, 9.0, 0.0, 0.0],   # hello
+        [8.0, 1.0, 0.0, 0.0],   # no_sign
+        [0.0, 0.0, 12.0, 0.0],  # thank_you
+        [0.0, 0.0, 11.0, 0.0],  # thank_you
+        [9.0, 0.0, 0.0, 0.0],   # no_sign
+    ], dtype=np.float32)
+
+    decoded = decoder.decode_logits(logits, class_names)
+    assert decoded == ["hello", "thank_you"]
+

@@ -18,7 +18,10 @@ import {
   Check,
   Clock,
 } from 'lucide-react';
-import { normalizeHandLandmarks63D } from '../utils/landmarkProcessor';
+import {
+  analyzeHandFraming,
+  type HandFramingAnalysis,
+} from '../utils/landmarkProcessor';
 import { useTextBuffer } from '../hooks/useTextBuffer';
 
 interface TopCandidate {
@@ -67,6 +70,10 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [showSkeleton, setShowSkeleton] = useState<boolean>(true);
+  const [showHandGuide, setShowHandGuide] = useState<boolean>(true);
+  const [dominantHand, setDominantHand] = useState<'right' | 'left'>('right');
+  const [numHandsDetected, setNumHandsDetected] = useState<number>(0);
+  const [framingInfo, setFramingInfo] = useState<HandFramingAnalysis | null>(null);
   const [isHandDetected, setIsHandDetected] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('Camera is idle. Click Start Camera to begin.');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -89,9 +96,9 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
     manualBackspace,
     clearBuffer,
   } = useTextBuffer({
-    holdDurationMs: 600,
-    confidenceThreshold: 0.85,
-    lockoutDurationMs: 400,
+    holdDurationMs: 380,
+    confidenceThreshold: 0.45,
+    lockoutDurationMs: 300,
   });
 
   const [copied, setCopied] = useState<boolean>(false);
@@ -136,9 +143,14 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
     };
   }, [checkHealth]);
 
-  // Draw landmarks and skeleton on canvas
-  const drawLandmarks = useCallback(
-    (landmarks: Array<{ x: number; y: number; z?: number }>, width: number, height: number) => {
+  // Draw landmarks, skeletons for both hands, and visual positioning guide
+  const drawCanvas = useCallback(
+    (
+      allHands: Array<{ landmarks: Array<{ x: number; y: number; z?: number }>; isLeft: boolean }>,
+      width: number,
+      height: number,
+      framing: HandFramingAnalysis | null
+    ) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -146,60 +158,193 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
 
       ctx.clearRect(0, 0, width, height);
 
-      if (!showSkeleton || !landmarks || landmarks.length !== 21) {
-        return;
-      }
+      // 1. Draw Visual Positioning Stencil / Silhouette Guide
+      if (showHandGuide) {
+        ctx.save();
+        // Target hand positioning guide zone
+        const gw = width * 0.44;
+        const gh = height * 0.68;
+        const gx = isMirrored ? width * 0.06 : width * 0.50;
+        const gy = height * 0.16;
 
-      ctx.save();
-      if (isMirrored) {
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-      }
+        let guideColor = 'rgba(255, 255, 255, 0.25)';
+        let glowColor = 'transparent';
+        let badgeText = 'Position Hand in Frame';
+        let badgeBg = 'rgba(15, 23, 42, 0.75)';
 
-      // Draw connections
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      for (const [startIdx, endIdx] of HAND_CONNECTIONS) {
-        const p1 = landmarks[startIdx];
-        const p2 = landmarks[endIdx];
-        if (p1 && p2) {
-          ctx.beginPath();
-          ctx.moveTo(p1.x * width, p1.y * height);
-          ctx.lineTo(p2.x * width, p2.y * height);
-          ctx.stroke();
+        if (framing) {
+          if (framing.isIdeal) {
+            guideColor = '#10B981';
+            glowColor = 'rgba(16, 185, 129, 0.45)';
+            badgeText = '✨ Optimal Framing & Distance';
+            badgeBg = 'rgba(6, 78, 59, 0.9)';
+          } else if (framing.distanceStatus === 'too_far') {
+            guideColor = '#F59E0B';
+            glowColor = 'rgba(245, 158, 11, 0.35)';
+            badgeText = '📏 Move Closer to Camera';
+            badgeBg = 'rgba(120, 53, 15, 0.9)';
+          } else if (framing.distanceStatus === 'too_close') {
+            guideColor = '#F59E0B';
+            glowColor = 'rgba(245, 158, 11, 0.35)';
+            badgeText = '⬅️ Move Slightly Back';
+            badgeBg = 'rgba(120, 53, 15, 0.9)';
+          } else if (framing.framingStatus === 'off_edge') {
+            guideColor = '#EF4444';
+            glowColor = 'rgba(239, 68, 68, 0.35)';
+            badgeText = '⚠️ Keep Hand Fully Visible';
+            badgeBg = 'rgba(127, 29, 29, 0.9)';
+          } else {
+            guideColor = '#38BDF8';
+            glowColor = 'rgba(56, 189, 248, 0.3)';
+            badgeText = '🎯 Center Hand in Target Zone';
+            badgeBg = 'rgba(12, 74, 110, 0.9)';
+          }
         }
-      }
 
-      // Draw landmark nodes
-      for (let i = 0; i < landmarks.length; i++) {
-        const p = landmarks[i];
-        const x = p.x * width;
-        const y = p.y * height;
+        ctx.strokeStyle = guideColor;
+        ctx.lineWidth = framing?.isIdeal ? 3 : 2;
+        if (glowColor !== 'transparent') {
+          ctx.shadowColor = glowColor;
+          ctx.shadowBlur = 12;
+        }
+        if (!framing) {
+          ctx.setLineDash([8, 8]);
+        } else {
+          ctx.setLineDash([]);
+        }
 
-        // Wrist (0) and Middle MCP (9) highlighted in cyan/green
-        const isKeyPoint = i === 0 || i === 9;
-        const radius = isKeyPoint ? 6 : 4;
+        const r = 16;
+        ctx.beginPath();
+        ctx.moveTo(gx + r, gy);
+        ctx.lineTo(gx + gw - r, gy);
+        ctx.quadraticCurveTo(gx + gw, gy, gx + gw, gy + r);
+        ctx.lineTo(gx + gw, gy + gh - r);
+        ctx.quadraticCurveTo(gx + gw, gy + gh, gx + gw - r, gy + gh);
+        ctx.lineTo(gx + r, gy + gh);
+        ctx.quadraticCurveTo(gx, gy + gh, gx, gy + gh - r);
+        ctx.lineTo(gx, gy + r);
+        ctx.quadraticCurveTo(gx, gy, gx + r, gy);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+
+        // Badge pill
+        ctx.fillStyle = badgeBg;
+        ctx.font = '600 12px Inter, sans-serif';
+        const textMetrics = ctx.measureText(badgeText);
+        const textPad = 12;
+        const textW = textMetrics.width + textPad * 2;
+        const textH = 24;
+        const textX = gx + (gw - textW) / 2;
+        const textY = gy - textH - 6;
 
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = isKeyPoint ? '#4E9F76' : '#94A3B8';
+        if ((ctx as any).roundRect) {
+          (ctx as any).roundRect(textX, textY, textW, textH, 6);
+        } else {
+          ctx.rect(textX, textY, textW, textH);
+        }
         ctx.fill();
-        ctx.lineWidth = 1.0;
-        ctx.strokeStyle = '#18191D';
+        ctx.strokeStyle = guideColor;
+        ctx.lineWidth = 1;
         ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeText, textX + textW / 2, textY + textH / 2);
+
+        ctx.restore();
       }
 
-      ctx.restore();
+      // 2. Draw Skeletons for Detected Hands (Supports 1 or 2 hands!)
+      if (showSkeleton && allHands.length > 0) {
+        ctx.save();
+        if (isMirrored) {
+          ctx.translate(width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        allHands.forEach((hand, hIdx) => {
+          const lms = hand.landmarks;
+          if (!lms || lms.length !== 21) return;
+
+          const isPrimary = hIdx === 0;
+          const strokeCol = isPrimary ? 'rgba(56, 189, 248, 0.85)' : 'rgba(168, 85, 247, 0.85)';
+          const nodeCol = isPrimary ? '#38BDF8' : '#A855F7';
+          const keyCol = isPrimary ? '#34D399' : '#F472B6';
+
+          // Connections
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = strokeCol;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          for (const [startIdx, endIdx] of HAND_CONNECTIONS) {
+            const p1 = lms[startIdx];
+            const p2 = lms[endIdx];
+            if (p1 && p2) {
+              ctx.beginPath();
+              ctx.moveTo(p1.x * width, p1.y * height);
+              ctx.lineTo(p2.x * width, p2.y * height);
+              ctx.stroke();
+            }
+          }
+
+          // Landmark nodes
+          for (let i = 0; i < lms.length; i++) {
+            const p = lms[i];
+            const x = p.x * width;
+            const y = p.y * height;
+            const isKeyPoint = i === 0 || i === 9;
+            const radius = isKeyPoint ? 6 : 4;
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = isKeyPoint ? keyCol : nodeCol;
+            ctx.fill();
+            ctx.lineWidth = 1.0;
+            ctx.strokeStyle = '#0F172A';
+            ctx.stroke();
+          }
+
+          // Wrist label pill
+          const wrist = lms[0];
+          if (wrist) {
+            const wx = wrist.x * width;
+            const wy = wrist.y * height;
+            ctx.save();
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            const handLabel = hand.isLeft ? 'Left Hand' : 'Right Hand';
+            const pillW = 72;
+            const pillH = 18;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.fillRect(wx - pillW / 2, wy + 8, pillW, pillH);
+            ctx.strokeStyle = strokeCol;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx - pillW / 2, wy + 8, pillW, pillH);
+            ctx.fillStyle = nodeCol;
+            ctx.fillText(handLabel, wx, wy + 21);
+            ctx.restore();
+          }
+        });
+
+        ctx.restore();
+      }
     },
-    [isMirrored, showSkeleton]
+    [isMirrored, showSkeleton, showHandGuide]
   );
 
-  // Send 63-D features to FastAPI POST /api/predict
+  // Send landmarks and bimanual context to FastAPI POST /api/predict
   const sendPredictionRequest = useCallback(
-    async (landmarks: Array<{ x: number; y: number; z?: number }>, isLeftHand: boolean) => {
+    async (
+      landmarks: Array<{ x: number; y: number; z?: number }>,
+      mirrorSagittal: boolean,
+      secondaryLandmarks?: Array<{ x: number; y: number; z?: number }> | null
+    ) => {
       if (isRequestPendingRef.current) return;
 
       const now = performance.now();
@@ -210,16 +355,22 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
       isRequestPendingRef.current = true;
 
       try {
-        // Preprocess to 63-D normalized vector directly in browser memory
-        const features63D = normalizeHandLandmarks63D(landmarks, isLeftHand);
+        const payload: Record<string, any> = {
+          landmarks: landmarks.map((lm) => ({ x: lm.x, y: lm.y, z: lm.z ?? 0.0 })),
+          dominant_hand: mirrorSagittal ? 'left' : 'right',
+        };
+        if (secondaryLandmarks && secondaryLandmarks.length === 21) {
+          payload.secondary_landmarks = secondaryLandmarks.map((lm) => ({
+            x: lm.x,
+            y: lm.y,
+            z: lm.z ?? 0.0,
+          }));
+        }
 
         const res = await fetch(`${apiBaseUrl}/api/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            features: features63D,
-            dominant_hand: isLeftHand ? 'left' : 'right',
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (res.ok) {
@@ -265,30 +416,57 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
       }
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const numHands = results.multiHandLandmarks.length;
+        setNumHandsDetected(numHands);
         setIsHandDetected(true);
-        setStatusMessage('Hand detected — Classifying letter');
 
-        const landmarks = results.multiHandLandmarks[0];
-        let isLeft = false;
-        if (results.multiHandedness && results.multiHandedness.length > 0) {
-          const label = results.multiHandedness[0]?.label || '';
-          isLeft = label.toLowerCase() === 'left';
+        const allHands: Array<{ landmarks: Array<{ x: number; y: number; z?: number }>; isLeft: boolean }> = [];
+        for (let i = 0; i < numHands; i++) {
+          const lms = results.multiHandLandmarks[i];
+          let isLeft = false;
+          if (results.multiHandedness && i < results.multiHandedness.length) {
+            const h = results.multiHandedness[i];
+            const label = h?.label || h?.[0]?.label || h?.categoryName || '';
+            isLeft = label.toLowerCase() === 'left';
+          }
+          allHands.push({ landmarks: lms, isLeft });
         }
 
-        drawLandmarks(landmarks, width, height);
-        sendPredictionRequest(landmarks, isLeft);
+        // Active signing hand: match dominant hand preference if present, else primary detected hand
+        let activeHand = allHands[0];
+        let secondaryHand: { landmarks: Array<{ x: number; y: number; z?: number }>; isLeft: boolean } | undefined = allHands[1];
+        if (numHands > 1) {
+          const preferred = allHands.find((h) => (dominantHand === 'left' ? h.isLeft : !h.isLeft));
+          if (preferred) {
+            activeHand = preferred;
+            secondaryHand = allHands.find((h) => h !== preferred);
+          }
+        }
+
+        const framing = analyzeHandFraming(activeHand.landmarks);
+        setFramingInfo(framing);
+
+        if (numHands >= 2) {
+          setStatusMessage(`2 hands in view — Bimanual ISL sign detected (${framing.guidanceMessage})`);
+        } else {
+          setStatusMessage(framing.guidanceMessage);
+        }
+
+        drawCanvas(allHands, width, height, framing);
+        sendPredictionRequest(activeHand.landmarks, activeHand.isLeft, secondaryHand?.landmarks);
       } else {
+        setNumHandsDetected(0);
         setIsHandDetected(false);
+        setFramingInfo(null);
         setStatusMessage('Position hand clearly inside camera view');
-        const ctx = canvas.getContext('2d');
-        if (ctx) ctx.clearRect(0, 0, width, height);
+        drawCanvas([], width, height, null);
         resetHold();
       }
     },
-    [drawLandmarks, isPaused, sendPredictionRequest, resetHold]
+    [dominantHand, drawCanvas, isPaused, resetHold, sendPredictionRequest]
   );
 
-  // Initialize MediaPipe Hands
+  // Initialize MediaPipe Hands (with 2-hand ISL tracking enabled)
   const initMediaPipeHands = useCallback(async () => {
     try {
       const mpHands = (window as any).Hands;
@@ -301,8 +479,8 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
       });
 
       hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
+        maxNumHands: 2,
+        modelComplexity: 0,
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5,
       });
@@ -587,6 +765,94 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
               </div>
             )}
 
+            {/* Real-time Hand Positioning & Multi-hand Guide Overlay */}
+            {isRunning && (
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                left: '12px',
+                right: '12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                pointerEvents: 'none',
+                zIndex: 10,
+              }}>
+                {/* Hand Count & Tracking Indicator */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {numHandsDetected > 0 ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'rgba(15, 23, 42, 0.85)',
+                      backdropFilter: 'blur(8px)',
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#F8FAFC',
+                    }}>
+                      <span style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: numHandsDetected === 2 ? '#A855F7' : '#38BDF8',
+                        boxShadow: `0 0 8px ${numHandsDetected === 2 ? '#A855F7' : '#38BDF8'}`,
+                      }} />
+                      <span>{numHandsDetected === 2 ? '2 Hands Active (Dual-Hand ISL)' : `1 Hand (${dominantHand === 'right' ? 'Right' : 'Left'})`}</span>
+                    </div>
+                  ) : (
+                    <div style={{
+                      background: 'rgba(15, 23, 42, 0.75)',
+                      backdropFilter: 'blur(6px)',
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      fontSize: '11px',
+                      color: '#94A3B8',
+                    }}>
+                      Place hand inside stencil
+                    </div>
+                  )}
+                </div>
+
+                {/* Framing & Distance Guidance Pill */}
+                {framingInfo && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: framingInfo.isIdeal
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : framingInfo.distanceStatus === 'too_close' || framingInfo.framingStatus === 'reposition'
+                      ? 'rgba(245, 158, 11, 0.2)'
+                      : 'rgba(56, 189, 248, 0.2)',
+                    backdropFilter: 'blur(8px)',
+                    border: `1px solid ${
+                      framingInfo.isIdeal
+                        ? 'rgba(16, 185, 129, 0.4)'
+                        : framingInfo.distanceStatus === 'too_close' || framingInfo.framingStatus === 'reposition'
+                        ? 'rgba(245, 158, 11, 0.4)'
+                        : 'rgba(56, 189, 248, 0.4)'
+                    }`,
+                    borderRadius: '20px',
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: framingInfo.isIdeal
+                      ? '#10B981'
+                      : framingInfo.distanceStatus === 'too_close' || framingInfo.framingStatus === 'reposition'
+                      ? '#F59E0B'
+                      : '#38BDF8',
+                  }}>
+                    <span>{framingInfo.guidanceMessage}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Live Subtitle Overlay */}
             {isRunning && prediction && isHandDetected && (
               <div style={{
@@ -688,6 +954,46 @@ export const WebcamAlphabetRecognition: React.FC<WebcamAlphabetRecognitionProps>
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setShowHandGuide((g) => !g)}
+                title="Toggle visual hand positioning stencil guide"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  background: showHandGuide ? 'rgba(56, 189, 248, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                  color: showHandGuide ? '#38BDF8' : '#94A3B8',
+                  border: `1px solid ${showHandGuide ? 'rgba(56, 189, 248, 0.35)' : 'rgba(255, 255, 255, 0.1)'}`,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                <Sparkles size={14} />
+                <span>Guide</span>
+              </button>
+
+              <button
+                onClick={() => setDominantHand((d) => (d === 'right' ? 'left' : 'right'))}
+                title="Switch dominant tracking hand priority"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: '#CBD5E1',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                <Type size={14} />
+                <span>Hand: {dominantHand === 'right' ? 'R' : 'L'}</span>
+              </button>
+
               <button
                 onClick={() => setIsMirrored((m) => !m)}
                 title="Toggle camera mirror"
