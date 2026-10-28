@@ -102,10 +102,17 @@ def check_subtitle_collision(left_hand: List[Dict[str, float]], right_hand: List
     return False
 
 
-def get_positioning_guidance(pose_pts: List[Dict[str, float]], has_hands: bool) -> str:
-    """Generates real positioning guidance based on upper body keypoint coordinates."""
+def get_positioning_guidance(
+    pose_pts: List[Dict[str, float]],
+    has_hands: bool,
+    lighting_score: Optional[float] = None,
+) -> str:
+    """Generates real positioning guidance based on upper body keypoints and ambient lighting."""
     if not pose_pts or len(pose_pts) < 13:
         return "Step into frame so your head and upper body are visible"
+
+    if lighting_score is not None and lighting_score < 0.38:
+        return "Low light detected — please turn on a light facing you"
 
     nose = pose_pts[0]
     left_shoulder = pose_pts[11]
@@ -113,10 +120,10 @@ def get_positioning_guidance(pose_pts: List[Dict[str, float]], has_hands: bool) 
 
     shoulder_width = abs(left_shoulder["x"] - right_shoulder["x"])
 
-    if shoulder_width > 0.70:
-        return "Too close to camera — please step back"
+    if shoulder_width > 0.65:
+        return "Too close to camera — please step back slightly (ideal: 50–70 cm)"
     if shoulder_width < 0.16:
-        return "Too far from camera — please move closer"
+        return "Too far from camera — please move closer (ideal: 50–70 cm)"
 
     if nose["y"] < 0.05:
         return "Camera too low — tilt up or lower your position"
@@ -524,7 +531,7 @@ async def websocket_recognize(
                     streaming_include.append_frame(pose, left_hand, right_hand)
 
                 hands_in_subtitle_zone = check_subtitle_collision(left_hand, right_hand)
-                guidance_text = get_positioning_guidance(pose, hand_detected)
+                guidance_text = get_positioning_guidance(pose, hand_detected, lighting_score=lighting_score)
 
                 curr_time_perf = time.perf_counter()
                 dt_frame = max(curr_time_perf - prev_frame_perf_time, 0.001)

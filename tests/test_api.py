@@ -76,6 +76,7 @@ def test_positioning_guidance():
     pose_far[11] = {"x": 0.45, "y": 0.3, "z": 0.0}
     pose_far[12] = {"x": 0.52, "y": 0.3, "z": 0.0}
     assert "Too far" in get_positioning_guidance(pose_far, False)
+    assert "Low light" in get_positioning_guidance(pose_far, False, lighting_score=0.2)
 
 
 def test_websocket_recognize_mock_frame(client):

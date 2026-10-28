@@ -68,7 +68,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   const [showSignGuide, setShowSignGuide] = useState<boolean>(false);
 
   // Local state fallback if external handler isn't explicitly passed
-  const [internalShowGuide, setInternalShowGuide] = useState<boolean>(false);
+  const [internalShowGuide, setInternalShowGuide] = useState<boolean>(true);
 
   const activeShowGuide = showFramingGuide !== undefined ? showFramingGuide : internalShowGuide;
 
@@ -212,14 +212,24 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
               <span>Detection Paused</span>
             </div>
           )}
-          {activeShowGuide && cameraStatus === 'detecting' && (
+          {/* Always display real-time distance and lighting feedback when camera is active */}
+          {cameraStatus === 'detecting' && (
             <div
               className={`framing-status-chip ${
-                framingFeedback.isOptimal ? 'optimal' : 'adjust'
+                (currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38)
+                  ? 'adjust'
+                  : framingFeedback.isOptimal
+                  ? 'optimal'
+                  : 'adjust'
               }`}
+              title="Real-time distance, framing, and lighting calibration"
             >
               <span className="framing-chip-dot" />
-              <span className="framing-chip-text">{framingFeedback.message}</span>
+              <span className="framing-chip-text">
+                {currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38
+                  ? 'Low Light — Increase front lighting'
+                  : currentResult?.guidance || framingFeedback.message}
+              </span>
             </div>
           )}
         </div>
@@ -285,11 +295,15 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* Soft Framing Guidance Hint when hands are not yet in frame */}
-        {cameraStatus === 'detecting' && !handDetected && !activeShowGuide && (
+        {/* Soft Real-Time Distance & Lighting Guidance Banner */}
+        {cameraStatus === 'detecting' && (!framingFeedback.isOptimal || !handDetected || (currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38)) && (
           <div className="camera-framing-hint-banner" aria-live="polite">
             <span className="framing-hint-dot" aria-hidden="true" />
-            <span className="framing-hint-text">Position hands within camera frame to translate</span>
+            <span className="framing-hint-text">
+              {currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38
+                ? 'Low light detected — please turn on a light facing you'
+                : currentResult?.guidance || framingFeedback.message}
+            </span>
           </div>
         )}
 
