@@ -22,6 +22,7 @@ from backend.app.services.vision.object_detector import COCOObjectDetector
 from backend.app.services.vision.enhancer import AdaptiveLowLightEnhancer
 from backend.app.services.nlp.multimodal_fuser import MultimodalFuser
 from backend.app.services.nlp.predictive import PredictiveTextEngine
+from backend.app.services.nlp.neural_translator import NeuralGlossTranslator, neural_translator
 
 logger = logging.getLogger("setu.backend.pipeline")
 
@@ -49,6 +50,7 @@ class PipelineManager:
         self.enhancer: Optional[AdaptiveLowLightEnhancer] = None
         self.fuser: Optional[MultimodalFuser] = None
         self.predictive: Optional[PredictiveTextEngine] = None
+        self.neural_translator: Optional[NeuralGlossTranslator] = None
 
         # Standard file paths
         self.model_path = _find_weight_file("isl_mvp_model.npz")
@@ -123,6 +125,8 @@ class PipelineManager:
         self.enhancer = AdaptiveLowLightEnhancer()
         self.fuser = MultimodalFuser()
         self.predictive = PredictiveTextEngine()
+        self.neural_translator = neural_translator
+        self.neural_translator.load(async_load=True)
 
         # Initialize COCO 80+ class object detector for Show-and-Sign interaction
         try:

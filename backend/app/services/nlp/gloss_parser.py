@@ -82,14 +82,14 @@ class ISLGlossParser:
                 cleaned.append(normalized)
         return cleaned
 
-    def parse_gloss(self, tokens: Sequence[str]) -> str:
-        """Parses a list of ISL gloss tokens into English."""
+    def match_rule(self, tokens: Sequence[str]) -> Optional[str]:
+        """Returns canonical translation if tokens match an exact dictionary rule, else None."""
         if not tokens:
-            return ""
+            return None
 
         cleaned = self.clean_duplicate_tokens(tokens)
         if not cleaned:
-            return ""
+            return None
 
         key = tuple(cleaned)
         if key in self.rules:
@@ -107,6 +107,15 @@ class ISLGlossParser:
         if expanded_key in self.rules:
             return self.rules[expanded_key]
 
+        return None
+
+    def parse_gloss(self, tokens: Sequence[str]) -> str:
+        """Parses a list of ISL gloss tokens into English."""
+        rule_match = self.match_rule(tokens)
+        if rule_match is not None:
+            return rule_match
+
+        cleaned = self.clean_duplicate_tokens(tokens)
         return self._fallback_sentence(cleaned)
 
     def _fallback_sentence(self, cleaned: List[str]) -> str:

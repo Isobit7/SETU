@@ -10,23 +10,28 @@ import time
 from typing import Any, Dict, List, Optional
 
 from backend.app.services.nlp.gloss_parser import ISLGlossParser
+from backend.app.services.nlp.neural_translator import neural_translator as default_neural_translator
 from models.adapters.sequence_lstm import CTCGreedyDecoder
 
 
 class SentenceAccumulator:
     """Accumulates individual alphabet letters and holistic phrases into full sentences,
-    handling timing buffers, CTC continuous sequence decoding, and dispatching to the ISLGlossParser.
+    handling timing buffers, CTC continuous sequence decoding, and dispatching to neural & gloss translators.
     """
 
     def __init__(
         self,
         parser: Optional[ISLGlossParser] = None,
+        neural_translator: Optional[Any] = None,
         word_timeout: float = 1.2,
         sentence_timeout: float = 2.5,
         ctc_blank_token: str = "no_sign",
         ctc_min_confidence: float = 0.40,
     ) -> None:
         self.parser: ISLGlossParser = parser or ISLGlossParser()
+        self.neural_translator: Any = (
+            neural_translator if neural_translator is not None else default_neural_translator
+        )
         self.word_timeout: float = word_timeout
         self.sentence_timeout: float = sentence_timeout
 
@@ -105,12 +110,20 @@ class SentenceAccumulator:
         }
 
     def translate_sentence(self) -> str:
-        """Parses the current sentence tokens through the ISL Gloss Parser."""
+        """Parses the current sentence tokens through the ISL Gloss Parser and Neural Translator."""
         if not self.sentence_tokens:
             self.translated_text = ""
             return ""
 
-        self.translated_text = self.parser.parse_gloss(self.sentence_tokens)
+        rule_match = self.parser.match_rule(self.sentence_tokens)
+        if rule_match is not None:
+            self.translated_text = rule_match
+            return self.translated_text
+
+        if self.neural_translator is not None and getattr(self.neural_translator, "is_loaded", False):
+            self.translated_text = self.neural_translator.translate(self.sentence_tokens)
+        else:
+            self.translated_text = self.parser.parse_gloss(self.sentence_tokens)
         return self.translated_text
 
     def add_continuous_token(
