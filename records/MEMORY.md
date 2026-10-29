@@ -3,7 +3,7 @@
 > **System:** SETU (Indian Sign Language Translator)  
 > **Repository:** `c:\MINI PROJ-SETU`  
 > **Last Synchronized:** October 2026  
-> **Operational Status:** Fully Operational (134/134 Pytest Tests Passing | Clean Vite Build | Live Daemons Active)  
+> **Operational Status:** Fully Operational (160/160 Pytest Tests Passing | Clean Vite Build | Live Daemons Active)  
 > **Protocol:** This living memory log tracks architectural commitments, completed milestones, resolved debt, and operational constraints.
 
 ---
@@ -12,16 +12,17 @@
 
 | Metric / Domain | Current Specification | Operational Standard |
 | :--- | :--- | :--- |
-| **Primary Mission** | Real-time Indian Sign Language (ISL) to English translation | Local-first, privacy-preserving, zero GPU required on client. |
-| **Frontend Workstation** | React 19 + TypeScript + Vite | Dark theme (`#131314`), glassmorphism HUD, disambiguation cards, movie subtitles, CLS = 0. |
-| **Backend API & Streaming** | FastAPI (ASGI) + Uvicorn + WebSockets | Duplex streaming at 15–30 FPS with < 30ms processing latency. |
-| **Alphabet ML Classifier** | PyTorch / ONNX RealSignMLP (89-D / 63-D) | **99.34% test accuracy**, 99.34% macro F1 across 26 alphabet classes (A–Z). |
+| **Primary Mission** | Real-time Indian Sign Language (ISL) to English translation | Local-first, privacy-preserving, zero cloud dependency. |
+| **Frontend Workstation** | React 19 + TypeScript + Vite | Dark theme (`#131314`), streamlined HUD, camera selector, continuous CTC display, movie subtitles, CLS = 0. |
+| **Backend API & Streaming** | FastAPI (ASGI) + Uvicorn + WebSockets | Duplex streaming at 20–30 FPS with < 30ms processing latency. |
+| **Alphabet ML Classifier** | PyTorch / ONNX RealSignMLP (89-D / 63-D) | **99.34% test accuracy**, 99.34% macro F1 across 26 alphabet classes (A–Z) with Left/Right symmetry. |
 | **Phrase / Word ML** | AI4Bharat INCLUDE + ISL Sequence BiLSTM (176-D) | 12-D Upper-Body Anchored, hysteresis margin gating against misclassification. |
-| **Object Detection & Fusion** | 80-Class COCO MobileNetV3 SSDLite + Multimodal Fuser | Detects held objects (bottle, cup, phone, book) and fuses with signed modifiers. |
+| **Object Detection & Fusion** | YOLO-World v2 (13M Params) + Multimodal Fuser | Open-vocabulary prompt-grounded detection (watches, phones, bottles, cups, books, pens) fused with signed modifiers. |
+| **SLM Language Engine** | On-Device Qwen2.5-0.5B Causal SLM (CUDA) | Context-aware predictive autocomplete + neural ISL-to-English translation with LRU caching. |
+| **Fingerspelling Decoder** | Continuous CTC Greedy Token Decoder | Stutter-collapsing dynamic decoder: zero 0.45s frozen lockout, fluid double letters (*"BOOK"*). |
 | **Low-Light Enhancement** | Adaptive LAB CLAHE + Bilateral Denoising | Automatically boosts dim webcam feeds (< 75 lum) for landmark stability. |
-| **NLP Grammar Engine** | `ISLGlossParser` + `PredictiveTextEngine` | Syntactic translation (SOV $\rightarrow$ SVO) and sub-ms next-word suggestions. |
 | **Audio Speech** | Native Web SpeechSynthesis API | Instant auditory spoken playback with cancel and re-trigger controls. |
-| **Test Suite Health** | 134 / 134 tests passing (100%) | Automated pytest execution in 68.1s across all vision, model, and API suites. |
+| **Test Suite Health** | 160 / 160 tests passing (100%) | Automated pytest execution across all vision, model, NLP, and regression suites. |
 
 ---
 
@@ -45,6 +46,7 @@
 | **P13**| **Custom Dataset & 89-D MLP** | ✅ Complete | Ingested user signs (SETU.zip); engineered 89-D features; achieved **99.34% test accuracy**. |
 | **P14**| **Living Documentation Polish** | ✅ Complete | Upgraded documentation to executive table-driven clarity and single-source truth. |
 | **P15**| **Multimodal AI & Disambiguation** | ✅ Complete | 80-Class COCO detector, Hand-lift HUD, 176-D geometry, low-light CLAHE, capture CLI. |
+| **P16**| **YOLO-World & SLM Modernization** | ✅ Complete | YOLO-World v2 open-vocabulary grounding, Qwen2.5-0.5B causal SLM, Continuous CTC decoding, Hand symmetry, 160 tests passing. |
 
 ---
 
