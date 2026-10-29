@@ -50,7 +50,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   currentResult,
   landmarkStyles,
   subtitleVisible = true,
-  subtitleSize = 'medium',
+  subtitleSize: _subtitleSize = 'medium',
   onStartCamera,
   onRetry,
   showFramingGuide,
@@ -60,7 +60,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   onFramingChange,
   onOpenVocabulary,
   onResolveDisambiguation,
-  onAcceptPrediction,
+  onAcceptPrediction: _onAcceptPrediction,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -68,7 +68,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   const [showSignGuide, setShowSignGuide] = useState<boolean>(false);
 
   // Local state fallback if external handler isn't explicitly passed
-  const [internalShowGuide, setInternalShowGuide] = useState<boolean>(true);
+  const [internalShowGuide, setInternalShowGuide] = useState<boolean>(false);
 
   const activeShowGuide = showFramingGuide !== undefined ? showFramingGuide : internalShowGuide;
 
@@ -142,34 +142,49 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  // Synchronize canvas size with video client dimensions and draw landmarks
+  // Ref-decoupled 60 FPS landmark drawing loop for silky-smooth, zero-lag tracking
+  const currentResultRef = useRef<RecognitionPayload | null>(currentResult);
+  currentResultRef.current = currentResult;
+  const landmarkStylesRef = useRef<LandmarkStyles>(landmarkStyles);
+  landmarkStylesRef.current = landmarkStyles;
+
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
+    let animId: number;
+    const renderLoop = () => {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      if (canvas && video && video.readyState >= 2) {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 480;
 
-    const width = video.videoWidth || 640;
-    const height = video.videoHeight || 480;
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
 
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
+        const ctx = canvas.getContext('2d');
+        const res = currentResultRef.current;
+        if (ctx) {
+          if (res?.landmarks || res?.detected_objects) {
+            drawLandmarksOnCanvas(
+              ctx,
+              width,
+              height,
+              res.landmarks || {},
+              landmarkStylesRef.current,
+              res.detected_objects
+            );
+          } else {
+            ctx.clearRect(0, 0, width, height);
+          }
+        }
+      }
+      animId = requestAnimationFrame(renderLoop);
+    };
 
-    const ctx = canvas.getContext('2d');
-    if (ctx && (currentResult?.landmarks || currentResult?.detected_objects)) {
-      drawLandmarksOnCanvas(
-        ctx,
-        width,
-        height,
-        currentResult.landmarks || {},
-        landmarkStyles,
-        currentResult.detected_objects
-      );
-    } else if (ctx) {
-      ctx.clearRect(0, 0, width, height);
-    }
-  }, [currentResult, landmarkStyles, videoRef]);
+    animId = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(animId);
+  }, [videoRef]);
 
   // Determine hand tracking status
   const handDetected = currentResult?.hand_detected || false;
@@ -227,22 +242,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
               <span>Detection Paused</span>
             </div>
           )}
-          {/* Always display real-time distance and lighting feedback when camera is active */}
-          {cameraStatus === 'detecting' && (
-            <div
-              className={`framing-status-chip ${
-                (currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38)
-                  ? 'adjust'
-                  : framingFeedback.isOptimal
-                  ? 'optimal'
-                  : 'adjust'
-              }`}
-              title="Real-time distance, framing, and lighting calibration"
-            >
-              <span className="framing-chip-dot" />
-              <span className="framing-chip-text">{guidanceMessage}</span>
-            </div>
-          )}
+
         </div>
 
         <div className="right-tools">
@@ -481,48 +481,36 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* PERSISTENT PREDICTED SIGN SUBTITLE BAR */}
+        {/* Luminous Center Camera Prediction (Transparent Background, High Readability) */}
         {subtitleVisible && (cameraStatus === 'detecting' || cameraStatus === 'paused') && (
-          <div className={`persistent-subtitle-dock subtitle-size-${subtitleSize}`} aria-live="polite">
-            <div
-              className={`subtitle-panel ${
-                isKnown ? 'active-sign' : 'resting'
-              }`}
-            >
-              <div className="subtitle-header-row">
-                <span className="subtitle-category-label">
-                  CURRENT PREDICTED SIGN
-                </span>
-                {isKnown && confidencePercent > 0 ? (
-                  <span className="subtitle-confidence-pill">
-                    {confidencePercent}% Match
-                  </span>
-                ) : null}
+          <div className="center-camera-prediction" aria-live="polite">
+            <div className={`center-prediction-badge ${isKnown ? 'active-sign' : 'resting-sign'}`}>
+              <div className="center-sign-text">
+                {cameraStatus === 'detecting' ? subtitleText : 'Detection Paused'}
               </div>
-              <div className="subtitle-value-row">
-                <span className="subtitle-main-display">
-                  {cameraStatus === 'detecting' ? subtitleText : 'Detection Paused'}
-                </span>
-              </div>
+              {isKnown && confidencePercent > 0 && (
+                <div className="center-sign-confidence">
+                  {confidencePercent}% match
+                </div>
+              )}
             </div>
+          </div>
+        )}
 
-            {/* Predictive Next-Word / Phrase Quick Suggestions */}
-            {currentResult?.predictive_suggestions && currentResult.predictive_suggestions.length > 0 && (
-              <div className="predictive-suggestions-bar">
-                <span className="predictive-hint">Suggestions:</span>
-                {currentResult.predictive_suggestions.map((phrase) => (
-                  <button
-                    key={phrase}
-                    type="button"
-                    className="predictive-chip-btn"
-                    onClick={() => onAcceptPrediction?.(phrase)}
-                    title={`Add "${phrase}" to sentence`}
-                  >
-                    <span>+ {phrase}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+        {/* Subtle Repositioned Guidance Chip in Bottom Corner */}
+        {cameraStatus === 'detecting' && guidanceMessage && (
+          <div
+            className={`subtle-guidance-chip ${
+              (currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38)
+                ? 'adjust'
+                : framingFeedback.isOptimal
+                ? 'optimal'
+                : 'adjust'
+            }`}
+            title="Real-time distance and lighting calibration"
+          >
+            <span className="guidance-dot" />
+            <span className="guidance-text">{guidanceMessage}</span>
           </div>
         )}
       </div>

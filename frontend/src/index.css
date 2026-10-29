@@ -4570,42 +4570,136 @@ button:active,
   z-index: 30;
 }
 
-/* Predictive Suggestions Bar */
-.predictive-suggestions-bar {
+
+/* ==========================================================================
+   Center Camera Prediction Display (Transparent Background, High Readability)
+   ========================================================================== */
+.center-camera-prediction {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(15, 23, 42, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  overflow-x: auto;
-  scrollbar-width: none;
+  z-index: 15;
+  pointer-events: none;
+  background: transparent !important;
+  width: 90%;
+  max-width: 580px;
 }
 
-.predictive-hint {
-  font-size: 10px;
-  font-weight: 600;
-  color: #64748b;
+.center-prediction-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.center-sign-text {
+  font-family: var(--font-body);
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #FFFFFF;
+  text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
+  word-break: break-word;
+  background: transparent !important;
+  text-shadow:
+    0 2px 14px rgba(0, 0, 0, 0.95),
+    0 0 28px rgba(56, 189, 248, 0.75),
+    0 0 4px rgba(0, 0, 0, 1);
+  transition: all 0.18s ease;
 }
 
-.predictive-chip-btn {
-  background: rgba(30, 41, 59, 0.85);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
+.center-prediction-badge.resting-sign .center-sign-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.center-prediction-badge.active-sign {
+  transform: scale(1.04);
+}
+
+.center-prediction-badge.active-sign .center-sign-text {
+  animation: centerSignGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes centerSignGlow {
+  0% {
+    text-shadow:
+      0 2px 12px rgba(0, 0, 0, 0.95),
+      0 0 20px rgba(56, 189, 248, 0.65),
+      0 0 4px rgba(0, 0, 0, 1);
+  }
+  100% {
+    text-shadow:
+      0 2px 14px rgba(0, 0, 0, 0.98),
+      0 0 32px rgba(56, 189, 248, 0.90),
+      0 0 8px rgba(56, 189, 248, 0.5);
+  }
+}
+
+.center-sign-confidence {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #7dd3fc;
+  background: transparent !important;
+  text-shadow:
+    0 1px 6px rgba(0, 0, 0, 0.95),
+    0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+/* Subtle Repositioned Guidance Chip in Bottom Corner */
+.subtle-guidance-chip {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 9999px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
+  color: #94a3b8;
+  z-index: 12;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-.predictive-chip-btn:hover {
-  background: rgba(56, 189, 248, 0.18);
-  border-color: #38bdf8;
-  transform: translateY(-1px);
+.subtle-guidance-chip.optimal {
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34d399;
 }
+
+.subtle-guidance-chip.adjust {
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fbbf24;
+}
+
+.subtle-guidance-chip .guidance-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+

@@ -11,7 +11,7 @@ interface UseRecognitionStreamProps {
 
 export function useRecognitionStream({
   videoRef,
-  fpsLimit = 18,
+  fpsLimit = 28,
   confidenceThreshold = 0.35,
   onPredictionChange,
   isFramingGated = false,

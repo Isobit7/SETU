@@ -166,3 +166,4 @@ def test_api_endpoints_model_matrices():
     res_refresh = client.post("/api/v1/models/matrices/refresh")
     assert res_refresh.status_code == 200
     assert res_refresh.json()["total_models"] >= 5
+

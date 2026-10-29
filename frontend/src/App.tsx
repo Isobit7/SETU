@@ -43,12 +43,12 @@ export const App: React.FC = () => {
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.35);
 
   // Proactive Framing Guide & Recognition Gating State
-  const [showFramingGuide, setShowFramingGuide] = useState<boolean>(true);
+  const [showFramingGuide, setShowFramingGuide] = useState<boolean>(false);
   const [enforceFraming, setEnforceFraming] = useState<boolean>(false);
   const [framingFeedback, setFramingFeedback] = useState<FramingFeedback>({
     status: 'searching',
-    message: 'Position yourself within the guide',
-    isOptimal: false,
+    message: 'Ready to sign',
+    isOptimal: true,
     score: 0,
     handsDetected: false,
   });

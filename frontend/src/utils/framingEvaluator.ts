@@ -16,9 +16,9 @@ export function evaluateFraming(
   if (!landmarks) {
     return {
       status: 'searching',
-      message: 'Position yourself within the guide',
-      isOptimal: false,
-      score: 0,
+      message: 'Ready to sign',
+      isOptimal: true,
+      score: 100,
       handsDetected: false,
     };
   }
@@ -45,7 +45,7 @@ export function evaluateFraming(
       const score = Math.max(20, Math.min(65, Math.round((shoulderWidth / 0.14) * 65)));
       return {
         status: 'step_closer',
-        message: 'Step Closer — Upper body too small',
+        message: 'Move closer',
         isOptimal: false,
         score,
         distanceMetric: shoulderWidth,
@@ -58,7 +58,7 @@ export function evaluateFraming(
       const score = Math.max(20, Math.min(65, Math.round((0.64 / shoulderWidth) * 65)));
       return {
         status: 'step_back',
-        message: 'Move Back — Too close to camera',
+        message: 'Step back slightly',
         isOptimal: false,
         score,
         distanceMetric: shoulderWidth,
@@ -235,9 +235,9 @@ export function evaluateFraming(
   // 3. NO LANDMARKS DETECTED
   return {
     status: 'searching',
-    message: 'Step into Frame to Begin',
-    isOptimal: false,
-    score: 10,
+    message: 'Ready to sign',
+    isOptimal: true,
+    score: 100,
     handsDetected: false,
   };
 }

@@ -41,7 +41,6 @@ YOLO_WORLD_CLASSES: List[str] = [
     "apple",
     "banana",
     "orange",
-    "glasses",
 ]
 
 # Friendly mappings for detected classes
@@ -52,7 +51,6 @@ LABEL_NORMALIZATION: Dict[str, str] = {
     "water bottle": "bottle",
     "coffee cup": "cup",
     "mug": "cup",
-    "wine glass": "glass",
     "dining table": "table",
     "potted plant": "plant",
     "hair drier": "hairdryer",
@@ -61,12 +59,12 @@ LABEL_NORMALIZATION: Dict[str, str] = {
 # Salient interactive objects relevant to Show-and-Sign
 INTERACTIVE_OBJECT_CLASSES = {
     "watch", "wristwatch", "smartwatch",
-    "bottle", "cup", "wine glass", "fork", "knife", "spoon", "bowl",
+    "bottle", "cup", "fork", "knife", "spoon", "bowl",
     "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake",
     "book", "cell phone", "phone", "laptop", "mouse", "remote", "keyboard",
     "scissors", "toothbrush", "pen", "backpack", "umbrella", "handbag",
     "clock", "vase", "teddy bear", "sports ball", "frisbee", "box",
-    "keys", "wallet", "glasses",
+    "keys", "wallet",
 }
 
 

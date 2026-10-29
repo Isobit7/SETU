@@ -69,13 +69,13 @@ def test_subtitle_collision():
 
 def test_positioning_guidance():
     # Empty pose
-    assert "Step into frame" in get_positioning_guidance([], False)
+    assert "Ready to sign" in get_positioning_guidance([], False)
 
     # Mock pose with close shoulders (narrow width = far away)
     pose_far = [{"x": 0.5, "y": 0.2, "z": 0.0} for _ in range(33)]
     pose_far[11] = {"x": 0.45, "y": 0.3, "z": 0.0}
     pose_far[12] = {"x": 0.52, "y": 0.3, "z": 0.0}
-    assert "Too far" in get_positioning_guidance(pose_far, False)
+    assert "Move closer" in get_positioning_guidance(pose_far, False)
     assert "Low light" in get_positioning_guidance(pose_far, False, lighting_score=0.2)
 
 

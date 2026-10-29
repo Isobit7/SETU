@@ -109,10 +109,10 @@ def get_positioning_guidance(
 ) -> str:
     """Generates real positioning guidance based on upper body keypoints and ambient lighting."""
     if not pose_pts or len(pose_pts) < 13:
-        return "Step into frame so your head and upper body are visible"
+        return "Ready to sign"
 
     if lighting_score is not None and lighting_score < 0.38:
-        return "Low light detected — please turn on a light facing you"
+        return "Low light detected"
 
     nose = pose_pts[0]
     left_shoulder = pose_pts[11]
@@ -121,19 +121,19 @@ def get_positioning_guidance(
     shoulder_width = abs(left_shoulder["x"] - right_shoulder["x"])
 
     if shoulder_width > 0.65:
-        return "Too close to camera — please step back slightly (ideal: 50–70 cm)"
+        return "Step back slightly"
     if shoulder_width < 0.16:
-        return "Too far from camera — please move closer (ideal: 50–70 cm)"
+        return "Move closer"
 
     if nose["y"] < 0.05:
-        return "Camera too low — tilt up or lower your position"
+        return "Tilt camera up"
     if nose["y"] > 0.45:
-        return "Camera too high — step back or raise camera"
+        return "Tilt camera down"
 
     if not has_hands:
-        return "Raise your hands into camera view to sign"
+        return "Ready to sign"
 
-    return "Position good — Ready to translate"
+    return "Ready to sign"
 
 
 async def websocket_recognize(

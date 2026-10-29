@@ -45,76 +45,90 @@ export function drawLandmarksOnCanvas(
   if (styles.showLeftHand && landmarks.left_hand && landmarks.left_hand.length > 0) {
     const pts = landmarks.left_hand;
 
-    // Hand skeleton connections
+    // Batched skeleton connections in a single path
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = '#38bdf8';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-
+    ctx.beginPath();
     for (const [s, e] of HAND_CONNECTIONS) {
       if (s < pts.length && e < pts.length) {
         const [x1, y1] = getPt(pts[s]);
         const [x2, y2] = getPt(pts[e]);
-        ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.stroke();
       }
     }
+    ctx.stroke();
 
-    // Hand joints
+    // Batched standard joints
+    ctx.fillStyle = '#0284c7';
+    ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
-      const [px, py] = getPt(pts[i]);
-      const isFingertip = [4, 8, 12, 16, 20].includes(i);
-      const radius = isFingertip ? 4.5 : 2.5;
-
-      ctx.beginPath();
-      ctx.arc(px, py, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = isFingertip ? '#7dd3fc' : '#0284c7';
-      ctx.fill();
-
-      ctx.lineWidth = 1.0;
-      ctx.strokeStyle = '#082f49';
-      ctx.stroke();
+      if (![4, 8, 12, 16, 20].includes(i)) {
+        const [px, py] = getPt(pts[i]);
+        ctx.moveTo(px + 2.5, py);
+        ctx.arc(px, py, 2.5, 0, 2 * Math.PI);
+      }
     }
+    ctx.fill();
+
+    // Batched fingertips
+    ctx.fillStyle = '#7dd3fc';
+    ctx.beginPath();
+    for (const i of [4, 8, 12, 16, 20]) {
+      if (i < pts.length) {
+        const [px, py] = getPt(pts[i]);
+        ctx.moveTo(px + 4.5, py);
+        ctx.arc(px, py, 4.5, 0, 2 * Math.PI);
+      }
+    }
+    ctx.fill();
   }
 
   // 2. Draw Right Hand (Vibrant Emerald / Mint Green: #34d399)
   if (styles.showRightHand && landmarks.right_hand && landmarks.right_hand.length > 0) {
     const pts = landmarks.right_hand;
 
-    // Hand skeleton connections
+    // Batched skeleton connections in a single path
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = '#34d399';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-
+    ctx.beginPath();
     for (const [s, e] of HAND_CONNECTIONS) {
       if (s < pts.length && e < pts.length) {
         const [x1, y1] = getPt(pts[s]);
         const [x2, y2] = getPt(pts[e]);
-        ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.stroke();
       }
     }
+    ctx.stroke();
 
-    // Hand joints
+    // Batched standard joints
+    ctx.fillStyle = '#059669';
+    ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
-      const [px, py] = getPt(pts[i]);
-      const isFingertip = [4, 8, 12, 16, 20].includes(i);
-      const radius = isFingertip ? 4.5 : 2.5;
-
-      ctx.beginPath();
-      ctx.arc(px, py, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = isFingertip ? '#a7f3d0' : '#059669';
-      ctx.fill();
-
-      ctx.lineWidth = 1.0;
-      ctx.strokeStyle = '#022c22';
-      ctx.stroke();
+      if (![4, 8, 12, 16, 20].includes(i)) {
+        const [px, py] = getPt(pts[i]);
+        ctx.moveTo(px + 2.5, py);
+        ctx.arc(px, py, 2.5, 0, 2 * Math.PI);
+      }
     }
+    ctx.fill();
+
+    // Batched fingertips
+    ctx.fillStyle = '#a7f3d0';
+    ctx.beginPath();
+    for (const i of [4, 8, 12, 16, 20]) {
+      if (i < pts.length) {
+        const [px, py] = getPt(pts[i]);
+        ctx.moveTo(px + 4.5, py);
+        ctx.arc(px, py, 4.5, 0, 2 * Math.PI);
+      }
+    }
+    ctx.fill();
   }
 
   // 3. Inter-Hand Contact & Proximity Indicator (Crucial for B, D, P, Q, T Two-Handed ISL Gestures)
