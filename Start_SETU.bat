@@ -54,9 +54,13 @@ start "SETU Backend - FastAPI" /D "%ROOT%" cmd /k ""%ROOT%\.venv\Scripts\python.
 start "SETU Frontend - Vite" /D "%ROOT%\frontend" cmd /k "npm run dev -- --host 127.0.0.1"
 
 echo.
-echo Both startup windows have been opened.
-echo Wait for the backend to report that Uvicorn is running and the frontend to show its Local URL.
-echo Then open: http://localhost:5173
- echo.
-echo Keep both terminal windows open while using SETU. Close them to stop the services.
+echo Waiting 3 seconds for services to initialize...
+timeout /t 3 /nobreak >nul
+start http://localhost:5173
+
+echo.
+echo ================================================================
+echo  SETU is live! Opening browser: http://localhost:5173
+echo ================================================================
+echo Keep both terminal windows open while using SETU. Close them to stop.
 endlocal
