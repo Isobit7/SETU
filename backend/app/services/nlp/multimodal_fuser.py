@@ -33,6 +33,13 @@ OBJECT_SIGN_PATTERNS: Dict[Tuple[str, str], str] = {
     ("phone", "call"): "Please make a call for me.",
     ("phone", "help"): "Please call emergency help.",
     ("phone", "give"): "Please hand me the phone.",
+    # Watch
+    ("watch", "time"): "What is the time?",
+    ("watch", "give"): "Please hand me the watch.",
+    ("watch", "i"): "This watch belongs to me.",
+    ("watch", "you"): "This watch is for you.",
+    ("watch", "thank_you"): "Thank you for the watch.",
+    ("watch", "help"): "Please check the time for me.",
     # Book
     ("book", "open"): "Please open the book.",
     ("book", "read"): "I am reading this book.",
@@ -49,7 +56,7 @@ OBJECT_SIGN_PATTERNS: Dict[Tuple[str, str], str] = {
 # Object category groups
 BEVERAGE_CONTAINERS = {"bottle", "cup", "glass", "bowl"}
 FOOD_ITEMS = {"apple", "banana", "sandwich", "orange", "broccoli", "carrot", "pizza", "donut", "cake"}
-ELECTRONICS = {"phone", "laptop", "mouse", "remote", "keyboard"}
+ELECTRONICS = {"phone", "watch", "laptop", "mouse", "remote", "keyboard"}
 
 
 class MultimodalFuser:

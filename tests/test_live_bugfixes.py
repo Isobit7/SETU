@@ -147,7 +147,7 @@ def test_letter_repeat_lockout_logic():
 
 
 def test_object_detector_filters_watches_and_noise():
-    """Verify that COCOObjectDetector filters out watches, tiny boxes, and low confidence."""
+    """Verify that COCOObjectDetector initializes properly and handles blank frames."""
     detector = COCOObjectDetector()
     
     # Create synthetic frame (480, 640, 3)
@@ -159,3 +159,47 @@ def test_object_detector_filters_watches_and_noise():
     
     # 2. Verify filter thresholds
     assert detector.confidence_threshold >= 0.65
+
+
+def test_yolo_world_classes_and_watch_normalization():
+    """Verify YOLO-World classes, watch/phone disambiguation, and Multimodal Fuser integration."""
+    from backend.app.services.vision.object_detector import (
+        LABEL_NORMALIZATION,
+        YOLO_WORLD_CLASSES,
+        COCOObjectDetector,
+        DetectedObject,
+    )
+    from backend.app.services.nlp.multimodal_fuser import MultimodalFuser
+
+    # 1. Vocabulary validation
+    assert "wristwatch" in YOLO_WORLD_CLASSES
+    assert "smartwatch" in YOLO_WORLD_CLASSES
+    assert "cell phone" in YOLO_WORLD_CLASSES
+
+    # 2. Label normalization
+    assert LABEL_NORMALIZATION["wristwatch"] == "watch"
+    assert LABEL_NORMALIZATION["smartwatch"] == "watch"
+    assert LABEL_NORMALIZATION["cell phone"] == "phone"
+
+    # 3. Detector loads with YOLO-World
+    detector = COCOObjectDetector()
+    assert "watch" in [LABEL_NORMALIZATION.get(c, c) for c in detector.categories]
+
+    # 4. Multimodal Fusion with Watch
+    fuser = MultimodalFuser()
+    watch_obj = DetectedObject(
+        label="watch",
+        display_name="WATCH",
+        confidence=0.88,
+        bbox=(0.2, 0.2, 0.5, 0.5),
+        is_interactive=True,
+        is_held=True,
+    )
+
+    fused_time = fuser.fuse("time", [watch_obj])
+    assert fused_time == "What is the time?"
+
+    fused_give = fuser.fuse("give", [watch_obj])
+    assert fused_give == "Please hand me the watch."
+
+

@@ -88,6 +88,8 @@ models/pretrained/*.pth
 !models/weights/*
 models/weights/*.bak
 models/weights/qwen_0.5b/
+models/weights/yolov8s-worldv2.pt
+yolov8s-worldv2.pt
 !models/realsign_26class_mlp.pth
 !models/isl_sequence_lstm.pth
 !models/isl_mvp_model.npz
