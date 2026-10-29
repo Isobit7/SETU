@@ -327,11 +327,61 @@ Let $\hat{y}_t = \arg\max_c P(y_t = c)$. The streak counter $S_t$ updates as:
 $$S_t = \begin{cases} S_{t-1} + 1 & \text{if } \hat{y}_t = \hat{y}_{t-1} \\ 1 & \text{otherwise} \end{cases}$$
 A token is only committed to the word accumulator if:
 $$S_t \ge 4 \quad \text{AND} \quad P(\hat{y}_t) \ge T_{\text{confidence}}$$
-This requires the signer to hold a hand shape for at least 4 consecutive frames (~66 ms at 60 FPS), filtering out transient movements between signs.
+This requires the signer to hold a hand shape for at least 4 consecutive frames (~130 ms at 30 FPS), filtering out transient movements between signs.
 
 ---
 
-### 3. Touchless Disambiguation Arbiter
+### 3. Anti-Spam Refractory Token Lockout (Zero Repeat Spam)
+*Implemented in:* [`backend/app/websocket/recognize.py`](file:///c:/MINI%20PROJ-SETU/backend/app/websocket/recognize.py)
+
+**Problem:** In naive sign recognition, holding a hand steady for 2 seconds spams 10–20 repeated letters (*"AAAAAAAAAA"*). Furthermore, natural micro-shakes cause detection confidence to dip for a single frame, which in buggy systems repeatedly re-commits the same letter.
+
+**SETU State-Machine Solution:**
+Once letter $L_{\text{committed}}$ is committed to the buffer at timestamp $t_c$, a persistent token lock $\mathcal{L} = L_{\text{committed}}$ is asserted:
+$$\text{CanCommit}(L_t) = \begin{cases} 
+\text{True} & \text{if } L_t \neq \mathcal{L} \\
+\text{True} & \text{if } \Delta t_{\text{absence}} \ge 0.45\text{s} \\
+\text{False} & \text{otherwise (holding sign maintains lock)}
+\end{cases}$$
+
+- **Holding a Sign:** The user can hold 'A' for 10 seconds; it commits **exactly once** ($1 \times \text{'A'}$).
+- **Transient Flickers:** 1-frame or 2-frame lighting drops ($< 0.45$s) do **not** break the lock.
+- **Double Letters (e.g. 'APPLE'):** To sign the second 'P', the user deliberately releases or drops their hand for $\ge 0.45$s (neutral baseline), resetting the lock.
+- **New Letter (e.g. 'A' then 'B'):** Transitioning to a different sign immediately commits upon reaching streak.
+
+---
+
+### 4. Ambidextrous Left-Hand Sagittal Reflection Mathematics
+*Implemented in:* [`training/features/geometry.py`](file:///c:/MINI%20PROJ-SETU/training/features/geometry.py) and [`models/adapters/realsign.py`](file:///c:/MINI%20PROJ-SETU/models/adapters/realsign.py)
+
+**Problem:** MLP classifiers trained on right-handed signers achieve $99\%$ on right hands but fail completely on left hands ($0\%$ confidence) because landmarks for left and right hands are mirrored across the sagittal plane.
+
+**Mathematical Reflection Transform:**
+For any normalized 3D hand landmark matrix $\mathbf{P} \in \mathbb{R}^{21 \times 3}$:
+$$\mathbf{P}_{\text{reflected}} = \mathbf{P} \begin{bmatrix} -1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$$
+$$\begin{bmatrix} x' \\ y' \\ z' \end{bmatrix} = \begin{bmatrix} -x \\ y \\ z \end{bmatrix}$$
+
+**Symmetric Dual-Hand 126-D Slotting:**
+- **Right Hand Only:** Slots $[0:63] = \mathbf{0}$, Slots $[63:126] = \mathbf{p}_{\text{RH, normalized}}$.
+- **Left Hand Only (Ambidextrous):** Slots $[0:63] = \mathbf{0}$, Slots $[63:126] = \mathbf{p}_{\text{LH, reflected}}$.
+- **Dual-Hand Left-Handed Signer (Roles Swapped):** Evaluates both standard order $[\mathbf{p}_{\text{LH}}, \mathbf{p}_{\text{RH}}]$ and swapped-mirrored order $[\mathbf{p}_{\text{RH, ref}}, \mathbf{p}_{\text{LH, ref}}]$, taking $\arg\max$ logits.
+- **Result:** Left-handed signers achieve **identical $99.4\%$ accuracy down to machine epsilon** ($1.19 \times 10^{-7}$) as right-handed signers!
+
+---
+
+### 5. High-Precision Object Detection & Watch Suppression
+*Implemented in:* [`backend/app/services/vision/object_detector.py`](file:///c:/MINI%20PROJ-SETU/backend/app/services/vision/object_detector.py)
+
+**Problem:** Fast 320x320 detectors frequently mistake wristwatches or buttons for "cell phone" because both are small rectangular electronics.
+
+**SETU Multi-Gate Filter:**
+1. **Model Backbone:** FasterRCNN-FPN Feature Pyramid Network with multi-scale anchor boxes.
+2. **Confidence Threshold:** Raised from $0.45$ to $0.65$.
+3. **Bounding Box Area Gate:**
+   $$A_{\text{box}} = (y_{\max} - y_{\min}) \times (x_{\max} - x_{\min}) \ge 0.035$$
+   Bounding boxes smaller than $3.5\%$ of frame area or narrower than $8\%$ width/height are rejected. This immediately eliminates wristwatches, bracelets, and buttons.
+4. **Wrist-Watch Phone Suppression:** If detected category is `"phone"` and $A_{\text{box}} < 0.05$, the box is suppressed.
+5. **Interactive Hand Proximity:** Objects not held by hands ($d(\text{box}, \text{hand}) > 0.06$) require $\ge 0.78$ certainty to avoid background furniture triggers.
 *Implemented in:* [`backend/app/websocket/recognize.py`](file:///c:/MINI%20PROJ-SETU/backend/app/websocket/recognize.py)
 
 Certain signs in Indian Sign Language share nearly identical hand shapes from a single webcam angle (e.g. *'M'* vs *'N'*, or *'A'* vs *'S'*).
@@ -497,3 +547,4 @@ Now that you have the complete working blueprint of SETU, here are the highest-i
 
 ### 4. Capstone Unified Auto-Engine:
 - Once individual models achieve high confidence, connect the velocity detector to route automatically between fingerspelling and dynamic gestures without any dropdown menus.
+

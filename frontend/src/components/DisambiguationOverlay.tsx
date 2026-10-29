@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hand, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export interface DisambiguationOption {
   label: string;
@@ -24,45 +24,32 @@ export const DisambiguationOverlay: React.FC<DisambiguationOverlayProps> = ({
   const rightOption = options.find((o) => o.hand === 'right') || options[1];
 
   return (
-    <div className="disambiguation-hud-container" role="region" aria-label="Sign Disambiguation Options">
-      {/* Top Banner Indicator */}
-      <div className="disambiguation-banner">
-        <Sparkles size={14} className="disambiguation-sparkle" />
-        <span className="disambiguation-title">Low-Margin Sign Detected — Choose One</span>
+    <div className="disambiguation-top-pill" role="region" aria-label="Sign Suggestions">
+      <div className="disambiguation-pill-title">
+        <Sparkles size={12} className="disambiguation-sparkle" />
+        <span>Suggested:</span>
       </div>
-
-      <div className="disambiguation-cards-grid">
-        {/* Left Option Card */}
+      <div className="disambiguation-pill-options">
         <button
           type="button"
-          className="disambiguation-card left-card"
+          className="disambiguation-mini-chip chip-left"
           onClick={() => onSelect(leftOption.label)}
-          aria-label={`Select Option 1: ${leftOption.display}`}
+          title={`Select ${leftOption.display}`}
         >
-          <div className="card-badge left-badge">
-            <Hand size={13} className="hand-lift-icon" />
-            <span>Option 1 (Lift Left Hand)</span>
-          </div>
-          <span className="disambiguation-sign-label">{leftOption.display}</span>
-          <span className="card-instruction">Click or raise left hand high</span>
+          <span className="hand-tag">L</span>
+          <span className="chip-sign">{leftOption.display}</span>
         </button>
-
-        {/* Right Option Card */}
+        <span className="disambiguation-divider">/</span>
         <button
           type="button"
-          className="disambiguation-card right-card"
+          className="disambiguation-mini-chip chip-right"
           onClick={() => onSelect(rightOption.label)}
-          aria-label={`Select Option 2: ${rightOption.display}`}
+          title={`Select ${rightOption.display}`}
         >
-          <div className="card-badge right-badge">
-            <Hand size={13} className="hand-lift-icon" />
-            <span>Option 2 (Lift Right Hand)</span>
-          </div>
-          <span className="disambiguation-sign-label">{rightOption.display}</span>
-          <span className="card-instruction">Click or raise right hand high</span>
+          <span className="hand-tag">R</span>
+          <span className="chip-sign">{rightOption.display}</span>
         </button>
       </div>
     </div>
   );
 };
-

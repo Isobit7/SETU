@@ -190,6 +190,8 @@ async def websocket_recognize(
     alphabet_last_committed: str = ""
     alphabet_last_committed_time: float = 0.0
     alphabet_had_baseline: bool = True
+    alphabet_repeat_lock: bool = False
+    last_hand_seen_time: float = time.time()
 
     # Word / Phrase Persistence & Latching State
     last_word_label: str = ""
@@ -491,6 +493,19 @@ async def websocket_recognize(
                 has_right = len(right_hand) > 0
                 hand_detected = has_left or has_right or (hand_landmarks_raw is not None)
 
+                now = time.time()
+                if hand_detected:
+                    last_hand_seen_time = now
+                    hand_absent_duration = 0.0
+                else:
+                    hand_absent_duration = now - last_hand_seen_time
+
+                # Reset repeat lock and baseline when user relaxes/drops hands for >= 0.45s
+                if hand_absent_duration >= 0.45:
+                    alphabet_repeat_lock = False
+                    alphabet_last_committed = ""
+                    had_idle_baseline = True
+
                 # Periodic COCO Object Detection for Show-and-Sign interaction (every 10 frames)
                 if pipeline.object_detector is not None and (total_stream_frames % 10 == 0):
                     try:
@@ -498,7 +513,7 @@ async def websocket_recognize(
                             None,
                             pipeline.object_detector.detect,
                             frame,
-                            0.45,
+                            0.65,
                             left_hand + right_hand,
                         )
                         current_detected_objects = detected_objs
@@ -543,6 +558,7 @@ async def websocket_recognize(
                     return [float(getattr(lm, "x", 0.0)), float(getattr(lm, "y", 0.0)), float(getattr(lm, "z", 0.0))]
 
                 current_hand_pts_list = []
+                is_left_only_hand = False
                 if hand_landmarks_raw is not None:
                     if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
                         for h_lm in hand_landmarks_raw.hand_landmarks[:1]:
@@ -551,8 +567,14 @@ async def websocket_recognize(
                         current_hand_pts_list.extend([_extract_pt(lm) for lm in hand_landmarks_raw])
                 elif hl_result and getattr(hl_result, "right_hand_landmarks", None):
                     current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.right_hand_landmarks])
-                if hl_result and getattr(hl_result, "left_hand_landmarks", None) and not current_hand_pts_list:
+                elif hl_result and getattr(hl_result, "left_hand_landmarks", None):
                     current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.left_hand_landmarks])
+                    is_left_only_hand = True
+
+                if is_left_only_hand and len(current_hand_pts_list) == 21:
+                    # Mirror X coordinate so geometric/heuristic checks evaluate canonical hand
+                    for pt_item in current_hand_pts_list:
+                        pt_item[0] = -pt_item[0]
 
                 kinetic_energy = 0.0
                 if current_hand_pts_list:
@@ -753,35 +775,8 @@ async def websocket_recognize(
                 if active_model == "realsign":
                     if not hand_detected or not has_realsign_feat or not is_pred_valid:
                         current_prediction = "Awaiting Sign Input"
-                        alphabet_had_baseline = True
                     else:
                         current_prediction = pred_label
-
-                    # Check for borderline alphabet margin to trigger Disambiguation HUD
-                    if (
-                        realsign_pred
-                        and len(realsign_pred.top_3) >= 2
-                        and is_pred_valid
-                        and not disambiguation_active
-                    ):
-                        t1_let = str(realsign_pred.top_3[0][0]).strip().upper()
-                        t2_let = str(realsign_pred.top_3[1][0]).strip().upper()
-                        t1_c = float(realsign_pred.top_3[0][1])
-                        t2_c = float(realsign_pred.top_3[1][1])
-                        if (
-                            t1_let not in ("", "NO_SIGN", "UNKNOWN", "AWAITING SIGN INPUT")
-                            and t2_let not in ("", "NO_SIGN", "UNKNOWN", "AWAITING SIGN INPUT")
-                            and (t1_c - t2_c < 0.20)
-                            and (t1_c < 0.65)
-                        ):
-                            disambiguation_active = True
-                            disambiguation_top1 = t1_let
-                            disambiguation_top2 = t2_let
-                            disambiguation_options = [
-                                {"label": t1_let, "display": f"LETTER {t1_let}", "hand": "left"},
-                                {"label": t2_let, "display": f"LETTER {t2_let}", "hand": "right"},
-                            ]
-                            disambiguation_start_time = now
 
                     if current_prediction == alphabet_streak_candidate:
                         alphabet_streak_count += 1
@@ -789,7 +784,7 @@ async def websocket_recognize(
                         alphabet_streak_candidate = current_prediction
                         alphabet_streak_count = 1
 
-                    if alphabet_streak_count >= required_streak and not disambiguation_active:
+                    if alphabet_streak_count >= required_streak:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
                             res_label = alphabet_streak_candidate
                             res_display = f"LETTER {alphabet_streak_candidate}"
@@ -797,21 +792,22 @@ async def websocket_recognize(
                             res_is_known = True
                             is_stable = True
 
-                            # Anti-jitter refractory lockout
+                            # Strict Anti-Spam Refractory Lockout:
+                            # 1. Once a letter commits, it is locked.
+                            # 2. Holding the hand up will NEVER commit the letter a second time.
+                            # 3. Only a DIFFERENT letter or relaxing hands for >= 0.45s allows a new commit.
                             can_commit = False
-                            if alphabet_streak_candidate == alphabet_last_committed:
-                                if (now - alphabet_last_committed_time >= 0.75) and alphabet_had_baseline:
-                                    can_commit = True
-                            else:
+                            if alphabet_streak_candidate != alphabet_last_committed:
+                                can_commit = True
+                            elif not alphabet_repeat_lock:
                                 can_commit = True
 
                             if can_commit and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
                                 accumulator.add_token(alphabet_streak_candidate, token_type="letter", timestamp=now)
                                 alphabet_last_committed = alphabet_streak_candidate
                                 alphabet_last_committed_time = now
-                                alphabet_had_baseline = False
+                                alphabet_repeat_lock = True
                         else:
-                            alphabet_last_committed = ""
                             res_label = "Awaiting Sign Input"
                             res_display = "Awaiting Sign Input"
                             res_conf = 0.0
@@ -893,7 +889,7 @@ async def websocket_recognize(
                             is_same_sign = (res_label == last_committed_sign)
                             can_commit = False
                             if is_same_sign:
-                                if time_since_last >= 1.0 and had_idle_baseline:
+                                if hand_absent_duration >= 0.5 and had_idle_baseline:
                                     can_commit = True
                             else:
                                 can_commit = True

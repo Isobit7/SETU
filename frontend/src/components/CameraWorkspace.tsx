@@ -80,7 +80,6 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     }
   };
 
-  // Real-time client-side framing feedback computation (<0.02ms, zero lag)
   const framingFeedback: FramingFeedback = useMemo(() => {
     if (cameraStatus !== 'detecting' && cameraStatus !== 'paused') {
       return {
@@ -95,6 +94,22 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       mirrored: landmarkStyles.mirrored,
     });
   }, [cameraStatus, currentResult?.landmarks, landmarkStyles.mirrored]);
+
+  // Real-time client-side guidance feedback computation (<0.02ms, zero lag)
+  const guidanceMessage = useMemo(() => {
+    if (currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38) {
+      return 'Low Light — Turn on front light';
+    }
+    const raw = currentResult?.guidance || framingFeedback.message;
+    if (!raw) return 'Optimal Framing (50–70cm)';
+    if (raw.includes('Too close') || raw.includes('step back')) return 'Move Back (Sit 50–70cm away)';
+    if (raw.includes('Too far') || raw.includes('closer')) return 'Move Closer (Sit 50–70cm away)';
+    if (raw.includes('Camera too low')) return 'Tilt Camera Up';
+    if (raw.includes('Camera too high')) return 'Tilt Camera Down';
+    if (raw.includes('Raise your hands')) return 'Raise Hands into View';
+    if (raw.includes('Position good')) return 'Optimal Framing (50–70cm)';
+    return raw;
+  }, [currentResult?.lighting?.score, currentResult?.guidance, framingFeedback.message]);
 
   // Notify parent of framing adjustments
   useEffect(() => {
@@ -225,11 +240,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
               title="Real-time distance, framing, and lighting calibration"
             >
               <span className="framing-chip-dot" />
-              <span className="framing-chip-text">
-                {currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38
-                  ? 'Low Light — Increase front lighting'
-                  : currentResult?.guidance || framingFeedback.message}
-              </span>
+              <span className="framing-chip-text">{guidanceMessage}</span>
             </div>
           )}
         </div>
@@ -295,17 +306,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* Soft Real-Time Distance & Lighting Guidance Banner */}
-        {cameraStatus === 'detecting' && (!framingFeedback.isOptimal || !handDetected || (currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38)) && (
-          <div className="camera-framing-hint-banner" aria-live="polite">
-            <span className="framing-hint-dot" aria-hidden="true" />
-            <span className="framing-hint-text">
-              {currentResult?.lighting?.score !== undefined && currentResult.lighting.score < 0.38
-                ? 'Low light detected — please turn on a light facing you'
-                : currentResult?.guidance || framingFeedback.message}
-            </span>
-          </div>
-        )}
+
 
         {/* Real-Time Reference Gesture & Sign Assistance Card */}
         {showSignGuide && (

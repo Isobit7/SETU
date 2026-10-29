@@ -294,6 +294,24 @@ class RealSignClassifier:
             logits_tensor = self.model(inp_tensor)
             logits_arr = logits_tensor.numpy()[0].copy()
 
+            # Dual-handed left-handed signer symmetry:
+            # If both hands are present, also evaluate mirrored-swapped configuration
+            # (dominant left hand mirrored -> right hand slot, base right hand mirrored -> left hand slot)
+            if self.input_dim == 126 and feat_vec.shape[0] == 126:
+                lh_energy = float(np.linalg.norm(feat_vec[0:63]))
+                rh_energy = float(np.linalg.norm(feat_vec[63:126]))
+                if lh_energy > 1e-3 and rh_energy > 1e-3:
+                    lh_pts = feat_vec[0:63].copy().reshape(21, 3)
+                    rh_pts = feat_vec[63:126].copy().reshape(21, 3)
+                    lh_mirrored = lh_pts.copy()
+                    lh_mirrored[:, 0] = -lh_mirrored[:, 0]
+                    rh_mirrored = rh_pts.copy()
+                    rh_mirrored[:, 0] = -rh_mirrored[:, 0]
+                    feat_swapped = np.concatenate([rh_mirrored.flatten(), lh_mirrored.flatten()]).astype(np.float32)
+                    logits_swapped = self.model(torch.from_numpy(feat_swapped).unsqueeze(0)).numpy()[0]
+                    if float(np.max(logits_swapped)) > float(np.max(logits_arr)):
+                        logits_arr = logits_swapped.copy()
+
         # Optional geometric rule validation (only if explicitly enabled; disabled by default to avoid hijacking)
         if apply_heuristic_boost:
             boosted_letter: Optional[str] = None
