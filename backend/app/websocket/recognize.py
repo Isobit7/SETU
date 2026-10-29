@@ -500,11 +500,12 @@ async def websocket_recognize(
                 else:
                     hand_absent_duration = now - last_hand_seen_time
 
-                # Reset repeat lock and baseline when user relaxes/drops hands for >= 0.45s
-                if hand_absent_duration >= 0.45:
+                # Reset repeat lock and register CTC blank when user relaxes/drops hands
+                if hand_absent_duration >= 0.20:
                     alphabet_repeat_lock = False
                     alphabet_last_committed = ""
                     had_idle_baseline = True
+                    accumulator.add_continuous_token("no_sign", confidence=1.0, token_type="letter", timestamp=now)
 
                 # Periodic COCO Object Detection for Show-and-Sign interaction (every 10 frames)
                 if pipeline.object_detector is not None and (total_stream_frames % 10 == 0):
@@ -663,7 +664,7 @@ async def websocket_recognize(
                                     target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
-                                    apply_heuristic_boost=True,
+                                    apply_heuristic_boost=False,
                                     raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )
@@ -792,18 +793,14 @@ async def websocket_recognize(
                             res_is_known = True
                             is_stable = True
 
-                            # Strict Anti-Spam Refractory Lockout:
-                            # 1. Once a letter commits, it is locked.
-                            # 2. Holding the hand up will NEVER commit the letter a second time.
-                            # 3. Only a DIFFERENT letter or relaxing hands for >= 0.45s allows a new commit.
-                            can_commit = False
-                            if alphabet_streak_candidate != alphabet_last_committed:
-                                can_commit = True
-                            elif not alphabet_repeat_lock:
-                                can_commit = True
-
-                            if can_commit and alphabet_streak_candidate not in ("", "no_sign", "unknown", "Awaiting Sign Input"):
-                                accumulator.add_token(alphabet_streak_candidate, token_type="letter", timestamp=now)
+                            # Continuous CTC Dynamic Token Emission (collapses duplicates, handles transitions & double letters)
+                            emitted = accumulator.add_continuous_token(
+                                alphabet_streak_candidate,
+                                confidence=raw_conf,
+                                token_type="letter",
+                                timestamp=now,
+                            )
+                            if emitted:
                                 alphabet_last_committed = alphabet_streak_candidate
                                 alphabet_last_committed_time = now
                                 alphabet_repeat_lock = True

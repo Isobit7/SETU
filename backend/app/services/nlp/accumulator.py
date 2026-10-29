@@ -115,15 +115,24 @@ class SentenceAccumulator:
             self.translated_text = ""
             return ""
 
+        # 1. Fast exact canonical idiom match (zero-latency for common baseline phrases)
         rule_match = self.parser.match_rule(self.sentence_tokens)
         if rule_match is not None:
             self.translated_text = rule_match
             return self.translated_text
 
+        # 2. High-fidelity on-device Neural Sequence-to-Sequence translation (Qwen2.5-0.5B) for all arbitrary sentences
         if self.neural_translator is not None and getattr(self.neural_translator, "is_loaded", False):
-            self.translated_text = self.neural_translator.translate(self.sentence_tokens)
-        else:
-            self.translated_text = self.parser.parse_gloss(self.sentence_tokens)
+            try:
+                res = self.neural_translator.translate(self.sentence_tokens)
+                if res:
+                    self.translated_text = res
+                    return self.translated_text
+            except Exception:
+                pass
+
+        # 3. Clean fallback
+        self.translated_text = self.parser.parse_gloss(self.sentence_tokens)
         return self.translated_text
 
     def add_continuous_token(

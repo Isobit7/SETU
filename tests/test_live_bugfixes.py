@@ -203,3 +203,62 @@ def test_yolo_world_classes_and_watch_normalization():
     assert fused_give == "Please hand me the watch."
 
 
+
+
+def test_neural_predictive_engine_and_domain_vocabulary():
+    """Verify modern PredictiveTextEngine with domain vocabulary and caching."""
+    from backend.app.services.nlp.predictive import PredictiveTextEngine
+
+    engine = PredictiveTextEngine()
+    
+    # 1. Base suggestions
+    res_empty = engine.predict_next("")
+    assert len(res_empty) == 3
+    assert "hello" in res_empty
+
+    # 2. Domain bigram completions (healthcare, education, time)
+    res_school = engine.predict_next("school")
+    assert any("school" in r or "bus" in r or "teacher" in r for r in res_school)
+
+    res_med = engine.predict_next("medicine")
+    assert any("medicine" in r or "doctor" in r or "pills" in r for r in res_med)
+
+    res_watch = engine.predict_next("watch")
+    assert any("time" in r or "watch" in r for r in res_watch)
+
+    # 3. Cache verification
+    engine._cache["custom_query"] = ["first suggestion", "second suggestion", "third suggestion"]
+    cached_res = engine.predict_next("custom_query")
+    assert cached_res == ["first suggestion", "second suggestion", "third suggestion"]
+
+
+def test_ctc_streaming_continuous_fingerspelling_and_double_letters():
+    """Verify CTC greedy continuous decoding correctly allows double letters without a 0.45s freeze."""
+    from backend.app.services.nlp.accumulator import SentenceAccumulator
+
+    acc = SentenceAccumulator()
+
+    # 1. Spell "B"
+    for _ in range(5):
+        acc.add_continuous_token("b", confidence=0.95, token_type="letter")
+    assert acc.current_word == "B"
+
+    # 2. Spell "O"
+    for _ in range(5):
+        acc.add_continuous_token("o", confidence=0.95, token_type="letter")
+    assert acc.current_word == "BO"
+
+    # 3. Rest transition (hand relaxes for 2 frames)
+    acc.add_continuous_token("no_sign", confidence=1.0, token_type="letter")
+    acc.add_continuous_token("no_sign", confidence=1.0, token_type="letter")
+    assert acc.current_word == "BO"
+
+    # 4. Spell second "O" (Double letter in "BOOK")
+    for _ in range(5):
+        acc.add_continuous_token("o", confidence=0.95, token_type="letter")
+    assert acc.current_word == "BOO"
+
+    # 5. Spell "K"
+    for _ in range(5):
+        acc.add_continuous_token("k", confidence=0.95, token_type="letter")
+    assert acc.current_word == "BOOK"

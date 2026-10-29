@@ -131,5 +131,15 @@ class MultimodalFuser:
         if obj_label in BEVERAGE_CONTAINERS and sign_clean in ("water", "drink", "thirsty"):
             return f"I need water in the {obj_label}."
 
+        # 3. Dynamic Neural Multimodal Fusion via local Qwen2.5-0.5B
+        try:
+            from backend.app.services.nlp.neural_translator import neural_translator
+            if getattr(neural_translator, "is_loaded", False):
+                res = neural_translator.translate([f"SHOWING {obj_label.upper()}", signed_token.upper()])
+                if res:
+                    return res
+        except Exception as e:
+            logger.debug("Neural multimodal fusion fallback: %s", e)
+
         return f"[{obj_label.capitalize()}] {signed_token.upper()}"
 
