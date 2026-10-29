@@ -451,14 +451,14 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           </div>
         )}
 
-        {/* Detected Physical Objects Tags */}
-        {currentResult?.detected_objects && currentResult.detected_objects.length > 0 && (
+        {/* Held Physical Objects Tags for Show-and-Sign (Only Active When Held) */}
+        {currentResult?.detected_objects && currentResult.detected_objects.filter((o) => o.is_held).length > 0 && (
           <div className="detected-objects-bar">
-            {currentResult.detected_objects.slice(0, 3).map((obj) => (
-              <span key={obj.label} className={`object-chip ${obj.is_held ? 'held' : ''}`}>
+            {currentResult.detected_objects.filter((o) => o.is_held).slice(0, 3).map((obj) => (
+              <span key={obj.label} className="object-chip held">
                 <span className="object-chip-dot" />
                 <span>{obj.display_name}</span>
-                {obj.is_held && <span className="held-badge">Held</span>}
+                <span className="held-badge">Held</span>
               </span>
             ))}
           </div>
@@ -481,14 +481,14 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* Luminous Center Camera Prediction (Transparent Background, High Readability) */}
-        {subtitleVisible && (cameraStatus === 'detecting' || cameraStatus === 'paused') && (
+        {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
+        {subtitleVisible && cameraStatus === 'detecting' && isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
           <div className="center-camera-prediction" aria-live="polite">
-            <div className={`center-prediction-badge ${isKnown ? 'active-sign' : 'resting-sign'}`}>
+            <div className="center-prediction-badge active-sign">
               <div className="center-sign-text">
-                {cameraStatus === 'detecting' ? subtitleText : 'Detection Paused'}
+                {subtitleText}
               </div>
-              {isKnown && confidencePercent > 0 && (
+              {confidencePercent > 0 && (
                 <div className="center-sign-confidence">
                   {confidencePercent}% match
                 </div>

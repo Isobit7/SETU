@@ -187,7 +187,8 @@ export function drawLandmarksOnCanvas(
   // 4. Detected Physical Objects Bounding Boxes (Show-and-Sign Multimodal Grounding)
   if (detectedObjects && detectedObjects.length > 0) {
     for (const obj of detectedObjects) {
-      if (!obj.bbox || obj.bbox.length < 4) continue;
+      // Only draw bounding boxes for held objects actively participating in Show-and-Sign
+      if (!obj.is_held || !obj.bbox || obj.bbox.length < 4) continue;
       const [ymin, xmin, ymax, xmax] = obj.bbox;
 
       // Coordinate mapping with mirror horizontal flip support
