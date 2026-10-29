@@ -16,13 +16,14 @@
     <a href="#key-capabilities">Key Capabilities</a> •
     <a href="#system-architecture">Architecture</a> •
     <a href="#model-suite--scientific-benchmarks">Models & Benchmarks</a> •
+    <a href="#model-evaluation-matrices">Evaluation Matrices</a> •
     <a href="#multimodal-show-and-sign">Show-and-Sign</a> •
     <a href="#ui-workstation">Workstation UI</a> •
     <a href="#documentation-hub">Documentation Hub</a> •
     <a href="#quick-start">Quick Start</a> •
     <a href="#api--websocket-protocol">API & WebSocket</a> •
     <a href="#continuous-capture--retraining">Retraining Pipeline</a> •
-    <a href="#testing--verification">Testing (160/160)</a> •
+    <a href="#testing--verification">Testing (164/164)</a> •
     <a href="#license">License</a>
   </p>
 
@@ -35,7 +36,7 @@
     <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
     <a href="https://typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
     <a href="https://vitejs.dev"><img src="https://img.shields.io/badge/Vite-8.0%2B-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></a>
-    <a href="https://docs.pytest.org"><img src="https://img.shields.io/badge/PyTest-160%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="PyTest" /></a>
+    <a href="https://docs.pytest.org"><img src="https://img.shields.io/badge/PyTest-164%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="PyTest" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License" /></a>
   </div>
 </div>
@@ -211,6 +212,26 @@ Evaluated rigorously through automated diagnostics ([`scripts/deep_system_diagno
 - **Ambiguity Ratio (Margin $< 0.20$):** **1.46%** (Resolved seamlessly by Disambiguation HUD)
 - **Weights Stability:** **0 NaN, 0 Inf** across 1,018,575 parameters; 0% dead sparsity.
 - **Hallucination on Blank Frame:** **0.0000 Confidence** (`"Awaiting Sign Input"`).
+
+---
+
+## Model Evaluation Matrices
+
+SETU features an automated **Model Evaluation Matrix Engine** ([`reports/evaluation_matrices/`](reports/evaluation_matrices/)) that inspects all trained neural networks and classifiers on disk. The engine evaluates weights and biases statistics layer-by-layer, logs training hyperparameters (learning rate, optimizer, epochs, loss function), and tracks test accuracy:
+
+| Model Name | Task / Domain | Architecture | Total Params | Weights / Biases | Learning Rate | Accuracy / F1 | Latency | Matrix Link |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **RealSign 26-Class Alphabet PyTorch MLP** | Two-Handed Alphabet Recognition (A–Z) | 3-Layer BatchNorm MLP | `26,972` | `26,176` / `410` | `0.001` | **97.22%** | `0.152 ms` | [View Matrix](reports/evaluation_matrices/realsign_26class_mlp_matrix.md) |
+| **Dynamic ISL Sequence BiLSTM + Attention** | Continuous Phrase & Greeting Recognition | 2-Layer BiLSTM + Multi-Head Attention | `964,631` | `959,560` / `5,071` | `0.001` | **88.00%** | `4.2 ms` | [View Matrix](reports/evaluation_matrices/isl_sequence_lstm_matrix.md) |
+| **YOLO-World v2 Small** | Show-and-Sign Open-Vocabulary Vision | RepVL-PAN Vision-Language Transformer | `12,784,200` | `12,745,424` / `14,453` | `0.01` | **Zero False Watches** | `24.8 ms` | [View Matrix](reports/evaluation_matrices/yolov8s_worldv2_matrix.md) |
+| **Qwen2.5-0.5B Small Language Model** | Neural ISL-to-English Translation & Autocomplete | Qwen2ForCausalLM (24 Layers, RoPE) | `494,032,768` | `494,005,120` / `27,648` | `0.00001` | **Fluent SVO** | `250.0 ms` | [View Matrix](reports/evaluation_matrices/qwen2.5_0.5b_matrix.md) |
+| **SETU ISL Conversational MVP Matrix** | Core Phrase Recognition (Sub-ms Baseline) | L2-Regularized Ridge Matrix | `10,119` | `10,113` / `6` | `Analytic` | **80.00%** | `0.2 ms` | [View Matrix](reports/evaluation_matrices/isl_mvp_model_matrix.md) |
+| **HuggingFace ISL 26-Class Benchmark MLP** | Benchmark Alphabet Recognition (A–Z) | 3-Layer BatchNorm MLP | `26,972` | `26,176` / `410` | `0.001` | **94.39%** | `0.16 ms` | [View Matrix](reports/evaluation_matrices/hf_isl_26class_mlp_matrix.md) |
+
+> 🔄 **Dynamic Auto-Discovery:** Adding, training, or deleting any model file in `models/weights/` triggers automatic matrix updates across `reports/evaluation_matrices/` and `reports/model_matrices/`.
+>
+> **CLI Tool:** `python scripts/generate_model_evaluation_matrices.py`  
+> **REST Endpoint:** `GET /api/v1/models/matrices` • `POST /api/v1/models/matrices/refresh`
 
 ---
 
@@ -432,26 +453,27 @@ Every pull request and modification is validated against an exhaustive automated
 ============================= test session starts =============================
 platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.7.0
 rootdir: C:\MINI PROJ-SETU
-collected 160 items
+collected 164 items
 
 tests/test_api.py ...............                                        [  9%]
-tests/test_backend_app_modular.py ......                                 [ 13%]
+tests/test_backend_app_modular.py ......                                 [ 12%]
 tests/test_camera_and_holistic_vision.py ....                            [ 15%]
-tests/test_config_exceptions.py ....                                     [ 18%]
-tests/test_custom_sign_pipeline.py .....                                 [ 21%]
+tests/test_config_exceptions.py ....                                     [ 17%]
+tests/test_custom_sign_pipeline.py .....                                 [ 20%]
 tests/test_feature_extraction_and_manifest_pipeline.py ....              [ 23%]
-tests/test_feature_schema.py ..............                              [ 32%]
-tests/test_include_model.py ...........                                  [ 39%]
-tests/test_invariant_features_and_segmentation.py ............           [ 46%]
-tests/test_isl_mvp_model.py ...........                                  [ 53%]
-tests/test_isl_sequence_lstm_classifier.py .........                     [ 58%]
-tests/test_live_bugfixes.py ..........................                   [ 75%]
-tests/test_nlp_pipeline.py .............                                 [ 83%]
-tests/test_real_data_readiness.py .....                                  [ 86%]
+tests/test_feature_schema.py ..............                              [ 31%]
+tests/test_include_model.py ...........                                  [ 38%]
+tests/test_invariant_features_and_segmentation.py ............           [ 45%]
+tests/test_isl_mvp_model.py ...........                                  [ 52%]
+tests/test_isl_sequence_lstm_classifier.py .........                     [ 57%]
+tests/test_live_bugfixes.py ..........................                   [ 73%]
+tests/test_model_evaluation_matrices.py ....                             [ 76%]
+tests/test_nlp_pipeline.py .............                                 [ 84%]
+tests/test_real_data_readiness.py .....                                  [ 87%]
 tests/test_realsign_classifier.py ..............                         [ 95%]
 tests/test_rf_uv11_adapter.py .......                                    [100%]
 
-================= 160 passed, 4 warnings in 82.87s (0:01:22) ==================
+================= 164 passed, 4 warnings in 90.13s (0:01:30) ==================
 ```
 
 ---

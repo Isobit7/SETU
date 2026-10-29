@@ -1,0 +1,121 @@
+{
+  "model_id": "isl_mvp_model",
+  "name": "SETU ISL Conversational MVP Matrix",
+  "task": "Core Phrase Recognition (Sub-Millisecond Baseline)",
+  "architecture_type": "L2-Regularized Ridge Classifier Matrix",
+  "file_name": "isl_mvp_model.npz",
+  "file_path": "models\\weights\\isl_mvp_model.npz",
+  "file_size_bytes": 38879,
+  "file_size_formatted": "37.97 KB",
+  "last_modified": "2026-10-26T11:52:41.372264+00:00",
+  "status": "active",
+  "total_parameters": 10119,
+  "weights_parameters": 10113,
+  "biases_parameters": 6,
+  "layers_count": 5,
+  "hyperparameters": {
+    "learning_rate": "N/A (Analytic Matrix Solver)",
+    "optimizer": "Ridge L2 Normal Equation",
+    "regularization_alpha": 1.0,
+    "loss_function": "Squared Error + L2 Penalty",
+    "epochs": 1,
+    "device": "CPU (NumPy BLAS)"
+  },
+  "evaluation_metrics": {
+    "test_accuracy": 0.8,
+    "macro_f1": 0.792,
+    "latency_cpu_ms": 0.2
+  },
+  "layers": [
+    {
+      "name": "weights",
+      "param_type": "weight",
+      "shape": [
+        1264,
+        6
+      ],
+      "dtype": "float32",
+      "numel": 7584,
+      "mean": -2e-05,
+      "std": 0.00765,
+      "min": -0.045215,
+      "max": 0.035687,
+      "l2_norm": 0.666187,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "bias",
+      "param_type": "bias",
+      "shape": [
+        6
+      ],
+      "dtype": "float32",
+      "numel": 6,
+      "mean": 0.0,
+      "std": 0.022662,
+      "min": -0.012244,
+      "max": 0.045974,
+      "l2_norm": 0.050674,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "mean",
+      "param_type": "parameter",
+      "shape": [
+        1264
+      ],
+      "dtype": "float32",
+      "numel": 1264,
+      "mean": 0.091493,
+      "std": 0.266527,
+      "min": -0.727392,
+      "max": 1.307931,
+      "l2_norm": 10.014997,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "scale",
+      "param_type": "parameter",
+      "shape": [
+        1264
+      ],
+      "dtype": "float32",
+      "numel": 1264,
+      "mean": 0.31335,
+      "std": 0.243039,
+      "min": 0.010825,
+      "max": 1.244097,
+      "l2_norm": 14.096567,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "num_classes",
+      "param_type": "parameter",
+      "shape": [],
+      "dtype": "int64",
+      "numel": 1,
+      "mean": 6.0,
+      "std": 0.0,
+      "min": 6.0,
+      "max": 6.0,
+      "l2_norm": 6.0,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    }
+  ],
+  "checkpoint_metadata": {
+    "class_names": [
+      "hello",
+      "thank_you",
+      "good_morning",
+      "i",
+      "you",
+      "no_sign"
+    ],
+    "num_classes": 6
+  }
+}

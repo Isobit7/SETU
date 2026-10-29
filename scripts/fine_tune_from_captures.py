@@ -241,6 +241,13 @@ def fine_tune_bilstm(
     torch.save(updated_checkpoint, str(weights_path))
     logger.info("Fine-tuned weights successfully saved to %s (backup at %s)", weights_path, backup_path)
 
+    try:
+        from backend.app.services.model_matrices import scan_and_generate_model_matrices
+        scan_and_generate_model_matrices()
+        logger.info("Automatically refreshed model evaluation matrices in reports/evaluation_matrices/")
+    except Exception as e:
+        logger.warning("Could not auto-generate model matrices: %s", e)
+
     return {
         "status": "success",
         "trained": True,

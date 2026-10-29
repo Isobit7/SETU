@@ -1,0 +1,335 @@
+{
+  "model_id": "realsign_26class_mlp",
+  "name": "RealSign 26-Class Alphabet PyTorch MLP",
+  "task": "Two-Handed ISL Alphabet Recognition (A\u2013Z)",
+  "architecture_type": "3-Layer BatchNorm MLP",
+  "file_name": "realsign_26class_mlp.pth",
+  "file_path": "models\\weights\\realsign_26class_mlp.pth",
+  "file_size_bytes": 114218,
+  "file_size_formatted": "111.54 KB",
+  "last_modified": "2026-10-26T18:12:06.868382+00:00",
+  "status": "active",
+  "total_parameters": 26972,
+  "weights_parameters": 26176,
+  "biases_parameters": 410,
+  "layers_count": 16,
+  "hyperparameters": {
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "loss_function": "CrossEntropyLoss",
+    "epochs": 30,
+    "batch_size": 64,
+    "dropout": 0.2,
+    "weight_decay": 0.0,
+    "device": "CUDA / CPU"
+  },
+  "evaluation_metrics": {
+    "test_accuracy": 0.9721845318860244,
+    "macro_f1": 0.9722599252307341,
+    "precision": 0.9843,
+    "recall": 0.984,
+    "latency_cpu_ms": 0.152,
+    "latency_onnx_us": 15.5
+  },
+  "layers": [
+    {
+      "name": "net.0.weight",
+      "param_type": "weight",
+      "shape": [
+        128,
+        126
+      ],
+      "dtype": "float32",
+      "numel": 16128,
+      "mean": 0.000649,
+      "std": 0.079323,
+      "min": -0.40232,
+      "max": 0.42979,
+      "l2_norm": 10.073727,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.0.bias",
+      "param_type": "bias",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": 0.005526,
+      "std": 0.050401,
+      "min": -0.102782,
+      "max": 0.123688,
+      "l2_norm": 0.571422,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.1.weight",
+      "param_type": "weight",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": 0.934721,
+      "std": 0.053907,
+      "min": 0.766728,
+      "max": 1.090479,
+      "l2_norm": 10.592597,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.1.bias",
+      "param_type": "bias",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": -0.341066,
+      "std": 0.086723,
+      "min": -0.572978,
+      "max": -0.150198,
+      "l2_norm": 3.980557,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.1.running_mean",
+      "param_type": "running_mean",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": -0.091042,
+      "std": 0.179804,
+      "min": -0.563027,
+      "max": 0.6763,
+      "l2_norm": 2.273061,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.1.running_var",
+      "param_type": "running_var",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": 0.064766,
+      "std": 0.040606,
+      "min": 0.013378,
+      "max": 0.208416,
+      "l2_norm": 0.863901,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.1.num_batches_tracked",
+      "param_type": "parameter",
+      "shape": [],
+      "dtype": "int64",
+      "numel": 1,
+      "mean": 8280.0,
+      "std": 0.0,
+      "min": 8280.0,
+      "max": 8280.0,
+      "l2_norm": 8280.0,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.4.weight",
+      "param_type": "weight",
+      "shape": [
+        64,
+        128
+      ],
+      "dtype": "float32",
+      "numel": 8192,
+      "mean": -0.017059,
+      "std": 0.075346,
+      "min": -0.362005,
+      "max": 0.251124,
+      "l2_norm": 6.991769,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.4.bias",
+      "param_type": "bias",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 0.005809,
+      "std": 0.051116,
+      "min": -0.096224,
+      "max": 0.093453,
+      "l2_norm": 0.408372,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.5.weight",
+      "param_type": "weight",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 1.609524,
+      "std": 0.064167,
+      "min": 1.466879,
+      "max": 1.77776,
+      "l2_norm": 12.886259,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.5.bias",
+      "param_type": "bias",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 0.210635,
+      "std": 0.070689,
+      "min": 0.068621,
+      "max": 0.425204,
+      "l2_norm": 1.776034,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.5.running_mean",
+      "param_type": "running_mean",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": -0.46897,
+      "std": 0.2908,
+      "min": -1.159377,
+      "max": 0.252642,
+      "l2_norm": 4.404914,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.5.running_var",
+      "param_type": "running_var",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 0.259701,
+      "std": 0.044715,
+      "min": 0.180069,
+      "max": 0.360254,
+      "l2_norm": 2.107704,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.5.num_batches_tracked",
+      "param_type": "parameter",
+      "shape": [],
+      "dtype": "int64",
+      "numel": 1,
+      "mean": 8280.0,
+      "std": 0.0,
+      "min": 8280.0,
+      "max": 8280.0,
+      "l2_norm": 8280.0,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.7.weight",
+      "param_type": "weight",
+      "shape": [
+        26,
+        64
+      ],
+      "dtype": "float32",
+      "numel": 1664,
+      "mean": -0.053898,
+      "std": 0.220727,
+      "min": -0.698491,
+      "max": 0.511241,
+      "l2_norm": 9.265837,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "net.7.bias",
+      "param_type": "bias",
+      "shape": [
+        26
+      ],
+      "dtype": "float32",
+      "numel": 26,
+      "mean": 0.020714,
+      "std": 0.056868,
+      "min": -0.079026,
+      "max": 0.113075,
+      "l2_norm": 0.303323,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    }
+  ],
+  "checkpoint_metadata": {
+    "input_dim": 126,
+    "classes": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z"
+    ],
+    "num_classes": 26,
+    "test_accuracy": 0.9721845318860244,
+    "macro_f1": 0.9722599252307341,
+    "architecture": {
+      "input_dim": 126,
+      "hidden1": 128,
+      "hidden2": 64,
+      "num_classes": 26,
+      "use_batchnorm": true,
+      "dropout": 0.2
+    },
+    "dataset_source": "combined:ISL_42K_Dataset+HuggingFace_akritRihal",
+    "created_at": "2026-10-26T23:42:06.864384"
+  }
+}

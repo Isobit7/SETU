@@ -22,6 +22,9 @@ Welcome to the **Sathwik** project documentation directory. This folder contains
 3. [**`SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) **(Checkpoint 28 Master Hardened Edition)**
    - Complete 236-file repository inventory, 15-endpoint API encyclopedia, deep scientific diagnostic audit, coupling analysis, and 5-phase engineering roadmap.
 
+4. [**`reports/evaluation_matrices/README.md`**](file:///c:/MINI%20PROJ-SETU/reports/evaluation_matrices/README.md) **(Automated Model Evaluation Matrices & Parameter Catalog)**
+   - Layer-by-layer weights, biases, parameter statistics, training hyperparameters (learning rate, optimizer, epochs), and live test accuracy for all models in the project with dynamic auto-updating.
+
 ---
 
 ## 📂 Supplementary Guides

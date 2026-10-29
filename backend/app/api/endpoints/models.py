@@ -11,8 +11,10 @@ from typing import Any, Dict, List
 from fastapi import APIRouter
 
 from backend.app.services.pipeline_manager import pipeline
+from backend.app.services.model_matrices import get_model_matrices, scan_and_generate_model_matrices
 from models.include import INCLUDEInferenceService
 from models.registry import ModelRegistry
+from fastapi import HTTPException
 
 logger = logging.getLogger("setu.backend.api.models")
 
@@ -167,3 +169,45 @@ async def get_include_model_classes() -> Dict[str, Any]:
         "total_classes": len(classes),
         "classes": classes,
     }
+
+
+@router.get("/matrices")
+async def get_evaluation_matrices() -> Dict[str, Any]:
+    """
+    Returns the master model evaluation matrix for all active models in the project.
+    Automatically checks if any model file has been added, updated, or deleted on disk.
+    """
+    return get_model_matrices()
+
+
+@router.post("/matrices/refresh")
+async def refresh_evaluation_matrices() -> Dict[str, Any]:
+    """
+    Forces an immediate rescan of models/weights/ and regenerates all evaluation matrices.
+    """
+    return scan_and_generate_model_matrices()
+
+
+@router.get("/matrices/{model_id}")
+async def get_single_model_matrix(model_id: str) -> Dict[str, Any]:
+    """
+    Returns detailed layer-by-layer weights, biases, hyperparameters, and evaluation
+    metrics for a specific model ID.
+    """
+    matrices = get_model_matrices()
+    models_dict = matrices.get("models", {})
+    clean_id = model_id.lower().replace("-", "_")
+
+    if clean_id in models_dict:
+        return models_dict[clean_id]
+
+    # Fuzzy match
+    for k, v in models_dict.items():
+        if clean_id in k or k in clean_id:
+            return v
+
+    raise HTTPException(
+        status_code=404,
+        detail=f"Model matrix for '{model_id}' not found. Available models: {list(models_dict.keys())}",
+    )
+

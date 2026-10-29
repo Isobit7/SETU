@@ -1,0 +1,98 @@
+{
+  "model_id": "test_dynamic_dummy",
+  "name": "test_dynamic_dummy.pth",
+  "task": "General Sign / Multimodal Processing",
+  "architecture_type": ".PTH Model",
+  "file_name": "test_dynamic_dummy.pth",
+  "file_path": "models\\weights\\test_dynamic_dummy.pth",
+  "file_size_bytes": 3496,
+  "file_size_formatted": "3.41 KB",
+  "last_modified": "2026-10-29T13:35:37.436754+00:00",
+  "status": "active",
+  "total_parameters": 325,
+  "weights_parameters": 300,
+  "biases_parameters": 25,
+  "layers_count": 4,
+  "hyperparameters": {
+    "learning_rate": 0.0005,
+    "optimizer": "AdamW",
+    "epochs": 15
+  },
+  "evaluation_metrics": {
+    "test_accuracy": 0.965
+  },
+  "layers": [
+    {
+      "name": "0.weight",
+      "param_type": "weight",
+      "shape": [
+        20,
+        10
+      ],
+      "dtype": "float32",
+      "numel": 200,
+      "mean": 0.004713,
+      "std": 0.183174,
+      "min": -0.311306,
+      "max": 0.311628,
+      "l2_norm": 2.584848,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "0.bias",
+      "param_type": "bias",
+      "shape": [
+        20
+      ],
+      "dtype": "float32",
+      "numel": 20,
+      "mean": -0.050419,
+      "std": 0.166146,
+      "min": -0.30381,
+      "max": 0.315271,
+      "l2_norm": 0.758504,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "2.weight",
+      "param_type": "weight",
+      "shape": [
+        5,
+        20
+      ],
+      "dtype": "float32",
+      "numel": 100,
+      "mean": -0.008434,
+      "std": 0.129473,
+      "min": -0.220095,
+      "max": 0.218954,
+      "l2_norm": 1.291001,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "2.bias",
+      "param_type": "bias",
+      "shape": [
+        5
+      ],
+      "dtype": "float32",
+      "numel": 5,
+      "mean": 0.04453,
+      "std": 0.169327,
+      "min": -0.17069,
+      "max": 0.206489,
+      "l2_norm": 0.352989,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    }
+  ],
+  "checkpoint_metadata": {
+    "learning_rate": 0.0005,
+    "optimizer": "AdamW",
+    "epochs": 15,
+    "test_accuracy": 0.965
+  }
+}

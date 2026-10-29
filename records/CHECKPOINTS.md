@@ -4,7 +4,7 @@
 > **Status:** Active Audit & Rollback Registry  
 > **Repository:** `c:\MINI PROJ-SETU`  
 > **Last Updated:** October 2026  
-> **Test Status:** 100% Passing (160/160 Backend Unit & Integration Tests | Clean TypeScript Vite Build)
+> **Test Status:** 100% Passing (164/164 Backend Unit & Integration Tests | Clean TypeScript Vite Build)
 
 This document serves as the canonical audit trail and rollback safety net for the SETU project. If any component, model weight, or UI feature suffers corruption, degradation, or regression, developers, teammates, and evaluators can inspect the exact commit hash, review what changed, and execute precise rollback procedures.
 
@@ -14,6 +14,7 @@ This document serves as the canonical audit trail and rollback safety net for th
 
 | Ckpt # | Milestone Focus | Core Technical Deliverable | Rollback Target |
 | :---: | :--- | :--- | :---: |
+| **28** | **Automated Model Evaluation Matrices & Inspection** | `reports/evaluation_matrices/` engine automatically extracting layer-by-layer weights, biases, parameter statistics, training hyperparameters (learning rate, optimizer, epochs, loss function), and test metrics with dynamic auto-update CLI & REST API; 164 passing tests. | `git checkout <commit_28>` |
 | **27** | **YOLO-World, Qwen2.5 SLM & CTC Decoding** | Zero-shot open-vocabulary YOLO-World v2 detector, on-device Qwen2.5-0.5B causal SLM on CUDA, continuous CTC dynamic greedy decoding (zero frozen lockout, stutter collapsed, handles double letters), dual-hand horizontal symmetry ($x' = -x$), streamlined HUD, 160 passing tests. | `git checkout <commit_27>` |
 | **26** | **Multimodal AI, Disambiguation & Low-Light** | 80-Class COCO detector, Hand-lift Disambiguation HUD, 176D body-anchored geometry, CLAHE low-light enhancer, fine-tune capture pipeline. | `git checkout <commit_26>` |
 | **25** | **89-D Invariant Geometric Features & MLP** | Added 15 joint angles, 17 inter-finger distances; achieved **99.34% test accuracy**. | `git checkout <commit_25>` |

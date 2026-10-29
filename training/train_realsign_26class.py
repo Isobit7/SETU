@@ -666,6 +666,12 @@ def main():
 
     report_size_kb = args.report_out.stat().st_size / 1024
     print(f"Evaluation report saved to: {args.report_out} ({report_size_kb:.2f} KB)")
+    try:
+        from backend.app.services.model_matrices import scan_and_generate_model_matrices
+        scan_and_generate_model_matrices()
+        print("Model evaluation matrices automatically refreshed in reports/evaluation_matrices/.")
+    except Exception as e:
+        print(f"Notice: Model matrices auto-update skipped: {e}")
     print("=" * 75)
 
 

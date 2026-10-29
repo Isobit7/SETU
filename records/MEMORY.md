@@ -22,7 +22,7 @@
 | **Fingerspelling Decoder** | Continuous CTC Greedy Token Decoder | Stutter-collapsing dynamic decoder: zero 0.45s frozen lockout, fluid double letters (*"BOOK"*). |
 | **Low-Light Enhancement** | Adaptive LAB CLAHE + Bilateral Denoising | Automatically boosts dim webcam feeds (< 75 lum) for landmark stability. |
 | **Audio Speech** | Native Web SpeechSynthesis API | Instant auditory spoken playback with cancel and re-trigger controls. |
-| **Test Suite Health** | 160 / 160 tests passing (100%) | Automated pytest execution across all vision, model, NLP, and regression suites. |
+| **Test Suite Health** | 164 / 164 tests passing (100%) | Automated pytest execution across all vision, model, matrices, NLP, and regression suites. |
 
 ---
 
@@ -47,6 +47,7 @@
 | **P14**| **Living Documentation Polish** | ✅ Complete | Upgraded documentation to executive table-driven clarity and single-source truth. |
 | **P15**| **Multimodal AI & Disambiguation** | ✅ Complete | 80-Class COCO detector, Hand-lift HUD, 176-D geometry, low-light CLAHE, capture CLI. |
 | **P16**| **YOLO-World & SLM Modernization** | ✅ Complete | YOLO-World v2 open-vocabulary grounding, Qwen2.5-0.5B causal SLM, Continuous CTC decoding, Hand symmetry, 160 tests passing. |
+| **P17**| **Automated Evaluation Matrices Engine** | ✅ Complete | `reports/evaluation_matrices/` folder auto-cataloging weights, biases stats, learning rates, epochs, layer metrics; dynamic auto-update CLI & REST API; 164 tests passing. |
 
 ---
 
