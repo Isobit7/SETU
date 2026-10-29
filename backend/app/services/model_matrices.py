@@ -732,6 +732,13 @@ def _generate_master_readme(master: Dict[str, Any]) -> None:
 def _sync_alias_directory() -> None:
     """Copies or mirrors files to reports/model_matrices/ for seamless discovery."""
     try:
+        current_names = {item.name for item in MATRICES_DIR.iterdir()}
+        for alias_item in ALIAS_MATRICES_DIR.iterdir():
+            if alias_item.name not in current_names:
+                try:
+                    alias_item.unlink()
+                except Exception:
+                    pass
         for item in MATRICES_DIR.iterdir():
             target = ALIAS_MATRICES_DIR / item.name
             if item.is_file():
