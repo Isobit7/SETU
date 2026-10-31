@@ -30,7 +30,7 @@ from models.adapters.mvp import (
 
 @pytest.fixture
 def weights_path():
-    p = Path("models/isl_mvp_model.npz")
+    p = Path("models/weights/isl_mvp_model.npz")
     assert p.exists(), f"Model weights missing at {p}. Run training/train_mvp_model.py first."
     return p
 

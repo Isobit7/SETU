@@ -14,7 +14,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from backend.app.services.pipeline_manager import pipeline
-from models.include import INCLUDEInferenceService
+from models.adapters.include import INCLUDEInferenceService
 
 logger = logging.getLogger("setu.backend.api.video")
 

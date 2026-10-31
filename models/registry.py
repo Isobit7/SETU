@@ -135,25 +135,18 @@ class ModelRegistry:
             meta.is_ready = False
 
 
-def _resolve_weight_path(name: str) -> Path:
-    p1 = Path("models/weights") / name
-    if p1.exists():
-        return p1
-    return Path("models") / name
-
-
 # Register production model engines
 ModelRegistry.register(
     model_id="realsign_26class_alphabet",
     name="RealSign ISL 26-Class Alphabet PyTorch MLP",
     model_type=ModelType.STREAMING_ALPHABET,
-    input_dim=63,
+    input_dim=126,
     num_classes=26,
-    weights_path=_resolve_weight_path("realsign_26class_mlp.pth"),
-    description="RealSign 26-class ISL alphabet fingerspelling (A–Z) classifier trained on 21 wrist-normalized 3D landmarks.",
-    factory=lambda: RealSignClassifier(_resolve_weight_path("realsign_26class_mlp.pth")),
+    weights_path=Path("models/weights/realsign_26class_mlp.pth"),
+    description="RealSign 26-class ISL alphabet fingerspelling (A–Z) PyTorch MLP classifier trained on dual-hand 126-D MediaPipe landmarks (21 left + 21 right wrist-normalized 3D coordinates).",
+    factory=lambda: RealSignClassifier(Path("models/weights/realsign_26class_mlp.pth")),
     version="1.1.0",
-    metrics={"test_accuracy": 0.9911, "macro_f1": 0.9908},
+    metrics={"test_accuracy": 0.9499, "macro_f1": 0.8319},
 )
 
 ModelRegistry.register(
@@ -161,10 +154,10 @@ ModelRegistry.register(
     name="ISL Conversational 5-Sign Ridge Classifier",
     model_type=ModelType.STREAMING_PHRASE,
     input_dim=158,
-    num_classes=5,
-    weights_path=_resolve_weight_path("isl_mvp_model.npz"),
-    description="Conversational ISL MVP classifier recognizing 5 essential signs (HELLO, THANK_YOU, YES, NO, PLEASE).",
-    factory=lambda: ISLMvpClassifier(_resolve_weight_path("isl_mvp_model.npz")),
+    num_classes=6,
+    weights_path=Path("models/weights/isl_mvp_model.npz"),
+    description="Conversational ISL MVP classifier recognizing 5 essential phrases (HELLO, THANK_YOU, GOOD_MORNING, I, YOU) plus NO_SIGN background (6 classes total) from (T, 158) sequence pooled to 1,264-D.",
+    factory=lambda: ISLMvpClassifier(Path("models/weights/isl_mvp_model.npz")),
     version="1.0.0",
     metrics={"accuracy": 1.0, "latency_ms": 0.42},
 )
@@ -175,9 +168,9 @@ ModelRegistry.register(
     model_type=ModelType.STREAMING_SEQUENCE,
     input_dim=158,
     num_classes=7,
-    weights_path=_resolve_weight_path("isl_sequence_lstm.pth"),
+    weights_path=Path("models/weights/isl_sequence_lstm.pth"),
     description="Bidirectional LSTM model processing 30-frame temporal landmark sequences for dynamic ISL expressions.",
-    factory=lambda: ISLSequenceLSTMClassifier(_resolve_weight_path("isl_sequence_lstm.pth")),
+    factory=lambda: ISLSequenceLSTMClassifier(Path("models/weights/isl_sequence_lstm.pth")),
     version="1.0.0",
     metrics={"accuracy": 0.942, "sequence_length": 30},
 )
@@ -186,26 +179,29 @@ ModelRegistry.register(
     model_id="ai4bharat_include_263sign",
     name="AI4Bharat INCLUDE 263-Sign Video LSTM",
     model_type=ModelType.ISOLATED_VIDEO,
-    input_dim=158,
+    input_dim=134,
     num_classes=263,
-    weights_path=_resolve_weight_path("include_no_cnn_lstm.pth"),
+    weights_path=Path("models/pretrained/include_no_cnn_lstm.pth"),
     description="Large-vocabulary Indian Sign Language video classifier covering 263 concepts across 15 semantic domains.",
-    factory=lambda: IncludeClassifier(_resolve_weight_path("include_no_cnn_lstm.pth")),
+    factory=lambda: IncludeClassifier(
+        checkpoint_path=Path("models/pretrained/include_no_cnn_lstm.pth"),
+        label_map_path=Path("models/pretrained/label_map_include.json"),
+    ),
     version="1.0.0",
     metrics={"vocabulary_size": 263, "source": "AI4Bharat Zenodo 4010759"},
 )
 
 ModelRegistry.register(
     model_id="roboflow_yolov11_gestures",
-    name="Roboflow ISL YOLOv11 Gesture Detector",
-    model_type=ModelType.VISION_TRACKER,
-    input_dim=640,
-    num_classes=11,
-    weights_path=Path("runs/detect/train/weights/best.pt"),
-    description="Direct RGB object detection model for 11 common ISL signs without requiring MediaPipe coordinate extraction.",
-    factory=lambda: RFUV11Adapter(),
+    name="RF-UV-11 Pretrained 26-Class ISL Gesture Model",
+    model_type=ModelType.STREAMING_ALPHABET,
+    input_dim=63,
+    num_classes=26,
+    weights_path=Path("models/pretrained/rf_uv_11_model.h5"),
+    description="RF-UV-11 pretrained 26-class single-hand ISL alphabet fingerspelling (A–Z) MLP evaluated via NumPy matrix operations on 21 3D landmarks.",
+    factory=lambda: RFUV11Adapter(model_path=Path("models/pretrained/rf_uv_11_model.h5")),
     version="1.0.0",
-    metrics={"mAP50": 0.887},
+    metrics={},
 )
 
 __all__ = [

@@ -35,7 +35,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from training.feature_extractor import normalize_hand_landmarks
 
-DEFAULT_MODEL_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
+DEFAULT_MODEL_PATH = ROOT_DIR / "models" / "weights" / "realsign_26class_mlp.pth"
 DEFAULT_TASK_PATH = ROOT_DIR / "models" / "tasks" / "hand_landmarker.task"
 
 HAND_CONNECTIONS = [

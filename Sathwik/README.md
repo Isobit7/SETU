@@ -1,36 +1,47 @@
-# Sathwik Documentation Hub — SETU Indian Sign Language Translator
+# Project SETU — Interactive Offline Documentation Hub
 
-Welcome to the **Sathwik** project documentation directory. This folder contains the complete architectural breakdowns, problem diagnostics, model audits, and improvement plans for the SETU codebase.
-
----
-
-## 📌 Primary Reference Documents
-
-1. [**`OPTIMISE.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/OPTIMISE.md) **(Codebase Modernization & Neural Optimization Blueprint)**
-   - **System Audit**: Comprehensive analysis of why traditional `if-else` rules, hardcoded timers, and static dictionaries fail on real signers.
-   - **Modern Neural Solutions**: Replacing `CONVERSATIONAL_BIGRAMS` with Qwen2.5-0.5B Trie-constrained SLM, replacing refractory timer `0.45s` with continuous CTC decoding, and replacing CLAHE with Zero-DCE.
-   - **Mathematical Formulations & Architecture Flowcharts**: Exact equations, loss functions, and code before/after transformations.
-   - **5-Phase Implementation Plan**: Concrete milestones, latency budgets, and engineering schedule.
-
-2. [**`SETU_WORKING_AND_FORMULAS_GUIDE.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_WORKING_AND_FORMULAS_GUIDE.md) **(Complete System Working & Mathematical Formulas Guide)**
-   - **End-to-End Visual Architecture**: Mermaid flowchart of the 7-stage processing pipeline.
-   - **Mathematical Formulas**: Exact equations for CLAHE contrast boost, Euclidean framing & distance evaluation, wrist translation centering, palm scale normalization, 6-D facial ratios, and 12-D body anchors.
-   - **ML & DL Engines**: In-depth review of RealSign 26-Class MLP, ISL Sequence BiLSTM, and AI4Bharat INCLUDE (263 signs).
-   - **Qwen2.5-0.5B Neural Seq2Seq Translation**: How the on-device Small Language Model on CUDA transforms arbitrary sign tokens and spelled letters into fluent, grammatically correct English sentences in ~350 ms.
-   - **Actionable Improvement Ideas**: Step-by-step suggestions for improving model accuracy, finger jitter filtering, and future enhancements.
-
-3. [**`SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) **(Checkpoint 28 Master Hardened Edition)**
-   - Complete 236-file repository inventory, 15-endpoint API encyclopedia, deep scientific diagnostic audit, coupling analysis, and 5-phase engineering roadmap.
-
-4. [**`reports/evaluation_matrices/README.md`**](file:///c:/MINI%20PROJ-SETU/reports/evaluation_matrices/README.md) **(Automated Model Evaluation Matrices & Parameter Catalog)**
-   - Layer-by-layer weights, biases, parameter statistics, training hyperparameters (learning rate, optimizer, epochs), and live test accuracy for all models in the project with dynamic auto-updating.
+> **Owner:** Sathwik (3rd Year B.Tech AI & ML Student)  
+> **Directory:** `Sathwik/`  
+> **Purpose:** Centralized, 100% offline-first interactive technical documentation, architecture walkthrough, model registry, and Viva defense preparation suite for **Project SETU (Indian Sign Language Translator)**.
 
 ---
 
-## 📂 Supplementary Guides
+## 🚀 Quick Access: Open the Documentation in Your Browser
 
-1. [**`problems/HOW_IT_CAN_BE_SOLVED.md`**](file:///c:/MINI%20PROJ-SETU/Sathwik/problems/HOW_IT_CAN_BE_SOLVED.md)
-   - Deep algorithmic analysis of confidence floor clamping, streak lockouts, and coordination pitfalls with code diff solutions.
+Double-click or open [`index.html`](index.html) in any web browser (Chrome, Edge, Firefox, Safari) to launch the master visual documentation hub. **No internet connection, web server, or Node/Python process is required.**
 
-2. **`commands/`**: Operational commands and workflow references.
-3. **`skill-groups/`**: Engineering domain skill groupings.
+```powershell
+# Open directly in Windows default browser
+Start-Process Sathwik\index.html
+```
+
+---
+
+## 📚 Master Documentation Suite Structure
+
+| Document | Focus Area & Content |
+| :--- | :--- |
+| **[`index.html`](index.html)** | **Central Portal & Overview:** Interactive entry point with high-level system architecture diagram, quick stats, feature matrix, and navigation cards. |
+| **[`01_Project_Overview.html`](01_Project_Overview.html)** | **Mission & Authentic ISL:** Linguistic realities of Indian Sign Language (ISL vs. ASL, two-handed alphabet requirement, non-manual markers), target users, scope, and technology stack. |
+| **[`02_APIs_and_Backend.html`](02_APIs_and_Backend.html)** | **Backend Architecture & APIs:** Fast-path REST endpoints (16 route handlers vs. 21 URL paths), real-time WebSocket protocol (`/ws/recognize`), Pydantic schemas, and filesystem persistence. |
+| **[`03_AI_Models_and_ML.html`](03_AI_Models_and_ML.html)** | **AI/ML Models & Spatial Geometry:** Master model registry, RealSign 26-class MLP (94.99% test acc), 126-D bimanual landmark normalization math, neuro-symbolic tie-breakers, 328-D BiLSTM, YOLO-World v2, and Qwen2.5-0.5B causal decoder LLM. |
+| **[`04_End_to_End_Workflow.html`](04_End_to_End_Workflow.html)** | **Execution Lifecycle & Pipeline Flow:** The complete 10-step frame-to-speech pipeline, 3-state temporal debouncing FSM, kinetic energy segmentation, accumulator timeouts, and Web Speech API TTS. |
+| **[`05_Codebase_and_File_Index.html`](05_Codebase_and_File_Index.html)** | **File Index, Developer Guide & Viva Defense:** Complete annotated repository file directory, developer quick start, Google Colab cloud training setup, and **25 comprehensive Technical Viva & Exam Defense Q&As**. |
+
+---
+
+## 🎨 Local Assets & Diagrams (`Sathwik/assets/`)
+
+- **`assets/styles/documentation.css`**: Responsive design system supporting dark and light themes, responsive breakpoints (768px, 1024px), print styles, and styled code blocks.
+- **`assets/scripts/documentation.js`**: Client-side interactive features: instant search filtering across topics, dark/light mode toggle with `localStorage` persistence, and one-click code copy buttons.
+- **`assets/diagrams/`**:
+  - `architecture_overview.svg`: Scalable vector system architecture.
+  - `pipeline_flow.svg`: Step-by-step frame processing dataflow.
+  - `feature_schemas.svg`: Visual breakdown of landmark dimensions (63-D, 126-D, 158-D, 164-D, 328-D).
+
+---
+
+## 📦 Historical & Legacy Archive
+
+The previous raw draft markdown files have been safely preserved in:
+`docs/archive/legacy_markdown_docs.zip`

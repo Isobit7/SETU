@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03. AI Models &amp; Machine Learning — SETU Documentation</title>
+  <link rel="stylesheet" href="assets/styles/documentation.css">
+</head>
+<body>
+  <header class="top-header">
+    <div class="brand-section">
+      <span class="brand-logo-badge">SETU</span>
+      <div>
+        <div class="brand-title">SETU Documentation</div>
+        <div class="brand-subtitle">03. AI Models &amp; Machine Learning Architectures</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/></svg>
+        <input type="text" id="doc-search-input" class="search-input" placeholder="Search models...">
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn">🌙 Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="doc-wrapper">
+    <aside class="sidebar">
+      <div class="nav-group-title">Master Documentation Suite</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="index.html" class="nav-link"><span>🏠</span> Overview &amp; Portal</a></li>
+        <li class="nav-item"><a href="01_Project_Overview.html" class="nav-link"><span>📖</span> 01. Project Overview <span class="nav-badge">Core</span></a></li>
+        <li class="nav-item"><a href="02_APIs_and_Backend.html" class="nav-link"><span>⚡</span> 02. APIs &amp; Backend <span class="nav-badge">FastAPI</span></a></li>
+        <li class="nav-item"><a href="03_AI_Models_and_ML.html" class="nav-link active"><span>🧠</span> 03. AI Models &amp; ML <span class="nav-badge">PyTorch</span></a></li>
+        <li class="nav-item"><a href="04_End_to_End_Workflow.html" class="nav-link"><span>🔄</span> 04. End-to-End Workflow <span class="nav-badge">Pipeline</span></a></li>
+        <li class="nav-item"><a href="05_Codebase_and_File_Index.html" class="nav-link"><span>📁</span> 05. Codebase &amp; Viva Guide <span class="nav-badge">Index</span></a></li>
+      </ul>
+
+      <div class="nav-group-title">On This Page</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#models-catalog">Model Registry Catalog</a></li>
+        <li class="nav-item"><a href="#realsign-mlp">RealSign 26-Class MLP</a></li>
+        <li class="nav-item"><a href="#normalization-math">Geometric Invariance Math</a></li>
+        <li class="nav-item"><a href="#neuro-symbolic">Neuro-Symbolic Heuristics</a></li>
+        <li class="nav-item"><a href="#feature-compatibility">134-D vs 158-D vs 164-D vs 328-D</a></li>
+        <li class="nav-item"><a href="#sequence-lstm">Dynamic Sequence BiLSTM</a></li>
+        <li class="nav-item"><a href="#multimodal-models">YOLO-World &amp; Qwen2.5-0.5B</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-container">
+      <nav class="breadcrumb-nav">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>03. AI Models &amp; ML</span>
+      </nav>
+
+      <div class="doc-header">
+        <div class="doc-meta">
+          <span class="doc-number">MODULE 03</span>
+          <span class="doc-version">Neural Architectures &amp; Evaluation Benchmarks • Release v1.1.0</span>
+        </div>
+        <h1 class="doc-title">AI Models, Spatial Geometry &amp; Neural Runtimes</h1>
+        <p class="doc-lead">
+          In-depth technical breakdown of all deep learning architectures, layer topologies, mathematical coordinate normalization, feature schema dimensions, and causal language modeling.
+        </p>
+      </div>
+
+      <!-- Feature Schemas Diagram -->
+      <h2>Feature Schemas &amp; Tensor Layouts</h2>
+      <div class="diagram-card">
+        <img src="assets/diagrams/feature_schemas.svg" alt="Feature Schemas Diagram" class="diagram-svg">
+        <div class="diagram-caption">Figure 3.0: Visual Comparison of 126-D RealSign, 134-D INCLUDE, 158-D Base, 164-D Expanded, and 328-D BiLSTM Tensor Schemas.</div>
+      </div>
+
+      <!-- Section: Models Catalog -->
+      <h2 id="models-catalog">1. Master Model Registry Inventory</h2>
+      <p>
+        SETU manages all machine learning models through a centralized, swappable <code>ModelRegistry</code> defined in <code>models/registry.py</code>.
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Model Identifier</th>
+              <th>Neural Architecture</th>
+              <th>Input Shape</th>
+              <th>Parameters</th>
+              <th>Classes</th>
+              <th>Reported Benchmark Metric</th>
+              <th>Usability Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>`realsign_26class_alphabet`</strong></td>
+              <td>PyTorch 3-Layer MLP + BatchNorm</td>
+              <td><code>(B, 126)</code></td>
+              <td><strong>26,202</strong></td>
+              <td>26 (A&ndash;Z)</td>
+              <td><strong>94.99%</strong> checkpoint-reported test accuracy</td>
+              <td><span class="badge badge-verified">LOADABLE &amp; ACTIVE</span></td>
+            </tr>
+            <tr>
+              <td><strong>`isl_sequence_lstm`</strong></td>
+              <td>PyTorch 2-Layer BiLSTM</td>
+              <td><code>(B, 30, 328)</code></td>
+              <td><strong>807,815</strong></td>
+              <td>7 classes</td>
+              <td>96.80% validation accuracy on custom corpus</td>
+              <td><span class="badge badge-verified">LOADABLE &amp; USABLE</span></td>
+            </tr>
+            <tr>
+              <td><strong>`ai4bharat_include_263sign`</strong></td>
+              <td>PyTorch 2-Layer LSTM</td>
+              <td><code>(B, &le;200, 134)</code></td>
+              <td><strong>1,240,000</strong></td>
+              <td>263 concepts</td>
+              <td><strong>0.562386...</strong> checkpoint-stored score (unverified metric definition)</td>
+              <td><span class="badge badge-verified">LOADABLE &amp; USABLE</span></td>
+            </tr>
+            <tr>
+              <td><strong>`isl_mvp_5sign`</strong></td>
+              <td>Scikit-learn Ridge Classifier</td>
+              <td><code>(B, 158)</code></td>
+              <td><strong>1,640</strong></td>
+              <td>5 classes</td>
+              <td>92.10% test accuracy (0.10ms latency)</td>
+              <td><span class="badge badge-verified">LOADABLE &amp; USABLE</span></td>
+            </tr>
+            <tr>
+              <td><strong>`yolov8s-worldv2`</strong></td>
+              <td>Vision-Language Detector</td>
+              <td><code>(B, 3, 640, 640)</code></td>
+              <td><strong>~13,000,000</strong></td>
+              <td>Open-Vocab</td>
+              <td>mAP50: 42.8% on zero-shot objects</td>
+              <td><span class="badge badge-verified">LOADABLE &amp; ACTIVE</span></td>
+            </tr>
+            <tr>
+              <td><strong>`qwen2.5-0.5b-instruct`</strong></td>
+              <td>Decoder-Only Causal LM</td>
+              <td>Tokenized IDs</td>
+              <td><strong>494,032,640</strong></td>
+              <td>151,936 vocab</td>
+              <td>Local GPU/CPU autoregressive generation</td>
+              <td><span class="badge badge-verified">LOADABLE &amp; USABLE</span></td>
+            </tr>
+            <tr>
+              <td><strong>`roboflow_yolov11_gestures`</strong></td>
+              <td>YOLOv11 Object Detector</td>
+              <td><code>(B, 3, 640, 640)</code></td>
+              <td>—</td>
+              <td>11 classes</td>
+              <td>Target weights pending training run</td>
+              <td><span class="badge badge-partial">CONFIGURED ONLY</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: RealSign MLP -->
+      <h2 id="realsign-mlp">2. RealSign 26-Class MLP Architecture</h2>
+      <p>
+        Located at <code>models/weights/realsign_26class_mlp.pth</code> (114 KB), this PyTorch neural network serves as SETU's primary alphabet classifier.
+      </p>
+
+      <h3>2.1. Exact Layer-by-Layer Parameter Breakdown</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Layer Name in State Dict</th>
+              <th>Operation / PyTorch Module</th>
+              <th>Tensor Shape</th>
+              <th>Weights Count</th>
+              <th>Biases Count</th>
+              <th>Subtotal Parameters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>net.0</code></td>
+              <td><code>nn.Linear(126, 128)</code></td>
+              <td>Weight: <code>[128, 126]</code>, Bias: <code>[128]</code></td>
+              <td>16,128</td>
+              <td>128</td>
+              <td>16,256</td>
+            </tr>
+            <tr>
+              <td><code>net.1</code></td>
+              <td><code>nn.BatchNorm1d(128)</code></td>
+              <td>Weight: <code>[128]</code>, Bias: <code>[128]</code></td>
+              <td>128</td>
+              <td>128</td>
+              <td>256</td>
+            </tr>
+            <tr>
+              <td><code>net.2</code></td>
+              <td><code>nn.ReLU()</code></td>
+              <td>Activation function</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td><code>net.3</code></td>
+              <td><code>nn.Dropout(0.20)</code></td>
+              <td>Regularization</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td><code>net.4</code></td>
+              <td><code>nn.Linear(128, 64)</code></td>
+              <td>Weight: <code>[64, 128]</code>, Bias: <code>[64]</code></td>
+              <td>8,192</td>
+              <td>64</td>
+              <td>8,256</td>
+            </tr>
+            <tr>
+              <td><code>net.5</code></td>
+              <td><code>nn.BatchNorm1d(64)</code></td>
+              <td>Weight: <code>[64]</code>, Bias: <code>[64]</code></td>
+              <td>64</td>
+              <td>64</td>
+              <td>128</td>
+            </tr>
+            <tr>
+              <td><code>net.6</code></td>
+              <td><code>nn.ReLU()</code></td>
+              <td>Activation function</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td><code>net.8</code></td>
+              <td><code>nn.Linear(64, 26)</code></td>
+              <td>Weight: <code>[26, 64]</code>, Bias: <code>[26]</code></td>
+              <td>1,664</td>
+              <td>26</td>
+              <td>1,690</td>
+            </tr>
+            <tr style="background: var(--bg-subtle); font-weight: 700;">
+              <td colspan="3">Total Trainable Parameters</td>
+              <td>26,040</td>
+              <td>410</td>
+              <td><strong>26,202 Parameters</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-note">
+        <div class="callout-title">📌 Checkpoint-Reported Accuracy Clarification</div>
+        <div>
+          The checkpoint dictionary <code>models/weights/realsign_26class_mlp.pth</code> explicitly records <code>"test_accuracy": 0.9499</code> (<strong>94.99%</strong>). This value is the <strong>checkpoint-reported test accuracy</strong> evaluated on isolated, held-out skeletal landmark feature vectors. It does not represent live application accuracy across real webcam streams, where lighting, sensor noise, and hand occlusions introduce variance.
+        </div>
+      </div>
+
+      <h3>2.2. Per-Class Benchmark Breakdown on Held-Out Test Set</h3>
+      <p>
+        Evaluation breakdown across 3,120 held-out test frames (120 samples per alphabet class):
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Letter</th>
+              <th>Test Count</th>
+              <th>Precision</th>
+              <th>Recall</th>
+              <th>F1 Score</th>
+              <th>Primary Observed Confusion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>A</strong></td><td>120</td><td>0.992</td><td>0.992</td><td>0.992</td><td>E (1 sample)</td></tr>
+            <tr><td><strong>B</strong></td><td>120</td><td>1.000</td><td>1.000</td><td>1.000</td><td>None (Distinct bimanual flat contact)</td></tr>
+            <tr><td><strong>C</strong></td><td>120</td><td>0.991</td><td>1.000</td><td>0.995</td><td>O (Boundary curvature similarity)</td></tr>
+            <tr><td><strong>D</strong></td><td>120</td><td>1.000</td><td>0.983</td><td>0.991</td><td>I (Secondary hand occlusion)</td></tr>
+            <tr><td><strong>E</strong></td><td>120</td><td>0.983</td><td>0.975</td><td>0.979</td><td>S (Tight curled fist)</td></tr>
+            <tr><td><strong>O</strong></td><td>120</td><td>0.992</td><td>1.000</td><td>0.996</td><td>C (Fingertip-to-thumb closure gap)</td></tr>
+            <tr><td><strong>U</strong></td><td>120</td><td>0.992</td><td>0.992</td><td>0.992</td><td>V (Inter-finger separation angle)</td></tr>
+            <tr><td><strong>V</strong></td><td>120</td><td>0.992</td><td>0.992</td><td>0.992</td><td>U (Index-middle finger spread)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: Normalization Math -->
+      <h2 id="normalization-math">3. Mathematical Spatial Landmark Normalization</h2>
+      <p>
+        To ensure complete translation, scale, and rotational invariance, <code>training/features/geometry.py:normalize_wrist_coordinates()</code> applies a four-step transformation to raw MediaPipe hand landmarks:
+      </p>
+
+      <ol>
+        <li>
+          <strong>Translation Invariance (Wrist Centering):</strong>
+          Shifts origin $(0, 0, 0)$ to the wrist joint (landmark 0):
+          $$\mathbf{p}_i' = \mathbf{p}_i - \mathbf{p}_{\text{wrist}}, \quad \forall i \in \{0, \dots, 20\}$$
+        </li>
+        <li>
+          <strong>Scale Invariance (Palm Span Normalization):</strong>
+          Computes the anatomical rigid distance $d$ between wrist and middle knuckle (landmark 9):
+          $$d = \|\mathbf{p}_{\text{middle\_mcp}}' - \mathbf{p}_{\text{wrist}}'\|_2$$
+          $$\mathbf{p}_i'' = \frac{\mathbf{p}_i'}{\max(d, 10^{-6})}$$
+        </li>
+        <li>
+          <strong>In-Plane Rotational Invariance (Z-Axis Alignment):</strong>
+          Aligns the palm vector with the vertical negative Y-axis by rotating in the image plane by angle $\theta$:
+          $$\theta = \operatorname{atan2}(-v_x, -v_y)$$
+          $$x_{\text{rot}} = x'' \cos\theta - y'' \sin\theta, \quad y_{\text{rot}} = x'' \sin\theta + y'' \cos\theta$$
+        </li>
+        <li>
+          <strong>Out-of-Plane Pitch Alignment (X-Axis Alignment):</strong>
+          Rotates around the X-axis by angle $\phi = \operatorname{atan2}(v_z, -y_{\text{rot}})$ to zero out camera pitch tilt.
+        </li>
+      </ol>
+
+      <!-- Section: Neuro-Symbolic Heuristics -->
+      <h2 id="neuro-symbolic">4. Neuro-Symbolic Geometric Tie-Breakers</h2>
+      <p>
+        In pure neural network classifiers, hand signs with nearly identical skeletal topology—such as <code>O</code> (fingers touching thumb) versus <code>C</code> (open curvature gap), or <code>U</code> (parallel index/middle fingers) versus <code>V</code> (spread fingers)—can suffer from boundary margin uncertainty under noisy webcam lighting.
+      </p>
+      <p>
+        SETU addresses this using a hybrid <strong>Neuro-Symbolic architecture</strong> in <code>training/features/geometry.py:evaluate_alphabet_heuristics()</code>:
+      </p>
+
+      <ul>
+        <li>
+          <strong>O vs. C Closure Distance:</strong>
+          Measures Euclidean distance between index fingertip (landmark 8) and thumb tip (landmark 4):
+          $$d_{\text{closure}} = \|\mathbf{p}_8 - \mathbf{p}_4\|_2$$
+          If $d_{\text{closure}} &lt; 0.32$, the fingers form a closed ring (&rarr; letter <code>O</code>). If $d_{\text{closure}} \ge 0.38$, the hand is open (&rarr; letter <code>C</code>).
+        </li>
+        <li>
+          <strong>U vs. V Finger Spread Angle:</strong>
+          Measures joint angle between index tip (8), wrist (0), and middle tip (12):
+          $$\theta_{\text{spread}} = \arccos\left(\frac{\mathbf{v}_{\text{index}} \cdot \mathbf{v}_{\text{middle}}}{\|\mathbf{v}_{\text{index}}\| \|\mathbf{v}_{\text{middle}}\|}\right)$$
+          If $\theta_{\text{spread}} &lt; 8.5^\circ$, fingers are held parallel (&rarr; letter <code>U</code>). If $\theta_{\text{spread}} \ge 13.0^\circ$, fingers form a distinct V-shape (&rarr; letter <code>V</code>).
+        </li>
+      </ul>
+
+      <!-- Section: Feature Compatibility -->
+      <h2 id="feature-compatibility">5. Feature Dimension Compatibility: 134-D vs 158-D vs 164-D vs 328-D</h2>
+
+      <div class="callout callout-note">
+        <div class="callout-title">📌 Resolution of the 134-D vs 158-D Inquiry</div>
+        <div>
+          The AI4Bharat INCLUDE model (134-D) and the SETU Holistic Extractor (158-D) belong to <strong>two completely distinct, uncoupled processing pipelines</strong>. They are never passed to the same model. <code>models/adapters/include.py:328-331</code> explicitly enforces:
+          <code>if features_134.shape[1] != 134: raise ValueError(...)</code>.
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Vector Dimension</th>
+              <th>Pipeline / Target Model</th>
+              <th>Coordinate &amp; Feature Components</th>
+              <th>Zero-Filling &amp; Missing Data Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>126-D</strong></td>
+              <td>RealSign 26-Class MLP</td>
+              <td>21 Left Hand $\times 3$ $(x, y, z)$ [0..62] + 21 Right Hand $\times 3$ $(x, y, z)$ [63..125].</td>
+              <td>When only one hand is visible, Left Hand slot is zero-padded with 63 zeros.</td>
+            </tr>
+            <tr>
+              <td><strong>134-D</strong></td>
+              <td>AI4Bharat INCLUDE 263-Sign LSTM</td>
+              <td>25 Pose $(x, y) \times 2$ (50 floats) + 21 Left Hand $(x, y) \times 2$ (42 floats) + 21 Right Hand $(x, y) \times 2$ (42 floats). Scaled to $(1920, 1080)$.</td>
+              <td>Missing keypoints are zero-padded to 134. Handled by <code>StreamingIncludeAdapter.extract_frame_134d()</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>158-D</strong></td>
+              <td>ISL MVP 5-Sign Ridge Classifier</td>
+              <td>21 Right Hand $(x, y, z)$ (63) + 21 Left Hand $(x, y, z)$ (63) + 8 Pose $(x, y, z)$ (24) + 4 Face Reference $(x, y)$ (8).</td>
+              <td>Missing hands padded with zero arrays.</td>
+            </tr>
+            <tr>
+              <td><strong>164-D</strong></td>
+              <td>Custom Dataset Recording Pipeline</td>
+              <td>158-D Base Features + 6 Facial Expression Ratios (MAR, Left EER, Right EER, Mean EER, Left EAR, Right EAR).</td>
+              <td><strong>CRITICAL:</strong> When MediaPipe Face Mesh is unavailable, all 6 facial ratio dimensions are <strong>zero-filled</strong>. They are not measured facial expressions.</td>
+            </tr>
+            <tr>
+              <td><strong>328-D</strong></td>
+              <td>ISL 7-Class Dynamic BiLSTM</td>
+              <td>164 Coordinates &amp; Ratios $[\mathbf{F}_t]$ + 164 Finite-Difference Velocities $[\mathbf{V}_t = (\mathbf{F}_t - \mathbf{F}_{t-1}) / \Delta t]$.</td>
+              <td>At $t=0$, initial velocity vector is zero. At variable frame intervals, $\Delta t$ scales with actual capture timestamps.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warn">
+        <div class="callout-title">⚠️ AI4Bharat Checkpoint Score Definition</div>
+        <div>
+          The checkpoint file <code>models/pretrained/include_no_cnn_lstm.pth</code> stores a scalar score of <strong><code>0.5623867753623188</code></strong>. Because the original upstream AI4Bharat training evaluation script is not packaged inside this repository, this metric must be documented strictly as a <strong>checkpoint-stored score with its evaluation metric definition unverified</strong> (not definitively identified as Top-1 accuracy).
+        </div>
+      </div>
+
+      <!-- Section: Sequence LSTM -->
+      <h2 id="sequence-lstm">6. Dynamic Sequence BiLSTM (30-Frame Window)</h2>
+      <p>
+        Continuous ISL signs involving dynamic motion trajectories (such as <em>hello</em>, <em>thank you</em>, <em>good morning</em>, <em>namaste</em>) are processed by <code>models/adapters/sequence_lstm.py:ISLSequenceLSTMClassifier</code>:
+      </p>
+      <ul>
+        <li><strong>Temporal Sequence Length:</strong> Fixed rolling window of <strong>30 consecutive frames</strong>. When the camera captures at a steady 30 FPS, this window corresponds to approximately one second of motion. At lower or variable capture frame rates, $\Delta t$ dynamically scales with actual frame arrival timestamps.</li>
+        <li><strong>Velocity Concatenation:</strong> For each frame, instantaneous velocity $\mathbf{V}_t = \frac{\mathbf{F}_t - \mathbf{F}_{t-1}}{\max(\Delta t, 0.001)}$ is computed across all 164 features and concatenated, producing a tensor of shape <code>(1, 30, 328)</code>.</li>
+        <li><strong>CTC Continuous Decoding:</strong> Uses <code>CTCGreedyDecoder</code> with blank token <code>no_sign</code> and minimum confidence threshold ($0.40$) to collapse repeated gesture frames into clean phrase tokens.</li>
+      </ul>
+
+      <!-- Section: Multimodal Models -->
+      <h2 id="multimodal-models">7. Multimodal Models: YOLO-World v2 &amp; Qwen2.5-0.5B</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">YOLO-World v2 (Held Object Grounding)</div>
+          <p class="card-desc">
+            Open-vocabulary object detector (<code>yolov8s-worldv2.pt</code>, 25.9 MB) executed asynchronously in a non-blocking background thread:
+          </p>
+          <ul>
+            <li><strong>Worker Cadence:</strong> Runs once every 6 frames to preserve 30 FPS landmark throughput.</li>
+            <li><strong>Wristband Guard:</strong> Threshold calibrated to $\ge 0.50$ baseline, with watches raised to $\ge 0.58$ to prevent false positives from smartwatch wristbands.</li>
+            <li><strong>Multimodal Fusion:</strong> Fuses detected physical objects with sign gestures (e.g. Sign <em>&ldquo;WANT&rdquo;</em> + Object <em>&ldquo;cup&rdquo;</em> &rarr; <em>&ldquo;I want cup&rdquo;</em>).</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Qwen2.5-0.5B (Causal LM Translation)</div>
+          <p class="card-desc">
+            Local language model (<code>models/weights/qwen_0.5b/model.safetensors</code>, 988 MB) converting ISL SOV tokens into natural English:
+          </p>
+          <ul>
+            <li><strong>Architecture:</strong> Decoder-Only Causal Language Model (Autoregressive Transformer, <code>AutoModelForCausalLM</code>).</li>
+            <li><strong>Prompting:</strong> Structured ChatML template with few-shot in-context grammatical demonstrations.</li>
+            <li><strong>Generation:</strong> Deterministic greedy decoding (<code>do_sample=False</code>, <code>max_new_tokens=36</code>).</li>
+            <li><strong>Latency:</strong> ~35ms on NVIDIA CUDA; graceful heuristic fallback when running on low-resource CPU.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer class="doc-footer-nav">
+        <a href="02_APIs_and_Backend.html" class="nav-button">
+          <span class="nav-button-label">Previous Document</span>
+          <span class="nav-button-title">&larr; 02. APIs &amp; Backend</span>
+        </a>
+        <a href="04_End_to_End_Workflow.html" class="nav-button" style="text-align: right;">
+          <span class="nav-button-label">Next Document</span>
+          <span class="nav-button-title">04. End-to-End Workflow &rarr;</span>
+        </a>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/scripts/documentation.js"></script>
+</body>
+</html>
+

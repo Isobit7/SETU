@@ -210,7 +210,8 @@ def evaluate_split(model: PureNumpyISLClassifier, X: np.ndarray, y: np.ndarray, 
 
 def main():
     manifest_path = Path("data/manifests/setu_isl_mvp_manifest.json")
-    model_save_path = Path("models/isl_mvp_model.npz")
+    model_save_path = Path("models/training_runs/isl_mvp/candidate_isl_mvp_model.npz")
+    model_save_path.parent.mkdir(parents=True, exist_ok=True)
 
     logger.info("Loading dataset splits...")
     dataset = load_dataset(manifest_path)

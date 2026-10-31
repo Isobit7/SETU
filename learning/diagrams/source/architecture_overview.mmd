@@ -1,0 +1,57 @@
+graph TB
+    subgraph Browser ["Frontend Client (React 19 + TypeScript - Port 5173)"]
+        Webcam[Webcam Video Stream]
+        Canvas[HTML5 Canvas Landmark HUD]
+        Hook[useRecognitionStream Hook]
+        Debounce[useSentenceBuilder Hook]
+        TTS[Web Speech API Audio Synthesis]
+        CenterBadge[Center HUD Luminous Badge]
+    end
+
+    subgraph Network ["Real-Time WebSocket Protocol"]
+        FrameStream["Binary Frame ArrayBuffers (JPEG)"]
+        PredictionStream["JSON RecognitionPayload Stream"]
+    end
+
+    subgraph Server ["Backend Server (FastAPI + PyTorch CUDA - Port 8000)"]
+        Uvicorn[Uvicorn ASGI Event Loop]
+        WSEndpoint[websocket_recognize Endpoint]
+        MediaPipe[MediaPipe Holistic Landmarker]
+        Norm[Spatial Geometry & Scale Invariance]
+        
+        subgraph NeuralInference ["Deep Learning Engines"]
+            RealSign[RealSign MLP 26-Class Alphabet]
+            SequenceLSTM[ISL Sequence Attention BiLSTM 7-Class]
+            YOLO[YOLO-World v2 Held Object Grounding]
+            Qwen[Qwen2.5-0.5B Neural Syntax Reconstructor]
+        end
+        
+        Accum[Temporal Accumulator & CTC Blank Filter]
+        Fuser[Multimodal Show-and-Sign Fuser]
+    end
+
+    Webcam -->|Raw Pixels 640x480| Hook
+    Hook -->|Pack JPEG Blob| FrameStream
+    FrameStream -->|Binary Stream| WSEndpoint
+    WSEndpoint -->|cv2.imdecode| MediaPipe
+    MediaPipe -->|21 3D Coordinates| Norm
+    
+    Norm -->|126-D Vector| RealSign
+    Norm -->|328-D Temporal Window| SequenceLSTM
+    WSEndpoint -.->|Async Non-Blocking Task| YOLO
+    
+    RealSign --> Accum
+    SequenceLSTM --> Accum
+    YOLO --> Fuser
+    Accum --> Fuser
+    Fuser --> Qwen
+    
+    Qwen -->|Prediction JSON| WSEndpoint
+    WSEndpoint --> PredictionStream
+    PredictionStream --> Hook
+    
+    Hook -->|Landmarks| Canvas
+    Hook -->|Recognized Sign| CenterBadge
+    Hook -->|Committed Token| Debounce
+    Debounce -->|Complete Sentence| TTS
+

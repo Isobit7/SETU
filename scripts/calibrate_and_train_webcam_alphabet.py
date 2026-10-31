@@ -45,7 +45,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("SETU.TrainAZ")
 
-DEFAULT_MODEL_PATH = ROOT_DIR / "models" / "realsign_26class_mlp.pth"
+DEFAULT_MODEL_PATH = ROOT_DIR / "models" / "weights" / "realsign_26class_mlp.pth"
 DEFAULT_DATASET_PATH = ROOT_DIR / "data" / "processed" / "realsign_landmarks_26class.npz"
 DEFAULT_TASK_PATH = ROOT_DIR / "models" / "tasks" / "hand_landmarker.task"
 DEFAULT_RAW_CAPTURED_DIR = ROOT_DIR / "data" / "raw_captured"
@@ -83,7 +83,11 @@ def generate_synthetic_samples_for_letter(
     """
     letter = letter.upper()
     cls_idx = ord(letter) - ord("A")
-    npz_path = dataset_path or DEFAULT_DATASET_PATH
+    npz_path = dataset_path or (
+        (ROOT_DIR / "data" / "processed" / "isl_dualhand_26class.npz")
+        if (ROOT_DIR / "data" / "processed" / "isl_dualhand_26class.npz").exists()
+        else DEFAULT_DATASET_PATH
+    )
 
     if npz_path.exists():
         try:
@@ -93,7 +97,7 @@ def generate_synthetic_samples_for_letter(
             if np.any(cls_mask):
                 cls_samples = X[cls_mask]
                 chosen_idx = np.random.choice(len(cls_samples), size=num_samples, replace=True)
-                jitter = np.random.normal(0.0, 0.015, size=(num_samples, 63)).astype(np.float32)
+                jitter = np.random.normal(0.0, 0.015, size=cls_samples[chosen_idx].shape).astype(np.float32)
                 return (cls_samples[chosen_idx] + jitter).astype(np.float32)
         except Exception as e:
             logger.debug("Could not sample from base dataset: %s", e)
@@ -509,10 +513,15 @@ def retrain_realsign_mlp(
     from training.features.geometry import expand_63d_to_89d
 
     # Align X_new dimension to input_dim
-    if X_new.shape[1] == 63 and input_dim == 89:
-        X_new_aligned = expand_63d_to_89d(X_new)
-    elif X_new.shape[1] == 89 and input_dim == 63:
-        X_new_aligned = X_new[:, :63]
+    if X_new.shape[1] != input_dim:
+        if X_new.shape[1] == 63 and input_dim == 89:
+            X_new_aligned = expand_63d_to_89d(X_new)
+        elif X_new.shape[1] == 89 and input_dim == 63:
+            X_new_aligned = X_new[:, :63]
+        elif input_dim == 126:
+            X_new_aligned = np.pad(X_new, ((0, 0), (126 - X_new.shape[1], 0)), mode="constant")
+        else:
+            X_new_aligned = X_new
     else:
         X_new_aligned = X_new
 
@@ -520,15 +529,22 @@ def retrain_realsign_mlp(
     X_train_list = [X_new_aligned]
     y_train_list = [y_new]
 
-    npz_path = dataset_path or DEFAULT_DATASET_PATH
+    npz_path = dataset_path or (
+        (ROOT_DIR / "data" / "processed" / "isl_dualhand_26class.npz")
+        if (ROOT_DIR / "data" / "processed" / "isl_dualhand_26class.npz").exists()
+        else DEFAULT_DATASET_PATH
+    )
     if npz_path.exists():
         try:
             base_data = np.load(str(npz_path), allow_pickle=True)
             X_base, y_base = base_data["X"], base_data["y"]
-            if X_base.shape[1] == 63 and input_dim == 89:
-                X_base = expand_63d_to_89d(X_base)
-            elif X_base.shape[1] == 89 and input_dim == 63:
-                X_base = X_base[:, :63]
+            if X_base.shape[1] != input_dim:
+                if X_base.shape[1] == 63 and input_dim == 89:
+                    X_base = expand_63d_to_89d(X_base)
+                elif X_base.shape[1] == 89 and input_dim == 63:
+                    X_base = X_base[:, :63]
+                elif input_dim == 126:
+                    X_base = np.pad(X_base, ((0, 0), (126 - X_base.shape[1], 0)), mode="constant")
 
             # Subsample 40 samples per class from base data
             sub_indices = []

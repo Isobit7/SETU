@@ -82,7 +82,7 @@ class SentenceAccumulator:
             self.last_token_time = timestamp
             self._tokens_changed = True
 
-    def check_timeouts(self, current_time: Optional[float] = None) -> Dict[str, Any]:
+    def check_timeouts(self, current_time: Optional[float] = None, async_neural: bool = True) -> Dict[str, Any]:
         """Checks word and sentence timeout buffers against the current time."""
         if current_time is None:
             current_time = time.time()
@@ -98,7 +98,7 @@ class SentenceAccumulator:
 
         if self._tokens_changed and (current_time - self.last_token_time > self.sentence_timeout):
             if self.sentence_tokens:
-                self.translate_sentence()
+                self.translate_sentence(async_neural=async_neural)
                 sentence_translated = True
             self._tokens_changed = False
 
@@ -109,7 +109,7 @@ class SentenceAccumulator:
             "translated_text": self.translated_text,
         }
 
-    def translate_sentence(self) -> str:
+    def translate_sentence(self, async_neural: bool = False) -> str:
         """Parses the current sentence tokens through the ISL Gloss Parser and Neural Translator."""
         if not self.sentence_tokens:
             self.translated_text = ""
@@ -121,18 +121,32 @@ class SentenceAccumulator:
             self.translated_text = rule_match
             return self.translated_text
 
-        # 2. High-fidelity on-device Neural Sequence-to-Sequence translation (Qwen2.5-0.5B) for all arbitrary sentences
-        if self.neural_translator is not None and getattr(self.neural_translator, "is_loaded", False):
-            try:
-                res = self.neural_translator.translate(self.sentence_tokens)
-                if res:
-                    self.translated_text = res
-                    return self.translated_text
-            except Exception:
-                pass
+        # 2. Immediate clean gloss heuristic fallback for 0ms latency UI update
+        immediate_gloss = self.parser.parse_gloss(self.sentence_tokens)
+        self.translated_text = immediate_gloss
 
-        # 3. Clean fallback
-        self.translated_text = self.parser.parse_gloss(self.sentence_tokens)
+        # 3. High-fidelity on-device Neural Sequence-to-Sequence translation (Qwen2.5-0.5B)
+        if self.neural_translator is not None and getattr(self.neural_translator, "is_loaded", False):
+            if async_neural:
+                import threading
+                tokens_copy = list(self.sentence_tokens)
+                def _bg_translate():
+                    try:
+                        res = self.neural_translator.translate(tokens_copy)
+                        if res:
+                            self.translated_text = res
+                    except Exception:
+                        pass
+                threading.Thread(target=_bg_translate, daemon=True).start()
+            else:
+                try:
+                    res = self.neural_translator.translate(self.sentence_tokens)
+                    if res:
+                        self.translated_text = res
+                        return self.translated_text
+                except Exception:
+                    pass
+
         return self.translated_text
 
     def add_continuous_token(

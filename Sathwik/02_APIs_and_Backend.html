@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02. APIs &amp; Backend — SETU Documentation</title>
+  <link rel="stylesheet" href="assets/styles/documentation.css">
+</head>
+<body>
+  <header class="top-header">
+    <div class="brand-section">
+      <span class="brand-logo-badge">SETU</span>
+      <div>
+        <div class="brand-title">SETU Documentation</div>
+        <div class="brand-subtitle">02. APIs &amp; Backend Communication Matrix</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/></svg>
+        <input type="text" id="doc-search-input" class="search-input" placeholder="Search endpoints...">
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn">🌙 Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="doc-wrapper">
+    <aside class="sidebar">
+      <div class="nav-group-title">Master Documentation Suite</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="index.html" class="nav-link"><span>🏠</span> Overview &amp; Portal</a></li>
+        <li class="nav-item"><a href="01_Project_Overview.html" class="nav-link"><span>📖</span> 01. Project Overview <span class="nav-badge">Core</span></a></li>
+        <li class="nav-item"><a href="02_APIs_and_Backend.html" class="nav-link active"><span>⚡</span> 02. APIs &amp; Backend <span class="nav-badge">FastAPI</span></a></li>
+        <li class="nav-item"><a href="03_AI_Models_and_ML.html" class="nav-link"><span>🧠</span> 03. AI Models &amp; ML <span class="nav-badge">PyTorch</span></a></li>
+        <li class="nav-item"><a href="04_End_to_End_Workflow.html" class="nav-link"><span>🔄</span> 04. End-to-End Workflow <span class="nav-badge">Pipeline</span></a></li>
+        <li class="nav-item"><a href="05_Codebase_and_File_Index.html" class="nav-link"><span>📁</span> 05. Codebase &amp; Viva Guide <span class="nav-badge">Index</span></a></li>
+      </ul>
+
+      <div class="nav-group-title">On This Page</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#inventory-breakdown" class="nav-link">Route vs Path Distinction</a></li>
+        <li class="nav-item"><a href="#rest-inventory" class="nav-link">REST Endpoints Inventory</a></li>
+        <li class="nav-item"><a href="#websocket-protocol" class="nav-link">WebSocket Streaming Protocol</a></li>
+        <li class="nav-item"><a href="#request-schemas" class="nav-link">Data Schemas &amp; Payloads</a></li>
+        <li class="nav-item"><a href="#lifecycle-middleware" class="nav-link">Lifecycle &amp; Telemetry</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-container">
+      <nav class="breadcrumb-nav">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>02. APIs &amp; Backend</span>
+      </nav>
+
+      <div class="doc-header">
+        <div class="doc-meta">
+          <span class="doc-number">MODULE 02</span>
+          <span class="doc-version">FastAPI &amp; WebSocket Architecture • Release v1.1.0</span>
+        </div>
+        <h1 class="doc-title">APIs, Backend Architecture &amp; WebSocket Protocol</h1>
+        <p class="doc-lead">
+          Comprehensive inventory of route definitions, distinct URL paths and aliases, binary WebSocket streaming contracts, and server telemetry.
+        </p>
+      </div>
+
+      <!-- Section: Route vs Path Distinction -->
+      <h2 id="inventory-breakdown">1. Endpoint Architecture: Route Definitions vs. URL Paths</h2>
+      <p>
+        To ensure strict architectural precision, SETU distinguishes the <strong>number of unique Python route handler functions</strong> from the <strong>number of distinct URL path routes</strong>, accounting for dual route aliases provided for backward compatibility and low-latency client access.
+      </p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">16 Handler Functions</div>
+          <p class="card-desc">
+            Independent Python async functions handling requests across <code>main.py</code>, <code>predict.py</code>, <code>models.py</code>, <code>video.py</code>, <code>dataset.py</code>, and <code>websocket/recognize.py</code>.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">21 Distinct URL Paths</div>
+          <p class="card-desc">
+            The total set of reachable HTTP and WebSocket route patterns, including root, API version prefixes (<code>/api/v1/</code>), and alias paths.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">2 Dedicated Aliases</div>
+          <p class="card-desc">
+            <code>/health</code> &harr; <code>/api/health</code> (Health check alias) and <code>/ws/recognize</code> &harr; <code>/api/v1/ws/recognize</code> (Streaming WebSocket alias).
+          </p>
+        </div>
+      </div>
+
+      <!-- Section: REST Inventory -->
+      <h2 id="rest-inventory">2. Complete REST Endpoint Inventory</h2>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Distinct URL Path</th>
+              <th>Handler Function &amp; Source File</th>
+              <th>Service Invoked</th>
+              <th>Role &amp; Frontend Caller</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/</code></td>
+              <td><code>root</code> in <code>main.py</code></td>
+              <td>Static JSON</td>
+              <td>Service welcome, version info, docs links.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/health</code></td>
+              <td><code>health_check</code> in <code>main.py</code></td>
+              <td><code>pipeline.is_ready</code></td>
+              <td>Primary system readiness probe. Called by <code>ApiService.checkHealth()</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/health</code></td>
+              <td><code>health_check</code> in <code>main.py</code></td>
+              <td><code>pipeline.is_ready</code></td>
+              <td><strong>Alias path</strong> for <code>/health</code> for consistent <code>/api/</code> prefixing.</td>
+            </tr>
+            <tr>
+              <td><code>POST</code></td>
+              <td><code>/api/predict</code></td>
+              <td><code>predict_letter</code> in <code>predict.py</code></td>
+              <td><code>RealSignClassifier</code></td>
+              <td>Single-frame 63-D or 126-D classification. Called by <code>WebcamAlphabetRecognition.tsx</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models</code></td>
+              <td><code>list_models</code> in <code>models.py</code></td>
+              <td><code>ModelRegistry</code></td>
+              <td>Catalog of registered models and readiness states. Called by <code>ApiService.fetchModels()</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/realsign/status</code></td>
+              <td><code>get_realsign_status</code> in <code>models.py</code></td>
+              <td><code>RealSignClassifier</code></td>
+              <td>Reports checkpoint accuracy (94.99%), device, and active classes.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/realsign/classes</code></td>
+              <td><code>get_realsign_classes</code> in <code>models.py</code></td>
+              <td><code>RealSignClassifier</code></td>
+              <td>List of 26 alphabet letters (A&ndash;Z). Called by <code>AlphabetModal.tsx</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/sequence_lstm/status</code></td>
+              <td><code>get_sequence_lstm_status</code> in <code>models.py</code></td>
+              <td><code>ISLSequenceLSTM</code></td>
+              <td>7-class dynamic BiLSTM status, sequence length (30), device.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/include/status</code></td>
+              <td><code>get_include_status</code> in <code>models.py</code></td>
+              <td><code>INCLUDEInferenceService</code></td>
+              <td>AI4Bharat 263-class checkpoint status and stored checkpoint score.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/include/classes</code></td>
+              <td><code>get_include_classes</code> in <code>models.py</code></td>
+              <td><code>INCLUDEInferenceService</code></td>
+              <td>Complete vocabulary list of all 263 concepts. Called by <code>IncludeVideoModal.tsx</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/matrices</code></td>
+              <td><code>get_evaluation_matrices</code> in <code>models.py</code></td>
+              <td><code>model_matrices.py</code></td>
+              <td>Returns master evaluation scoreboard and per-class confusion matrices.</td>
+            </tr>
+            <tr>
+              <td><code>POST</code></td>
+              <td><code>/api/v1/models/matrices/refresh</code></td>
+              <td><code>refresh_evaluation_matrices</code> in <code>models.py</code></td>
+              <td><code>model_matrices.py</code></td>
+              <td>Forces rescanning of <code>models/weights/</code> to update metrics.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/models/matrices/{model_id}</code></td>
+              <td><code>get_single_model_matrix</code> in <code>models.py</code></td>
+              <td><code>model_matrices.py</code></td>
+              <td>Layer-by-layer weights, biases, and evaluation metrics for a specific model.</td>
+            </tr>
+            <tr>
+              <td><code>POST</code></td>
+              <td><code>/api/v1/recognize/video</code></td>
+              <td><code>recognize_video</code> in <code>video.py</code></td>
+              <td><code>INCLUDEInferenceService</code></td>
+              <td>Multipart video upload (max 50MB, .mp4/.webm). Called by <code>IncludeVideoModal.tsx</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/vocabulary</code></td>
+              <td><code>get_vocabulary</code> in <code>vocabulary.py</code></td>
+              <td>Static Dictionary</td>
+              <td>Conversational phrases metadata. Called by <code>VocabularyModal.tsx</code>.</td>
+            </tr>
+            <tr>
+              <td><code>POST</code></td>
+              <td><code>/api/v1/dataset/record_sample</code></td>
+              <td><code>record_sample</code> in <code>dataset.py</code></td>
+              <td><code>data/processed/</code> Disk</td>
+              <td>Uploads 30 frames &times; 164-D sequence. Called by <code>RecordSignModal.tsx</code>.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/dataset/custom_samples</code></td>
+              <td><code>list_custom_samples</code> in <code>dataset.py</code></td>
+              <td>File Scanner</td>
+              <td>Lists all user-recorded sign archives in <code>data/processed/</code>.</td>
+            </tr>
+            <tr>
+              <td><code>POST</code></td>
+              <td><code>/api/v1/dataset/capture_session</code></td>
+              <td><code>capture_session</code> in <code>dataset.py</code></td>
+              <td><code>data/captured_sessions/</code></td>
+              <td>Stores raw webcam frames, lighting score, and metadata for fine-tuning.</td>
+            </tr>
+            <tr>
+              <td><code>GET</code></td>
+              <td><code>/api/v1/dataset/captured_sessions</code></td>
+              <td><code>list_captured_sessions</code> in <code>dataset.py</code></td>
+              <td>File Scanner</td>
+              <td>Catalogs summary of all fine-tuning sessions on disk.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: WebSocket Protocol -->
+      <h2 id="websocket-protocol">3. Real-Time WebSocket Streaming Protocol</h2>
+      <p>
+        Live sign language recognition requires sub-50ms latency. SETU uses persistent full-duplex WebSocket connections routed to <code>backend/app/websocket/recognize.py</code> via two paths:
+        <code>WS /api/v1/ws/recognize</code> and <code>WS /ws/recognize</code> (alias).
+      </p>
+
+      <h3>3.1. Ingress Message Types</h3>
+      <ul>
+        <li>
+          <strong>Binary Message (Raw JPEG Bytes):</strong> Client rasterizes webcam frames onto an offscreen HTML5 canvas, encodes them as JPEG chunks, and sends raw byte buffers.
+        </li>
+        <li>
+          <strong>Text Message (JSON Control Actions):</strong> The server accepts real-time control actions without interrupting video streaming:
+        </li>
+      </ul>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Action Name</th>
+              <th>JSON Command Payload</th>
+              <th>Backend Handler Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>reset</code></td>
+              <td><code>{"action": "reset"}</code></td>
+              <td>Flushes rolling FIFO buffers, resets MediaPipe landmark filters, and clears sentence state.</td>
+            </tr>
+            <tr>
+              <td><code>clear_sentence</code></td>
+              <td><code>{"action": "clear_sentence"}</code></td>
+              <td>Clears accumulated words and translated text from <code>SentenceAccumulator</code>.</td>
+            </tr>
+            <tr>
+              <td><code>backspace</code></td>
+              <td><code>{"action": "backspace"}</code></td>
+              <td>Removes the last committed word or letter from the accumulated sentence buffer.</td>
+            </tr>
+            <tr>
+              <td><code>set_model</code></td>
+              <td><code>{"action": "set_model", "model": "realsign"}</code></td>
+              <td>Hot-swaps active inference classifier (<code>realsign</code>, <code>isl_mvp</code>, <code>isl_sequence_lstm</code>, <code>include_stream</code>).</td>
+            </tr>
+            <tr>
+              <td><code>set_threshold</code></td>
+              <td><code>{"action": "set_threshold", "threshold": 0.45}</code></td>
+              <td>Dynamically alters confidence gating threshold (bounded between 0.10 and 0.95).</td>
+            </tr>
+            <tr>
+              <td><code>set_object_detection</code></td>
+              <td><code>{"action": "set_object_detection", "enabled": false}</code></td>
+              <td>Toggles the background YOLO-World v2 worker thread to reduce compute on battery-constrained devices.</td>
+            </tr>
+            <tr>
+              <td><code>resolve_disambiguation</code></td>
+              <td><code>{"action": "resolve_disambiguation", "selected": "O"}</code></td>
+              <td>Commits user choice when low confidence margin prompts a disambiguation HUD overlay.</td>
+            </tr>
+            <tr>
+              <td><code>accept_prediction</code></td>
+              <td><code>{"action": "accept_prediction", "phrase": "WATER"}</code></td>
+              <td>Commits auto-complete predictive vocabulary phrase directly into the sentence buffer.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>3.2. Egress Prediction Message Structure</h3>
+      <p>
+        For every processed video frame, the server emits a structured JSON packet:
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>Server Egress Payload • JSON Schema</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code>{
+  "type": "prediction",
+  "active_model": "realsign",
+  "label": "A",
+  "display_name": "LETTER A",
+  "confidence": 0.9421,
+  "is_known_sign": true,
+  "is_stable": true,
+  "streak_count": 4,
+  "required_streak": 3,
+  "probabilities": { "A": 0.9421, "E": 0.0312, "S": 0.0125 },
+  "candidates": [
+    { "label": "A", "confidence": 0.9421 },
+    { "label": "E", "confidence": 0.0312 },
+    { "label": "S", "confidence": 0.0125 }
+  ],
+  "hand_detected": true,
+  "hands_in_subtitle_zone": false,
+  "guidance": "Ready to sign",
+  "fps": 28.4,
+  "latency_ms": 14.8,
+  "kinetic_energy": 0.012,
+  "motion_state": "signing",
+  "sentence_buffer": "HELLO MY NAME SATHWIK",
+  "translated_text": "Hello, my name is Sathwik.",
+  "sentence_tokens": ["HELLO", "MY", "NAME", "SATHWIK"],
+  "detected_objects": [
+    {
+      "label": "cup",
+      "display_name": "Cup / Mug",
+      "confidence": 0.724,
+      "is_held": true,
+      "bbox": [120, 240, 260, 390]
+    }
+  ],
+  "fused_multimodal_text": "I want cup",
+  "landmarks": {
+    "pose": [{ "x": 0.51, "y": 0.32, "z": -0.15 }],
+    "left_hand": [],
+    "right_hand": [{ "x": 0.62, "y": 0.55, "z": 0.01 }],
+    "face": []
+  }
+}</code></pre>
+      </div>
+
+      <!-- Section: Data Schemas -->
+      <h2 id="request-schemas">4. Core Data Schemas &amp; Models</h2>
+      <p>
+        SETU validates all incoming REST requests using Pydantic v2 schemas in <code>backend/app/schemas/predict.py</code>:
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>Python (Pydantic v2) • backend/app/schemas/predict.py</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code>class LandmarkRequest(BaseModel):
+    """Payload for hand landmark prediction supporting single-hand and dual-hand ISL."""
+    features: Optional[List[float]] = Field(
+        default=None,
+        description="Normalized feature vector: 126-D dual-hand (recommended), 89-D, or 63-D"
+    )
+    landmarks: Optional[List[Dict[str, float]]] = Field(
+        default=None,
+        description="21 primary hand landmarks, each with 'x', 'y', and optional 'z'"
+    )
+    secondary_landmarks: Optional[List[Dict[str, float]]] = Field(
+        default=None,
+        description="21 secondary hand landmarks for bimanual ISL letters (B, D, P, Q, T)"
+    )
+    dominant_hand: Optional[str] = Field(default="right")
+
+class PredictionResponse(BaseModel):
+    """Structured response from sign language classifier."""
+    letter: str = Field(description="Top-ranked alphabet letter (A-Z)")
+    confidence: float = Field(description="Confidence of top-ranked letter")
+    top_3: List[TopCandidate] = Field(description="Top 3 predicted candidates")</code></pre>
+      </div>
+
+      <!-- Section: Lifecycle & Middleware -->
+      <h2 id="lifecycle-middleware">5. Lifecycle Management &amp; Observability</h2>
+      
+      <h3>5.1. Lifespan Startup &amp; Warmup</h3>
+      <p>
+        In <code>backend/app/main.py:lifespan</code>, the server utilizes FastAPI's <code>@asynccontextmanager</code> lifecycle:
+      </p>
+      <ul>
+        <li><strong>Eager Neural Warmup:</strong> Instantiates <code>classifier_service</code> and loads <code>realsign_26class_mlp.pth</code> onto the optimal device (CUDA if available, otherwise CPU).</li>
+        <li><strong>Vision Warmup:</strong> Loads MediaPipe Holistic Landmarker models and caches warm buffers to avoid first-frame latency spikes.</li>
+        <li><strong>Graceful Teardown:</strong> Upon shutdown, releases MediaPipe native handles and cleans up background YOLO execution workers.</li>
+      </ul>
+
+      <h3>5.2. Telemetry &amp; Request Tracing</h3>
+      <p>
+        Every incoming HTTP request is intercepted by custom middleware in <code>main.py:88-106</code>:
+      </p>
+      <ul>
+        <li>Generates a globally unique <code>UUID4</code> correlation ID assigned to <code>X-Request-ID</code>.</li>
+        <li>Calculates execution duration via high-resolution monotonic timer: <code>duration_ms = round((time.perf_counter() - t0) * 1000, 2)</code>.</li>
+        <li>Injects <code>X-Response-Time-MS</code> into the response headers for live client benchmarking.</li>
+      </ul>
+
+      <!-- Footer Navigation -->
+      <footer class="doc-footer-nav">
+        <a href="01_Project_Overview.html" class="nav-button">
+          <span class="nav-button-label">Previous Document</span>
+          <span class="nav-button-title">&larr; 01. Project Overview</span>
+        </a>
+        <a href="03_AI_Models_and_ML.html" class="nav-button" style="text-align: right;">
+          <span class="nav-button-label">Next Document</span>
+          <span class="nav-button-title">03. AI Models &amp; ML &rarr;</span>
+        </a>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/scripts/documentation.js"></script>
+</body>
+</html>
+

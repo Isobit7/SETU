@@ -22,15 +22,15 @@ def client():
 
 def test_realsign_classifier_initialization():
     """Verify RealSignClassifier loads the 26-class PyTorch model correctly."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     assert clf.num_classes == 26
     assert clf.class_names == [chr(ord("A") + i) for i in range(26)]
     assert isinstance(clf.model, RealSignMLP)
-    assert clf.input_dim in (63, 89)
+    assert clf.input_dim in (63, 89, 126)
     if clf.test_accuracy is not None:
         assert clf.test_accuracy >= 0.85
 
@@ -65,9 +65,9 @@ def test_extract_realsign_hand_features():
 
 def test_realsign_classifier_predict_direct():
     """Verify clf.predict accepts 63-D normalized features and populates logits & probs."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     dummy_vec = np.zeros(63, dtype=np.float32)
@@ -84,9 +84,9 @@ def test_realsign_classifier_predict_direct():
 
 def test_realsign_classifier_predict_vector():
     """Verify inference on a 63-D normalized feature vector."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     dummy_vec = np.zeros(63, dtype=np.float32)
@@ -101,9 +101,9 @@ def test_realsign_classifier_predict_vector():
 
 def test_realsign_classifier_predict_landmarks():
     """Verify inference from 21x3 raw landmark points."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     # Generate 21 dummy 3D points
@@ -259,9 +259,9 @@ def test_finger_extension_states_and_heuristics():
 
 def test_realsign_classifier_hybrid_heuristics_boost():
     """Verify RealSignClassifier.predict applies geometric boosts to achieve high confidence on clear poses."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
 
@@ -299,7 +299,7 @@ def test_instant_retrain_realsign_mlp(tmp_path):
     y_new = np.array([0] * 10 + [1] * 10, dtype=np.int64)
 
     output_model = tmp_path / "test_realsign_mlp.pth"
-    base_model = Path("models/realsign_26class_mlp.pth")
+    base_model = Path("models/weights/realsign_26class_mlp.pth")
 
     elapsed, acc = retrain_realsign_mlp(
         X_new=X_new,
@@ -319,9 +319,9 @@ def test_instant_retrain_realsign_mlp(tmp_path):
 
 def test_realsign_classifier_ema_smoothing():
     """Verify EMA probability smoothing S_t = alpha * P_t + (1 - alpha) * S_{t-1} with alpha=0.40."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     assert clf.ema_alpha == 0.40
@@ -354,9 +354,9 @@ def test_realsign_classifier_ema_smoothing():
 
 def test_realsign_confidence_and_margin_gate():
     """Verify that predict_vector returns 'Awaiting Sign Input' when top1 < 0.50 or margin < 0.15."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
 
@@ -381,9 +381,9 @@ def test_realsign_confidence_and_margin_gate():
 
 def test_realsign_dual_hand_126d_support():
     """Verify RealSignClassifier seamlessly handles 126-D symmetric dual-hand inputs."""
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     from training.features.geometry import extract_dual_hand_126d
@@ -401,9 +401,9 @@ def test_realsign_dual_hand_126d_support():
 def test_realsign_cpu_latency_and_letters():
     """Verify CPU inference latency < 1.0ms and forward pass across single/two-handed letters."""
     import time
-    weights_path = Path("models/realsign_26class_mlp.pth")
+    weights_path = Path("models/weights/realsign_26class_mlp.pth")
     if not weights_path.exists():
-        pytest.skip("models/realsign_26class_mlp.pth not found")
+        pytest.skip("models/weights/realsign_26class_mlp.pth not found")
 
     clf = RealSignClassifier(weights_path)
     from training.features.geometry import extract_dual_hand_126d

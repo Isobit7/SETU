@@ -189,7 +189,7 @@ def run_isl_mvp_demo(
     print("=" * 70)
 
     # 1. Initialize Model
-    m_path = Path(model_path) if model_path else Path("models/isl_mvp_model.npz")
+    m_path = Path(model_path) if model_path else Path("models/weights/isl_mvp_model.npz")
     try:
         classifier = ISLMVPClassifier(m_path)
         print(f"[OK] ISL MVP Classifier loaded from: {m_path}")

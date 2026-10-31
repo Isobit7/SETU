@@ -20,13 +20,7 @@ from training.features.geometry import normalize_hand_landmarks, evaluate_alphab
 
 logger = logging.getLogger(__name__)
 
-def _resolve_realsign_path() -> Path:
-    p1 = Path("models/weights/realsign_26class_mlp.pth")
-    if p1.exists():
-        return p1
-    return Path("models/realsign_26class_mlp.pth")
-
-DEFAULT_REALSIGN_MODEL_PATH = _resolve_realsign_path()
+DEFAULT_REALSIGN_MODEL_PATH = Path("models/weights/realsign_26class_mlp.pth")
 
 CLASSES_26: List[str] = [chr(ord("A") + i) for i in range(26)]
 

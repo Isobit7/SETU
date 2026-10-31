@@ -1,0 +1,32 @@
+flowchart TD
+    FrameIn["Raw Video Frame [480, 640, 3]"] --> MP["MediaPipe Holistic Task Graph"]
+    
+    MP -->|21 Left + 21 Right Hand Joints| GeoNorm["Spatial Geometry Normalization"]
+    GeoNorm -->|"Anchor to Wrist (Joint 0) & Scale by Palm Span"| Vec126["126-D Static Feature Vector"]
+    
+    MP -->|Hands + Posture + Facial Ratios| TemporalExtr["Full-Body Temporal Feature Extractor"]
+    TemporalExtr --> Vec328["328-D Frame Vector"]
+    Vec328 --> Buffer["Rolling Temporal Window [B, 30, 328]"]
+    
+    Vec126 --> RealSign["PyTorch RealSignMLP (3 Layers)"]
+    RealSign --> TempScale["Temperature Scaling (T=0.75)"]
+    TempScale --> SoftmaxAlphabet["Softmax across 26 Alphabet Letters"]
+    
+    Buffer --> BiLSTM["PyTorch 2-Layer BiLSTM (256 Hidden)"]
+    BiLSTM --> AttnPool["Additive Self-Attention Pooling"]
+    AttnPool --> Head["Dense Head -> Softmax across 7 ISL Phrases"]
+    
+    FrameIn -.->|Async Non-Blocking Task| YOLO["YOLO-World v2 Open-Vocabulary Detector"]
+    YOLO --> KnuckleFilter["Knuckle Proximity Filter (Exclude Wrist)"]
+    KnuckleFilter --> HeldObj["Detected Held Objects (is_held == True)"]
+    
+    SoftmaxAlphabet --> Accum["Temporal Accumulator & CTC Blank Filter"]
+    Head --> Accum
+    
+    Accum --> Fuser["Multimodal Show-and-Sign Fuser"]
+    HeldObj --> Fuser
+    
+    Fuser --> GlossSeq["Assembled Sign Gloss Sequence"]
+    GlossSeq --> Qwen["Qwen2.5-0.5B Small Language Model"]
+    Qwen --> OutputText["Natural, Fluent English Sentence Translation"]
+

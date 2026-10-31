@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor Signer as Signer (Browser Webcam)
+    participant Client as Frontend (useRecognitionStream.ts)
+    participant Canvas as HTML5 Landmark HUD
+    participant WS as WebSocket (FastAPI / Uvicorn)
+    participant CV as OpenCV Frame Decoder
+    participant MP as MediaPipe Holistic
+    participant PyTorch as PyTorch Neural Engines
+    participant Audio as Browser Speech Synthesis
+
+    Note over Signer,WS: Step 1: Protocol Upgrade Handshake
+    Client->>WS: GET /api/v1/ws/recognize HTTP/1.1 (Upgrade: websocket)
+    WS-->>Client: HTTP 101 Switching Protocols
+
+    Note over Client,WS: Step 2: Continuous 30 FPS Stream Loop
+    loop Every 33 Milliseconds
+        Signer->>Client: Webcam Video Frame (640x480)
+        Client->>WS: Raw Binary ArrayBuffer (JPEG Blob Quality 0.70)
+        WS->>CV: cv2.imdecode(np.frombuffer(...))
+        CV->>MP: Extract 21 Hand Keypoints (x, y, z)
+        MP->>PyTorch: Centered & Scale-Normalized Tensor [1, 126]
+        PyTorch-->>WS: Top Prediction ('A', Confidence: 0.94)
+        WS-->>Client: JSON RecognitionPayload
+        Client->>Canvas: Batched Draw 21 Bones & Joint Dots (0.4ms)
+        Client->>Client: Render Luminous Center Prediction Badge
+    end
+
+    Note over Client,Audio: Step 3: Sentence Commit & Audio Synthesis
+    Client->>Audio: window.speechSynthesis.speak("HELLO")
+    Audio-->>Signer: Audio Playback from Speakers
+

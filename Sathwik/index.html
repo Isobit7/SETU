@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SETU Documentation Portal — Indian Sign Language Translation Engine</title>
+  <link rel="stylesheet" href="assets/styles/documentation.css">
+</head>
+<body>
+  <!-- Sticky Top Header -->
+  <header class="top-header">
+    <div class="brand-section">
+      <span class="brand-logo-badge">SETU</span>
+      <div>
+        <div class="brand-title">SETU Documentation Portal</div>
+        <div class="brand-subtitle">Indian Sign Language Translation &amp; Multimodal AI Engine</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="doc-search-input" class="search-input" placeholder="Search documentation...">
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle dark mode">🌙 Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="doc-wrapper">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="nav-group-title">Master Documentation Suite</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="index.html" class="nav-link active"><span>🏠</span> Overview &amp; Portal</a></li>
+        <li class="nav-item"><a href="01_Project_Overview.html" class="nav-link"><span>📖</span> 01. Project Overview <span class="nav-badge">Core</span></a></li>
+        <li class="nav-item"><a href="02_APIs_and_Backend.html" class="nav-link"><span>⚡</span> 02. APIs &amp; Backend <span class="nav-badge">FastAPI</span></a></li>
+        <li class="nav-item"><a href="03_AI_Models_and_ML.html" class="nav-link"><span>🧠</span> 03. AI Models &amp; ML <span class="nav-badge">PyTorch</span></a></li>
+        <li class="nav-item"><a href="04_End_to_End_Workflow.html" class="nav-link"><span>🔄</span> 04. End-to-End Workflow <span class="nav-badge">Pipeline</span></a></li>
+        <li class="nav-item"><a href="05_Codebase_and_File_Index.html" class="nav-link"><span>📁</span> 05. Codebase &amp; Viva Guide <span class="nav-badge">Index</span></a></li>
+      </ul>
+
+      <div class="nav-group-title">System Status (Verified)</div>
+      <ul class="nav-list">
+        <li class="nav-item" style="padding: 0.4rem 0.65rem; font-size: 0.8rem; color: var(--text-muted);">
+          Pytest Suite: <strong style="color: #059669;">164 Passed (100%)</strong>
+        </li>
+        <li class="nav-item" style="padding: 0.4rem 0.65rem; font-size: 0.8rem; color: var(--text-muted);">
+          Frontend Build: <strong style="color: #059669;">Vite Clean (0 errors)</strong>
+        </li>
+        <li class="nav-item" style="padding: 0.4rem 0.65rem; font-size: 0.8rem; color: var(--text-muted);">
+          Default Model: <strong style="color: var(--brand-primary);">RealSign 26-Class</strong>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+      <nav class="breadcrumb-nav">
+        <span>Home</span>
+        <span class="breadcrumb-separator">/</span>
+        <span>Documentation Portal</span>
+      </nav>
+
+      <div class="doc-header">
+        <div class="doc-meta">
+          <span class="doc-number">PORTAL</span>
+          <span class="doc-version">SETU Release v1.1.0 • Offline-First</span>
+        </div>
+        <h1 class="doc-title">Project SETU: Master Documentation</h1>
+        <p class="doc-lead">
+          Welcome to the authoritative technical documentation for <strong>SETU (Bridge)</strong> — an enterprise-grade Indian Sign Language (ISL) bidirectional translation platform combining spatial landmark normalization, PyTorch deep neural networks, open-vocabulary object grounding, and causal neural language modeling.
+        </p>
+      </div>
+
+      <!-- Quick Alert Callout -->
+      <div class="callout callout-tip">
+        <div class="callout-title">💡 Complete Offline Availability</div>
+        <div>
+          This documentation suite is 100% self-contained. All styles, vector SVG schematics, scripts, and typography render locally in any web browser without requiring an internet connection or external CDN dependencies.
+        </div>
+      </div>
+
+      <!-- System Architecture Overview Diagram -->
+      <h2>System Architecture Diagram</h2>
+      <div class="diagram-card">
+        <img src="assets/diagrams/architecture_overview.svg" alt="SETU System Architecture Diagram" class="diagram-svg">
+        <div class="diagram-caption">Figure 1.0: High-Level Tier Architecture connecting Client Browser, FastAPI ASGI Gateway, and PyTorch ML Runtime.</div>
+      </div>
+
+      <!-- Navigation Cards Grid -->
+      <h2>Explore the 5 Master Documents</h2>
+      <div class="grid-2">
+        <a href="01_Project_Overview.html" class="card" style="text-decoration: none;">
+          <div class="card-title">
+            <span>01. Project Overview</span>
+            <span class="badge badge-verified">VERIFIED</span>
+          </div>
+          <p class="card-desc">
+            Explore the problem domain of Indian Sign Language (ISL), why ISL requires bimanual (two-handed) tracking unlike ASL, intended user communities, technology stack, and verified project scope.
+          </p>
+        </a>
+
+        <a href="02_APIs_and_Backend.html" class="card" style="text-decoration: none;">
+          <div class="card-title">
+            <span>02. APIs &amp; Backend Service</span>
+            <span class="badge badge-verified">VERIFIED</span>
+          </div>
+          <p class="card-desc">
+            Inspect all 17 distinct URL paths, route handlers, low-latency binary WebSocket streaming protocol, backpressure handling, JSON request/response schemas, and ASGI lifecycle management.
+          </p>
+        </a>
+
+        <a href="03_AI_Models_and_ML.html" class="card" style="text-decoration: none;">
+          <div class="card-title">
+            <span>03. AI Models &amp; Machine Learning</span>
+            <span class="badge badge-verified">VERIFIED</span>
+          </div>
+          <p class="card-desc">
+            Deep dive into RealSign MLP (94.99% checkpoint-reported test accuracy, 26,202 parameters), the 158-D vs 164-D vs 328-D feature schemas, AI4Bharat 134-D LSTM, YOLO-World v2, and Qwen2.5-0.5B causal language model.
+          </p>
+        </a>
+
+        <a href="04_End_to_End_Workflow.html" class="card" style="text-decoration: none;">
+          <div class="card-title">
+            <span>04. End-to-End Execution Workflow</span>
+            <span class="badge badge-verified">VERIFIED</span>
+          </div>
+          <p class="card-desc">
+            Trace the live pipeline step-by-step: webcam canvas capture &rarr; MediaPipe skeletal tracking &rarr; wrist coordinate normalization &rarr; neural inference &rarr; streak debouncing &rarr; translation &rarr; speech output.
+          </p>
+        </a>
+
+        <a href="05_Codebase_and_File_Index.html" class="card" style="text-decoration: none;" style="grid-column: span 2;">
+          <div class="card-title">
+            <span>05. Codebase File Index &amp; Viva Guide</span>
+            <span class="badge badge-verified">VERIFIED</span>
+          </div>
+          <p class="card-desc">
+            Complete annotated file-by-file inventory of every source file, developer startup instructions, Google Colab cloud training instructions, and 25+ comprehensive exam/viva defense questions with expert answers.
+          </p>
+        </a>
+      </div>
+
+      <!-- Key Technological Highlights -->
+      <h2>Key Technical Innovations in SETU</h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Authentic Dual-Hand ISL</div>
+          <p class="card-desc">
+            Unlike American Sign Language which relies heavily on single-hand fingerspelling, ISL letters (such as B, D, P, Q, T) require coordinate interactions across both hands. SETU models 126-D dual-hand skeletal geometry natively.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">Geometric Invariance Math</div>
+          <p class="card-desc">
+            Full mathematical scale, translation, and 3D rotation invariance. Hand landmarks are shifted to the wrist origin and rotated in-plane and out-of-plane to eliminate webcam perspective distortions.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">Non-Blocking Multimodal Vision</div>
+          <p class="card-desc">
+            YOLO-World v2 open-vocabulary physical object detection runs in asynchronous background workers, enabling Show-and-Sign interactions without dropping the 30 FPS sign language pipeline.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Run Instructions -->
+      <h2>Quick Start Commands</h2>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Windows PowerShell • Launch Backend and Frontend</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code># 1. Run full automated test suite (164 tests)
+.venv\Scripts\python.exe -m pytest tests/ -q
+
+# 2. Launch SETU Backend (FastAPI on Port 8000) & Frontend (Vite on Port 5173)
+.\scripts\run_fe_be.bat</code></pre>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer class="doc-footer-nav">
+        <div></div>
+        <a href="01_Project_Overview.html" class="nav-button" style="text-align: right;">
+          <span class="nav-button-label">Next Document</span>
+          <span class="nav-button-title">01. Project Overview &rarr;</span>
+        </a>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/scripts/documentation.js"></script>
+</body>
+</html>
+

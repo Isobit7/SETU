@@ -203,7 +203,7 @@ class COCOObjectDetector:
 
         # 1. Primary Engine: YOLO-World
         if self._yolo_model is not None:
-            det_conf = min(thresh, 0.35) if hand_landmarks else min(thresh, 0.45)
+            det_conf = max(0.50, thresh if thresh is not None else self.confidence_threshold)
             dev = str(self.device) if self.device.type == "cuda" else "cpu"
             preds = self._yolo_model.predict(frame, conf=det_conf, verbose=False, device=dev)[0]
             if len(preds.boxes) > 0:
@@ -278,6 +278,10 @@ class COCOObjectDetector:
             # 2. Strict Watch vs Phone disambiguation on fallback:
             # In old COCO models without "watch", wrist false positives had tiny areas
             if self._yolo_model is None and norm_name == "phone" and box_area < 0.05:
+                continue
+
+            # Strict suppression for wristband/fitness band false alarms
+            if norm_name == "watch" and score_f < 0.58:
                 continue
 
             # 3. If not held in hands, require higher certainty to prevent passive background clutter

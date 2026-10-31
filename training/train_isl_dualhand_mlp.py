@@ -36,7 +36,8 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 DEFAULT_FEATURES_PATH = ROOT_DIR / "data" / "processed" / "isl_dualhand_26class.npz"
-DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "weights" / "realsign_26class_mlp.pth"
+DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "training_runs" / "realsign" / "candidate_realsign_26class_mlp.pth"
+DEFAULT_MODEL_SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
 DEFAULT_REPORT_SAVE_PATH = ROOT_DIR / "reports" / "realsign_26class_evaluation_report.json"
 CLASSES_26 = [chr(ord("A") + i) for i in range(26)]
 

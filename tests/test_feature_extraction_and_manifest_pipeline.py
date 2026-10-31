@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from training.dataset_manifest import DatasetManifest, SampleRecord, compute_file_sha256
-from training.no_sign_generator import NoSignGenerator
+from training.generate_negative_resting_samples import NoSignGenerator
 from training.extract_features import FeatureExtractionPipeline
 from backend.app.services.vision import HolisticLandmarkerWrapper
 

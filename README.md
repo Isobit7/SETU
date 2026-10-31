@@ -1,520 +1,266 @@
+# SETU — Authentic Indian Sign Language (ISL) Real-Time AI Translation Workstation
+
 <div align="center">
-  <img src="frontend/public/logo.png" alt="SETU — Indian Sign Language Translation" width="560" />
+  <img src="frontend/public/logo.png" alt="SETU — Indian Sign Language Translation Workstation" width="480" />
   <br />
-  <h3>Bridging Silence and Sound Through Authentic, Real-Time Multimodal AI</h3>
+  <br />
+
+  [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+  [![PyTorch](https://img.shields.io/badge/PyTorch-2.5%20CUDA-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
+  [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+  [![Vite](https://img.shields.io/badge/Vite-8.0%2B-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+  [![PyTest](https://img.shields.io/badge/PyTest-164%20%2F%20164%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org)
+  [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
   <p align="center">
-    <strong>A production-ready, local-first Indian Sign Language (ISL) workstation and multimodal translation engine.</strong>
+    <strong>Bridging Silence and Sound Through Authentic, Real-Time Multimodal AI.</strong>
     <br />
-    Captures live webcam feeds, enhances low-light visibility via adaptive CLAHE, detects real-world objects with zero-shot YOLO-World ("Show-and-Sign"), extracts scale/translation-invariant skeletal landmarks, evaluates multi-tier neural models in &lt; 1 ms, decodes continuous fingerspelling via CTC, auto-completes phrases using an on-device Qwen2.5 SLM, arbitrates ambiguities via interactive hand-lift HUD, translates ISL grammar (SOV &rarr; SVO), and speaks English aloud in real time.
+    A production-ready, zero-cloud-latency workstation that bridges Deaf signers and hearing society through standard RGB webcams.
   </p>
-
-  <p align="center">
-    <a href="#overview">Overview</a> •
-    <a href="#whats-new-in-v20">What's New in v2.0</a> •
-    <a href="#why-setu">Why SETU</a> •
-    <a href="#key-capabilities">Key Capabilities</a> •
-    <a href="#system-architecture">Architecture</a> •
-    <a href="#model-suite--scientific-benchmarks">Models & Benchmarks</a> •
-    <a href="#model-evaluation-matrices">Evaluation Matrices</a> •
-    <a href="#multimodal-show-and-sign">Show-and-Sign</a> •
-    <a href="#ui-workstation">Workstation UI</a> •
-    <a href="#documentation-hub">Documentation Hub</a> •
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#api--websocket-protocol">API & WebSocket</a> •
-    <a href="#continuous-capture--retraining">Retraining Pipeline</a> •
-    <a href="#testing--verification">Testing (164/164)</a> •
-    <a href="#license">License</a>
-  </p>
-
-  <div>
-    <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
-    <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
-    <a href="https://pytorch.org"><img src="https://img.shields.io/badge/PyTorch-2.5%20CUDA-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch" /></a>
-    <a href="https://github.com/AILab-CVC/YOLO-World"><img src="https://img.shields.io/badge/Vision-YOLO--World_v2-FF6F00?style=for-the-badge&logo=yolo&logoColor=white" alt="YOLO-World" /></a>
-    <a href="https://huggingface.co/Qwen/Qwen2.5-0.5B"><img src="https://img.shields.io/badge/SLM-Qwen2.5--0.5B-7928CA?style=for-the-badge&logo=huggingface&logoColor=white" alt="Qwen2.5" /></a>
-    <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
-    <a href="https://typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
-    <a href="https://vitejs.dev"><img src="https://img.shields.io/badge/Vite-8.0%2B-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></a>
-    <a href="https://docs.pytest.org"><img src="https://img.shields.io/badge/PyTest-164%20Passed%20(100%25)-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="PyTest" /></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License" /></a>
-  </div>
 </div>
 
 ---
 
-## Overview
+## 🌟 The SETU Vision & Pitch
 
-**SETU** (*Sanskrit/Hindi for "Bridge"*) is an enterprise-grade, real-time sign language translation workstation designed to bridge the communication gap between Deaf/Hard-of-Hearing individuals and hearing society.
+In India alone, more than **7 million individuals** rely on Indian Sign Language (ISL) as their primary means of expression. Despite this, digital accessibility remains profoundly broken:
+- Most existing research prototypes rely on **American Sign Language (ASL)**, which is fundamentally incompatible with ISL's dual-handed linguistic structure.
+- Hardware alternatives (e.g., wired sensory data gloves costing \$500–\$2,000) are expensive, fragile, and socially alienating.
+- Cloud-based translation pipelines suffer from high network latency (300ms–1.5s) and serious privacy risks when transmitting personal video streams.
 
-Unlike research prototypes that rely on cumbersome wired data gloves or generic American Sign Language (ASL) models, **SETU is architected specifically for authentic Indian Sign Language (ISL)**:
-- **Two-Handed Fingerspelling:** Dual-hand coordination for complex consonants (`B`, `D`, `P`, `Q`, `T`).
-- **Subject-Object-Verb (SOV) Syntax:** Complete grammatical transformation rather than naive letter-by-letter concatenation.
-- **Dynamic Spatial-Temporal Phrasing:** Full upper-body posture, facial anchor ratios, and arm geometry.
-- **Open-Vocabulary Multimodal Grounding ("Show-and-Sign"):** Allows signers to physically show real-world items (smartphones, watches, water bottles, cups, books, pens) to formulate grounded sentences without fingerspelling fatigue.
-
-SETU transforms an ordinary RGB webcam into a low-latency translation hub that transcribes live signs into text and speaks fluent English sentences in **under 30 milliseconds**.
-
----
-
-## What's New in v2.0
-
-| Feature | Prior Baseline | **SETU v2.0 Modernization** |
-| :--- | :--- | :--- |
-| **Object Detection** | Brittle MobileNet SSDLite (false positives: watch &rarr; phone) | **YOLO-World v2 (13M Params):** Prompt-grounded open-vocabulary detection. Identifies watches, phones, cups, bottles, pens, books with zero misclassification. |
-| **Predictive Suggestions** | Static 12-entry hardcoded bigrams | **On-Device Qwen2.5-0.5B Causal SLM:** Context-aware completions + domain vocabulary (healthcare, emergency, school, daily life) with sub-microsecond LRU caching. |
-| **Fingerspelling Input** | Rigid 0.45s frozen refractory timer | **Continuous CTC Dynamic Greedy Decoding:** Collapses repeated frame noise while held; flows immediately on new letters or intentional double letters (*"BOOK"*, *"LOOK"*). |
-| **Hand Symmetry** | Right-hand biased MLP | **Horizontal Mirroring ($x' = -x$):** Equal 100% recognition parity for left-handed signers without retraining. |
-| **HUD & Camera Placement** | Overcrowded floating controls | **Streamlined HUD:** Compact header status, integrated camera selector, sleek movie-style subtitle banner, and hand-lift disambiguation cards. |
-| **Verification & Tests** | 134 automated unit tests | **160/160 PyTest Suite (100% Pass Rate):** Full regression coverage across all vision, neural, NLP, and live bugfix pathways. |
+**SETU** (*the Sanskrit and Hindi word for "Bridge"*) eliminates these barriers. It transforms an ordinary, budget laptop webcam into a **real-time, bidirectional translation workstation** that:
+1. Recognizes authentic dual-handed ISL fingerspelling (A–Z) and dynamic phrases in **under 1 millisecond**.
+2. Bridges vocabulary gaps through multimodal **"Show-and-Sign" object grounding** powered by zero-shot open-vocabulary YOLO-World.
+3. Translates native ISL Subject-Object-Verb (SOV) grammatical glosses into fluent English sentences.
+4. Speaks translated phrases aloud via browser-native Text-to-Speech (TTS) and provides an interactive 2-Way Text-to-Sign workspace for hearing users.
+5. Runs **100% locally** in volatile memory with zero cloud dependence and zero data harvesting.
 
 ---
 
-## Why SETU?
+## 🚀 Key Technological Innovations
 
-In India alone, more than **7 million individuals** rely on Indian Sign Language as their primary language. Yet, accessible digital translation tools remain scarce.
+### 1. Dual-Hand Invariant Coordinate Normalization (126-D)
+Authentic ISL uses both hands for critical consonants (`B`, `D`, `P`, `Q`, `T`). SETU extracts 21 3D landmarks per hand ($21 \times 3 = 63\text{-D}$), independently translates wrist origins to $(0,0,0)$, normalizes palm span to scale $1.0$, and aligns hand orientation along the vertical axis. The concatenated 126-D vector ($63\text{-D LH} + 63\text{-D RH}$) makes recognition immune to camera distance, tilt, or user hand size.
 
-| Dimension | Traditional Research Models | Sensory Hardware Gloves | **SETU v2.0 Engine** |
-| :--- | :--- | :--- | :--- |
-| **Input Hardware** | Expensive depth/stereo rigs | Sensory data gloves ($300–$2,000) | **Standard RGB Webcam (640×480)** |
-| **Language Target** | Single-handed ASL | Custom sensor mappings | **Authentic Indian Sign Language (ISL)** |
-| **Object Awareness**| Absent or limited COCO classes | Absent | **YOLO-World v2 Open-Vocabulary Grounding** |
-| **Typing & Autocomplete**| Static lookup tables | Rigid dictionaries | **Qwen2.5-0.5B Causal Neural SLM + CTC** |
-| **Ambiguity Control**| Jittery class-flipping | Rigid thresholds | **Interactive Hand-Lift Disambiguation HUD** |
-| **Lighting Robustness**| Fails in dim rooms | Not applicable | **Adaptive LAB CLAHE Video Enhancer** |
-| **Data Privacy** | Cloud API video streaming | Closed firmware | **100% On-Device Volatile RAM Processing** |
-| **Inference Latency**| 300 ms – 1,200 ms (Cloud lag) | Low (device) | **&lt; 1 ms CPU / 152 µs PyTorch MLP** |
-| **Syntax Handling** | Naive character concatenation | Static token mapping | **Neural + Rule ISL Grammar (SOV &rarr; SVO)** |
-| **Spoken Feedback** | None / Third-party add-on | External speaker module | **Native Browser Web Speech TTS Engine** |
-| **Open Source** | Proprietary or abandoned | Hardware-locked | **100% Free & Open-Source (MIT)** |
+### 2. Continuous CTC Dynamic Fingerspelling
+Traditional sign systems freeze recognition for 0.5s after every letter or spam 30 duplicate characters per second. SETU uses a **Connectionist Temporal Classification (CTC) Greedy Decoder** that:
+- Seamlessly collapses repeated frame noise while a sign is held steady.
+- Immediately emits transitions when a new letter begins.
+- Correctly detects natural double letters (*"B-O-O-K"*, *"M-E-E-T"*, *"L-O-O-K"*) without requiring unnatural hand drops.
 
----
+### 3. Multimodal "Show-and-Sign" (YOLO-World v2)
+Signers often need to discuss everyday physical items without laboriously fingerspelling each word. SETU runs asynchronous open-vocabulary object detection every 12 frames to detect held items (e.g., water bottles, cups, phones, books, pens) and fuses them with signed gestures:
+$$\text{[Holds Water Bottle]} + \text{[Signs "EMPTY"]} \longrightarrow \textbf{"The water bottle is empty."}$$
 
-## Key Capabilities
+### 4. Interactive Hand-Lift Disambiguation HUD
+When a signer makes a borderline or ambiguous gesture (e.g., `M` vs `N` or `K` vs `V`), SETU detects low top-1/top-2 margin ($< 0.20$) and renders floating Left/Right decision cards. The signer simply raises their left or right hand to confirm the intended letter without breaking their signing flow.
 
-* ⚡ **High-Throughput Streaming Engine:** Full-duplex WebSocket streaming at 20–30 FPS with under 30 ms end-to-end glass-to-ear latency.
-* 📦 **Zero-Shot "Show-and-Sign" Grounding:** Integrates YOLO-World v2 to detect physical items (smartphones, smartwatches, water bottles, cups, books, pens) and fuses them with signed modifiers (e.g. *holding bottle + signing "empty"* $\rightarrow$ *"The water bottle is empty"*).
-* 🔤 **Continuous CTC Dynamic Fingerspelling:** Automatically collapses continuous frame repetitions while hands are held steady (eliminates 20 spammed letters), while seamlessly detecting genuine repeated letters (`B-O-O-K`, `L-O-O-K`, `M-E-E-T`) without a 0.45s frozen lockout.
-* 🧠 **On-Device Qwen2.5-0.5B Language Model:** Local GPU-accelerated Small Language Model on CUDA for fluent gloss-to-sentence translation and conversational autocomplete suggestions with zero cloud latency.
-* 🖐️ **Left/Right Hand Parity:** Symmetrical coordinate reflection ($x' = -x$) maps left-hand inputs onto right-hand trained model manifolds, ensuring left-handed signers experience identical high accuracy.
-* 🙋 **Interactive Hand-Lift Disambiguation HUD:** Floating Left/Right option cards appear when models encounter subtle borderline signs (e.g., `M` vs `N` or `X` vs `Y`). Raising the left or right hand immediately confirms the desired letter without polluting the sentence accumulator.
-* ☀️ **Adaptive Low-Light CLAHE Enhancer:** Automatically measures frame luminance ($L < 75$) and applies Contrast-Limited Adaptive Histogram Equalization in LAB space with bilateral denoising, preventing tracking loss on budget laptop webcams.
-* 📐 **12-D Upper-Body Pose Anchoring:** Eliminates dynamic gesture confusion (`HELLO` vs `I` vs `YOU` vs `GOOD MORNING`) by tracking wrist offsets relative to shoulders, chest, and nose normalized by shoulder span.
-* 🔄 **Continuous Capture & Retraining Pipeline:** Single-click endpoint (`POST /v1/dataset/capture_session`) saving frames, `.npz` landmarks, and lighting metadata, paired with `scripts/fine_tune_from_captures.py` for effortless on-device fine-tuning with automatic weight backups.
-* 🎨 **High-Fidelity 2-Way Avatar Workstation:** Features an articulated visualizer with enlarged palm geometry, elongated phalanges, glowing joint knuckles, and curvature cues for authentic visual legibility.
-* 🔒 **Zero-Cloud Privacy Guarantee:** Camera frames are decoded strictly across local loopback (`127.0.0.1`) in volatile RAM. No biometrics or video streams ever touch external cloud servers.
+### 5. Adaptive Low-Light LAB CLAHE Enhancer
+Budget laptop cameras in dim lighting cause landmark jitter. SETU automatically measures luminance ($L < 75$) and applies Contrast-Limited Adaptive Histogram Equalization in LAB color space with bilateral denoising, restoring landmark tracking in low-light environments.
+
+### 6. Bidirectional Communication (2-Way Workstation)
+SETU is not just a translator for hearing people; it is a two-way bridge:
+- **ISL $\rightarrow$ English**: Live camera feed transcribes signs, converts syntax, and speaks English aloud.
+- **English $\rightarrow$ ISL**: Hearing users type or speak English; the interactive Text-to-Sign avatar workstation visualizes the corresponding signs and fingerspelling sequences.
 
 ---
 
-## System Architecture
+## 🏛️ System Architecture
 
 ```mermaid
-graph TD
-    subgraph Client ["Frontend Workstation (React 19 + TypeScript + Vite)"]
-        Cam[Live Webcam Feed 640x480 @ 20-30 FPS]
-        CamSelect[Camera Device Selector]
-        Canvas[Landmark Visualizer Canvas]
-        DisambigHUD[Hand-Lift Disambiguation HUD]
-        Subtitles[Movie-Style Subtitle HUD]
-        Buffer[Sentence Accumulator & CTC Display]
-        Avatar[Articulated 2-Way Text-to-Sign Avatar]
-        TTS[SpeechSynthesis Audio Output]
+flowchart TD
+    subgraph Client ["Frontend Workstation (React 18 + Vite + TypeScript)"]
+        Cam["Live Webcam Feed (30 FPS)"] --> CanvasCapture["Offscreen Canvas Frame Grabber"]
+        CanvasCapture --> WSClient["WebSocket Client (useRecognitionStream.ts)"]
+        WSClient --> SubtitleHUD["Movie-Style Subtitle HUD"]
+        WSClient --> DisambigHUD["Hand-Lift Disambiguation Overlay"]
+        WSClient --> TTS["Web SpeechSynthesis Audio Engine"]
+        WSClient --> TwoWay["Text-to-Sign Avatar Workspace"]
     end
 
-    subgraph Transport ["Local Loopback Transport Layer"]
-        WS["WebSocket (ws://127.0.0.1:8000/api/v1/ws/recognize)"]
-        REST["REST API (http://127.0.0.1:8000/api)"]
+    subgraph Transport ["Local Transport Layer"]
+        WSClient <== "Binary JPEGs / JSON Control Tokens" ==> WSServer["FastAPI WebSocket (/ws/recognize)"]
     end
 
-    subgraph VisionPipeline ["Vision & Preprocessing Engine"]
-        CLAHE[Adaptive Low-Light CLAHE Enhancer]
-        MP[MediaPipe Holistic & Hand Landmarker]
-        Symmetry[Hand Symmetry Normalizer: x' = -x for Left Hand]
-        Extract[Invariant Normalizer: 126-D & 176-D Body Anchors]
-        YOLO["YOLO-World v2 (Open-Vocabulary 13M Detector)"]
+    subgraph Backend ["SETU Backend Engine (pipeline_manager.py)"]
+        WSServer --> Drainer["Backpressure Queue Drainer"]
+        Drainer --> ImgDecode["cv2.imdecode (Thread Pool)"]
+        ImgDecode --> CLAHE["Adaptive CLAHE Low-Light Enhancer"]
+        
+        CLAHE --> VisionRouter{"Model Branch"}
+        VisionRouter -- "RealSign Alphabet" --> HandLM["MediaPipe HandLandmarker (~15 ms)"]
+        VisionRouter -- "Word & Sequence Models" --> HolisticLM["MediaPipe HolisticLandmarker (~35 ms)"]
+
+        HandLM --> Geom126["Dual-Hand 126-D Coordinate Normalizer"]
+        HolisticLM --> Feat176["FeatureExtractor158 + 6D Facial + 12D Body Anchors"]
+
+        subgraph ML_Suite ["Multi-Model Inference Suite"]
+            Geom126 --> RealSign["RealSignClassifier (126-D MLP, PyTorch CUDA)"]
+            Geom126 --> RFUV11["RFUV11Adapter (63-D Dense, Pure NumPy)"]
+            Feat176 --> MVP["ISLMVPClassifier (1264-D Linear, Pure NumPy)"]
+            Feat176 --> SeqLSTM["ISLSequenceLSTM (328-D BiLSTM + Attention)"]
+            Feat176 --> INCLUDE["StreamingIncludeAdapter (134-D BiLSTM, 263 Signs)"]
+        end
+
+        subgraph NLP_Pipeline ["Debouncing & Language Processing"]
+            RealSign --> EMA["EMA Probability Smoothing (alpha=0.40)"]
+            EMA --> CTC["Continuous CTC Greedy Decoder"]
+            SeqLSTM --> Kinetic["Kinetic Energy Gesture Segmentation"]
+            MVP --> Latch["Word Latch & Hysteresis Gate"]
+
+            CTC --> Accum["SentenceAccumulator (Token Buffer)"]
+            Latch --> Accum
+            Kinetic --> Accum
+
+            Accum --> Translator["NeuralGlossTranslator (Qwen-0.5B / Rules Fallback)"]
+            ImgDecode -. "Async (12 Frames)" .-> YOLO["YOLO-World v2 Object Detector"]
+            YOLO --> Fuser["Show-and-Sign Multimodal Fuser"]
+            Translator --> Fuser
+        end
+
+        Fuser --> Serializer["Response Formatter"]
+        Serializer --> WSServer
     end
-
-    subgraph Models ["Machine Learning Inference Layer"]
-        RealSign["RealSignMLP (26-Class Alphabet PyTorch/ONNX)"]
-        MVP["ISLMVP (5-Sign Ridge NumPy Matrix)"]
-        LSTM["ISLSequenceLSTM (BiLSTM Dynamic Margin Gate)"]
-        INCLUDE["AI4Bharat INCLUDE (263-Sign Video Model)"]
-    end
-
-    subgraph NLP ["Natural Language & SLM Pipeline"]
-        CTC["Continuous CTC Dynamic Greedy Decoder"]
-        Streak[Confidence Gate & Dynamic Streak Filter]
-        DisambigArbiter[Hand-Lift Disambiguation Arbiter]
-        Accum[Sentence Accumulator]
-        Fuser[Multimodal Vision-Language Fuser]
-        Qwen["Qwen2.5-0.5B Neural SLM (CUDA Acceleration)"]
-        LRUCache["Predictive LRU Cache (< 0.001 ms hits)"]
-    end
-
-    Cam -->|JPEG Frame via WS| WS
-    CamSelect -.-> Cam
-    WS --> CLAHE
-    REST --> CLAHE
-    CLAHE --> MP
-    CLAHE --> YOLO
-    MP --> Symmetry
-    Symmetry --> Extract
-
-    Extract --> RealSign
-    Extract --> MVP
-    Extract --> LSTM
-    Extract --> INCLUDE
-
-    RealSign --> CTC
-    CTC --> Streak
-    MVP --> Streak
-    LSTM --> Streak
-    INCLUDE --> Streak
-
-    Streak --> DisambigArbiter
-    DisambigArbiter --> Accum
-    Accum --> Fuser
-    YOLO --> Fuser
-    Fuser --> Qwen
-    Qwen <--> LRUCache
-
-    Qwen -->|Structured JSON Payload| WS
-    WS --> Canvas
-    WS --> DisambigHUD
-    WS --> Subtitles
-    WS --> Buffer
-    Buffer --> Avatar
-    Buffer --> TTS
 ```
 
 ---
 
-## Model Suite & Scientific Benchmarks
+## 📊 Production Model Catalog & Verification
 
-Evaluated rigorously through automated diagnostics ([`scripts/deep_system_diagnostic.py`](scripts/deep_system_diagnostic.py)) on independent holdout sets:
+All models are registered with explicit paths and verified tensor dimensions in [`models/registry.py`](file:///C:/MINI%20PROJ-SETU/models/registry.py):
 
-| Model / Subsystem | Architecture | Vocabulary / Scope | Accuracy / F1 | Latency | Device |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **RealSignMLP** | 3-Layer BatchNorm MLP | 26 Alphabet (A–Z) | **98.30%** Test Acc / **98.36%** F1 | **152.7 µs** (0.15 ms) | CPU / ONNX |
-| **ISLSequenceLSTM** | 2-Layer BiLSTM + Margin Gate | 7 Conversational Phrases | **100.0%** Fine-Tuned Acc | **4.2 ms** | CUDA |
-| **YOLO-World v2** | Open-Vocabulary RepVL-PAN | Zero-Shot Prompts (Watches, Phones, etc.) | **Zero False-Watch Classifications** | **~25 ms** (Async Worker) | CUDA |
-| **Qwen2.5-0.5B SLM** | Causal Transformer SLM | ISL-to-English + Autocomplete | **State-of-the-Art On-Device Seq2Seq** | **~250 ms** (Cached &lt; 0.001 ms) | CUDA |
-| **Continuous CTC** | Greedy Token Collapser | Streaming Alphabet Buffer | **100% Collapse of Stutter Noise** | **&lt; 0.01 ms** | In-Memory |
-| **Low-Light CLAHE** | LAB Equalizer + Bilateral | Continuous Luminance | **100%** Dim Video Boost | **3.48 ms** (287 FPS) | CPU |
-| **ISLMVPClassifier** | L2-Regularized Ridge | 5 Core Signs | **80.0%** Unseen Signer Acc | **0.20 ms** | CPU |
-| **AI4Bharat INCLUDE** | BiLSTM Sequence Classifier | 263 Words | **86.1%** Top-5 Accuracy | **12.5 ms** | CPU |
-
-### Comprehensive Holdout Metrics (2,947 Unseen Samples)
-- **Macro-Averaged Precision:** **98.43%**
-- **Macro-Averaged Recall:** **98.40%**
-- **Macro-Averaged F1-Score:** **98.36%**
-- **Mean Top-1 vs Top-2 Confidence Margin:** **0.9188**
-- **Ambiguity Ratio (Margin $< 0.20$):** **1.46%** (Resolved seamlessly by Disambiguation HUD)
-- **Weights Stability:** **0 NaN, 0 Inf** across 1,018,575 parameters; 0% dead sparsity.
-- **Hallucination on Blank Frame:** **0.0000 Confidence** (`"Awaiting Sign Input"`).
+| Model | Task | Input Dim | Classes | Inference Latency | Hardware / Engine | Weight Path |
+|---|---|---:|---:|---:|---|---|
+| **RealSign MLP** | Dual-Hand Alphabet (A–Z) | **126-D** | 26 | **0.15 ms** | PyTorch (CUDA / CPU) | `models/weights/realsign_26class_mlp.pth` |
+| **ISL MVP** | Core Conversational Phrases | **158-D** (1,264-D pooled) | 6 | **0.42 ms** | Pure NumPy Linear | `models/weights/isl_mvp_model.npz` |
+| **Sequence LSTM** | Dynamic Gesture Sequences | **328-D** | 7 | **3.80 ms** | PyTorch BiLSTM + Attention | `models/weights/isl_sequence_lstm.pth` |
+| **AI4Bharat INCLUDE** | 263 Conversational Signs | **134-D** | 263 | **12.50 ms** | 5-Layer BiLSTM (PyTorch) | `models/pretrained/include_no_cnn_lstm.pth` |
+| **RF-UV-11** | Single-Hand Fingerspelling | **63-D** | 26 | **0.88 ms** | Pure NumPy Dense HDF5 | `models/pretrained/rf_uv_11_model.h5` |
 
 ---
 
-## Model Evaluation Matrices
+## ☁️ Cloud Model Training Guide (Google Colab & Kaggle GPU)
 
-SETU features an automated **Model Evaluation Matrix Engine** ([`reports/evaluation_matrices/`](reports/evaluation_matrices/)) that inspects all trained neural networks and classifiers on disk. The engine evaluates weights and biases statistics layer-by-layer, logs training hyperparameters (learning rate, optimizer, epochs, loss function), and tracks test accuracy:
+To achieve maximum generalization across unseen signers without local dataset size constraints:
 
-| Model Name | Task / Domain | Architecture | Total Params | Weights / Biases | Learning Rate | Accuracy / F1 | Latency | Matrix Link |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **RealSign 26-Class Alphabet PyTorch MLP** | Two-Handed Alphabet Recognition (A–Z) | 3-Layer BatchNorm MLP | `26,972` | `26,176` / `410` | `0.001` | **97.22%** | `0.152 ms` | [View Matrix](reports/evaluation_matrices/realsign_26class_mlp_matrix.md) |
-| **Dynamic ISL Sequence BiLSTM + Attention** | Continuous Phrase & Greeting Recognition | 2-Layer BiLSTM + Multi-Head Attention | `964,631` | `959,560` / `5,071` | `0.001` | **88.00%** | `4.2 ms` | [View Matrix](reports/evaluation_matrices/isl_sequence_lstm_matrix.md) |
-| **YOLO-World v2 Small** | Show-and-Sign Open-Vocabulary Vision | RepVL-PAN Vision-Language Transformer | `12,784,200` | `12,745,424` / `14,453` | `0.01` | **Zero False Watches** | `24.8 ms` | [View Matrix](reports/evaluation_matrices/yolov8s_worldv2_matrix.md) |
-| **Qwen2.5-0.5B Small Language Model** | Neural ISL-to-English Translation & Autocomplete | Qwen2ForCausalLM (24 Layers, RoPE) | `494,032,768` | `494,005,120` / `27,648` | `0.00001` | **Fluent SVO** | `250.0 ms` | [View Matrix](reports/evaluation_matrices/qwen2.5_0.5b_matrix.md) |
-| **SETU ISL Conversational MVP Matrix** | Core Phrase Recognition (Sub-ms Baseline) | L2-Regularized Ridge Matrix | `10,119` | `10,113` / `6` | `Analytic` | **80.00%** | `0.2 ms` | [View Matrix](reports/evaluation_matrices/isl_mvp_model_matrix.md) |
-| **HuggingFace ISL 26-Class Benchmark MLP** | Benchmark Alphabet Recognition (A–Z) | 3-Layer BatchNorm MLP | `26,972` | `26,176` / `410` | `0.001` | **94.39%** | `0.16 ms` | [View Matrix](reports/evaluation_matrices/hf_isl_26class_mlp_matrix.md) |
+### 1. The Clean Master Dataset
+We generated [`data/processed/isl_master_clean_126d.npz`](file:///C:/MINI%20PROJ-SETU/data/processed/isl_master_clean_126d.npz) containing **14,300 clean samples**:
+- **Zero Data Leakage**: Evaluated with strict duplicate hashing; 0% train/test frame overlap.
+- **Stratified Split**: 80% Train (11,440), 10% Val (1,430), 10% Test (1,430).
+- **Dual-Hand 126-D**: Balanced distribution across all 26 letters (A–Z).
 
-> 🔄 **Dynamic Auto-Discovery:** Adding, training, or deleting any model file in `models/weights/` triggers automatic matrix updates across `reports/evaluation_matrices/` and `reports/model_matrices/`.
->
-> **CLI Tool:** `python scripts/generate_model_evaluation_matrices.py`  
-> **REST Endpoint:** `GET /api/v1/models/matrices` • `POST /api/v1/models/matrices/refresh`
-
----
-
-## Multimodal "Show-and-Sign"
-
-Rather than requiring users to manually fingerspell common nouns, SETU detects physical objects in the camera frame via YOLO-World and connects them with signed gestures:
-
-```text
-[ User holds up a wristwatch ] + [ Signs "TIME" / "LATE" ]
-       ↓                                ↓
-[ YOLO-World: watch (is_held: true) ] + [ ISL BiLSTM: time ]
-       ↓                                ↓
-           [ Multimodal Sentence Fuser + Qwen2.5 SLM ]
-                         ↓
-       "What time is it?" (Audio Spoken Aloud)
+### 2. Standalone Training Script
+Run [`scripts/train_isl_cloud.py`](file:///C:/MINI%20PROJ-SETU/scripts/train_isl_cloud.py) locally or in cloud compute:
+```powershell
+python scripts/train_isl_cloud.py --data data/processed/isl_master_clean_126d.npz --epochs 50 --batch-size 64 --lr 0.001
 ```
 
-Supported interaction pairs include:
-- `watch` + `time` &rarr; *"What time is it?"*
-- `phone` + `call` &rarr; *"Please call this number"*
-- `bottle` + `empty` &rarr; *"The water bottle is empty"*
-- `bottle` + `water` &rarr; *"I need drinking water"*
-- `cup` + `tea` &rarr; *"A cup of tea, please"*
-- `book` + `read` &rarr; *"I am reading this book"*
-- `pen` + `write` &rarr; *"I need a pen to write"*
+### 3. One-Click Google Colab Training Notebook
+Open [`scripts/train_isl_cloud_colab.ipynb`](file:///C:/MINI%20PROJ-SETU/scripts/train_isl_cloud_colab.ipynb) in Google Colab:
+1. Select GPU Runtime (**Runtime &rarr; Change runtime type &rarr; T4 GPU**).
+2. Upload `isl_master_clean_126d.npz`.
+3. Run all cells to execute training with online geometric jitter ($\pm 15^\circ$ rotation, scale jittering, Gaussian noise, hand dropout).
+4. The notebook outputs the production `realsign_26class_mlp.pth` checkpoint and full evaluation classification report.
 
 ---
 
-## UI Workstation
-
-The SETU frontend workstation is built with **React 19**, **TypeScript**, and **Vite**, featuring an ergonomic dark interface inspired by Google Gemini and modern creative tools:
-
-```text
-+-----------------------------------------------------------------------------------------------------------------+
-| [SETU LOGO]  Model: [RealSign 26-Class v]  Camera: [Logitech HD Pro v]  [● 26 FPS]  [☀️ LOW-LIGHT: ON]  [L/R: AUTO] |
-+-----------------------------------------------------------------------------------------------------------------+
-|                                                           |                                                     |
-|                    CAMERA WORKSPACE                       |                  TRANSLATION PANEL                  |
-|   +---------------------------------------------------+   |   +---------------------------------------------+   |
-|   |  LIVE SKELETON CANVAS                             |   |   | RECOGNIZED SIGN                             |   |
-|   |  - Left Hand:  Sage Green Joints (#81C995)        |   |   | LETTER 'A'                                  |   |
-|   |  - Right Hand: Slate Cyan Joints (#78A9FF)        |   |   | Confidence: 98.4%                           |   |
-|   |                                                   |   |   +---------------------------------------------+   |
-|   |  [⌚ WATCH (HELD: YES)]   [📱 PHONE (HELD: NO)]    |   |                                                     |
-|   |                                                   |   |   +---------------------------------------------+   |
-|   |  +---------------------------------------------+  |   |   | CONTINUOUS CTC ACCUMULATOR                  |   |
-|   |  | DISAMBIGUATION HUD: LIFT HAND TO SELECT     |  |   |   | "HELLO BOOK" (Stutter Collapsed)            |   |
-|   |  | [🖐️ LEFT HAND: 'M']   [🖐️ RIGHT HAND: 'N']   |  |   |   | Translated: "Hello, I am reading a book."   |   |
-|   |  +---------------------------------------------+  |   |   +---------------------------------------------+   |
-|   |                                                   |   |                                                     |
-|   |  [ MOVIE-STYLE SUBTITLE HUD: "HELLO, WELCOME" ]   |   |   +---------------------------------------------+   |
-|   +---------------------------------------------------+   |   | QWEN2.5 PREDICTIVE CHIPS                    |   |
-|                                                           |   | [ WATER ]  [ PLEASE ]  [ THANK YOU ]        |   |
-|   [Start Stream]   [Stop Stream]   [Switch Mode (2-Way)]  |   |   +---------------------------------------------+   |
-+-----------------------------------------------------------------------------------------------------------------+
-| MODALS:  [Alphabet Chart]  [Vocabulary (263)]  [Video Upload Studio]  [Continuous Session Capture Studio]       |
-+-----------------------------------------------------------------------------------------------------------------+
-```
-
----
-
-## Documentation Hub
-
-Detailed engineering blueprints, algorithmic formulas, and diagnostic reports are maintained in the [`Sathwik/`](Sathwik/) directory:
-
-| Document | Description |
-| :--- | :--- |
-| 📘 [**`Sathwik/OPTIMISE.md`**](Sathwik/OPTIMISE.md) | **Codebase Modernization Blueprint:** Comprehensive analysis of traditional rule failures, mathematical specifications of modern neural replacements (Causal SLM, Continuous CTC, Zero-DCE, Conformal Prediction), and 5-phase engineering roadmap. |
-| 📐 [**`Sathwik/SETU_WORKING_AND_FORMULAS_GUIDE.md`**](Sathwik/SETU_WORKING_AND_FORMULAS_GUIDE.md) | **Formulas & Architecture Guide:** Exact mathematical formulas for CLAHE luminance enhancement, MediaPipe Euclidean framing, wrist centering, palm scale normalization, 6-D facial ratios, 12-D body anchors, and Qwen2.5-0.5B prompt structures. |
-| 🗺️ [**`Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md`**](Sathwik/SETU_MASTER_CODEBASE_ANALYSIS_AND_ROADMAP.md) | **Master Codebase Inventory:** Complete 236-file repository map, 15 REST endpoints, WebSocket schema, and multi-tier architectural dependency graphs. |
-| 📊 [**`reports/diagnostics/`**](reports/diagnostics/) | **Scientific Diagnostic Audits:** Historical holdout validation reports, latency profiles, and parameter health checks. |
-
----
-
-## Quick Start
+## 🛠️ Quick Start & Developer Setup
 
 ### Option 1: Windows One-Click Launch (Recommended)
-
 Double-click the included batch launcher at the repository root:
-
 ```powershell
 .\Start_SETU.bat
 ```
-
-*Automatically activates the virtual environment, verifies Node.js, and launches both backend (port 8000) and frontend (port 5173) in clean, independent consoles.*
-
----
-
-### Option 2: Docker Compose
-
-Spin up the containerized stack with a single command:
-
-```bash
-docker-compose up --build
-```
-
-* **Frontend:** Accessible at `http://localhost:5173`
-* **Backend:** Accessible at `http://localhost:8000`
-* **API Documentation:** Interactive Swagger UI at `http://localhost:8000/docs`
+*Automatically starts both the FastAPI backend (port 8000) and the Vite React frontend (port 5173) in independent terminal windows.*
 
 ---
 
-### Option 3: Manual Developer Setup
+### Option 2: Manual Developer Setup
 
 #### 1. Backend Engine (FastAPI + PyTorch)
-
 ```powershell
-# Create and activate virtual environment
-python -m venv .venv
+# 1. Activate Python virtual environment
 .\.venv\Scripts\Activate.ps1
 
-# Install package in editable mode with all dependencies
-pip install -e .
-
-# Run test suite to verify pipeline integrity (160/160 passing)
+# 2. Run the complete automated test suite (164/164 tests passing)
 pytest tests/ -q
 
-# Launch FastAPI development server
+# 3. Launch FastAPI server
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-#### 2. Frontend Workstation (React 19 + Vite)
-
+#### 2. Frontend Workstation (React 18 + Vite)
 ```powershell
+# 1. Navigate to frontend directory
 cd frontend
+
+# 2. Install dependencies & build production bundle
 npm install
+npm run build
+
+# 3. Start local development server
 npm run dev
 ```
-
 Open your browser to [**`http://localhost:5173`**](http://localhost:5173).
 
 ---
 
-## API & WebSocket Protocol
+## 🧪 Comprehensive Verification & Test Suite
 
-### Real-Time WebSocket Endpoint
-
-```text
-ws://localhost:8000/api/v1/ws/recognize?model=realsign&threshold=0.35
-```
-
-#### Outbound Recognition Payload (Server &rarr; Client)
-```json
-{
-  "type": "prediction",
-  "label": "a",
-  "display_name": "LETTER A",
-  "confidence": 0.984,
-  "is_known_sign": true,
-  "hand_detected": true,
-  "detected_objects": [
-    {
-      "label": "watch",
-      "display_name": "Wristwatch",
-      "confidence": 0.923,
-      "is_held": true,
-      "bbox": [0.35, 0.42, 0.78, 0.61]
-    }
-  ],
-  "disambiguation": {
-    "is_ambiguous": false,
-    "option_a": "M",
-    "option_b": "N",
-    "margin": 0.918
-  },
-  "lighting": {
-    "score": 0.82,
-    "is_low_light": false,
-    "enhanced": false
-  },
-  "predictive_suggestions": ["APPLE", "AFTER", "ABOUT"],
-  "sentence_buffer": "HELLO BOOK",
-  "translated_text": "Hello, I am reading a book.",
-  "fps": 26.4,
-  "latency_ms": 24.1
-}
-```
-
-#### Interactive Control Actions (Client &rarr; Server)
-
-| Action | Payload | Purpose |
-| :--- | :--- | :--- |
-| `resolve_disambiguation` | `{"action": "resolve_disambiguation", "choice": "left"}` | Confirms Option A or B via hand-lift or button click |
-| `accept_prediction` | `{"action": "accept_prediction", "phrase": "WATER"}` | Injects predictive autocomplete suggestion into buffer |
-| `set_model` | `{"action": "set_model", "model": "isl_sequence_lstm"}` | Switches active classifier engine dynamically |
-| `reset` | `{"action": "reset"}` | Clears sentence buffer and resets CTC dynamic decoder |
-
----
-
-## Continuous Capture & Retraining
-
-SETU provides an automated pipeline to capture real-world evaluation sessions and fine-tune models on-device:
+The repository is covered by an automated test suite containing **164 unit, integration, and regression tests**:
 
 ```powershell
-# 1. Fetch captured session catalog
-curl http://localhost:8000/api/v1/dataset/captured_sessions
+# Run all tests across the entire codebase
+pytest tests/ -q
+# Result: 164 passed, 0 failed in 21.4s
 
-# 2. Run automated fine-tuning with sequence augmentation and auto-backup
-.\.venv\Scripts\python.exe scripts/fine_tune_from_captures.py --epochs 5 --lr 0.0005
+# Run pre-launch API & WebSocket endpoint verification
+python scripts/verify_all_endpoints.py
+# Result: 14 / 14 Endpoints Passed (100%)
 
-# 3. Run complete system diagnostic and stress test
-.\.venv\Scripts\python.exe scripts/deep_system_diagnostic.py
-```
+# Run system health and model weights inspection
+python scripts/audit_project.py
+# Result: Dataset, Checkpoint, Offline Metrics, Test Suite: ALL HEALTHY [OK]
 
-*All fine-tuned weights automatically create `.bak` recovery checkpoints before overwriting.*
-
----
-
-## Testing & Verification
-
-Every pull request and modification is validated against an exhaustive automated test suite covering API endpoints, WebSocket streaming, coordinate geometry, neural model inference, continuous CTC decoding, and Qwen SLM syntax translation:
-
-```powershell
-# Run the complete test suite
-.\.venv\Scripts\pytest.exe -v
-```
-
-```text
-============================= test session starts =============================
-platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.7.0
-rootdir: C:\MINI PROJ-SETU
-collected 164 items
-
-tests/test_api.py ...............                                        [  9%]
-tests/test_backend_app_modular.py ......                                 [ 12%]
-tests/test_camera_and_holistic_vision.py ....                            [ 15%]
-tests/test_config_exceptions.py ....                                     [ 17%]
-tests/test_custom_sign_pipeline.py .....                                 [ 20%]
-tests/test_feature_extraction_and_manifest_pipeline.py ....              [ 23%]
-tests/test_feature_schema.py ..............                              [ 31%]
-tests/test_include_model.py ...........                                  [ 38%]
-tests/test_invariant_features_and_segmentation.py ............           [ 45%]
-tests/test_isl_mvp_model.py ...........                                  [ 52%]
-tests/test_isl_sequence_lstm_classifier.py .........                     [ 57%]
-tests/test_live_bugfixes.py ..........................                   [ 73%]
-tests/test_model_evaluation_matrices.py ....                             [ 76%]
-tests/test_nlp_pipeline.py .............                                 [ 84%]
-tests/test_real_data_readiness.py .....                                  [ 87%]
-tests/test_realsign_classifier.py ..............                         [ 95%]
-tests/test_rf_uv11_adapter.py .......                                    [100%]
-
-================= 164 passed, 4 warnings in 90.13s (0:01:30) ==================
+# Frontend TypeScript and build verification
+npm --prefix frontend run build
+# Result: built in 653ms (0 errors)
 ```
 
 ---
 
-## Security, Privacy & Ethical AI
+## 📡 REST & WebSocket API Reference
 
-1. **Local-First Privacy:** Video frames captured by `getUserMedia` are streamed strictly across local loopback (`127.0.0.1`). Frames exist only in volatile RAM for the duration of inference and are immediately freed.
-2. **Transparent Model Accountability:** Confidence scores are mathematically authentic softmax probabilities. No simulated outputs or artificial smoothing numbers are ever synthesized.
-3. **Inclusive Dataset Representation:** Trained on authentic sign videos recorded across 7 deaf schools in India (AI4Bharat) and diverse dual-hand alphabet signers (RealSign), actively guarding against demographic bias.
-4. **Zero-Cloud Vulnerability:** Operates 100% offline without requiring internet connectivity or third-party cloud API keys.
+Interactive Swagger documentation is available at [**`http://localhost:8000/docs`**](http://localhost:8000/docs).
 
----
-
-## Contributing
-
-We warmly welcome contributions from AI researchers, Deaf community advocates, frontend developers, and accessibility engineers!
-
-1. **Fork the Repository**
-2. **Create a Feature Branch:** `git checkout -b feature/amazing-feature`
-3. **Commit Your Changes:** `git commit -m 'feat: Add support for custom regional ISL signs'`
-4. **Run the Test Suite:** `pytest tests/` (all 160 tests must pass)
-5. **Push to Your Branch:** `git push origin feature/amazing-feature`
-6. **Open a Pull Request**
+### Primary Endpoints:
+- `WS  /api/v1/ws/recognize` — Live bidirectional recognition stream (accepts JPEG bytes, emits predictions, landmarks, and HUD states).
+- `GET /health` — Health check reporting pipeline readiness, active models, and CUDA device status.
+- `GET /api/v1/models` — Full catalog of all 5 available models and metadata.
+- `GET /api/v1/models/matrices` — Automated model evaluation matrices, weights/biases statistics, and accuracy metrics.
+- `GET /api/v1/vocabulary` — Supported signs, categories, and gesture descriptions.
+- `POST /api/v1/recognize/video` — Isolated video sign recognition via AI4Bharat INCLUDE model.
 
 ---
 
-## Acknowledgments
+## 📚 Interactive Documentation Portal
 
-SETU stands on the shoulders of open-source research and community accessibility initiatives:
-* **[AI4Bharat (IIT Madras)](https://ai4bharat.iitm.ac.in/):** For releasing the foundational INCLUDE dataset recorded across Indian deaf schools.
-* **[RealSign Research Team](https://github.com/):** For the dual-hand ISL alphabet benchmark dataset.
-* **[Google MediaPipe](https://developers.google.com/mediapipe):** For the open-source on-device perception framework powering real-time hand and body tracking.
-* **[YOLO-World (Tencent AI Lab)](https://github.com/AILab-CVC/YOLO-World):** For the open-vocabulary real-time object detector powering Show-and-Sign multimodal grounding.
-* **[Qwen Team (Alibaba Cloud)](https://github.com/QwenLM/Qwen2.5):** For the exceptional Qwen2.5-0.5B Small Language Model powering local edge translation and predictive completion.
+For in-depth viva explanations, architectural formulas, and file-by-file indexes, launch the interactive HTML documentation portal:
+👉 Open [**`Sathwik/index.html`**](file:///C:/MINI%20PROJ-SETU/Sathwik/index.html) in any browser.
+
+Sections include:
+1. `01_Project_Overview.html`: Project scope, problem statement, and ISL vs. ASL breakdown.
+2. `02_APIs_and_Backend.html`: Complete WebSocket protocol and REST endpoint documentation.
+3. `03_AI_Models_and_ML.html`: Mathematical formulations of all 5 models and training architectures.
+4. `04_End_to_End_Workflow.html`: Step-by-step frame processing pipeline from camera to audio.
+5. `05_Codebase_and_File_Index.html`: File-by-file viva guide explaining every module.
 
 ---
 
-## License
+## 📄 License & Attribution
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
-<div align="center">
-  <sub>Built with compassion and precision for the Deaf and Hard-of-Hearing community.</sub>
-</div>
+SETU is licensed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+- Includes models and architectures trained on Indian Sign Language datasets.
+- Utilizes open-source pretrained weights from AI4Bharat INCLUDE (MIT) and Roboflow RF-UV-11 (Apache-2.0).

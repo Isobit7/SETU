@@ -446,12 +446,15 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
 
     # Aperture distance between thumb tip (landmark 4) and index tip (landmark 8)
     d_thumb_idx = float(np.linalg.norm(arr[4] - arr[8])) / palm_len
+    d_thumb_mid = float(np.linalg.norm(arr[4] - arr[12])) / palm_len
 
     # 1. Non-extended finger poses: 'C' (open curved arc) vs 'A' (closed fist)
     if not index_ext and not middle_ext and not ring_ext and not pinky_ext and not thumb_ext:
         if d_thumb_idx >= 0.35:
             return "C"
-        elif d_thumb_idx < 0.25:
+        elif d_thumb_idx <= 0.16:
+            return "O"
+        elif d_thumb_idx < 0.28:
             return "A"
         return None
 
@@ -470,8 +473,8 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
     # 5. 'V': Index + Middle extended (apart), others curled
     if index_ext and middle_ext and not ring_ext and not pinky_ext and not thumb_ext:
         d_idx_mid = float(np.linalg.norm(arr[8] - arr[12])) / palm_len
-        if d_idx_mid >= 0.20:
-            return "V"
+        return "V" if d_idx_mid >= 0.16 else "U"
+
 
     # 6. 'W': Index + Middle + Ring extended, others curled
     if index_ext and middle_ext and ring_ext and not pinky_ext and not thumb_ext:

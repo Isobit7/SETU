@@ -27,11 +27,7 @@ from training.features.schema import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SEQUENCE_LSTM_MODEL_PATH = (
-    Path("models/weights/isl_sequence_lstm.pth")
-    if Path("models/weights/isl_sequence_lstm.pth").exists()
-    else Path("models/isl_sequence_lstm.pth")
-)
+DEFAULT_SEQUENCE_LSTM_MODEL_PATH = Path("models/weights/isl_sequence_lstm.pth")
 
 
 @dataclass(frozen=True)

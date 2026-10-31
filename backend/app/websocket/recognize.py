@@ -211,7 +211,9 @@ async def websocket_recognize(
     KINETIC_ENERGY_THRESHOLD: float = 0.025
 
     # Multimodal Object Detection & Show-and-Sign State
+    enable_object_detection: bool = True
     current_detected_objects: List[Any] = []
+    object_detect_task: Optional[Any] = None
     fused_sentence: Optional[str] = None
     lighting_score: float = 1.0
     was_low_light_enhanced: bool = False
@@ -237,6 +239,7 @@ async def websocket_recognize(
         nonlocal last_word_label, last_word_display, last_word_conf, last_word_is_known
         nonlocal last_word_probs, last_word_top3, last_word_pred_time
         nonlocal disambiguation_active, disambiguation_top1, disambiguation_top2, disambiguation_options
+        nonlocal enable_object_detection, current_detected_objects
         try:
             payload = json.loads(text_str)
             action = payload.get("action")
@@ -369,6 +372,15 @@ async def websocket_recognize(
                     "type": "info",
                     "message": f"Confidence threshold set to {client_threshold}",
                     "threshold": client_threshold,
+                })
+            elif action == "set_object_detection":
+                enable_object_detection = bool(payload.get("enabled", True))
+                if not enable_object_detection:
+                    current_detected_objects = []
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Object detection {'enabled' if enable_object_detection else 'disabled'}",
+                    "object_detection_enabled": enable_object_detection,
                 })
         except Exception as e:
             logger.warning("Error processing text command: %s", e)
@@ -507,19 +519,29 @@ async def websocket_recognize(
                     had_idle_baseline = True
                     accumulator.add_continuous_token("no_sign", confidence=1.0, token_type="letter", timestamp=now)
 
-                # Periodic COCO Object Detection for Show-and-Sign interaction (every 10 frames)
-                if pipeline.object_detector is not None and (total_stream_frames % 10 == 0):
-                    try:
-                        detected_objs = await loop.run_in_executor(
+                # Non-blocking Asynchronous Object Detection (Zero-Stall, 60 FPS Smooth)
+                if enable_object_detection and pipeline.object_detector is not None:
+                    # 1. Harvest result from completed background worker without blocking
+                    if object_detect_task is not None and object_detect_task.done():
+                        try:
+                            current_detected_objects = object_detect_task.result()
+                        except Exception as e:
+                            logger.debug("Background object detector task error: %s", e)
+                        object_detect_task = None
+
+                    # 2. Spawn non-blocking background detector worker if idle (sampled every 12 frames)
+                    if object_detect_task is None and (total_stream_frames % 12 == 0):
+                        frame_copy = frame.copy()
+                        hand_pts_copy = list(left_hand + right_hand)
+                        object_detect_task = loop.run_in_executor(
                             None,
                             pipeline.object_detector.detect,
-                            frame,
+                            frame_copy,
                             0.65,
-                            left_hand + right_hand,
+                            hand_pts_copy,
                         )
-                        current_detected_objects = detected_objs
-                    except Exception as e:
-                        logger.debug("Object detection error: %s", e)
+                elif not enable_object_detection and current_detected_objects:
+                    current_detected_objects = []
 
                 # Robust 176-D body-anchored feature extraction
                 face_lms = getattr(hl_result, "face_landmarks", None)
@@ -664,7 +686,7 @@ async def websocket_recognize(
                                     target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
-                                    apply_heuristic_boost=False,
+                                    apply_heuristic_boost=True,
                                     raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )

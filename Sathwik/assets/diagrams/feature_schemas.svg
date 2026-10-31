@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sc-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="sc-indigo" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="sc-emerald" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="sc-amber" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="sc-purple" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#7e22ce" />
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="540" fill="#ffffff" rx="10" stroke="#e2e8f0" stroke-width="2" />
+
+  <text x="480" y="32" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="800" text-anchor="middle" fill="#0f172a">MATHEMATICAL FEATURE SCHEMAS &amp; TENSOR DIMENSIONS</text>
+  <text x="480" y="50" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" text-anchor="middle" fill="#64748b">Comparison of Coordinate Spaces, Normalization Frames, and Velocity Concatenations</text>
+
+  <!-- 1. RealSign 126-D Dual Hand -->
+  <g transform="translate(40, 70)">
+    <text x="0" y="15" font-family="sans-serif" font-size="12" font-weight="700" fill="#0f172a">1. RealSign Dual-Hand Feature Schema (126-D)</text>
+    <text x="500" y="15" font-family="monospace" font-size="11" fill="#2563eb">Models: realsign_26class_mlp.pth</text>
+    
+    <!-- Bar -->
+    <rect x="0" y="25" width="440" height="34" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" rx="4" />
+    <rect x="440" y="25" width="440" height="34" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.5" rx="4" />
+    <text x="220" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#1e40af" text-anchor="middle">Left Hand: 21 Landmarks x 3 (x, y, z) [Indices 0..62]</text>
+    <text x="660" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#1e40af" text-anchor="middle">Right Hand: 21 Landmarks x 3 (x, y, z) [Indices 63..125]</text>
+    
+    <text x="0" y="73" font-family="sans-serif" font-size="10" fill="#64748b">• Note: When a single hand (63-D) is supplied, Left Hand slot is zero-padded. Evaluates mirrored symmetry for left-handed signers.</text>
+  </g>
+
+  <!-- 2. AI4Bharat INCLUDE 134-D -->
+  <g transform="translate(40, 160)">
+    <text x="0" y="15" font-family="sans-serif" font-size="12" font-weight="700" fill="#0f172a">2. AI4Bharat INCLUDE Isolated Video Schema (134-D)</text>
+    <text x="500" y="15" font-family="monospace" font-size="11" fill="#7c3aed">Models: include_no_cnn_lstm.pth (263 Classes)</text>
+
+    <!-- Bar -->
+    <rect x="0" y="25" width="328" height="34" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1.5" rx="4" />
+    <rect x="328" y="25" width="276" height="34" fill="#f3e8ff" stroke="#c084fc" stroke-width="1.5" rx="4" />
+    <rect x="604" y="25" width="276" height="34" fill="#ede9fe" stroke="#a855f7" stroke-width="1.5" rx="4" />
+
+    <text x="164" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#581c87" text-anchor="middle">25 Pose Keypoints x 2 (50 floats)</text>
+    <text x="466" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#581c87" text-anchor="middle">21 Left Hand x 2 (42 floats)</text>
+    <text x="742" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#581c87" text-anchor="middle">21 Right Hand x 2 (42 floats)</text>
+
+    <text x="0" y="73" font-family="sans-serif" font-size="10" fill="#64748b">• Unnormalized image scale: coordinates scaled by (1920, 1080). Strictly separated from 158-D pipeline via runtime assertions.</text>
+  </g>
+
+  <!-- 3. Base 158-D vs Expanded 164-D -->
+  <g transform="translate(40, 250)">
+    <text x="0" y="15" font-family="sans-serif" font-size="12" font-weight="700" fill="#0f172a">3. Holistic Base (158-D) vs Expanded NMM Facial (164-D)</text>
+    <text x="500" y="15" font-family="monospace" font-size="11" fill="#d97706">Schema: training/features/schema.py</text>
+
+    <!-- Bar -->
+    <rect x="0" y="25" width="338" height="34" fill="#fefce8" stroke="#fde047" stroke-width="1.5" rx="4" />
+    <rect x="338" y="25" width="338" height="34" fill="#fef9c3" stroke="#facc15" stroke-width="1.5" rx="4" />
+    <rect x="676" y="25" width="130" height="34" fill="#fef08a" stroke="#eab308" stroke-width="1.5" rx="4" />
+    <rect x="806" y="25" width="74" height="34" fill="#fed7aa" stroke="#f97316" stroke-width="1.5" rx="4" />
+
+    <text x="169" y="46" font-family="sans-serif" font-size="10" font-weight="600" fill="#713f12" text-anchor="middle">Right Hand (63 floats)</text>
+    <text x="507" y="46" font-family="sans-serif" font-size="10" font-weight="600" fill="#713f12" text-anchor="middle">Left Hand (63 floats)</text>
+    <text x="741" y="42" font-family="sans-serif" font-size="9" font-weight="600" fill="#713f12" text-anchor="middle">Pose + Face</text>
+    <text x="741" y="53" font-family="sans-serif" font-size="8" fill="#713f12" text-anchor="middle">(24 + 8 = 32)</text>
+    <text x="843" y="42" font-family="sans-serif" font-size="9" font-weight="700" fill="#c2410c" text-anchor="middle">+6 Facial</text>
+    <text x="843" y="53" font-family="sans-serif" font-size="8" fill="#c2410c" text-anchor="middle">(MAR/EER/EAR)</text>
+
+    <text x="0" y="73" font-family="sans-serif" font-size="10" fill="#64748b">• Indices 0..157 = 158-D Base. Indices 158..163 = 6 Facial Ratios. When Face Mesh is unavailable, indices 158..163 are zero-filled.</text>
+  </g>
+
+  <!-- 4. ISL Sequence BiLSTM (328-D) -->
+  <g transform="translate(40, 340)">
+    <text x="0" y="15" font-family="sans-serif" font-size="12" font-weight="700" fill="#0f172a">4. Dynamic Spatio-Temporal Sequence Vector (328-D)</text>
+    <text x="500" y="15" font-family="monospace" font-size="11" fill="#059669">Models: isl_sequence_lstm.pth (Shape: [1, 30, 328])</text>
+
+    <!-- Bar -->
+    <rect x="0" y="25" width="440" height="34" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5" rx="4" />
+    <rect x="440" y="25" width="440" height="34" fill="#d1fae5" stroke="#34d399" stroke-width="1.5" rx="4" />
+
+    <text x="220" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#065f46" text-anchor="middle">164 Coordinates &amp; Facial Ratios: [F_t]</text>
+    <text x="660" y="46" font-family="sans-serif" font-size="11" font-weight="600" fill="#065f46" text-anchor="middle">164 Frame Velocities: V_t = (F_t - F_{t-1}) / dt</text>
+
+    <text x="0" y="73" font-family="sans-serif" font-size="10" fill="#64748b">• Rolling 30-frame temporal buffer (~1.0s at 30 FPS). Captures both hand shapes and trajectory motion dynamics for continuous signs.</text>
+  </g>
+</svg>
+

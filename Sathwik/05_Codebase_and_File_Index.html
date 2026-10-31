@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05. Codebase Index &amp; Viva Guide — SETU Documentation</title>
+  <link rel="stylesheet" href="assets/styles/documentation.css">
+</head>
+<body>
+  <header class="top-header">
+    <div class="brand-section">
+      <span class="brand-logo-badge">SETU</span>
+      <div>
+        <div class="brand-title">SETU Documentation</div>
+        <div class="brand-subtitle">05. Codebase File Index &amp; Technical Viva Guide</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/></svg>
+        <input type="text" id="doc-search-input" class="search-input" placeholder="Search codebase / viva...">
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn">🌙 Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="doc-wrapper">
+    <aside class="sidebar">
+      <div class="nav-group-title">Master Documentation Suite</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="index.html" class="nav-link"><span>🏠</span> Overview &amp; Portal</a></li>
+        <li class="nav-item"><a href="01_Project_Overview.html" class="nav-link"><span>📖</span> 01. Project Overview <span class="nav-badge">Core</span></a></li>
+        <li class="nav-item"><a href="02_APIs_and_Backend.html" class="nav-link"><span>⚡</span> 02. APIs &amp; Backend <span class="nav-badge">FastAPI</span></a></li>
+        <li class="nav-item"><a href="03_AI_Models_and_ML.html" class="nav-link"><span>🧠</span> 03. AI Models &amp; ML <span class="nav-badge">PyTorch</span></a></li>
+        <li class="nav-item"><a href="04_End_to_End_Workflow.html" class="nav-link"><span>🔄</span> 04. End-to-End Workflow <span class="nav-badge">Pipeline</span></a></li>
+        <li class="nav-item"><a href="05_Codebase_and_File_Index.html" class="nav-link active"><span>📁</span> 05. Codebase &amp; Viva Guide <span class="nav-badge">Index</span></a></li>
+      </ul>
+
+      <div class="nav-group-title">On This Page</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#dir-tree">Annotated Directory Tree</a></li>
+        <li class="nav-item"><a href="#file-index">File-by-File Responsibility Index</a></li>
+        <li class="nav-item"><a href="#dev-setup">Developer Setup &amp; Run Guide</a></li>
+        <li class="nav-item"><a href="#cloud-training">Cloud GPU Training Guide</a></li>
+        <li class="nav-item"><a href="#viva-guide">25+ Viva &amp; Exam Q&amp;A</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-container">
+      <nav class="breadcrumb-nav">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>05. Codebase &amp; Viva Guide</span>
+      </nav>
+
+      <div class="doc-header">
+        <div class="doc-meta">
+          <span class="doc-number">MODULE 05</span>
+          <span class="doc-version">Complete Inventory &amp; Academic Reference • Release v1.1.0</span>
+        </div>
+        <h1 class="doc-title">Codebase File Index, Developer Guide &amp; Technical Viva Defense</h1>
+        <p class="doc-lead">
+          Annotated repository tree, file-by-file component responsibilities, developer setup instructions, cloud GPU training workflow, and 25+ comprehensive exam viva questions with authoritative answers.
+        </p>
+      </div>
+
+      <!-- Section: Directory Tree -->
+      <h2 id="dir-tree">1. Annotated Repository Directory Tree</h2>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Project Root Directory Layout • c:\MINI PROJ-SETU</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code>c:\MINI PROJ-SETU\
+├── backend/                  # Consolidated Enterprise FastAPI Service
+│   └── app/
+│       ├── api/endpoints/    # REST Route Modules: predict, models, video, dataset, vocabulary
+│       ├── schemas/          # Pydantic v2 Request/Response Data Validation Schemas
+│       ├── services/         # Core Services: pipeline_manager, vision, nlp, audio, matrices
+│       │   ├── vision/       # MediaPipe Landmarker Wrappers &amp; YOLO-World Object Detector
+│       │   └── nlp/          # SentenceAccumulator, NeuralGlossTranslator (Qwen), GlossParser
+│       ├── websocket/        # recognize.py: Real-time 30 FPS binary JPEG streaming WebSocket
+│       └── main.py           # Application Entry Point, Lifespan Warmup, CORS, Telemetry
+├── frontend/                 # React 19 + TypeScript + Vite Single Page Application
+│   ├── src/
+│   │   ├── components/       # CameraWorkspace, HUD Overlays, Modals, TextToSignWorkspace
+│   │   ├── hooks/            # useRecognitionStream, useSentenceBuilder, useTTS, useTextBuffer
+│   │   ├── services/         # apiService.ts: Centralized HTTP Client &amp; Error Handling
+│   │   ├── utils/            # landmarksDrawer, landmarkProcessor, framingEvaluator
+│   │   ├── App.tsx           # Master Application View &amp; Modal Coordinator
+│   │   └── main.tsx          # React StrictMode Entry Point
+│   ├── package.json          # Node Dependencies &amp; Vite Build Scripts
+│   └── vite.config.ts        # Vite Server Configuration (Port 5173)
+├── models/                   # PyTorch Architectures, Swappable Adapters, &amp; Model Registry
+│   ├── adapters/             # realsign.py, sequence_lstm.py, include.py, mvp.py, rf_uv11.py
+│   ├── weights/              # realsign_26class_mlp.pth, isl_sequence_lstm.pth, yolov8s-worldv2.pt, qwen_0.5b/
+│   ├── pretrained/           # include_no_cnn_lstm.pth (AI4Bharat), label maps, licenses
+│   └── registry.py           # ModelRegistry Catalog &amp; Dynamic Classifiers Discovery
+├── training/                 # Mathematical Feature Engineering &amp; Training Pipelines
+│   └── features/
+│       ├── geometry.py       # Wrist normalization, palm scale, joint angles, neuro-symbolic heuristics
+│       ├── extractor.py      # FeatureExtractor158, 164-D expanded, 328-D velocity concatenation
+│       └── schema.py         # Schema constants, slice ranges, and vector validation guards
+├── data/                     # Multitier Geometric Datasets &amp; Manifest Storage
+│   ├── raw/                  # Isolated images, INCLUDE video archives, user webcam recordings
+│   ├── processed/            # Normalized .npz landmark archives (realsign, hf_isl, custom recordings)
+│   ├── manifests/            # Cryptographically hashed JSON split files (realsign_clean_manifest.json)
+│   └── captured_sessions/    # Live webcam sessions, telemetry, and base64 frames for fine-tuning
+├── tests/                    # 11 Pytest Test Modules (164 automated unit &amp; integration tests)
+├── scripts/                  # run_fe_be.bat, train_isl_cloud.py, train_isl_cloud_colab.ipynb
+└── Sathwik/                  # Authoritative Offline HTML Documentation Suite &amp; Vector Assets</code></pre>
+      </div>
+
+      <!-- Section: File-by-File Index -->
+      <h2 id="file-index">2. File-by-File Component Responsibility Index</h2>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>File Path</th>
+              <th>Primary Component Role</th>
+              <th>Key Classes / Functions</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>backend/app/main.py</code></td>
+              <td>FastAPI application setup, ASGI lifespan warmup, CORS, and request telemetry middleware.</td>
+              <td><code>lifespan()</code>, <code>health_check()</code>, <code>request_logging_middleware()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/websocket/recognize.py</code></td>
+              <td>Low-latency binary JPEG WebSocket streaming handler, backpressure guard, and temporal debouncer.</td>
+              <td><code>websocket_recognize()</code>, <code>_process_control_text()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/api/endpoints/predict.py</code></td>
+              <td>REST single-frame alphabet prediction endpoint (POST /api/predict).</td>
+              <td><code>predict_letter()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/api/endpoints/models.py</code></td>
+              <td>Model inspection catalog, status, classes listings, and evaluation matrices endpoints.</td>
+              <td><code>list_models()</code>, <code>get_realsign_status()</code>, <code>get_include_status()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/api/endpoints/video.py</code></td>
+              <td>Isolated gesture recognition from uploaded video files (max 50MB).</td>
+              <td><code>recognize_video()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/api/endpoints/dataset.py</code></td>
+              <td>User custom sign recorder (30-frame &times; 164-D) and session fine-tuning capture.</td>
+              <td><code>record_sample()</code>, <code>capture_session()</code>, <code>list_custom_samples()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/services/pipeline_manager.py</code></td>
+              <td>Singleton managing MediaPipe Holistic, RealSignMLP, BiLSTM, and YOLO services.</td>
+              <td><code>PipelineManager</code>, <code>pipeline.load()</code>, <code>pipeline.process_frame()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/services/vision/object_detector.py</code></td>
+              <td>YOLO-World v2 open-vocabulary held object detector with wristband filtering.</td>
+              <td><code>YoloWorldObjectDetector</code>, <code>detect_objects()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/services/nlp/accumulator.py</code></td>
+              <td>Buffers letters into words, commits on idle timeouts, and triggers translation.</td>
+              <td><code>SentenceAccumulator</code>, <code>add_token()</code>, <code>check_timeouts()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>backend/app/services/nlp/neural_translator.py</code></td>
+              <td>Qwen2.5-0.5B causal language model translating ISL glosses into fluent English sentences.</td>
+              <td><code>NeuralGlossTranslator</code>, <code>translate()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>frontend/src/hooks/useRecognitionStream.ts</code></td>
+              <td>Custom React hook managing webcam stream, WebSocket binary frames, and telemetry state.</td>
+              <td><code>useRecognitionStream()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>frontend/src/hooks/useSentenceBuilder.ts</code></td>
+              <td>Synchronizes client-side sentence buffer and coordinates automatic speech synthesis.</td>
+              <td><code>useSentenceBuilder()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>frontend/src/hooks/useTTS.ts</code></td>
+              <td>Offline client-side voice synthesis using native browser W3C Web Speech API.</td>
+              <td><code>useTTS()</code>, <code>speak()</code>, <code>stop()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>frontend/src/services/apiService.ts</code></td>
+              <td>Centralized HTTP client with timeout guards and standardized error normalization.</td>
+              <td><code>ApiService.checkHealth()</code>, <code>fetchModels()</code>, <code>recognizeVideo()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>models/adapters/realsign.py</code></td>
+              <td>PyTorch adapter for RealSign 26-class alphabet model with left-hand symmetry mirroring.</td>
+              <td><code>RealSignClassifier</code>, <code>RealSignMLP</code>, <code>predict_vector()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>models/adapters/sequence_lstm.py</code></td>
+              <td>PyTorch adapter for 7-class dynamic BiLSTM with CTC greedy sequence decoding.</td>
+              <td><code>ISLSequenceLSTMClassifier</code>, <code>CTCGreedyDecoder</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>models/adapters/include.py</code></td>
+              <td>Adapter for AI4Bharat 263-class LSTM across 134-D keypoint sequences.</td>
+              <td><code>IncludeClassifier</code>, <code>StreamingIncludeAdapter</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>training/features/geometry.py</code></td>
+              <td>Wrist centering, palm scaling, 3D rotation alignment, and neuro-symbolic heuristics.</td>
+              <td><code>normalize_wrist_coordinates()</code>, <code>evaluate_alphabet_heuristics()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+            <tr>
+              <td><code>training/features/extractor.py</code></td>
+              <td>Holistic feature extraction (158-D), facial ratios (164-D), and temporal velocity (328-D).</td>
+              <td><code>FeatureExtractor158</code>, <code>append_velocity_features_328()</code></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: Developer Setup -->
+      <h2 id="dev-setup">3. Developer Setup &amp; Execution Guide</h2>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>One-Click Full Stack Startup • scripts/run_fe_be.bat</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code># Launches Backend (Uvicorn on Port 8000) and Frontend (Vite on Port 5173) simultaneously:
+.\scripts\run_fe_be.bat</code></pre>
+      </div>
+
+      <h3>3.1. Manual Step-by-Step Launch Commands</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span>PowerShell • Independent Backend and Frontend Terminal Commands</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code># Terminal 1: Backend ASGI Server
+.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Terminal 2: Frontend Vite Development Server
+cd frontend
+npm run dev
+
+# Terminal 3: Automated Pytest Suite Verification (164 tests)
+.venv\Scripts\python.exe -m pytest tests/ -q</code></pre>
+      </div>
+
+      <!-- Section: Cloud Training Guide -->
+      <h2 id="cloud-training">4. Cloud GPU Training Guide (Google Colab / AWS)</h2>
+      <p>
+        To retrain models on high-volume datasets (such as the 42,000 ISL image dataset) without local thermal throttling, SETU provides dedicated cloud training pipelines in <code>scripts/</code>:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Google Colab 1-Click Notebook</div>
+          <p class="card-desc">
+            <code>scripts/train_isl_cloud_colab.ipynb</code>: Fully automated Jupyter notebook designed for free T4 or A100 GPU instances. Ingests raw images, extracts 126-D landmarks, trains with AdamW and cosine decay, and exports <code>realsign_26class_mlp.pth</code>.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Headless Python Trainer</div>
+          <p class="card-desc">
+            <code>scripts/train_isl_cloud.py</code>: Standalone command-line trainer supporting multi-GPU distributed data parallel (DDP), mixed precision (FP16), and automatic dataset manifest validation.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section: Viva Guide -->
+      <h2 id="viva-guide">5. Comprehensive Technical Viva &amp; Exam Defense (25 Questions)</h2>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q1: What fundamental problem does Project SETU solve?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> SETU bridges the communication gap between over 18 million Deaf/hard-of-hearing individuals in India and hearing citizens. It provides real-time, bidirectional translation between Indian Sign Language (ISL) gestures and natural English text/speech using standard, ubiquitous consumer webcams without requiring expensive sensory hardware.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q2: How does Indian Sign Language (ISL) differ fundamentally from American Sign Language (ASL)?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> ISL has three crucial differences: (1) <em>Bimanual Fingerspelling:</em> While ASL alphabet signs are primarily one-handed, authentic ISL letters (B, D, P, Q, T) require coordinated contact between both hands. (2) <em>SOV Grammar:</em> ISL uses Subject-Object-Verb syntax rather than English SVO. (3) <em>Non-Manual Markers:</em> Facial expressions and eyebrow movements serve as grammatical question markers.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q3: Why does SETU use MediaPipe skeletal landmarks rather than raw RGB pixels or 3D CNNs?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> Feeding raw pixels into CNNs makes models brittle to room lighting, skin complexions, clothing, and background clutter. Extracting 3D skeletal landmarks compresses a 921,600-byte frame into a compact, normalized vector, achieving complete background invariance and sub-millisecond inference latencies suitable for real-time edge execution.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q4: What is the exact mathematical formulation of wrist normalization in SETU?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> (1) Translation: Shift wrist to origin: $\mathbf{p}' = \mathbf{p} - \mathbf{p}_{\text{wrist}}$. (2) Scale: Divide all points by rigid palm distance $d = \|\mathbf{p}_9' - \mathbf{p}_0'\|_2$. (3) Rotation: Rotate around Z-axis by $\theta = \operatorname{atan2}(-v_x, -v_y)$ to align palm with the vertical axis, followed by X-axis rotation $\phi = \operatorname{atan2}(v_z, -y_{\text{rot}})$ to cancel out camera pitch.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q5: What are the differences between 126-D, 134-D, 158-D, 164-D, and 328-D feature vectors?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> (1) <strong>126-D:</strong> Dual-hand landmarks ($21 \times 3 \times 2$) for RealSign A&ndash;Z. (2) <strong>134-D:</strong> AI4Bharat INCLUDE schema (50 pose + 42 LH + 42 RH scaled to 1920&times;1080). (3) <strong>158-D:</strong> Base holistic vector (63 RH + 63 LH + 24 pose + 8 face). (4) <strong>164-D:</strong> 158-D base + 6 facial expression ratios (zero-filled when face mesh is absent). (5) <strong>328-D:</strong> 164 coordinates/ratios + 164 finite-difference velocity features.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q6: Why are 134-D and 158-D features strictly separated in the codebase?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> They represent fundamentally different coordinate spaces. 134-D contains unnormalized pixel coordinates scaled to $1920 \times 1080$ for the AI4Bharat Zenodo benchmark model. 158-D contains unit-normalized wrist-centered landmarks for SETU's internal models. <code>models/adapters/include.py</code> enforces an explicit assertion preventing 158-D features from ever being passed to the 134-D model.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q7: What happens to the six facial expression features in 164-D when MediaPipe Face Mesh is not detected?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> When Face Mesh is unavailable, all six facial expression dimensions (indices 158..163) are explicitly <strong>zero-filled</strong>. The server code guarantees that unmeasured facial expressions are never fabricated or presented as real physical measurements.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q8: How does the BiLSTM model dynamic temporal sequences?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> It processes a rolling FIFO sequence of <strong>30 frames</strong>. For each frame, it computes first-order velocities $\mathbf{V}_t = (\mathbf{F}_t - \mathbf{F}_{t-1}) / \Delta t$ across 164 features, forming a $(30, 328)$ spatiotemporal matrix that captures both joint positions and movement trajectories.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q9: What is Connectionist Temporal Classification (CTC) Greedy Decoding, and why is it used?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> In continuous sign language, a user holds a sign across several consecutive frames. CTC greedy decoding identifies continuous blocks of identical class predictions, eliminates duplicate consecutive tokens, and removes <code>no_sign</code> blank tokens, converting raw frame streams into discrete word tokens without requiring manual frame segmentation.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q10: How does YOLO-World v2 run without dropping the 30 FPS landmark tracking rate?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> YOLO-World v2 runs in a non-blocking asynchronous executor thread (<code>loop.run_in_executor</code>). The sign language landmark thread never awaits the object detector. It checks for finished detection results every 6 frames, allowing the main sign recognition loop to sustain a consistent 28&ndash;30 FPS.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q11: Why is Qwen2.5-0.5B classified as a decoder-only causal language model rather than Seq2Seq?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> The imported model class is <code>AutoModelForCausalLM</code>, which is an autoregressive decoder-only Transformer. While the application task is sequence-to-sequence translation, the neural architecture predicts tokens causally from left to right using a ChatML prompt rather than an encoder-decoder cross-attention structure.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q12: How does the temporal debouncing state machine prevent repeated letter flickering?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> It requires a sign to maintain identical top-1 classification for at least 3&ndash;4 consecutive frames, requires a confidence margin $\ge 0.05$ over the second candidate, and engages a repeat lock. To sign identical consecutive letters (like "LL"), the signer must execute an idle baseline transition (such as a hand drop or relaxation).
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q13: How does SETU handle left-handed signers?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> In <code>models/adapters/realsign.py</code>, when dual hands are detected, the classifier evaluates both the default orientation and a horizontally mirrored and slot-swapped configuration ($x \to -x$, Left Hand &harr; Right Hand). If the mirrored pass yields higher softmax margin, it accepts the mirrored prediction natively.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q14: How does the neuro-symbolic heuristic tie-breaker resolve subtle finger curls?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> On ambiguous classification boundaries (such as O vs C), the system evaluates exact physical landmark geometry: fingertip-to-thumb closure distance $\|\mathbf{p}_8 - \mathbf{p}_4\|_2$ (&lt;0.32 &rarr; closed ring O; &ge;0.38 &rarr; open curve C) and index-middle spread angle (&lt;8.5&deg; &rarr; parallel U; &ge;13&deg; &rarr; spread V).
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q15: What is the true source and meaning of the 94.99% RealSign accuracy?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> 94.99% is the <strong>checkpoint-reported test accuracy</strong> stored in <code>realsign_26class_mlp.pth</code> evaluated across 3,120 held-out static landmark feature vectors. It is an offline evaluation metric on isolated vectors, not live application streaming accuracy.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q16: What is the source and meaning of the 0.562386... INCLUDE checkpoint score?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> <code>0.5623867753623188</code> is a scalar score stored directly inside the AI4Bharat checkpoint dictionary. Because the original evaluation harness is external, it is documented strictly as a checkpoint-stored score with its metric definition unverified.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q17: Does SETU use any SQL relational database at runtime?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> No. SETU uses zero runtime SQL databases. All datasets and model features are stored in compressed NumPy archives (<code>.npz</code>), cryptographic JSON split manifests, and directory-based session captures on disk.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q18: How does SETU prevent data leakage in its training datasets?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> In <code>data/manifests/realsign_clean_manifest.json</code>, samples are strictly stratified by signer identity using SHA-256 cryptographic hashes. All frames from a given signer are assigned exclusively to either the training set or the testing set, preventing artificially inflated accuracy.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q19: What is WebSocket backpressure protection, and why is it essential?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> If a client camera sends frames faster than the backend can decode them, frames accumulate in the network buffer, causing latency to drift by several seconds. The backpressure guard drains stale queued frames and decodes only the freshest received frame.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q20: How does the system guide users who sign outside the camera frame or in low light?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> <code>VisualFramingGuide.tsx</code> computes facial brightness and shoulder span centering. If lighting falls below 0.38 or the user's upper body is off-center, real-time visual banners notify the user (&ldquo;Move closer&rdquo;, &ldquo;Low light detected&rdquo;).
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q21: What is the purpose of the 10-step execution lifecycle?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> It provides a deterministic, decoupled processing contract that isolates camera ingress, landmark extraction, spatial normalization, neural inference, debouncing, causal translation, and audio synthesis into testable pipeline stages.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q22: What are the primary latency bottlenecks on CPU versus CUDA hardware?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> On CUDA GPUs, total end-to-end latency is ~14&ndash;20 ms (50+ FPS). On pure CPU, Qwen2.5-0.5B causal generation increases from 35 ms to 250&ndash;600 ms, which is mitigated by running translation in background threads and using immediate title-cased join fallbacks.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q23: How does the custom sign dataset recording endpoint function?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> <code>POST /api/v1/dataset/record_sample</code> accepts a 30-frame sequence of 164-D vectors or landmarks, pads missing facial ratios with zeros, validates array finiteness, and saves a timestamped <code>custom_<label>_<timestamp>.npz</code> archive for future fine-tuning.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q24: What ethical considerations exist in sign language AI tools?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> Tools must respect the linguistic sovereignty of Deaf communities, avoid misrepresenting fingerspelling as full grammatical fluency, prevent non-consensual biometric data capture, and transparently document confidence thresholds to avoid dangerous misinterpretations in critical domains like healthcare.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-title">Q25: How does SETU guarantee offline-first operation?</div>
+        <p class="card-desc">
+          <strong>Answer:</strong> All PyTorch weights, MediaPipe models, Qwen language model checkpoints, and Web Speech API synthesis operate entirely locally without requiring internet connectivity, cloud API tokens, or external CDN dependencies.
+        </p>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer class="doc-footer-nav">
+        <a href="04_End_to_End_Workflow.html" class="nav-button">
+          <span class="nav-button-label">Previous Document</span>
+          <span class="nav-button-title">&larr; 04. End-to-End Workflow</span>
+        </a>
+        <a href="index.html" class="nav-button" style="text-align: right;">
+          <span class="nav-button-label">Return to Portal</span>
+          <span class="nav-button-title">Portal Overview &rarr;</span>
+        </a>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/scripts/documentation.js"></script>
+</body>
+</html>
+

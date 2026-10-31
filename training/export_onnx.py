@@ -243,8 +243,13 @@ def print_ascii_summary_table(
 
 
 def main():
-    pt_path = PROJECT_ROOT / "models" / "realsign_26class_mlp.pt"
-    onnx_path = PROJECT_ROOT / "models" / "realsign_26class_mlp.onnx"
+    pt_path = (
+        PROJECT_ROOT / "models" / "reference" / "realsign_26class_mlp_63d.pt"
+        if (PROJECT_ROOT / "models" / "reference" / "realsign_26class_mlp_63d.pt").exists()
+        else (PROJECT_ROOT / "models" / "weights" / "realsign_26class_mlp.pt" if (PROJECT_ROOT / "models" / "weights" / "realsign_26class_mlp.pt").exists() else PROJECT_ROOT / "models" / "realsign_26class_mlp.pt")
+    )
+    onnx_path = PROJECT_ROOT / "models" / "training_runs" / "export" / "candidate_realsign_26class_mlp_63d.onnx"
+    onnx_path.parent.mkdir(parents=True, exist_ok=True)
     npz_path = PROJECT_ROOT / "data" / "processed" / "realsign_landmarks_26class.npz"
 
     print(format_header("SETU 26-CLASS ISL REAL-SIGN MLP ONNX EXPORT & BENCHMARK"))

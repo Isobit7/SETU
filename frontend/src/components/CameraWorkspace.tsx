@@ -454,8 +454,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         {/* Held Physical Objects Tags for Show-and-Sign (Only Active When Held) */}
         {currentResult?.detected_objects && currentResult.detected_objects.filter((o) => o.is_held).length > 0 && (
           <div className="detected-objects-bar">
-            {currentResult.detected_objects.filter((o) => o.is_held).slice(0, 3).map((obj) => (
-              <span key={obj.label} className="object-chip held">
+            {currentResult.detected_objects.filter((o) => o.is_held).slice(0, 3).map((obj, idx) => (
+              <span key={`${obj.label}-${idx}-${obj.confidence}`} className="object-chip held">
                 <span className="object-chip-dot" />
                 <span>{obj.display_name}</span>
                 <span className="held-badge">Held</span>

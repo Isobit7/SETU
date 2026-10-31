@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01. Project Overview — SETU Documentation</title>
+  <link rel="stylesheet" href="assets/styles/documentation.css">
+</head>
+<body>
+  <header class="top-header">
+    <div class="brand-section">
+      <span class="brand-logo-badge">SETU</span>
+      <div>
+        <div class="brand-title">SETU Documentation</div>
+        <div class="brand-subtitle">01. Project Overview</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/></svg>
+        <input type="text" id="doc-search-input" class="search-input" placeholder="Search this document...">
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn">🌙 Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="doc-wrapper">
+    <aside class="sidebar">
+      <div class="nav-group-title">Master Documentation Suite</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="index.html" class="nav-link"><span>🏠</span> Overview &amp; Portal</a></li>
+        <li class="nav-item"><a href="01_Project_Overview.html" class="nav-link active"><span>📖</span> 01. Project Overview <span class="nav-badge">Core</span></a></li>
+        <li class="nav-item"><a href="02_APIs_and_Backend.html" class="nav-link"><span>⚡</span> 02. APIs &amp; Backend <span class="nav-badge">FastAPI</span></a></li>
+        <li class="nav-item"><a href="03_AI_Models_and_ML.html" class="nav-link"><span>🧠</span> 03. AI Models &amp; ML <span class="nav-badge">PyTorch</span></a></li>
+        <li class="nav-item"><a href="04_End_to_End_Workflow.html" class="nav-link"><span>🔄</span> 04. End-to-End Workflow <span class="nav-badge">Pipeline</span></a></li>
+        <li class="nav-item"><a href="05_Codebase_and_File_Index.html" class="nav-link"><span>📁</span> 05. Codebase &amp; Viva Guide <span class="nav-badge">Index</span></a></li>
+      </ul>
+
+      <div class="nav-group-title">On This Page</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#mission" class="nav-link">Mission &amp; Problem Space</a></li>
+        <li class="nav-item"><a href="#isl-linguistics" class="nav-link">Authentic ISL Linguistics</a></li>
+        <li class="nav-item"><a href="#intended-users" class="nav-link">Intended Users &amp; Scope</a></li>
+        <li class="nav-item"><a href="#features-matrix" class="nav-link">Application Feature Matrix</a></li>
+        <li class="nav-item"><a href="#tech-stack" class="nav-link">Technology Stack</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-container">
+      <nav class="breadcrumb-nav">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>01. Project Overview</span>
+      </nav>
+
+      <div class="doc-header">
+        <div class="doc-meta">
+          <span class="doc-number">MODULE 01</span>
+          <span class="doc-version">SETU Architecture Specification • Release v1.1.0</span>
+        </div>
+        <h1 class="doc-title">Project Overview &amp; Authentic ISL System</h1>
+        <p class="doc-lead">
+          Understanding the mission, linguistic realities, and architectural foundations of Project SETU — a real-time assistive communication engine for Indian Sign Language.
+        </p>
+      </div>
+
+      <!-- Section: Mission & Problem Space -->
+      <h2 id="mission">1. Mission &amp; Problem Space</h2>
+      <p>
+        In India, over <strong>18 million individuals</strong> live with significant hearing or speech impairments. Despite the rich linguistic history of <strong>Indian Sign Language (ISL)</strong>, the vast majority of hearing individuals cannot understand or produce ISL gestures. This creates severe barriers in daily communication, access to public healthcare, banking, education, and employment opportunities.
+      </p>
+      <p>
+        <strong>Project SETU (&ldquo;Bridge&rdquo;)</strong> was conceived as a real-time, low-latency, edge-capable translation bridge. By converting streaming webcam video into normalized 3D skeletal landmarks, neural classification tokens, and grammatically fluent English sentences, SETU enables seamless bidirectional conversation between Deaf signers and hearing non-signers without requiring specialized sensory gloves or expensive depth cameras.
+      </p>
+
+      <div class="callout callout-note">
+        <div class="callout-title">📌 Edge-First Philosophy</div>
+        <div>
+          SETU runs its core inference pipelines on local client hardware or low-cost workstations using standard RGB webcams. It utilizes mathematical spatial normalization to remain resilient against varied room lighting, skin complexions, and camera angles.
+        </div>
+      </div>
+
+      <!-- Section: Authentic ISL Linguistics -->
+      <h2 id="isl-linguistics">2. Linguistic Realities of Indian Sign Language (ISL)</h2>
+      <p>
+        A widespread misconception in sign language AI research is treating Indian Sign Language as an identical dialect of American Sign Language (ASL). In reality, ISL possess profound grammatical, topological, and manual differences that render single-hand ASL classifiers completely ineffective on authentic ISL:
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Linguistic Dimension</th>
+              <th>American Sign Language (ASL)</th>
+              <th>Indian Sign Language (ISL) — Supported by SETU</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Manual Hand Configuration</strong></td>
+              <td>Primarily single-handed (one dominant hand for fingerspelling alphabet A to Z).</td>
+              <td><strong>Inherently Bimanual (Two-Handed):</strong> Letters such as <code>B</code>, <code>D</code>, <code>P</code>, <code>Q</code>, and <code>T</code> require coordinated spatial contact between both hands.</td>
+            </tr>
+            <tr>
+              <td><strong>Grammatical Word Order</strong></td>
+              <td>Subject-Verb-Object (SVO), similar to standard English syntax.</td>
+              <td><strong>Subject-Object-Verb (SOV):</strong> Signs follow Hindi/Sanskrit grammatical order (e.g. <em>&ldquo;ME WATER DRINK&rdquo;</em>).</td>
+            </tr>
+            <tr>
+              <td><strong>Non-Manual Markers (NMM)</strong></td>
+              <td>Used for facial expression and questions.</td>
+              <td><strong>Grammatical Indicators:</strong> Eyebrow elevation and mouth shapes alter the grammatical meaning of interrogative and conditional sentences.</td>
+            </tr>
+            <tr>
+              <td><strong>Left-Handed Signer Symmetry</strong></td>
+              <td>Often mirrors single hand.</td>
+              <td><strong>Coordinate Mirroring:</strong> Dominant and non-dominant hand roles swap completely, requiring symmetric slot evaluation ($x \to -x$).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warn">
+        <div class="callout-title">⚠️ Why SETU Models 126-D Dual Hands Instead of 63-D Single Hand</div>
+        <div>
+          A 63-D single-hand vector ($21 \times 3$) cannot distinguish two-handed ISL letters like <code>B</code> (two flat palms touching) or <code>D</code> (dominant index finger meeting non-dominant index finger) from noise. SETU's primary alphabet classifier operates on a <strong>126-D dual-hand coordinate space</strong> ($21 \times 3 \times 2$), allowing authentic bimanual letters to be classified reliably.
+        </div>
+      </div>
+
+      <!-- Section: Intended Users & Scope -->
+      <h2 id="intended-users">3. Intended Users &amp; Project Scope</h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Deaf &amp; Hard-of-Hearing Signers</div>
+          <p class="card-desc">
+            Individuals who use ISL natively and need to communicate in public offices, hospitals, banks, and schools where human sign interpreters are unavailable.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">Hearing Non-Signers &amp; Clerks</div>
+          <p class="card-desc">
+            Receptionists, medical personnel, and everyday citizens who can read the real-time generated English captions or hear synthetic voice speech from signers.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">ISL Students &amp; Educators</div>
+          <p class="card-desc">
+            Students learning ISL who need real-time visual feedback on their hand shapes, finger curls, and spatial framing using the reverse Text-to-Sign workspace.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section: Application Feature Matrix -->
+      <h2 id="features-matrix">4. Verified Application Feature Matrix</h2>
+      <p>
+        Every technical claim regarding SETU's feature set is backed by verifiable code evidence in the repository:
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature Name</th>
+              <th>Status</th>
+              <th>Implementation Location</th>
+              <th>Technical Verification Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Real-Time ISL Alphabet (A–Z)</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>models/adapters/realsign.py</code></td>
+              <td>126-D PyTorch MLP, 26 classes, 94.99% checkpoint-reported test accuracy, evaluated with geometric heuristic tie-breaker.</td>
+            </tr>
+            <tr>
+              <td><strong>Dynamic Phrase BiLSTM</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>models/adapters/sequence_lstm.py</code></td>
+              <td>30-frame temporal window, 328-D feature vector (164 coords/ratios + 164 velocities), 7 classes with CTC greedy decoding.</td>
+            </tr>
+            <tr>
+              <td><strong>AI4Bharat Video Recognition</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>backend/app/api/endpoints/video.py</code></td>
+              <td>Isolated video upload endpoint (max 50MB) evaluated against 263 concepts across 134-D skeletal keypoints.</td>
+            </tr>
+            <tr>
+              <td><strong>Show-and-Sign Object Detection</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>backend/app/websocket/recognize.py</code></td>
+              <td>YOLO-World v2 open-vocabulary held object detector running asynchronously in a background loop without throttling 30 FPS landmarks.</td>
+            </tr>
+            <tr>
+              <td><strong>Causal ISL-to-English Translation</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>backend/app/services/nlp/neural_translator.py</code></td>
+              <td>Qwen2.5-0.5B-Instruct decoder-only causal language model converting accumulated ISL glosses into natural English sentences.</td>
+            </tr>
+            <tr>
+              <td><strong>Offline Text-to-Speech (TTS)</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>frontend/src/hooks/useTTS.ts</code></td>
+              <td>Native browser Web Speech API client synthesis with automatic voice selection and server pyttsx3 fallback.</td>
+            </tr>
+            <tr>
+              <td><strong>Interactive Text-to-Sign Workspace</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>frontend/src/components/TextToSignWorkspace.tsx</code></td>
+              <td>Reverse translation workspace animating entered English words into sequences of fingerspelling sign reference cards.</td>
+            </tr>
+            <tr>
+              <td><strong>Visual Framing &amp; Lighting Guide</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>frontend/src/components/VisualFramingGuide.tsx</code></td>
+              <td>Real-time mathematical validator checking bounding box coverage, centering, and ambient lighting adequacy.</td>
+            </tr>
+            <tr>
+              <td><strong>Custom Sign Dataset Recording</strong></td>
+              <td><span class="badge badge-verified">VERIFIED</span></td>
+              <td><code>backend/app/api/endpoints/dataset.py</code></td>
+              <td>Ingestion pipeline collecting 30-frame user sequences (164-D) and saving compressed <code>.npz</code> archives in <code>data/processed/</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Direct RGB YOLOv11 Gestures</strong></td>
+              <td><span class="badge badge-partial">CONFIGURED ONLY</span></td>
+              <td><code>models/adapters/rf_uv11.py</code></td>
+              <td>Python adapter and registry definitions exist; weight file at <code>runs/detect/train/weights/best.pt</code> pending training run.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: Technology Stack -->
+      <h2 id="tech-stack">5. Technology Stack &amp; Runtime Environment</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Frontend Architecture</div>
+          <ul>
+            <li><strong>Framework:</strong> React 19.0.0 (Strict Mode)</li>
+            <li><strong>Language:</strong> TypeScript 5.7.2</li>
+            <li><strong>Build Tool:</strong> Vite 6.2.0 (ESM Hot Reloading)</li>
+            <li><strong>Video Streaming:</strong> HTML5 Canvas + WebSockets</li>
+            <li><strong>Audio Engine:</strong> W3C Web Speech API (Local Offline)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Backend Architecture</div>
+          <ul>
+            <li><strong>Framework:</strong> FastAPI 0.115+ (ASGI Async Loop)</li>
+            <li><strong>Server:</strong> Uvicorn 0.34+ (WebSocket Support)</li>
+            <li><strong>Computer Vision:</strong> MediaPipe Holistic &amp; OpenCV</li>
+            <li><strong>Neural Network Runtime:</strong> PyTorch 2.6.0 (CUDA / CPU)</li>
+            <li><strong>Object Grounding:</strong> Ultralytics YOLO-World v2</li>
+            <li><strong>Language Modeling:</strong> Hugging Face Transformers (Qwen2.5)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer class="doc-footer-nav">
+        <a href="index.html" class="nav-button">
+          <span class="nav-button-label">Previous Document</span>
+          <span class="nav-button-title">&larr; Portal Home</span>
+        </a>
+        <a href="02_APIs_and_Backend.html" class="nav-button" style="text-align: right;">
+          <span class="nav-button-label">Next Document</span>
+          <span class="nav-button-title">02. APIs &amp; Backend &rarr;</span>
+        </a>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/scripts/documentation.js"></script>
+</body>
+</html>
+

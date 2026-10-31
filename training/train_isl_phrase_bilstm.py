@@ -47,9 +47,10 @@ if str(ROOT_DIR) not in sys.path:
 
 DEFAULT_MANIFEST_PATH = ROOT_DIR / "data" / "manifests" / "setu_isl_mvp_manifest.json"
 DEFAULT_PROCESSED_DIR = ROOT_DIR / "data" / "processed"
-DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "isl_sequence_lstm.pth"
+DEFAULT_MODEL_SAVE_PATH = ROOT_DIR / "models" / "training_runs" / "isl_sequence_lstm" / "candidate_isl_sequence_lstm.pth"
+DEFAULT_MODEL_SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
 DEFAULT_REPORT_SAVE_PATH = ROOT_DIR / "reports" / "isl_sequence_lstm_evaluation.json"
-DEFAULT_LABEL_MAP_PATH = ROOT_DIR / "models" / "label_map.json"
+DEFAULT_LABEL_MAP_PATH = ROOT_DIR / "models" / "metadata" / "sequence_lstm_label_map.json"
 
 BASE_CLASSES = ["hello", "thank_you", "good_morning", "i", "you", "no_sign"]
 CLASS_NAMES = list(BASE_CLASSES)

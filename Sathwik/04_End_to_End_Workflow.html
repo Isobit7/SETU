@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04. End-to-End Workflow — SETU Documentation</title>
+  <link rel="stylesheet" href="assets/styles/documentation.css">
+</head>
+<body>
+  <header class="top-header">
+    <div class="brand-section">
+      <span class="brand-logo-badge">SETU</span>
+      <div>
+        <div class="brand-title">SETU Documentation</div>
+        <div class="brand-subtitle">04. End-to-End Execution Workflow</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/></svg>
+        <input type="text" id="doc-search-input" class="search-input" placeholder="Search workflow...">
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn">🌙 Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="doc-wrapper">
+    <aside class="sidebar">
+      <div class="nav-group-title">Master Documentation Suite</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="index.html" class="nav-link"><span>🏠</span> Overview &amp; Portal</a></li>
+        <li class="nav-item"><a href="01_Project_Overview.html" class="nav-link"><span>📖</span> 01. Project Overview <span class="nav-badge">Core</span></a></li>
+        <li class="nav-item"><a href="02_APIs_and_Backend.html" class="nav-link"><span>⚡</span> 02. APIs &amp; Backend <span class="nav-badge">FastAPI</span></a></li>
+        <li class="nav-item"><a href="03_AI_Models_and_ML.html" class="nav-link"><span>🧠</span> 03. AI Models &amp; ML <span class="nav-badge">PyTorch</span></a></li>
+        <li class="nav-item"><a href="04_End_to_End_Workflow.html" class="nav-link active"><span>🔄</span> 04. End-to-End Workflow <span class="nav-badge">Pipeline</span></a></li>
+        <li class="nav-item"><a href="05_Codebase_and_File_Index.html" class="nav-link"><span>📁</span> 05. Codebase &amp; Viva Guide <span class="nav-badge">Index</span></a></li>
+      </ul>
+
+      <div class="nav-group-title">On This Page</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#pipeline-diagram">Pipeline Visual Diagram</a></li>
+        <li class="nav-item"><a href="#step-by-step">10-Step Execution Lifecycle</a></li>
+        <li class="nav-item"><a href="#debouncing-fsm">Temporal Debouncing State Machine</a></li>
+        <li class="nav-item"><a href="#kinetic-energy">Kinetic Energy &amp; Motion Gating</a></li>
+        <li class="nav-item"><a href="#sentence-accumulator">Sentence Accumulator &amp; Timeouts</a></li>
+        <li class="nav-item"><a href="#tts-synthesis">Speech Synthesis &amp; Text-to-Sign</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-container">
+      <nav class="breadcrumb-nav">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>04. End-to-End Workflow</span>
+      </nav>
+
+      <div class="doc-header">
+        <div class="doc-meta">
+          <span class="doc-number">MODULE 04</span>
+          <span class="doc-version">Real-Time Dataflow &amp; State Engineering • Release v1.1.0</span>
+        </div>
+        <h1 class="doc-title">End-to-End Execution Workflow &amp; Pipeline Dataflow</h1>
+        <p class="doc-lead">
+          Tracing how a physical sign language gesture moves from the user's camera through MediaPipe, spatial normalization, neural inference, streak debouncing, causal translation, and speech synthesis.
+        </p>
+      </div>
+
+      <!-- Pipeline Diagram -->
+      <h2 id="pipeline-diagram">End-to-End Processing Pipeline</h2>
+      <div class="diagram-card">
+        <img src="assets/diagrams/pipeline_flow.svg" alt="End-to-End Pipeline Diagram" class="diagram-svg">
+        <div class="diagram-caption">Figure 4.0: Frame Lifecycle from Webcam Ingress to Web Speech Audio Synthesis.</div>
+      </div>
+
+      <!-- Section: Step-by-Step Lifecycle -->
+      <h2 id="step-by-step">1. The 10-Step Execution Lifecycle</h2>
+      <p>
+        The complete path of a video frame through the SETU runtime is broken down into ten discrete operations:
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Stage</th>
+              <th>Component &amp; File</th>
+              <th>Operation Performed</th>
+              <th>Latency / Timing</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Ingress</strong></td>
+              <td><code>useRecognitionStream.ts</code></td>
+              <td>Webcam video captured at 30 FPS, painted to HTML5 canvas, encoded as JPEG binary bytes, sent over WebSocket.</td>
+              <td>~2.1 ms</td>
+            </tr>
+            <tr>
+              <td><strong>2. Backpressure Guard</strong></td>
+              <td><code>websocket/recognize.py</code></td>
+              <td>FastAPI server drains queued stale frames to ensure zero socket lag and decodes JPEG bytes via <code>cv2.imdecode</code>.</td>
+              <td>~1.8 ms</td>
+            </tr>
+            <tr>
+              <td><strong>3. Landmark Extraction</strong></td>
+              <td><code>services/pipeline_manager.py</code></td>
+              <td>MediaPipe Holistic extracts 3D coordinates for Left Hand (21), Right Hand (21), Pose (33), and Face Mesh.</td>
+              <td>~8.5 ms (CPU/GPU)</td>
+            </tr>
+            <tr>
+              <td><strong>4. Normalization</strong></td>
+              <td><code>training/features/geometry.py</code></td>
+              <td>Wrist origin translation, palm span scale normalization, and 3D in-plane/out-of-plane rotation alignment.</td>
+              <td>~0.4 ms</td>
+            </tr>
+            <tr>
+              <td><strong>5. Dual Inference</strong></td>
+              <td><code>models/adapters/realsign.py</code></td>
+              <td>RealSign MLP (126-D) computes 26 alphabet logits while YOLO-World runs asynchronously in background loop.</td>
+              <td>~0.42 ms (CUDA)</td>
+            </tr>
+            <tr>
+              <td><strong>6. Geometric Boost</strong></td>
+              <td><code>evaluate_alphabet_heuristics()</code></td>
+              <td>Neuro-symbolic rules evaluate physical fingertip distances (O vs C, U vs V, A, F, D) to break margin ties.</td>
+              <td>~0.05 ms</td>
+            </tr>
+            <tr>
+              <td><strong>7. Streak Debouncer</strong></td>
+              <td><code>websocket/recognize.py</code></td>
+              <td>Requires 3&ndash;4 consecutive identical frames, checks confidence threshold and margin, enforces idle baseline transition.</td>
+              <td>~0.02 ms</td>
+            </tr>
+            <tr>
+              <td><strong>8. Word Buffer</strong></td>
+              <td><code>SentenceAccumulator.add_token()</code></td>
+              <td>Appends letters to active word. If idle for 1.2 seconds, commits word with trailing space.</td>
+              <td>~0.01 ms</td>
+            </tr>
+            <tr>
+              <td><strong>9. Causal Translation</strong></td>
+              <td><code>services/nlp/neural_translator.py</code></td>
+              <td>If sentence idle for 2.5 seconds, dispatches ISL gloss tokens to Qwen2.5-0.5B causal LM for fluent English synthesis.</td>
+              <td>~35 ms (CUDA)</td>
+            </tr>
+            <tr>
+              <td><strong>10. Client Egress &amp; TTS</strong></td>
+              <td><code>useTTS.ts</code> &amp; Canvas HUD</td>
+              <td>Client receives JSON telemetry, renders skeletal overlay, updates captions, and speaks translated text via Web Speech API.</td>
+              <td>~1.5 ms</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: Debouncing FSM -->
+      <h2 id="debouncing-fsm">2. Temporal Debouncing State Machine</h2>
+      <p>
+        A major flaw in naive sign language models is &ldquo;frame flickering&rdquo;—emitting rapid duplicate characters (e.g. typing <em>&ldquo;AAAAA&rdquo;</em> in half a second). SETU enforces a strict four-layer state machine in <code>backend/app/websocket/recognize.py:230-360</code>:
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">1. Consecutive Streak Counter</div>
+          <p class="card-desc">
+            A predicted sign is not considered valid on a single frame. It must maintain identical top-1 classification across <strong>3 consecutive frames</strong> (or 4 frames for alphabet letters) before triggering a state transition.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Confidence Hysteresis &amp; Margin</div>
+          <p class="card-desc">
+            The predicted probability must exceed the user-configured confidence threshold ($P(c) \ge \text{threshold}$) AND the margin between the top-1 and top-2 candidates must be at least $0.05$:
+            $$P(\text{top}_1) - P(\text{top}_2) \ge 0.05$$
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Idle Baseline Transition</div>
+          <p class="card-desc">
+            To sign duplicate consecutive letters (such as <code>L</code> followed by <code>L</code> in <em>&ldquo;HELLO&rdquo;</em>), the signer must perform a brief hand drop, relaxation, or slight movement ($d_{\text{wrist}} &gt; 0.12$) to reset the baseline lock.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">4. Repeat Lock Guard</div>
+          <p class="card-desc">
+            Once a character is committed to the sentence buffer, a repeat lock flag is engaged. The system ignores identical static frames until the hands either leave the camera frame or transition through neutral posture.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section: Kinetic Energy -->
+      <h2 id="kinetic-energy">3. Kinetic Energy &amp; Motion Segmentation</h2>
+      <p>
+        To distinguish intentional signing gestures from static rest or incidental arm repositioning, SETU computes <strong>Mean Joint Kinetic Energy</strong> across consecutive frames in <code>websocket/recognize.py:206-212</code>:
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>Kinetic Energy Formula • Python Implementation</span>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <pre><code># Compute instantaneous velocity vector for all 21 hand landmarks
+v_hand = (current_hand_pts - prev_hand_pts) / max(dt, 0.001)
+
+# Mean Euclidean kinetic motion energy
+kinetic_energy = float(np.mean(np.linalg.norm(v_hand, axis=-1)))
+
+# Segmentation gating
+KINETIC_ENERGY_THRESHOLD = 0.025
+is_actively_signing = kinetic_energy > KINETIC_ENERGY_THRESHOLD</code></pre>
+      </div>
+
+      <ul>
+        <li><strong>Active Signing State (<code>kinetic_energy &gt; 0.025</code>):</strong> The user is in dynamic motion. The system buffers frames into temporal sequence queues.</li>
+        <li><strong>Settled Posture State (<code>kinetic_energy &le; 0.025</code> for &ge;2 frames):</strong> The user has held a stable hand shape. The static alphabet classifier is evaluated.</li>
+        <li><strong>Hands Idle / Drop:</strong> If wrist $y$-coordinate exceeds $0.85$ (hands down near waist/desk), the state machine enters neutral rest mode and resets temporal streaks.</li>
+      </ul>
+
+      <!-- Section: Sentence Accumulator -->
+      <h2 id="sentence-accumulator">4. Sentence Accumulator &amp; Timeout Buffers</h2>
+      <p>
+        Individual fingerspelled letters and holistic phrases are buffered into coherent words and sentences by <code>backend/app/services/nlp/accumulator.py:SentenceAccumulator</code>:
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Buffer Mechanism</th>
+              <th>Timeout Setting</th>
+              <th>Trigger Condition &amp; Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Word Timeout Buffer</strong></td>
+              <td><code>1.2 seconds</code></td>
+              <td>When hands rest or remain idle for &gt;1.2s after signing letters, the accumulated letters are committed as a completed word with a trailing space.</td>
+            </tr>
+            <tr>
+              <td><strong>Sentence Boundary Buffer</strong></td>
+              <td><code>2.5 seconds</code></td>
+              <td>When no new tokens arrive for &gt;2.5s, the sentence is finalized. The accumulator triggers neural translation via Qwen2.5-0.5B and fires client-side voice synthesis.</td>
+            </tr>
+            <tr>
+              <td><strong>Multimodal Object Fusion</strong></td>
+              <td>Instantaneous</td>
+              <td>If a held physical object is detected by YOLO-World during an active gesture, <code>MultimodalFuser</code> combines the concepts (e.g. <em>&ldquo;WANT&rdquo;</em> + <em>&ldquo;cup&rdquo;</em> &rarr; <em>&ldquo;I want cup&rdquo;</em>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section: Speech Synthesis & Text-to-Sign -->
+      <h2 id="tts-synthesis">5. Speech Synthesis &amp; Reverse Text-to-Sign</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Client-Side Text-to-Speech (TTS)</div>
+          <p class="card-desc">
+            Managed by <code>frontend/src/hooks/useTTS.ts</code> using the native browser <strong>W3C Web Speech API</strong> (<code>window.speechSynthesis</code>):
+          </p>
+          <ul>
+            <li><strong>Zero External Network Calls:</strong> Voices are synthesized completely offline on the user's operating system.</li>
+            <li><strong>Auto-Speak Trigger:</strong> Automatically speaks the translated English sentence upon sentence completion.</li>
+            <li><strong>Server Fallback:</strong> If running in a headless or unsupported browser, server-side <code>pyttsx3</code> provides local audio generation.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Reverse Text-to-Sign Workspace</div>
+          <p class="card-desc">
+            Implemented in <code>frontend/src/components/TextToSignWorkspace.tsx</code> for two-way communication:
+          </p>
+          <ul>
+            <li><strong>Two-Way Communication:</strong> Enables a hearing clerk to type English sentences, which are decomposed into ISL grammatical sign cards.</li>
+            <li><strong>Fingerspelling Card Reel:</strong> Displays animated reference cards and anatomical hand diagrams for each letter and phrase.</li>
+            <li><strong>Educational Value:</strong> Helps hearing learners verify their own hand shapes against standard ISL visual cards.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Navigation -->
+      <footer class="doc-footer-nav">
+        <a href="03_AI_Models_and_ML.html" class="nav-button">
+          <span class="nav-button-label">Previous Document</span>
+          <span class="nav-button-title">&larr; 03. AI Models &amp; ML</span>
+        </a>
+        <a href="05_Codebase_and_File_Index.html" class="nav-button" style="text-align: right;">
+          <span class="nav-button-label">Next Document</span>
+          <span class="nav-button-title">05. Codebase &amp; Viva Guide &rarr;</span>
+        </a>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/scripts/documentation.js"></script>
+</body>
+</html>
+

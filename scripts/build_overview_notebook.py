@@ -377,7 +377,7 @@ import torch
 import torch.nn as nn
 from backend.app.services.classifier import RealSignMLP
 
-WEIGHTS_PATH = PROJECT_ROOT / "models" / "realsign_26class_mlp.pt"
+WEIGHTS_PATH = PROJECT_ROOT / "models" / "weights" / "realsign_26class_mlp.pth"
 checkpoint = torch.load(str(WEIGHTS_PATH), map_location="cpu", weights_only=False)
 
 arch = checkpoint.get("architecture", {"input_dim": 63, "hidden1": 128, "hidden2": 64, "num_classes": 26})

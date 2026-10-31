@@ -12,7 +12,7 @@ from fastapi import APIRouter
 
 from backend.app.services.pipeline_manager import pipeline
 from backend.app.services.model_matrices import get_model_matrices, scan_and_generate_model_matrices
-from models.include import INCLUDEInferenceService
+from models.adapters.include import INCLUDEInferenceService
 from models.registry import ModelRegistry
 from fastapi import HTTPException
 
@@ -100,7 +100,7 @@ async def get_sequence_lstm_status() -> Dict[str, Any]:
         "device": str(clf.device) if is_ready else "cuda",
         "gpu_name": getattr(clf, "gpu_name", None) or ("NVIDIA GeForce RTX 3050" if is_ready and clf.device.type == "cuda" else "CPU"),
         "test_accuracy": clf.test_accuracy if (is_ready and clf.test_accuracy is not None) else 0.88,
-        "weights_path": str(clf.weights_path) if is_ready else "models/isl_sequence_lstm.pth",
+        "weights_path": str(clf.weights_path) if is_ready else "models/weights/isl_sequence_lstm.pth",
     }
 
 
@@ -119,7 +119,7 @@ async def get_realsign_status() -> Dict[str, Any]:
         "architecture": f"Linear({clf.input_dim}, {clf.hidden1}) -> ReLU -> Dropout({clf.dropout}) -> Linear({clf.hidden1}, {clf.hidden2}) -> ReLU -> Linear({clf.hidden2}, {clf.num_classes})" if is_ready else "MLP 63->128->64->26",
         "test_accuracy": clf.test_accuracy if (is_ready and clf.test_accuracy is not None) else 0.9105,
         "macro_f1": clf.macro_f1 if (is_ready and clf.macro_f1 is not None) else 0.9080,
-        "weights_path": str(clf.weights_path) if is_ready else "models/realsign_26class_mlp.pth",
+        "weights_path": str(clf.weights_path) if is_ready else "models/weights/realsign_26class_mlp.pth",
     }
 
 
