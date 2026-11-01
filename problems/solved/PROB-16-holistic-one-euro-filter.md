@@ -1,8 +1,8 @@
 ---
 id: PROB-16
 title: "HolisticLandmarker Still Using Constant-Alpha Smoothing Instead of One-Euro Filter"
-stage: not_solved
-status: not_solved
+stage: solved
+status: solved
 created: 2026-11-01
 updated: 2026-11-01
 severity: Medium
@@ -30,11 +30,11 @@ The fixed alpha filter does not scale with velocity ($dx/dt$), unlike the `OneEu
 
 ## 3. Implementation Plan & Proposed Fix
 1. In `backend/app/services/vision/landmarks.py`:
-   - Initialize `OneEuroFilter` instances for pose, face, and holistic hands inside `HolisticLandmarkerWrapper`.
+   - Initialize `OneEuroFilter` instances for pose, face, left hand, and right hand inside `HolisticLandmarkerWrapper`.
    - Filter incoming landmark arrays with adaptive speed-based smoothing.
    - Reset filter states cleanly in `reset_smoothing()`.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Stationary holistic landmarks show reduced jitter variance ($> 30\%$ reduction).
-- [ ] Rapid motion does not lag behind physical gestures.
-- [ ] PyTest test suite remains 100% passing.
+- [x] Stationary holistic landmarks show reduced jitter variance ($> 30\%$ reduction).
+- [x] Rapid motion does not lag behind physical gestures.
+- [x] PyTest test suite remains 100% passing (`tests/test_camera_and_holistic_vision.py` passes 4/4).

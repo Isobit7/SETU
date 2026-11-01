@@ -19,13 +19,13 @@ import torch
 from fastapi import WebSocket, WebSocketDisconnect
 
 from backend.app.services.pipeline_manager import pipeline
-from backend.app.services.vision.landmarks import HolisticLandmarkerResult
+from backend.app.services.vision.landmarks import HolisticLandmarkerResult, HandednessTracker
 from training.feature_extractor import (
     FeatureExtractor158,
     extract_facial_expression_features,
     extract_realsign_hand_features,
 )
-from training.features.geometry import extract_dual_hand_126d, extract_body_anchored_features
+from training.features.geometry import extract_dual_hand_126d, extract_body_anchored_features, is_resting_or_neutral_pose
 from models.adapters.realsign import RealSignPrediction
 from models.adapters.sequence_lstm import SequencePrediction as ISLSequencePrediction
 from models.adapters.mvp import MVPClassifierPrediction as ISLPrediction
@@ -231,6 +231,9 @@ async def websocket_recognize(
     # Real-Time Sentence Accumulator & ISL Gloss Parser
     accumulator = SentenceAccumulator()
 
+    # Spatial-Temporal Handedness Tracker (PROB-05 Hysteresis)
+    handedness_tracker = HandednessTracker(hysteresis_frames=4, max_distance=0.25)
+
     logger.info("Client connected to SETU recognition WebSocket. Active model: %s", active_model)
     loop = asyncio.get_running_loop()
 
@@ -250,6 +253,7 @@ async def websocket_recognize(
                 rolling_features.clear()
                 gesture_sequence_buffer.clear()
                 accumulator.reset()
+                handedness_tracker.reset()
                 is_actively_signing = False
                 settled_frames_count = 0
                 prev_hand_pts = None
@@ -506,8 +510,27 @@ async def websocket_recognize(
                         if len(right_hand) == 0:
                             right_hand = hand_pts_serialized
 
+                # Stabilize single-hand handedness against single-frame MediaPipe label flapping (PROB-05)
                 has_left = len(left_hand) > 0
                 has_right = len(right_hand) > 0
+                if has_left ^ has_right:  # Exactly one hand detected
+                    raw_label = "left" if has_left else "right"
+                    active_pts = left_hand if has_left else right_hand
+                    stable_label = handedness_tracker.stabilize_single_hand(raw_label, active_pts, timestamp=time.time())
+                    if stable_label != raw_label:
+                        if stable_label == "left":
+                            left_hand = active_pts
+                            right_hand = []
+                        else:
+                            right_hand = active_pts
+                            left_hand = []
+                        has_left = len(left_hand) > 0
+                        has_right = len(right_hand) > 0
+                elif not has_left and not has_right:
+                    handedness_tracker.stabilize_single_hand("", [], timestamp=time.time())
+                else:
+                    handedness_tracker.reset()
+
                 hand_detected = has_left or has_right or (hand_landmarks_raw is not None)
 
                 now = time.time()
@@ -680,7 +703,19 @@ async def websocket_recognize(
                         )
 
                     elif active_model == "realsign" and pipeline.realsign_classifier is not None:
-                        target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(pipeline.realsign_classifier, "input_dim", 63) == 126) else realsign_feat_63d
+                        # PROB-08: If hand is resting low down in lap/desk, suppress alphabet emission
+                        is_resting = False
+                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand):
+                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand):
+                                is_resting = True
+
+                        if is_resting:
+                            realsign_pred = pipeline.realsign_classifier._empty_prediction()
+                            pipeline.realsign_classifier.reset_smoothing()
+                            accumulator.add_continuous_token("no_sign", confidence=1.0, token_type="letter", timestamp=now)
+                            target_realsign_feat = None
+                        else:
+                            target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(pipeline.realsign_classifier, "input_dim", 63) == 126) else realsign_feat_63d
                         if target_realsign_feat is None and realsign_feat_126d is not None:
                             target_realsign_feat = realsign_feat_126d
                         if target_realsign_feat is not None:

@@ -5,6 +5,7 @@ from MediaPipe hand landmark results or raw point lists.
 """
 
 from __future__ import annotations
+import math
 
 from typing import Any, Dict, List, Optional, Sequence, Union
 import numpy as np
@@ -79,18 +80,25 @@ def normalize_landmarks_to_63d(
         y_rot = scaled[:, 1].copy()
         z_rot = scaled[:, 2].copy()
 
-    # 4. Out-of-plane rotation around X axis so (y', z') aligns with (-1, 0)
+    # 4. Out-of-plane rotation around X axis with noise deadzone and dampening (PROB-07)
     y9 = float(y_rot[9])
     z9 = float(z_rot[9])
     norm_yz = float(np.hypot(y9, z9))
     if norm_yz > eps and abs(z9) > eps:
-        phi = float(np.arctan2(z9, -y9))
-        cos_p = float(np.cos(phi))
-        sin_p = float(np.sin(phi))
-        y_rot2 = y_rot * cos_p - z_rot * sin_p
-        z_rot2 = y_rot * sin_p + z_rot * cos_p
-        y_rot = y_rot2
-        z_rot = z_rot2
+        raw_phi = float(np.arctan2(z9, -y9))
+        deadzone = 0.08
+        if abs(raw_phi) <= deadzone:
+            phi = 0.0
+        else:
+            phi = math.copysign(abs(raw_phi) - deadzone, raw_phi) * 0.50
+
+        if abs(phi) > eps:
+            cos_p = float(np.cos(phi))
+            sin_p = float(np.sin(phi))
+            y_rot2 = y_rot * cos_p - z_rot * sin_p
+            z_rot2 = y_rot * sin_p + z_rot * cos_p
+            y_rot = y_rot2
+            z_rot = z_rot2
 
     # Canonical exact alignment
     x_rot[0] = 0.0

@@ -4,7 +4,9 @@ Provides an explicit, validated wrapper around Google MediaPipe Tasks HolisticLa
 with comprehensive artifact checks and clear exception handling.
 """
 
+import math
 from pathlib import Path
+import time
 from typing import Optional, Union, Any
 import cv2
 import numpy as np
@@ -92,6 +94,12 @@ class HolisticLandmarkerWrapper:
             "left_hand": None,
             "right_hand": None,
         }
+        self._filters: dict[str, OneEuroFilter] = {
+            "pose": OneEuroFilter(min_cutoff=0.8, beta=0.01),
+            "face": OneEuroFilter(min_cutoff=0.8, beta=0.01),
+            "left_hand": OneEuroFilter(min_cutoff=0.8, beta=0.01),
+            "right_hand": OneEuroFilter(min_cutoff=0.8, beta=0.01),
+        }
 
     def initialize(self) -> None:
         """Initializes the MediaPipe Holistic landmarker after verifying the model asset path."""
@@ -123,18 +131,24 @@ class HolisticLandmarkerWrapper:
         landmarks: Optional[list[Any]],
         alpha: float = 0.70,
     ) -> None:
-        """Applies exponential moving average coordinate smoothing to minimize frame-to-frame joint jitter."""
+        """Applies adaptive speed-based One-Euro low-pass filtering to eliminate stationary jitter while preventing motion lag."""
         if not landmarks:
             self._prev_landmarks[key] = None
+            if key in self._filters:
+                self._filters[key].reset()
             return
 
-        prev = self._prev_landmarks.get(key)
-        if prev is not None and len(prev) == len(landmarks):
-            for i, lm in enumerate(landmarks):
-                lm.x = float(alpha * lm.x + (1.0 - alpha) * prev[i][0])
-                lm.y = float(alpha * lm.y + (1.0 - alpha) * prev[i][1])
-                lm.z = float(alpha * lm.z + (1.0 - alpha) * prev[i][2])
+        filt = self._filters.get(key)
+        if filt is None:
+            filt = OneEuroFilter(min_cutoff=0.8, beta=0.01)
+            self._filters[key] = filt
 
+        coords = np.array([[lm.x, lm.y, lm.z] for lm in landmarks], dtype=np.float32)
+        filtered = filt.filter(coords)
+        for i, lm in enumerate(landmarks):
+            lm.x = float(filtered[i, 0])
+            lm.y = float(filtered[i, 1])
+            lm.z = float(filtered[i, 2])
         self._prev_landmarks[key] = [(lm.x, lm.y, lm.z) for lm in landmarks]
 
     def reset_smoothing(self) -> None:
@@ -145,6 +159,8 @@ class HolisticLandmarkerWrapper:
             "left_hand": None,
             "right_hand": None,
         }
+        for f in self._filters.values():
+            f.reset()
 
     def detect(self, bgr_image: np.ndarray) -> HolisticLandmarkerResult:
         """
@@ -323,3 +339,95 @@ class HandLandmarkerWrapper:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.close()
 
+
+
+class HandednessTracker:
+    """
+    Spatial-temporal handedness tracker with hysteresis for live video streams.
+    Prevents single-frame label flapping (Left <-> Right) from causing sudden
+    sagittal reflection and prediction flickering when signing near the center.
+    """
+
+    def __init__(self, hysteresis_frames: int = 4, max_distance: float = 0.25) -> None:
+        self.hysteresis_frames = hysteresis_frames
+        self.max_distance = max_distance
+        self.stable_label: Optional[str] = None
+        self.last_wrist: Optional[tuple[float, float]] = None
+        self.flip_streak: int = 0
+        self.last_timestamp: float = 0.0
+
+    def reset(self) -> None:
+        """Resets tracking memory on buffer clear or long idle."""
+        self.stable_label = None
+        self.last_wrist = None
+        self.flip_streak = 0
+        self.last_timestamp = 0.0
+
+    def stabilize_single_hand(
+        self,
+        reported_label: str,
+        landmarks: Any,
+        timestamp: Optional[float] = None,
+    ) -> str:
+        """
+        Stabilizes the handedness label ('left' or 'right') for a single detected hand.
+        If the hand is spatially contiguous with the previously tracked hand,
+        requires `hysteresis_frames` consecutive opposite frames to change label.
+        """
+        now = time.time() if timestamp is None else timestamp
+        if not landmarks or len(landmarks) == 0:
+            if now - self.last_timestamp > 0.40:
+                self.reset()
+            return reported_label
+
+        # Wrist is landmark 0
+        lm0 = landmarks[0]
+        if hasattr(lm0, "x") and hasattr(lm0, "y"):
+            wx, wy = float(lm0.x), float(lm0.y)
+        elif isinstance(lm0, dict):
+            wx, wy = float(lm0.get("x", 0.0)), float(lm0.get("y", 0.0))
+        elif isinstance(lm0, (list, tuple, np.ndarray)) and len(lm0) >= 2:
+            wx, wy = float(lm0[0]), float(lm0[1])
+        else:
+            wx, wy = 0.0, 0.0
+
+        time_gap = now - self.last_timestamp if self.last_timestamp > 0.0 else 0.0
+        self.last_timestamp = now
+        norm_label = reported_label.lower().strip()
+        if norm_label not in ("left", "right"):
+            norm_label = "right"
+
+        # Cold start or hand absent for > 0.40s
+        if self.stable_label is None or self.last_wrist is None or time_gap > 0.40:
+            self.stable_label = norm_label
+            self.last_wrist = (wx, wy)
+            self.flip_streak = 0
+            return norm_label
+
+        # Spatial displacement from last tracked wrist
+        pw_x, pw_y = self.last_wrist
+        dist = math.hypot(wx - pw_x, wy - pw_y)
+
+        # Hand jumped across screen (user switched physical hands or entered from other side)
+        if dist > self.max_distance:
+            self.stable_label = norm_label
+            self.last_wrist = (wx, wy)
+            self.flip_streak = 0
+            return norm_label
+
+        # Hand is in the same spatial vicinity (same physical hand)
+        self.last_wrist = (wx, wy)
+        if norm_label == self.stable_label:
+            self.flip_streak = 0
+            return self.stable_label
+
+        # MediaPipe gave opposite label: increment flip streak
+        self.flip_streak += 1
+        if self.flip_streak >= self.hysteresis_frames:
+            # Confirmed deliberate switch
+            self.stable_label = norm_label
+            self.flip_streak = 0
+            return self.stable_label
+        else:
+            # Suppress single-frame flapping! Retain previous stable label
+            return self.stable_label

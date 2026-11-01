@@ -290,3 +290,149 @@ def test_kinetic_gating_suppresses_intermediate_transition_frames():
         acc.add_continuous_token("B", confidence=0.94, token_type="letter")
     assert acc.current_word == "AB"
 
+
+
+def test_handedness_tracker_hysteresis_suppresses_mirror_flaps():
+    """Verify that MediaPipe single-frame Left/Right label flapping is suppressed by HandednessTracker."""
+    from backend.app.services.vision.landmarks import HandednessTracker
+
+    tracker = HandednessTracker(hysteresis_frames=4, max_distance=0.25)
+    steady_hand = [{"x": 0.52, "y": 0.48, "z": 0.0}] * 21
+
+    # User presents physical right hand
+    lbl_f1 = tracker.stabilize_single_hand("right", steady_hand, timestamp=1.00)
+    assert lbl_f1 == "right"
+
+    # MediaPipe single-frame flap: labels right hand as "left" in frame 2
+    lbl_f2 = tracker.stabilize_single_hand("left", steady_hand, timestamp=1.033)
+    assert lbl_f2 == "right", "Single-frame left flap must be suppressed to prevent sagittal reflection"
+
+    # Frame 3 returns to "right"
+    lbl_f3 = tracker.stabilize_single_hand("right", steady_hand, timestamp=1.066)
+    assert lbl_f3 == "right"
+    assert tracker.flip_streak == 0
+
+    # User physically switches to left hand and holds it for 4 consecutive frames
+    for i in range(3):
+        lbl = tracker.stabilize_single_hand("left", steady_hand, timestamp=1.10 + i * 0.033)
+        assert lbl == "right", f"Frame {i+1} of transition must remain right during hysteresis"
+
+    # 4th consecutive frame commits deliberate left hand switch
+    lbl_commit = tracker.stabilize_single_hand("left", steady_hand, timestamp=1.20)
+    assert lbl_commit == "left", "4th consecutive frame must confirm transition to left hand"
+
+
+def test_prob07_z_depth_noise_deadzone():
+    """Verify that monocular z-depth noise on Landmark 9 is suppressed by soft deadzone dampening."""
+    from training.features.geometry import normalize_wrist_coordinates
+
+    rng = np.random.RandomState(42)
+    base_hand = np.zeros((21, 3), dtype=np.float32)
+    base_hand[0] = [0.0, 0.0, 0.0]
+    base_hand[9] = [0.0, -0.2, 0.0]
+    for i in range(1, 21):
+        if i != 9:
+            base_hand[i] = [float(rng.uniform(-0.1, 0.1)), float(rng.uniform(-0.3, -0.05)), float(rng.uniform(-0.02, 0.02))]
+
+    norm_base, scale_base = normalize_wrist_coordinates(base_hand)
+    other_indices = [i for i in range(21) if i != 9]
+
+    # Monocular depth jitter on Landmark 9 (|z| = 0.01 to 0.015, raw_phi < 0.08 deadzone)
+    jitter_z_values = [-0.015, -0.01, 0.01, 0.015]
+    for jz in jitter_z_values:
+        noisy_hand = base_hand.copy()
+        noisy_hand[9, 2] = jz
+        norm_noisy, scale_noisy = normalize_wrist_coordinates(noisy_hand)
+
+        # Because raw_phi < 0.08 deadzone, phi is 0.0 and out-of-plane tilt is suppressed.
+        diff = np.max(np.abs(norm_noisy[other_indices] * scale_noisy - norm_base[other_indices] * scale_base))
+        assert diff < 1e-6, f"Depth jitter jz={jz} should not tilt non-anchor landmarks, got diff={diff}"
+        assert np.allclose(norm_noisy[0], [0.0, 0.0, 0.0], atol=1e-6)
+        assert np.allclose(norm_noisy[9], [0.0, -1.0, 0.0], atol=1e-5)
+
+
+def test_prob04_landmark_9_canonical_projection_in_augmentation():
+    """Verify that multi-signer augmented hands strictly enforce Landmark 0 at (0,0,0) and Landmark 9 at (0,-1,0) (PROB-04)."""
+    from scripts.generate_multisigner_dataset import augment_hand_landmarks
+
+    rng = np.random.RandomState(42)
+    base_hand = np.zeros((21, 3), dtype=np.float32)
+    base_hand[0] = [0.0, 0.0, 0.0]
+    base_hand[9] = [0.0, -0.20, 0.0]
+    for i in range(1, 21):
+        if i != 9:
+            base_hand[i] = [float(rng.uniform(-0.1, 0.1)), float(rng.uniform(-0.35, -0.05)), float(rng.uniform(-0.02, 0.02))]
+
+    l9_samples = []
+    for _ in range(50):
+        aug = augment_hand_landmarks(base_hand)
+        assert np.allclose(aug[0], [0.0, 0.0, 0.0], atol=1e-5), "Landmark 0 (wrist) must strictly be (0,0,0)"
+        assert np.allclose(aug[9], [0.0, -1.0, 0.0], atol=1e-4), "Landmark 9 (middle MCP) must strictly be (0,-1,0)"
+        l9_samples.append(aug[9])
+
+    l9_arr = np.array(l9_samples)
+    std_x = np.std(l9_arr[:, 0])
+    std_y = np.std(l9_arr[:, 1])
+    std_z = np.std(l9_arr[:, 2])
+    assert std_x < 1e-4 and std_y < 1e-4 and std_z < 1e-4, f"Landmark 9 std must be ~0, got ({std_x}, {std_y}, {std_z})"
+
+
+def test_prob10_anthropometric_variation_diversity():
+    """Verify that segmental anthropometric variation creates diverse finger-to-palm ratios (PROB-10)."""
+    from scripts.generate_multisigner_dataset import augment_hand_landmarks
+
+    rng = np.random.RandomState(99)
+    base_hand = np.zeros((21, 3), dtype=np.float32)
+    base_hand[0] = [0.0, 0.0, 0.0]
+    base_hand[9] = [0.0, -0.20, 0.0]
+    for i in range(1, 21):
+        if i != 9:
+            base_hand[i] = [float(rng.uniform(-0.1, 0.1)), float(rng.uniform(-0.35, -0.05)), float(rng.uniform(-0.02, 0.02))]
+
+    # Track index finger length relative to palm length across 50 augmented variants
+    ratios = []
+    for _ in range(50):
+        aug = augment_hand_landmarks(base_hand)
+        # In canonical coordinates, palm length ||aug[9] - aug[0]|| is 1.0
+        # Index tip is landmark 8, index MCP is landmark 5
+        index_len = float(np.linalg.norm(aug[8] - aug[5]))
+        ratios.append(index_len)
+
+    std_ratio = float(np.std(ratios))
+    assert std_ratio > 0.03, f"Anthropometric finger length variation std must be > 0.03, got {std_ratio:.4f}"
+
+
+def test_prob03_hand_dropout_in_dualhand_dataset():
+    """Verify that ISLDualHandDataset randomly zeroes out left hand during training augmentation (PROB-03)."""
+    from training.train_isl_dualhand_mlp import ISLDualHandDataset
+
+    # Synthetic dual-hand data (100 samples)
+    X = np.ones((100, 126), dtype=np.float32)
+    y = np.zeros(100, dtype=np.int64)
+
+    ds = ISLDualHandDataset(X, y, augment=True, hand_dropout_prob=0.50)
+    zero_lh_count = 0
+    for i in range(100):
+        x_aug, _ = ds[i]
+        if torch.all(x_aug[:63] == 0.0):
+            zero_lh_count += 1
+
+    # With p=0.50, out of 100 samples, roughly 35-65 should have left hand dropped
+    assert 30 <= zero_lh_count <= 70, f"Expected ~50 dropped left hands, got {zero_lh_count}"
+
+
+def test_prob08_resting_hand_suppression():
+    """Verify that is_resting_or_neutral_pose accurately flags resting hands and allows active signs (PROB-08)."""
+    from training.features.geometry import is_resting_or_neutral_pose
+
+    # Resting hand resting on desk/lap (wrist at y = 0.88)
+    resting_hand = [{"x": 0.50, "y": 0.88, "z": 0.0}] * 21
+    assert is_resting_or_neutral_pose(resting_hand) is True
+
+    # Active signing hand raised in front of chest (wrist at y = 0.50)
+    active_hand = [{"x": 0.50, "y": 0.50, "z": 0.0}] * 21
+    assert is_resting_or_neutral_pose(active_hand) is False
+
+    # Empty / absent hand
+    assert is_resting_or_neutral_pose([]) is True
+    assert is_resting_or_neutral_pose(None) is True

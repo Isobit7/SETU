@@ -1,3 +1,4 @@
+import math
 """
 SETU - Invariant Hand Geometry & Mathematics
 Provides scale, translation, and rotation invariant hand landmark normalization,
@@ -102,18 +103,26 @@ def normalize_wrist_coordinates(
         y_rot = scaled[:, 1].copy()
         z_rot = scaled[:, 2].copy()
 
-    # Step B: Out-of-plane rotation around X axis so (y', z') aligns with (-1, 0)
+    # Step B: Out-of-plane rotation around X axis with noise deadzone and dampening (PROB-07)
     y9 = float(y_rot[9])
     z9 = float(z_rot[9])
     norm_yz = float(np.hypot(y9, z9))
     if norm_yz > eps and abs(z9) > eps:
-        phi = float(np.arctan2(z9, -y9))
-        cos_p = float(np.cos(phi))
-        sin_p = float(np.sin(phi))
-        y_rot2 = y_rot * cos_p - z_rot * sin_p
-        z_rot2 = y_rot * sin_p + z_rot * cos_p
-        y_rot = y_rot2
-        z_rot = z_rot2
+        raw_phi = float(np.arctan2(z9, -y9))
+        # Soft deadzone: damp monocular depth noise (|phi| < 0.08 rad (~4.6 deg))
+        deadzone = 0.08
+        if abs(raw_phi) <= deadzone:
+            phi = 0.0
+        else:
+            phi = math.copysign(abs(raw_phi) - deadzone, raw_phi) * 0.50
+
+        if abs(phi) > eps:
+            cos_p = float(np.cos(phi))
+            sin_p = float(np.sin(phi))
+            y_rot2 = y_rot * cos_p - z_rot * sin_p
+            z_rot2 = y_rot * sin_p + z_rot * cos_p
+            y_rot = y_rot2
+            z_rot = z_rot2
 
     # Enforce exact canonical alignment on origin and middle MCP
     x_rot[0] = 0.0
@@ -727,6 +736,75 @@ def extract_dual_hand_126d(
     return np.concatenate([norm_lh, norm_rh], axis=0).astype(np.float32)
 
 
+def compute_inter_hand_relative_geometry(
+    left_hand: Optional[Union[np.ndarray, List[Any]]],
+    right_hand: Optional[Union[np.ndarray, List[Any]]],
+    eps: float = 1e-6,
+) -> Dict[str, Any]:
+    """
+    Computes scale-invariant relative spatial geometry between Left and Right hands (PROB-02):
+    - wrist_distance: Normalized Euclidean distance between wrists ||w_rh - w_lh|| / s_ref
+    - min_fingertip_distance: Minimum distance between right fingertips (4,8,12,16,20) and left hand
+    - are_hands_touching: True if min_fingertip_distance <= 0.12 (e.g. contact signs 'P', 'H', 'K')
+    - relative_offset: 3D displacement vector (w_rh - w_lh) / s_ref
+
+    Returns:
+        dict with wrist_distance (float), min_fingertip_distance (float), are_hands_touching (bool),
+        and relative_offset (list of 3 floats [dx, dy, dz]).
+    """
+    def _parse(h):
+        if h is None:
+            return None
+        if hasattr(h, "landmark"):
+            h = h.landmark
+        if len(h) < 21:
+            return None
+        arr = np.zeros((21, 3), dtype=np.float32)
+        for i, lm in enumerate(h[:21]):
+            if hasattr(lm, "x") and hasattr(lm, "y"):
+                arr[i] = [float(lm.x), float(lm.y), float(getattr(lm, "z", 0.0))]
+            elif isinstance(lm, dict):
+                arr[i] = [float(lm.get("x", 0.0)), float(lm.get("y", 0.0)), float(lm.get("z", 0.0))]
+            elif isinstance(lm, (list, tuple, np.ndarray)) and len(lm) >= 2:
+                z_val = float(lm[2]) if len(lm) >= 3 else 0.0
+                arr[i] = [float(lm[0]), float(lm[1]), z_val]
+        return arr
+
+    lh = _parse(left_hand)
+    rh = _parse(right_hand)
+
+    if lh is None or rh is None or np.all(lh == 0) or np.all(rh == 0):
+        return {
+            "wrist_distance": 0.0,
+            "min_fingertip_distance": 0.0,
+            "are_hands_touching": False,
+            "relative_offset": [0.0, 0.0, 0.0],
+        }
+
+    w_lh = lh[0]
+    w_rh = rh[0]
+    s_lh = float(np.linalg.norm(lh[9] - w_lh))
+    s_rh = float(np.linalg.norm(rh[9] - w_rh))
+    s_ref = max(s_rh, s_lh, eps)
+
+    delta_w = (w_rh - w_lh) / s_ref
+    d_wrist = float(np.linalg.norm(delta_w))
+
+    # Right fingertips to left hand points
+    rh_tips = rh[[4, 8, 12, 16, 20]]
+    # Compute pairwise Euclidean distances (5, 21)
+    diffs = rh_tips[:, np.newaxis, :] - lh[np.newaxis, :, :]
+    pw_dists = np.linalg.norm(diffs, axis=-1) / s_ref
+    min_tip_dist = float(np.min(pw_dists))
+
+    return {
+        "wrist_distance": round(d_wrist, 4),
+        "min_fingertip_distance": round(min_tip_dist, 4),
+        "are_hands_touching": bool(min_tip_dist <= 0.12),
+        "relative_offset": [round(float(v), 4) for v in delta_w],
+    }
+
+
 def extract_body_anchored_features(
     pose_landmarks: Optional[Union[np.ndarray, List[Any]]] = None,
     left_hand: Optional[Union[np.ndarray, List[Any]]] = None,
@@ -808,3 +886,28 @@ def extract_body_anchored_features(
 
 
 
+
+
+def is_resting_or_neutral_pose(landmarks: Any, y_threshold: float = 0.82) -> bool:
+    """
+    Detects whether a hand is resting in the lap, desk, or neutral non-signing zone (PROB-08).
+    Returns True if wrist coordinate y >= y_threshold or landmarks are empty/degenerate.
+    """
+    if landmarks is None:
+        return True
+    if hasattr(landmarks, "landmark"):
+        landmarks = landmarks.landmark
+    if len(landmarks) < 21:
+        return True
+
+    lm0 = landmarks[0]
+    if hasattr(lm0, "y"):
+        wy = float(lm0.y)
+    elif isinstance(lm0, dict):
+        wy = float(lm0.get("y", 0.0))
+    elif isinstance(lm0, (list, tuple, np.ndarray)) and len(lm0) >= 2:
+        wy = float(lm0[1])
+    else:
+        return True
+
+    return wy >= y_threshold

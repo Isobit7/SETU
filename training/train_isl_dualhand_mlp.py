@@ -82,13 +82,21 @@ class RealSignMLP(nn.Module):
 
 
 class ISLDualHandDataset(Dataset):
-    """PyTorch Dataset wrapper with coordinate jitter augmentation for 126-D vectors."""
+    """PyTorch Dataset wrapper with coordinate jitter and hand-dropout augmentation for 126-D vectors (PROB-03)."""
 
-    def __init__(self, X: np.ndarray, y: np.ndarray, augment: bool = False, noise_std: float = 0.006):
+    def __init__(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        augment: bool = False,
+        noise_std: float = 0.005,
+        hand_dropout_prob: float = 0.35,
+    ):
         self.X = torch.from_numpy(np.array(X, dtype=np.float32))
         self.y = torch.from_numpy(np.array(y, dtype=np.int64))
         self.augment = augment
         self.noise_std = noise_std
+        self.hand_dropout_prob = hand_dropout_prob
 
     def __len__(self) -> int:
         return len(self.X)
@@ -96,6 +104,11 @@ class ISLDualHandDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         x = self.X[idx].clone()
         if self.augment:
+            # PROB-03: Independent Hand Dropout to train model on pure single-hand inputs
+            if torch.rand(1).item() < self.hand_dropout_prob:
+                # Signer drops left hand (slots 0..62 zero-padded)
+                x[:63] = 0.0
+
             # Add small Gaussian noise to non-zero coordinates
             mask = (x != 0.0).float()
             noise = torch.randn_like(x) * self.noise_std * mask

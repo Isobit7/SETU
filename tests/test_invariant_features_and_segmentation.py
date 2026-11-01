@@ -293,3 +293,84 @@ def test_extract_realsign_hand_features_invariant():
     rotated = hand @ R.T
     feat_rot = extract_realsign_hand_features(rotated)
     assert np.allclose(feat_rot, feat_base, atol=1e-4)
+
+
+def test_compute_finger_spread_angles_and_uv_separation():
+    """Verify that finger spread angles are in [0, 1] and cleanly separate 'U' (touching) from 'V' (spread)."""
+    from training.features.geometry import compute_finger_spread_angles, evaluate_alphabet_heuristics, normalize_wrist_coordinates
+
+    # Create U pose (index and middle fingers extended parallel/touching)
+    u_hand = np.zeros((21, 3), dtype=np.float32)
+    u_hand[0] = [0.0, 0.0, 0.0]
+    u_hand[9] = [0.0, -0.20, 0.0]
+    # Index finger pointing straight up at x = -0.01
+    u_hand[5] = [-0.01, -0.20, 0.0]
+    u_hand[6] = [-0.01, -0.27, 0.0]
+    u_hand[7] = [-0.01, -0.34, 0.0]
+    u_hand[8] = [-0.01, -0.40, 0.0]  # tip
+    # Middle finger pointing straight up at x = +0.01 (touching index)
+    u_hand[10] = [0.01, -0.27, 0.0]
+    u_hand[11] = [0.01, -0.34, 0.0]
+    u_hand[12] = [0.01, -0.41, 0.0]  # tip
+    # Curled thumb, ring, pinky
+    u_hand[4] = [-0.05, -0.08, 0.0]
+    u_hand[16] = [0.04, -0.10, 0.0]
+    u_hand[20] = [0.07, -0.08, 0.0]
+
+    spread_u = compute_finger_spread_angles(u_hand)
+    assert spread_u.shape == (4,)
+    assert np.all(spread_u >= 0.0) and np.all(spread_u <= 1.0)
+    # Angle between index and middle (slot 1) should be very small (< 0.05 * pi)
+    assert spread_u[1] < 0.05
+    heur_u = evaluate_alphabet_heuristics(u_hand)
+    assert heur_u == "U"
+
+    # Create V pose (index and middle fingers spread apart in peace/victory sign)
+    v_hand = u_hand.copy()
+    # Spread index finger to the left (-0.08) and middle to the right (+0.08)
+    v_hand[8] = [-0.08, -0.40, 0.0]
+    v_hand[12] = [0.08, -0.41, 0.0]
+
+    spread_v = compute_finger_spread_angles(v_hand)
+    # Index-middle spread angle should be significantly larger for V than U
+    assert spread_v[1] > spread_u[1] * 2.5
+    heur_v = evaluate_alphabet_heuristics(v_hand)
+    assert heur_v == "V"
+
+
+def test_inter_hand_relative_geometry():
+    """Verify scale-invariant inter-hand distance and touching detection (PROB-02)."""
+    from training.features.geometry import compute_inter_hand_relative_geometry
+
+    # Left hand at (0.35, 0.50, 0.0), scale = 0.15
+    lh = np.zeros((21, 3), dtype=np.float32)
+    lh[0] = [0.35, 0.50, 0.0]
+    lh[9] = [0.35, 0.35, 0.0]
+    for i in range(1, 21):
+        if i != 9:
+            lh[i] = lh[0] + [0.02 * (i % 3), -0.05 * (i // 4), 0.0]
+
+    # Touching pose (Right index fingertip touches Left index fingertip)
+    rh_touch = np.zeros((21, 3), dtype=np.float32)
+    rh_touch[0] = [0.36, 0.52, 0.0]
+    rh_touch[9] = [0.36, 0.37, 0.0]
+    rh_touch[8] = lh[8] + [0.005, 0.005, 0.0]
+    for i in range(1, 21):
+        if i not in (8, 9):
+            rh_touch[i] = rh_touch[0] + [0.01, -0.04, 0.0]
+
+    # Detached dual sign (wrists 40cm apart)
+    rh_far = np.zeros((21, 3), dtype=np.float32)
+    rh_far[0] = [0.75, 0.50, 0.0]
+    rh_far[9] = [0.75, 0.35, 0.0]
+    for i in range(1, 21):
+        if i != 9:
+            rh_far[i] = rh_far[0] + [0.01, -0.04, 0.0]
+
+    g_touch = compute_inter_hand_relative_geometry(lh, rh_touch)
+    g_far = compute_inter_hand_relative_geometry(lh, rh_far)
+
+    assert g_touch["are_hands_touching"] is True
+    assert g_far["are_hands_touching"] is False
+    assert g_far["wrist_distance"] > g_touch["wrist_distance"] * 5.0
+    assert len(g_touch["relative_offset"]) == 3
