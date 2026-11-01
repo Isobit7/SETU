@@ -31,6 +31,6 @@ SETU currently only recognizes 26 English alphabet letters (`A`–`Z`) and 263 i
    - Support currency prefixes (`RUPEES` + `50` -> `₹50`).
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Model achieves $\ge 95\%$ accuracy on test split across digits `0`–`9`.
-- [ ] Sequential digits `['9', '8', '2', '0']` auto-commit as `"9820"` in the sentence buffer.
-- [ ] PyTest benchmark suite asserts discrimination between `1` vs `D` (index extended) and `2` vs `V` (finger spread).
+- [x] Model achieves $\ge 95\%$ accuracy on test split across digits `0`–`9`.
+- [x] Sequential digits `['9', '8', '2', '0']` auto-commit as `"9820"` in the sentence buffer.
+- [x] PyTest benchmark suite asserts discrimination between `1` vs `D` (index extended) and `2` vs `V` (finger spread).

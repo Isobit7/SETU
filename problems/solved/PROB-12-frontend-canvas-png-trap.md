@@ -51,6 +51,6 @@ In `frontend/src/hooks/useRecognitionStream.ts`:
    - Zero perceivable degradation in MediaPipe landmark accuracy because MediaPipe operates down to 256x256 resolution.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] WebSocket binary payloads sent from browser are verified as `image/jpeg`.
-- [ ] Average payload size is under 40 KB per frame.
-- [ ] Frontend builds cleanly with zero errors.
+- [x] WebSocket binary payloads sent from browser are verified as `image/jpeg`.
+- [x] Average payload size is under 40 KB per frame.
+- [x] Frontend builds cleanly with zero errors.

@@ -36,6 +36,6 @@ Currently, all video frames captured by the browser webcam must be compressed in
    - **Cloud Mode (Server-Side):** Used for heavy 263-class INCLUDE video models or Qwen2.5-0.5B neural translations when online.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Exported `.onnx` model reproduces PyTorch logits within $\le 1e-4$ max absolute error.
-- [ ] Browser can run continuous sign recognition with Wi-Fi/Internet completely disabled.
-- [ ] Latency reduces from ~45ms (network WebSocket) to $< 8$ ms (local Wasm execution).
+- [x] Exported `.onnx` model reproduces PyTorch logits within $\le 1e-4$ max absolute error.
+- [x] Browser can run continuous sign recognition with Wi-Fi/Internet completely disabled.
+- [x] Latency reduces from ~45ms (network WebSocket) to $< 8$ ms (local Wasm execution).

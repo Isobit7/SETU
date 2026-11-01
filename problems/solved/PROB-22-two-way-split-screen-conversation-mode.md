@@ -31,6 +31,6 @@ Currently, the SETU user interface isolates sign recognition into the "Translato
    - Animated visual cues showing who is currently signing vs speaking to prevent conversational collision.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Speech spoken into microphone directly translates into sign avatar animation without leaving the page.
-- [ ] Signer signing in front of camera outputs spoken audio to computer speakers.
-- [ ] Dialogue history records both sides chronologically with timestamps.
+- [x] Speech spoken into microphone directly translates into sign avatar animation without leaving the page.
+- [x] Signer signing in front of camera outputs spoken audio to computer speakers.
+- [x] Dialogue history records both sides chronologically with timestamps.

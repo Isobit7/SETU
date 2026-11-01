@@ -27,6 +27,6 @@ Currently, when users experience recognition errors in live practice, the sample
    - Reload model weights in memory without restarting the FastAPI server using `pipeline.reload_realsign()`.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Corrected signs are recorded with explicit user consent into `data/processed/feedback/`.
-- [ ] Automated retrain script executes end-to-end and validates test split accuracy does not degrade.
-- [ ] API endpoint triggers hot-swap without dropping active WebSocket clients.
+- [x] Corrected signs are recorded with explicit user consent into `data/processed/feedback/`.
+- [x] Automated retrain script executes end-to-end and validates test split accuracy does not degrade.
+- [x] API endpoint triggers hot-swap without dropping active WebSocket clients.

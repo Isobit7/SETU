@@ -39,5 +39,5 @@ When opening the web application on a mobile device, `localhost` resolves to the
    - Use `ApiService.getBaseUrl()` instead of hardcoded `'http://localhost:8000'`.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Frontend dynamically constructs base URL from `window.location.hostname`.
-- [ ] TypeScript build succeeds.
+- [x] Frontend dynamically constructs base URL from `window.location.hostname`.
+- [x] TypeScript build succeeds.

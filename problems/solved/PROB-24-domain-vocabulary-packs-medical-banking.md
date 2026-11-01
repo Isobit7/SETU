@@ -29,6 +29,6 @@ General-purpose sign recognition models often fail when applied to specialized h
    - Synthesize canonical dual-hand feature sequences for domain signs using standard ISL anatomical dictionaries.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Medical mode prioritizes clinical phrases in next-word predictive suggestions.
-- [ ] Quick-access visual card grid for non-signing emergencies ("Where hurts?", "Pain scale 1-10").
-- [ ] Unit tests verify domain dictionary loading and lookup speed $< 1$ ms.
+- [x] Medical mode prioritizes clinical phrases in next-word predictive suggestions.
+- [x] Quick-access visual card grid for non-signing emergencies ("Where hurts?", "Pain scale 1-10").
+- [x] Unit tests verify domain dictionary loading and lookup speed $< 1$ ms.

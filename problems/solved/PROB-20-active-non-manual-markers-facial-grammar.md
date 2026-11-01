@@ -32,6 +32,6 @@ In Indian Sign Language (ISL) and all natural sign languages, facial expressions
    - Show subtle icon indicator: "❓ Question detected from expression" or "❌ Negation detected".
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Raised eyebrows during signing `['YOU', 'COME']` automatically produces `"Will you come?"` instead of `"You come."`.
-- [ ] Sustained head shaking during `['WANT']` produces `"I do not want."`.
-- [ ] Unit tests in `tests/test_non_manual_markers.py` verify blendshape threshold triggers.
+- [x] Raised eyebrows during signing `['YOU', 'COME']` automatically produces `"Will you come?"` instead of `"You come."`.
+- [x] Sustained head shaking during `['WANT']` produces `"I do not want."`.
+- [x] Unit tests in `tests/test_non_manual_markers.py` verify blendshape threshold triggers.

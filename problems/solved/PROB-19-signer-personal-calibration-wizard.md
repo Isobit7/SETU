@@ -33,6 +33,6 @@ The resting pose threshold in SETU is hardcoded to $y \ge 0.82$ (`training/featu
    - Saved across sessions so users only calibrate once per device.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Custom `rest_y` parameter passed over WebSocket successfully overrides default $0.82$ threshold.
-- [ ] Users with low desk cameras ($y_{\text{rest}} = 0.72$) experience 0 false positive triggers when resting.
-- [ ] Unit tests verify dynamic threshold clamping and recovery.
+- [x] Custom `rest_y` parameter passed over WebSocket successfully overrides default $0.82$ threshold.
+- [x] Users with low desk cameras ($y_{\text{rest}} = 0.72$) experience 0 false positive triggers when resting.
+- [x] Unit tests verify dynamic threshold clamping and recovery.

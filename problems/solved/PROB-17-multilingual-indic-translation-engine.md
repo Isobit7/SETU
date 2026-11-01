@@ -31,7 +31,7 @@ The SETU platform currently translates Indian Sign Language (ISL) glosses exclus
    - Render localized script directly in subtitles and speak native Indic text with appropriate regional voice.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] ISL glosses `['ME', 'WATER', 'WANT']` translate directly to `"मुझे पानी चाहिए"` when Hindi is active.
-- [ ] Question glosses `['YOU', 'LIVE', 'WHERE']` translate to `"आप कहाँ रहते हैं?"`.
-- [ ] Unit tests in `tests/test_indic_translation.py` assert translation accuracy across top 50 ISL phrases.
-- [ ] Full PyTest test suite remains 100% green.
+- [x] ISL glosses `['ME', 'WATER', 'WANT']` translate directly to `"मुझे पानी चाहिए"` when Hindi is active.
+- [x] Question glosses `['YOU', 'LIVE', 'WHERE']` translate to `"आप कहाँ रहते हैं?"`.
+- [x] Unit tests in `tests/test_indic_translation.py` assert translation accuracy across top 50 ISL phrases.
+- [x] Full PyTest test suite remains 100% green.

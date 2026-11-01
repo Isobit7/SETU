@@ -28,6 +28,6 @@ category: Frontend & 3D Graphics
    - Map ISL vocabulary tokens to 3D bone keyframes rather than 2D pixel coordinates.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] 3D avatar renders at steady 60 FPS in browser with WebGL acceleration.
-- [ ] Palm orientations (e.g., palm facing forward for `B` vs facing chest for `C`) are clearly visible in 3D perspective.
-- [ ] Transitions between consecutive signs exhibit smooth, non-jerky interpolation.
+- [x] 3D avatar renders at steady 60 FPS in browser with WebGL acceleration.
+- [x] Palm orientations (e.g., palm facing forward for `B` vs facing chest for `C`) are clearly visible in 3D perspective.
+- [x] Transitions between consecutive signs exhibit smooth, non-jerky interpolation.

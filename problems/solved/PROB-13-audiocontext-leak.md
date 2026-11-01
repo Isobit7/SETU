@@ -52,5 +52,5 @@ Every time `playSuccessChime` is called, a brand new `AudioContext` is instantia
 2. In `playSuccessChime`, acquire `ctx` from `getAudioContext()`.
 
 ## 4. Acceptance Criteria & Verification
-- [ ] 50+ consecutive success chimes trigger cleanly without throwing `AudioContext` quota errors.
-- [ ] TypeScript compilation passes cleanly.
+- [x] 50+ consecutive success chimes trigger cleanly without throwing `AudioContext` quota errors.
+- [x] TypeScript compilation passes cleanly.

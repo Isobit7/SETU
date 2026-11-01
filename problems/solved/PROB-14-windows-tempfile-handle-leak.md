@@ -50,5 +50,5 @@ On Windows, a file cannot be deleted while any open handle to it exists. When `H
    ```
 
 ## 4. Acceptance Criteria & Verification
-- [ ] Exceeding 50MB upload limit returns clean HTTP 413 without `WinError 32`.
-- [ ] Temporary files are always removed cleanly from disk.
+- [x] Exceeding 50MB upload limit returns clean HTTP 413 without `WinError 32`.
+- [x] Temporary files are always removed cleanly from disk.
