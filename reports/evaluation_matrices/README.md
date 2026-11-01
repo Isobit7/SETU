@@ -2,7 +2,7 @@
 
 > **Canonical Path:** `reports/evaluation_matrices/`  
 > **Total Models Listed:** 7  
-> **Last Synchronized:** 2026-11-01T07:22:01.896129+00:00  
+> **Last Synchronized:** 2026-11-01T07:32:35.936158+00:00  
 > **Auto-Update Guarantee:** Automatically scans `models/weights/` whenever models are trained, updated, or removed.
 
 ---
