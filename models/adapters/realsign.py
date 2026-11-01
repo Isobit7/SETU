@@ -98,9 +98,8 @@ class RealSignClassifier:
         checkpoint = torch.load(str(self.weights_path), map_location="cpu", weights_only=False)
         state_dict = checkpoint.get("model_state_dict", checkpoint)
 
-        self.class_names: List[str] = checkpoint.get(
-            "classes", [chr(ord("A") + i) for i in range(26)]
-        )
+        raw_classes = checkpoint.get("classes", [chr(ord("A") + i) for i in range(26)])
+        self.class_names: List[str] = [str(c) for c in raw_classes]
         self.num_classes: int = len(self.class_names)
         arch = checkpoint.get("architecture", {}) if isinstance(checkpoint, dict) else {}
 

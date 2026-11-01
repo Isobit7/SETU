@@ -210,8 +210,8 @@ async def websocket_recognize(
     settled_frames_count: int = 0
     KINETIC_ENERGY_THRESHOLD: float = 0.025
 
-    # Multimodal Object Detection & Show-and-Sign State
-    enable_object_detection: bool = True
+    # Multimodal Object Detection & Show-and-Sign State (Disabled by default for 30 FPS smooth performance)
+    enable_object_detection: bool = False
     current_detected_objects: List[Any] = []
     object_detect_task: Optional[Any] = None
     fused_sentence: Optional[str] = None
@@ -686,7 +686,7 @@ async def websocket_recognize(
                                     target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
-                                    apply_heuristic_boost=True,
+                                    apply_heuristic_boost=False,
                                     raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )

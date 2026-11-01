@@ -3,8 +3,8 @@
 > **Model ID:** `realsign_26class_mlp`  
 > **Task:** Two-Handed ISL Alphabet Recognition (A–Z)  
 > **Architecture:** 3-Layer BatchNorm MLP  
-> **File:** `models\weights\realsign_26class_mlp.pth` (113.54 KB)  
-> **Last Modified:** 2026-10-30T18:26:13.705002+00:00  
+> **File:** `models\weights\realsign_26class_mlp.pth` (111.29 KB)  
+> **Last Modified:** 2026-11-01T05:01:28.279119+00:00  
 > **Total Parameters:** `26,972` (26,176 weights, 410 biases)  
 
 ---
@@ -28,8 +28,8 @@
 
 | Metric | Empirical Result | Target Benchmark |
 | :--- | :--- | :--- |
-| **Test Accuracy** | **0.9499** | Production SLA Passed |
-| **Macro F1** | **0.8319** | Production SLA Passed |
+| **Test Accuracy** | **0.9720** | Production SLA Passed |
+| **Macro F1** | **0.9718** | Production SLA Passed |
 | **Precision** | **0.9843** | Production SLA Passed |
 | **Recall** | **0.9840** | Production SLA Passed |
 | **Latency Cpu Ms** | **0.1520** | Production SLA Passed |
@@ -41,23 +41,23 @@
 
 | Layer / Tensor Name | Type | Shape | Dtype | Parameters | Mean | Std | Min | Max | L2 Norm | Sparsity |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `net.0.weight` | `weight` | `[128, 126]` | `float32` | `16,128` | -0.0003 | 0.0730 | -0.2685 | 0.2908 | 9.2656 | 0.0% |
-| `net.0.bias` | `bias` | `[128]` | `float32` | `128` | 0.0052 | 0.0532 | -0.1088 | 0.0947 | 0.6025 | 0.0% |
-| `net.1.weight` | `weight` | `[128]` | `float32` | `128` | 0.9818 | 0.0520 | 0.8644 | 1.1105 | 11.1236 | 0.0% |
-| `net.1.bias` | `bias` | `[128]` | `float32` | `128` | -0.1872 | 0.0717 | -0.3357 | -0.0036 | 2.2662 | 0.0% |
-| `net.1.running_mean` | `running_mean` | `[128]` | `float32` | `128` | -0.0902 | 0.2427 | -1.4498 | 1.1663 | 2.9191 | 0.0% |
-| `net.1.running_var` | `running_var` | `[128]` | `float32` | `128` | 0.0684 | 0.0424 | 0.0158 | 0.2972 | 0.9089 | 0.0% |
-| `net.1.num_batches_tracked` | `parameter` | `[]` | `int64` | `1` | 1550.0000 | 0.0000 | 1550.0000 | 1550.0000 | 1550.0000 | 0.0% |
-| `net.4.weight` | `weight` | `[64, 128]` | `float32` | `8,192` | -0.0135 | 0.0664 | -0.2554 | 0.2066 | 6.1356 | 0.0% |
-| `net.4.bias` | `bias` | `[64]` | `float32` | `64` | -0.0009 | 0.0542 | -0.0797 | 0.0919 | 0.4304 | 0.0% |
-| `net.5.weight` | `weight` | `[64]` | `float32` | `64` | 1.3508 | 0.0420 | 1.2600 | 1.4430 | 10.8113 | 0.0% |
-| `net.5.bias` | `bias` | `[64]` | `float32` | `64` | 0.2088 | 0.0458 | 0.0639 | 0.3145 | 1.7097 | 0.0% |
-| `net.5.running_mean` | `running_mean` | `[64]` | `float32` | `64` | -0.5542 | 0.4250 | -1.3038 | 0.5719 | 5.5709 | 0.0% |
-| `net.5.running_var` | `running_var` | `[64]` | `float32` | `64` | 0.4193 | 0.0791 | 0.2761 | 0.6525 | 3.4126 | 0.0% |
-| `net.5.num_batches_tracked` | `parameter` | `[]` | `int64` | `1` | 1550.0000 | 0.0000 | 1550.0000 | 1550.0000 | 1550.0000 | 0.0% |
-| `net.7.weight` | `weight` | `[26, 64]` | `float32` | `1,664` | -0.0449 | 0.1678 | -0.5228 | 0.3413 | 7.0847 | 0.0% |
-| `net.7.bias` | `bias` | `[26]` | `float32` | `26` | -0.0083 | 0.0738 | -0.2052 | 0.1381 | 0.3714 | 0.0% |
+| `net.0.weight` | `weight` | `[128, 126]` | `float32` | `16,128` | -0.0005 | 0.0791 | -0.3166 | 0.4000 | 10.0473 | 0.0% |
+| `net.0.bias` | `bias` | `[128]` | `float32` | `128` | 0.0016 | 0.0555 | -0.1040 | 0.1120 | 0.6258 | 0.0% |
+| `net.1.weight` | `weight` | `[128]` | `float32` | `128` | 0.9409 | 0.0463 | 0.8375 | 1.0421 | 10.6577 | 0.0% |
+| `net.1.bias` | `bias` | `[128]` | `float32` | `128` | -0.3270 | 0.0928 | -0.5289 | -0.0252 | 3.8442 | 0.0% |
+| `net.1.running_mean` | `running_mean` | `[128]` | `float32` | `128` | -0.0877 | 0.2076 | -0.8840 | 0.9566 | 2.5416 | 0.0% |
+| `net.1.running_var` | `running_var` | `[128]` | `float32` | `128` | 0.0658 | 0.0521 | 0.0157 | 0.3893 | 0.9481 | 0.0% |
+| `net.1.num_batches_tracked` | `parameter` | `[]` | `int64` | `1` | 8550.0000 | 0.0000 | 8550.0000 | 8550.0000 | 8550.0000 | 0.0% |
+| `net.4.weight` | `weight` | `[64, 128]` | `float32` | `8,192` | -0.0154 | 0.0765 | -0.3700 | 0.2451 | 7.0628 | 0.0% |
+| `net.4.bias` | `bias` | `[64]` | `float32` | `64` | 0.0021 | 0.0542 | -0.1136 | 0.0923 | 0.4306 | 0.0% |
+| `net.5.weight` | `weight` | `[64]` | `float32` | `64` | 1.6234 | 0.0669 | 1.3957 | 1.7595 | 12.9981 | 0.0% |
+| `net.5.bias` | `bias` | `[64]` | `float32` | `64` | 0.2344 | 0.0750 | 0.0516 | 0.4393 | 1.9672 | 0.0% |
+| `net.5.running_mean` | `running_mean` | `[64]` | `float32` | `64` | -0.4404 | 0.3415 | -0.9903 | 0.5204 | 4.4456 | 0.0% |
+| `net.5.running_var` | `running_var` | `[64]` | `float32` | `64` | 0.2900 | 0.0464 | 0.1829 | 0.4023 | 2.3489 | 0.0% |
+| `net.5.num_batches_tracked` | `parameter` | `[]` | `int64` | `1` | 8550.0000 | 0.0000 | 8550.0000 | 8550.0000 | 8550.0000 | 0.0% |
+| `net.7.weight` | `weight` | `[26, 64]` | `float32` | `1,664` | -0.0644 | 0.2248 | -0.6397 | 0.5178 | 9.5366 | 0.0% |
+| `net.7.bias` | `bias` | `[26]` | `float32` | `26` | 0.0246 | 0.0759 | -0.1054 | 0.1455 | 0.3996 | 0.0% |
 
 ---
 
-<sub>Report auto-generated by SETU Model Evaluation Engine at 2026-10-31T18:53:44.407362+00:00.</sub>
+<sub>Report auto-generated by SETU Model Evaluation Engine at 2026-11-01T05:05:07.834740+00:00.</sub>
