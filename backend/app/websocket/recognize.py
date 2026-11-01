@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import cv2
 import numpy as np
+import torch
 from fastapi import WebSocket, WebSocketDisconnect
 
 from backend.app.services.pipeline_manager import pipeline
@@ -217,6 +218,8 @@ async def websocket_recognize(
     fused_sentence: Optional[str] = None
     lighting_score: float = 1.0
     was_low_light_enhanced: bool = False
+    latency_history: deque = deque(maxlen=60)
+    dropped_frames_count: int = 0
 
     # Disambiguation HUD & Low-Margin Gate State
     disambiguation_active: bool = False
@@ -749,6 +752,10 @@ async def websocket_recognize(
 
                 t1 = time.perf_counter()
                 latency_ms = round((t1 - t0) * 1000.0, 1)
+                latency_history.append(latency_ms)
+                p50_latency = round(float(np.percentile(latency_history, 50)), 1) if latency_history else latency_ms
+                p95_latency = round(float(np.percentile(latency_history, 95)), 1) if latency_history else latency_ms
+                cuda_mem_mb = round(torch.cuda.memory_allocated() / (1024 * 1024), 1) if (torch.cuda.is_available() and torch.cuda.is_initialized()) else 0.0
 
                 active_threshold = client_threshold if client_threshold is not None else (
                     CONFIDENCE_THRESHOLD_ALPHABET if active_model == "realsign" else CONFIDENCE_THRESHOLD_SEQUENCE
@@ -1009,6 +1016,14 @@ async def websocket_recognize(
                     "guidance": guidance_text,
                     "fps": fps,
                     "latency_ms": latency_ms,
+                    "telemetry": {
+                        "fps": fps,
+                        "latency_ms": latency_ms,
+                        "p50_latency_ms": p50_latency,
+                        "p95_latency_ms": p95_latency,
+                        "dropped_frames": dropped_frames_count,
+                        "cuda_memory_mb": cuda_mem_mb,
+                    },
                     "kinetic_energy": round(float(kinetic_energy), 4),
                     "is_actively_signing": bool(is_actively_signing),
                     "motion_state": "signing" if is_actively_signing else ("settled" if motion_settled_now else "idle"),

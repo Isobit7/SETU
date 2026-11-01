@@ -45,7 +45,10 @@ export function drawLandmarksOnCanvas(
   if (styles.showLeftHand && landmarks.left_hand && landmarks.left_hand.length > 0) {
     const pts = landmarks.left_hand;
 
-    // Batched skeleton connections in a single path
+    // Batched skeleton connections with glowing neon aesthetics
+    ctx.save();
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = '#38bdf8';
     ctx.lineCap = 'round';
@@ -60,6 +63,7 @@ export function drawLandmarksOnCanvas(
       }
     }
     ctx.stroke();
+    ctx.restore();
 
     // Batched standard joints
     ctx.fillStyle = '#0284c7';
@@ -90,7 +94,10 @@ export function drawLandmarksOnCanvas(
   if (styles.showRightHand && landmarks.right_hand && landmarks.right_hand.length > 0) {
     const pts = landmarks.right_hand;
 
-    // Batched skeleton connections in a single path
+    // Batched skeleton connections with glowing neon aesthetics
+    ctx.save();
+    ctx.shadowColor = '#10b981';
+    ctx.shadowBlur = 8;
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = '#34d399';
     ctx.lineCap = 'round';
@@ -105,6 +112,7 @@ export function drawLandmarksOnCanvas(
       }
     }
     ctx.stroke();
+    ctx.restore();
 
     // Batched standard joints
     ctx.fillStyle = '#059669';

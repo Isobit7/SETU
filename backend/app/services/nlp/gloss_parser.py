@@ -116,6 +116,13 @@ class ISLGlossParser:
             return rule_match
 
         cleaned = self.clean_duplicate_tokens(tokens)
+        try:
+            from backend.app.services.nlp.syntax_transformer import ISLSyntaxTransformer
+            transformed = ISLSyntaxTransformer().transform(cleaned)
+            if transformed:
+                return transformed
+        except Exception:
+            pass
         return self._fallback_sentence(cleaned)
 
     def _fallback_sentence(self, cleaned: List[str]) -> str:

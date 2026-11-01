@@ -7,7 +7,7 @@
   "file_path": "models\\weights\\realsign_26class_mlp.pth",
   "file_size_bytes": 113962,
   "file_size_formatted": "111.29 KB",
-  "last_modified": "2026-11-01T05:01:28.279119+00:00",
+  "last_modified": "2026-11-01T05:09:47.132234+00:00",
   "status": "active",
   "total_parameters": 26972,
   "weights_parameters": 26176,

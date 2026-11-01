@@ -12,6 +12,7 @@ import mediapipe as mp
 
 from config.exceptions import ModelArtifactError, LandmarkExtractionError
 from config.settings import config
+from backend.app.services.vision.one_euro_filter import OneEuroFilter
 
 class NormalizedLandmarkPoint:
     """Lightweight mutable landmark point compatible with MediaPipe NormalizedLandmark."""
@@ -230,6 +231,9 @@ class HandLandmarkerWrapper:
         self.smooth_landmarks = smooth_landmarks
         self._landmarker: Optional[Any] = None
         self._prev_hands: list[Optional[list[tuple[float, float, float]]]] = []
+        self._hand_filters: list[OneEuroFilter] = [
+            OneEuroFilter(min_cutoff=0.8, beta=0.01) for _ in range(self.num_hands)
+        ]
 
     def initialize(self) -> None:
         """Initializes the MediaPipe Tasks HandLandmarker."""
@@ -265,6 +269,8 @@ class HandLandmarkerWrapper:
     def reset_smoothing(self) -> None:
         """Resets smoothing history to clear temporal state."""
         self._prev_hands.clear()
+        for f in self._hand_filters:
+            f.reset()
 
     def detect(self, bgr_image: np.ndarray) -> Any:
         """
@@ -285,19 +291,18 @@ class HandLandmarkerWrapper:
             result = self._landmarker.detect(mp_image)
             if self.smooth_landmarks and result is not None and getattr(result, "hand_landmarks", None):
                 hands = result.hand_landmarks
-                while len(self._prev_hands) < len(hands):
-                    self._prev_hands.append(None)
-                alpha = 0.70
+                while len(self._hand_filters) < len(hands):
+                    self._hand_filters.append(OneEuroFilter(min_cutoff=0.8, beta=0.01))
                 for h_idx, hand in enumerate(hands):
-                    prev = self._prev_hands[h_idx]
-                    if prev is not None and len(prev) == len(hand):
-                        for i, lm in enumerate(hand):
-                            lm.x = float(alpha * lm.x + (1.0 - alpha) * prev[i][0])
-                            lm.y = float(alpha * lm.y + (1.0 - alpha) * prev[i][1])
-                            lm.z = float(alpha * lm.z + (1.0 - alpha) * prev[i][2])
-                    self._prev_hands[h_idx] = [(lm.x, lm.y, lm.z) for lm in hand]
+                    coords = np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
+                    filtered = self._hand_filters[h_idx].filter(coords)
+                    for i, lm in enumerate(hand):
+                        lm.x = float(filtered[i, 0])
+                        lm.y = float(filtered[i, 1])
+                        lm.z = float(filtered[i, 2])
             elif not (result and getattr(result, "hand_landmarks", None)):
-                self._prev_hands.clear()
+                for f in self._hand_filters:
+                    f.reset()
             return result
         except Exception as e:
             raise LandmarkExtractionError(f"Error during HandLandmarker detection: {e}") from e

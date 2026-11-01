@@ -12,6 +12,7 @@ import { HelpModal } from './components/HelpModal';
 import { IncludeVideoModal } from './components/IncludeVideoModal';
 import { RecordSignModal } from './components/RecordSignModal';
 import { TextToSignWorkspace } from './components/TextToSignWorkspace';
+import { PracticeStudio } from './components/PracticeStudio';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
 import { useSentenceBuilder } from './hooks/useSentenceBuilder';
@@ -321,22 +322,30 @@ export const App: React.FC = () => {
               />
             </section>
 
-            {/* Right Column: Active Output, Candidate Scores & Sentence Buffer */}
+            {/* Right Column: Translation Panel OR Interactive Practice Studio */}
             <aside className="workspace-side-section" aria-label="Translation Output and Candidates">
-              <TranslationPanel
-                currentResult={currentResult}
-                onClearCurrent={handleResetSession}
-                onOpenHistory={() => setIsHistoryModalOpen(true)}
-                historyCount={history.length}
-                sentence={sentence}
-                translatedText={currentResult?.translated_text}
-                onClearSentence={handleClearSentence}
-                onBackspaceSentence={handleBackspaceSentence}
-                onAddSpaceSentence={handleAddSpaceSentence}
-                isSpeaking={isSpeaking}
-                onSpeak={speak}
-                onStopSpeak={stop}
-              />
+              {activeTab === 'practice' ? (
+                <PracticeStudio
+                  currentResult={currentResult}
+                  onSpeak={speak}
+                  onClose={() => setActiveTab('translator')}
+                />
+              ) : (
+                <TranslationPanel
+                  currentResult={currentResult}
+                  onClearCurrent={handleResetSession}
+                  onOpenHistory={() => setIsHistoryModalOpen(true)}
+                  historyCount={history.length}
+                  sentence={sentence}
+                  translatedText={currentResult?.translated_text}
+                  onClearSentence={handleClearSentence}
+                  onBackspaceSentence={handleBackspaceSentence}
+                  onAddSpaceSentence={handleAddSpaceSentence}
+                  isSpeaking={isSpeaking}
+                  onSpeak={speak}
+                  onStopSpeak={stop}
+                />
+              )}
             </aside>
           </>
         ) : (
