@@ -135,3 +135,4 @@ class NonManualMarkerDetector:
 
 # Singleton
 non_manual_detector = NonManualMarkerDetector()
+

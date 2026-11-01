@@ -126,3 +126,4 @@ def test_conversation_mode_message_formatting_and_transcript():
     assert "[10:30 AM] 🤟 Signer (ISL): I need help with my ticket." in transcript_text
     assert "[10:31 AM] 🎙️ Speaker (Voice): Sure, which train are you taking?" in transcript_text
     assert len(transcript_lines) == 2
+

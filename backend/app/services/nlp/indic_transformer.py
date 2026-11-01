@@ -302,3 +302,4 @@ class IndicTransformer:
 
 # Singleton instance
 indic_transformer = IndicTransformer()
+

@@ -186,3 +186,4 @@ class ISLDigitClassifier:
 
 # Singleton
 digit_classifier = ISLDigitClassifier()
+

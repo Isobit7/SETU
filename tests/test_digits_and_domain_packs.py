@@ -164,3 +164,4 @@ def test_ws_set_domain_control_command(client):
         r_bk = ws.receive_json()
         assert r_bk["type"] == "info"
         assert r_bk["active_domain"] == "banking"
+

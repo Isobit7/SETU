@@ -235,3 +235,4 @@ export const Avatar3DViewer: React.FC<Avatar3DViewerProps> = ({ currentSign }) =
     </div>
   );
 };
+

@@ -156,3 +156,4 @@ def test_custom_rest_y_threshold_behavior():
 
     # With calibrated threshold 0.74, hand at 0.76 IS properly recognized as resting!
     assert is_resting_or_neutral_pose(hand_at_76, y_threshold=0.74) is True
+
