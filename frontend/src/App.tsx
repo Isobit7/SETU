@@ -13,6 +13,7 @@ import { IncludeVideoModal } from './components/IncludeVideoModal';
 import { RecordSignModal } from './components/RecordSignModal';
 import { TextToSignWorkspace } from './components/TextToSignWorkspace';
 import { PracticeStudio } from './components/PracticeStudio';
+import { ConversationStudio } from './components/ConversationStudio';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
 import { useSentenceBuilder } from './hooks/useSentenceBuilder';
@@ -267,7 +268,16 @@ export const App: React.FC = () => {
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
       <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''}`} role="main">
-        {translationDirection === 'isl-to-en' ? (
+        {activeTab === 'conversation' ? (
+          <ConversationStudio
+            currentResult={currentResult}
+            onSpeak={speak}
+            videoRef={videoRef}
+            isCameraActive={cameraStatus === 'detecting' || cameraStatus === 'ready'}
+            onStartCamera={startCamera}
+            onStopCamera={stopCamera}
+          />
+        ) : translationDirection === 'isl-to-en' ? (
           <>
             {/* Left Column: Live Camera, Persistent Prediction Bar & Controls */}
             <section className="workspace-camera-section" aria-label="Camera and Sign Recognition View">

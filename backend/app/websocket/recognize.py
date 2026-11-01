@@ -31,6 +31,8 @@ from models.adapters.sequence_lstm import SequencePrediction as ISLSequencePredi
 from models.adapters.mvp import MVPClassifierPrediction as ISLPrediction
 from models.adapters.include import StreamingIncludeAdapter, INCLUDEResult
 from backend.app.services.nlp import SentenceAccumulator
+from backend.app.services.nlp.domain_packs import domain_packs_manager
+from backend.app.services.vision.non_manual_markers import non_manual_detector
 from config.settings import (
     CONFIDENCE_THRESHOLD_ALPHABET,
     CONFIDENCE_THRESHOLD_SEQUENCE,
@@ -173,6 +175,7 @@ async def websocket_recognize(
             client_threshold = max(0.10, min(0.95, float(threshold)))
         except (ValueError, TypeError):
             client_threshold = None
+    client_rest_y: float = 0.82
     frame_count = 0
     total_stream_frames = 0
     last_fps_calc = time.time()
@@ -238,7 +241,7 @@ async def websocket_recognize(
     loop = asyncio.get_running_loop()
 
     async def _process_control_text(text_str: str) -> None:
-        nonlocal active_model, client_threshold, is_actively_signing, settled_frames_count
+        nonlocal active_model, client_threshold, client_rest_y, is_actively_signing, settled_frames_count
         nonlocal prev_hand_pts, candidate_label, candidate_streak, last_committed_sign
         nonlocal last_committed_time, had_idle_baseline
         nonlocal alphabet_streak_candidate, alphabet_streak_count, alphabet_last_committed
@@ -288,6 +291,8 @@ async def websocket_recognize(
                     "message": "Sentence buffer cleared",
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
+                    "translated_indic": accumulator.translated_indic,
+                    "translations": {"en": accumulator.translated_text, **accumulator.translated_indic},
                 })
             elif action == "backspace":
                 accumulator.backspace()
@@ -296,6 +301,8 @@ async def websocket_recognize(
                     "message": "Backspace applied",
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
+                    "translated_indic": accumulator.translated_indic,
+                    "translations": {"en": accumulator.translated_text, **accumulator.translated_indic},
                 })
             elif action in ("resolve_disambiguation", "select_disambiguation"):
                 selected_label = str(payload.get("selected", payload.get("choice", ""))).strip().lower()
@@ -390,6 +397,50 @@ async def websocket_recognize(
                     "type": "info",
                     "message": f"Object detection {'enabled' if enable_object_detection else 'disabled'}",
                     "object_detection_enabled": enable_object_detection,
+                })
+            elif action == "set_language":
+                req_lang = str(payload.get("language", "en")).strip().lower()
+                accumulator.target_language = req_lang
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Target translation language set to {req_lang}",
+                    "target_language": req_lang,
+                })
+            elif action == "set_calibration":
+                # PROB-19: Personal Calibration Wizard
+                if "rest_y" in payload:
+                    try:
+                        calib_y = float(payload["rest_y"])
+                        client_rest_y = max(0.50, min(0.95, calib_y))
+                    except (ValueError, TypeError):
+                        pass
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Personal calibration updated (rest_y={client_rest_y:.2f})",
+                    "rest_y": client_rest_y,
+                })
+            elif action == "set_domain":
+                domain_name = str(payload.get("domain", "general")).strip().lower()
+                domain_packs_manager.set_domain(domain_name)
+                suggestions = domain_packs_manager.get_domain_suggestions(limit=5)
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Active vocabulary domain switched to {domain_name}",
+                    "active_domain": domain_name,
+                    "domain_suggestions": suggestions,
+                })
+            elif action == "set_nmm":
+                accumulator.update_non_manual_grammar(
+                    is_question=bool(payload.get("is_question", False)),
+                    is_negation=bool(payload.get("is_negation", False)),
+                    is_affirmation=bool(payload.get("is_affirmation", False)),
+                )
+                await websocket.send_json({
+                    "type": "info",
+                    "message": "NMM grammar updated",
+                    "question": accumulator.detected_question,
+                    "negation": accumulator.detected_negation,
+                    "affirmation": accumulator.detected_affirmation,
                 })
         except Exception as e:
             logger.warning("Error processing text command: %s", e)
@@ -574,6 +625,13 @@ async def websocket_recognize(
                 # Robust 176-D body-anchored feature extraction
                 face_lms = getattr(hl_result, "face_landmarks", None)
                 pose_lms = getattr(hl_result, "pose_landmarks", None)
+                nmm_marker = non_manual_detector.detect(face_lms)
+                if nmm_marker.is_question or nmm_marker.is_negation or nmm_marker.is_affirmation:
+                    accumulator.update_non_manual_grammar(
+                        is_question=nmm_marker.is_question,
+                        is_negation=nmm_marker.is_negation,
+                        is_affirmation=nmm_marker.is_affirmation,
+                    )
                 facial_ratios = extract_facial_expression_features(face_lms)
                 body_anchors = extract_body_anchored_features(
                     pose_lms,
@@ -705,8 +763,8 @@ async def websocket_recognize(
                     elif active_model == "realsign" and pipeline.realsign_classifier is not None:
                         # PROB-08: If hand is resting low down in lap/desk, suppress alphabet emission
                         is_resting = False
-                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand):
-                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand):
+                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=client_rest_y):
+                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=client_rest_y):
                                 is_resting = True
 
                         if is_resting:
@@ -1080,6 +1138,8 @@ async def websocket_recognize(
                     "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model == "realsign" and is_stable)) else "idle"),
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
+                    "translated_indic": accumulator.translated_indic,
+                    "translations": {"en": accumulator.translated_text, **accumulator.translated_indic},
                     "sentence_tokens": list(accumulator.sentence_tokens),
                     "detected_objects": [
                         {
@@ -1109,6 +1169,14 @@ async def websocket_recognize(
                         "right_hand": right_hand,
                         "pose": pose,
                         "face": face,
+                    },
+                    "non_manual_markers": {
+                        "is_question": nmm_marker.is_question,
+                        "is_negation": nmm_marker.is_negation,
+                        "is_affirmation": nmm_marker.is_affirmation,
+                        "eyebrow_elevation": nmm_marker.eyebrow_elevation,
+                        "head_yaw_oscillation": nmm_marker.head_yaw_oscillation,
+                        "confidence": nmm_marker.confidence,
                     },
                     "realsign_prediction": {
                         "letter": realsign_pred.letter if realsign_pred else "no_sign",

@@ -310,3 +310,4 @@ def test_multisigner_model_accuracy_benchmark():
     # Verify no class collapse: all 26 classes must have non-zero recall
     for c_name, c_stats in metrics["per_class"].items():
         assert c_stats["recall"] > 0.0, f"Class {c_name} suffered from mode collapse (recall = 0)"
+

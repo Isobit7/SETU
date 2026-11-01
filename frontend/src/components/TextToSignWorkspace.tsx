@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Avatar3DViewer } from './Avatar3DViewer';
 import {
   Play,
   Pause,
@@ -361,6 +362,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [avatarMode, setAvatarMode] = useState<'3d' | '2d'>('3d');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -828,7 +830,25 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
               <span>ISL Avatar Demonstrator</span>
             </div>
 
-            <div className="avatar-tools">
+            <div className="avatar-tools" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                type="button"
+                className="avatar-mode-toggle-btn"
+                onClick={() => setAvatarMode((m) => (m === '3d' ? '2d' : '3d'))}
+                title="Toggle 3D Skeletal Rig vs 2D Canvas"
+                style={{
+                  background: avatarMode === '3d' ? '#4f46e5' : '#1e293b',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  cursor: 'pointer',
+                }}
+              >
+                {avatarMode === '3d' ? '3D Rigged' : '2D Classic'}
+              </button>
               <button
                 className="overlay-icon-btn"
                 onClick={toggleFullscreen}
@@ -841,13 +861,17 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
 
           {/* Canvas Rendering Area */}
           <div className="avatar-canvas-wrap">
-            <canvas
-              ref={canvasRef}
-              width={600}
-              height={440}
-              className="avatar-canvas"
-              aria-label="Indian Sign Language Humanoid Avatar"
-            />
+            {avatarMode === '3d' ? (
+              <Avatar3DViewer currentSign={activeToken} />
+            ) : (
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={440}
+                className="avatar-canvas"
+                aria-label="Indian Sign Language Humanoid Avatar"
+              />
+            )}
 
             {/* Persistent Subtitle Dock for Avatar Viewport */}
             <div className="avatar-sign-subtitle-dock">

@@ -59,6 +59,16 @@ export interface RecognitionPayload {
   landmarks?: LandmarkGroups;
   sentence_buffer?: string;
   translated_text?: string;
+  translated_indic?: Record<string, string>;
+  translations?: Record<string, string>;
+  non_manual_markers?: {
+    is_question: boolean;
+    is_negation: boolean;
+    is_affirmation: boolean;
+    eyebrow_elevation: number;
+    head_yaw_oscillation: number;
+    confidence: number;
+  };
   sentence_tokens?: string[];
   message?: string;
   detected_objects?: Array<{

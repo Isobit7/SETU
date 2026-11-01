@@ -17,6 +17,7 @@ import {
   Volume2,
   VolumeX,
   Target,
+  Users,
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -152,6 +153,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         >
           <Target size={14} className="nav-icon" />
           <span>Practice Studio</span>
+        </button>
+
+        {/* Conversation Studio Tab */}
+        <button
+          className={`nav-link-btn ${activeTab === 'conversation' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('conversation');
+            setMobileMenuOpen(false);
+          }}
+          aria-current={activeTab === 'conversation' ? 'page' : undefined}
+        >
+          <Users size={14} className="nav-icon" />
+          <span>Conversation</span>
         </button>
 
         {/* 4. Resources Dropdown: 26 Letters, ISL Vocabulary, 263 Signs, Help */}

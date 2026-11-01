@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Optional
 
 from backend.app.services.nlp.gloss_parser import ISLGlossParser
 from backend.app.services.nlp.neural_translator import neural_translator as default_neural_translator
+from backend.app.services.nlp.indic_transformer import indic_transformer
+from backend.app.services.nlp.domain_packs import format_tokens_with_numbers_and_currency, domain_packs_manager
 from models.adapters.sequence_lstm import CTCGreedyDecoder
 
 
@@ -43,7 +45,26 @@ class SentenceAccumulator:
         self.sentence_tokens: List[str] = []
         self.last_token_time: float = 0.0
         self.translated_text: str = ""
+        self.translated_indic: Dict[str, str] = {}
+        self.target_language: str = "en"
         self._tokens_changed: bool = False
+        self.detected_question: bool = False
+        self.detected_negation: bool = False
+        self.detected_affirmation: bool = False
+
+    def update_non_manual_grammar(
+        self,
+        is_question: bool = False,
+        is_negation: bool = False,
+        is_affirmation: bool = False,
+    ) -> None:
+        """Updates grammatical flags inferred from facial expression and head movement (PROB-20)."""
+        if is_question:
+            self.detected_question = True
+        if is_negation:
+            self.detected_negation = True
+        if is_affirmation:
+            self.detected_affirmation = True
 
     @property
     def sentence_buffer(self) -> str:
@@ -51,7 +72,7 @@ class SentenceAccumulator:
         tokens = list(self.sentence_tokens)
         if self.current_word:
             tokens.append(self.current_word)
-        return " ".join(tokens)
+        return " ".join(format_tokens_with_numbers_and_currency(tokens))
 
     def add_token(
         self,
@@ -107,19 +128,24 @@ class SentenceAccumulator:
             "sentence_translated": sentence_translated,
             "sentence_buffer": self.sentence_buffer,
             "translated_text": self.translated_text,
+            "translated_indic": self.translated_indic,
+            "translations": {"en": self.translated_text, **self.translated_indic},
         }
 
     def translate_sentence(self, async_neural: bool = False) -> str:
         """Parses the current sentence tokens through the ISL Gloss Parser and Neural Translator."""
         if not self.sentence_tokens:
+            self.translated_indic.clear()
             self.translated_text = ""
             return ""
+
+        # Compute Indic multilingual translations (PROB-17)
+        self.translated_indic = indic_transformer.translate_all(self.sentence_tokens)
 
         # 1. Fast exact canonical idiom match (zero-latency for common baseline phrases)
         rule_match = self.parser.match_rule(self.sentence_tokens)
         if rule_match is not None:
             self.translated_text = rule_match
-            return self.translated_text
 
         # 2. Immediate clean gloss heuristic fallback for 0ms latency UI update
         immediate_gloss = self.parser.parse_gloss(self.sentence_tokens)
@@ -143,9 +169,23 @@ class SentenceAccumulator:
                     res = self.neural_translator.translate(self.sentence_tokens)
                     if res:
                         self.translated_text = res
-                        return self.translated_text
                 except Exception:
                     pass
+
+        # Apply Non-Manual Markers (NMMs) grammatical modifiers (PROB-20)
+        if self.detected_negation:
+            if "not" not in self.translated_text.lower() and "no" not in self.translated_text.lower():
+                self.translated_text = f"NOT {self.translated_text}".strip()
+            for lang, neg_suffix in [("hi", " नहीं"), ("ta", " இல்லை"), ("te", " లేదు"), ("kn", " ಇಲ್ಲ")]:
+                if lang in self.translated_indic and neg_suffix.strip() not in self.translated_indic[lang]:
+                    self.translated_indic[lang] = self.translated_indic[lang].rstrip("।.").strip() + neg_suffix
+
+        if self.detected_question:
+            if not self.translated_text.endswith("?"):
+                self.translated_text = self.translated_text.rstrip(".").strip() + "?"
+            for lang in self.translated_indic:
+                if not self.translated_indic[lang].endswith("?"):
+                    self.translated_indic[lang] = self.translated_indic[lang].rstrip("।.").strip() + "?"
 
         return self.translated_text
 
@@ -173,7 +213,11 @@ class SentenceAccumulator:
         self.sentence_tokens = []
         self.last_token_time = 0.0
         self.translated_text = ""
+        self.translated_indic.clear()
         self._tokens_changed = False
+        self.detected_question = False
+        self.detected_negation = False
+        self.detected_affirmation = False
         self.ctc_decoder.reset()
 
     def clear(self) -> None:

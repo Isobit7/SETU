@@ -192,6 +192,21 @@ class PipelineManager:
             except Exception as e:
                 logger.warning("ISL Sequence LSTM warmup encountered error: %s", e)
 
+    def reload_realsign(self, weights_path: Optional[str] = None) -> bool:
+        """
+        Hot-swaps RealSign classifier weights in-memory without restarting server or
+        disconnecting active WebSocket clients (PROB-25).
+        """
+        try:
+            path = weights_path or "models/weights/realsign_26class_mlp.pth"
+            self.realsign_classifier = RealSignClassifier(weights_path=path)
+            self.warmup_models()
+            logger.info("RealSign classifier hot-swapped successfully from %s", path)
+            return True
+        except Exception as e:
+            logger.error("Failed to hot-swap RealSign classifier: %s", e)
+            return False
+
     def close(self) -> None:
         """
         Safely releases underlying C++ native memory allocations, MediaPipe task contexts,

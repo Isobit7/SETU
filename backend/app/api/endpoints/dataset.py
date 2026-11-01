@@ -259,3 +259,104 @@ async def list_captured_sessions() -> Dict[str, Any]:
         "total_samples": len(samples),
         "samples": samples,
     }
+
+
+class ActiveLearningFeedbackPayload(BaseModel):
+    label: str
+    predicted_label: Optional[str] = None
+    feature_vector: Optional[List[float]] = None
+    source: str = "user_disambiguation"
+    user_consent: bool = True
+
+
+@router.post("/feedback")
+async def record_active_learning_feedback(payload: ActiveLearningFeedbackPayload) -> Dict[str, Any]:
+    """Records user-corrected hard ambiguous sign samples for continuous active learning (PROB-25)."""
+    if not payload.user_consent:
+        return {"success": False, "message": "User consent required for active learning feedback."}
+
+    clean_label = payload.label.strip().upper()
+    if not clean_label:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Label must not be empty.",
+        )
+
+    feats = payload.feature_vector
+    if feats is None or len(feats) not in (126, 164, 176):
+        feats = [0.0] * 126
+
+    feedback_dir = Path("data/processed/feedback")
+    feedback_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = int(time.time() * 1000)
+    filename = f"fb_{clean_label}_{timestamp}.npz"
+    save_path = feedback_dir / filename
+
+    arr = np.array(feats[:126], dtype=np.float32)
+    np.savez_compressed(
+        save_path,
+        features=arr,
+        label=clean_label,
+        predicted_label=payload.predicted_label or "",
+        source=payload.source,
+        created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    )
+    logger.info("Active learning feedback sample '%s' saved to %s", clean_label, save_path)
+
+    return {
+        "success": True,
+        "message": f"Feedback sample for '{clean_label}' recorded successfully.",
+        "label": clean_label,
+        "filename": filename,
+        "source": payload.source,
+    }
+
+
+@router.get("/feedback")
+async def list_feedback_samples() -> Dict[str, Any]:
+    """Lists summary of all active learning feedback samples stored on disk."""
+    feedback_dir = Path("data/processed/feedback")
+    if not feedback_dir.exists():
+        return {"total_samples": 0, "samples": [], "labels": []}
+
+    samples = []
+    labels = set()
+    for p in sorted(feedback_dir.glob("*.npz")):
+        try:
+            d = np.load(p, allow_pickle=True)
+            lbl = str(d.get("label", "UNKNOWN")).upper()
+            labels.add(lbl)
+            samples.append({
+                "filename": p.name,
+                "label": lbl,
+                "predicted_label": str(d.get("predicted_label", "")),
+                "source": str(d.get("source", "user_correction")),
+                "created_time": os.path.getmtime(p),
+            })
+        except Exception:
+            continue
+
+    return {
+        "total_samples": len(samples),
+        "samples": samples,
+        "labels": sorted(list(labels)),
+    }
+
+
+class RetrainPayload(BaseModel):
+    epochs: int = 5
+    min_samples: int = 1
+    hot_reload: bool = True
+
+
+@router.post("/retrain")
+async def trigger_active_learning_retrain(payload: RetrainPayload) -> Dict[str, Any]:
+    """Triggers the active learning continuous retraining pipeline and hot-swaps weights."""
+    from scripts.retrain_feedback_loop import run_active_learning_retrain
+
+    result = run_active_learning_retrain(
+        epochs=payload.epochs,
+        min_samples=payload.min_samples,
+        hot_reload=payload.hot_reload,
+    )
+    return result
