@@ -6,6 +6,7 @@ import {
   Trash2,
   Check,
   Delete,
+  Download,
 } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 import { LiveDetectionOutput } from './LiveDetectionOutput';
@@ -112,6 +113,33 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
     } catch (err) {
       console.error('Failed to copy text:', err);
     }
+  };
+
+  // Export active translation / sentence as Markdown
+  const handleExport = () => {
+    const textToExport = (activeTranslation.trim() || activeSentence.trim() || displayText || '').trim();
+    if (!textToExport) return;
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    let md = `# SETU — ISL Translation Transcript\n`;
+    md += `**Date:** ${now.toLocaleDateString()} ${now.toLocaleTimeString()}\n\n`;
+    if (activeTranslation.trim()) {
+      md += `### English Translation\n${activeTranslation.trim()}\n\n`;
+    }
+    if (activeSentence.trim()) {
+      md += `### ISL Gloss Sequence\n${activeSentence.trim()}\n\n`;
+    }
+    md += `---\n*Exported from SETU ISL Workstation*\n`;
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `SETU_Transcript_${dateStr}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Unified Clear All: clears sentence builder and active live sign
@@ -245,7 +273,20 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             <kbd className="action-kbd-badge">⌫</kbd>
           </button>
 
-          {/* Button 4: Clear */}
+                    {/* Button: Export */}
+          <button
+            className="action-btn export-action-btn"
+            disabled={!hasTextToOperate}
+            onClick={handleExport}
+            title="Export transcript as Markdown [E]"
+            aria-label="Export transcript"
+          >
+            <Download size={14} />
+            <span>Export</span>
+            <kbd className="action-kbd-badge">E</kbd>
+          </button>
+
+{/* Button 4: Clear */}
           <button
             className="action-btn clear-action-btn"
             disabled={!hasTextToOperate}

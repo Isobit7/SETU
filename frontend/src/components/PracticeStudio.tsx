@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Award, CheckCircle2, ChevronRight, RotateCcw, Target, Sparkles, Volume2, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Award, CheckCircle2, ChevronRight, RotateCcw, Target, Sparkles, Volume2, X, PlayCircle, Shuffle } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 
 export interface PracticeStudioProps {
@@ -19,6 +19,29 @@ const COMMON_SIGNS = [
   { id: 'help', label: 'HELP', desc: 'Place closed fist with thumb up onto flat open palm of other hand.' },
 ];
 
+/** Synthesize a gentle celebratory chime using the browser native Web Audio API */
+const playSuccessChime = () => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+    osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.12); // E5
+    osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.25); // G5
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.40);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.40);
+  } catch {
+    // AudioContext blocked or unsupported, fail silently
+  }
+};
+
 export const PracticeStudio: React.FC<PracticeStudioProps> = ({
   currentResult,
   onSpeak,
@@ -29,20 +52,25 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
   const [streak, setStreak] = useState<number>(0);
   const [holdProgress, setHoldProgress] = useState<number>(0);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
+  const [isShuffle, setIsShuffle] = useState<boolean>(false);
+
+  const autoAdvanceTimeoutRef = useRef<number | null>(null);
 
   const currentDetected = currentResult?.label?.toUpperCase() || 'NO_SIGN';
   const currentConfidence = currentResult?.confidence || 0;
   const isMatch = currentDetected === selectedTarget.toUpperCase() && currentConfidence >= 0.60;
 
-  // Hold timer: User must hold the correct sign steady for 1.2s to score
+  // Hold timer: User must hold the correct sign steady for ~1.0s (7 intervals of 15%) to score
   useEffect(() => {
-    let timer: any = null;
+    let timer: number | null = null;
     if (isMatch && !isSuccess) {
-      timer = setInterval(() => {
+      timer = window.setInterval(() => {
         setHoldProgress((prev) => {
           if (prev >= 100) {
             setIsSuccess(true);
             setStreak((s) => s + 1);
+            playSuccessChime();
             if (onSpeak) onSpeak(`Excellent! You signed ${selectedTarget}!`);
             return 100;
           }
@@ -52,22 +80,55 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
     } else if (!isMatch && !isSuccess) {
       setHoldProgress(0);
     }
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [isMatch, isSuccess, selectedTarget, onSpeak]);
 
   const handleNext = () => {
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     setIsSuccess(false);
     setHoldProgress(0);
+
     if (mode === 'alphabet') {
-      const idx = ALPHABET_LIST.indexOf(selectedTarget);
-      const nextIdx = (idx + 1) % ALPHABET_LIST.length;
-      setSelectedTarget(ALPHABET_LIST[nextIdx]);
+      if (isShuffle) {
+        const nextLetters = ALPHABET_LIST.filter((l) => l !== selectedTarget);
+        const randomLetter = nextLetters[Math.floor(Math.random() * nextLetters.length)];
+        setSelectedTarget(randomLetter);
+      } else {
+        const idx = ALPHABET_LIST.indexOf(selectedTarget);
+        const nextIdx = (idx + 1) % ALPHABET_LIST.length;
+        setSelectedTarget(ALPHABET_LIST[nextIdx]);
+      }
     } else {
-      const idx = COMMON_SIGNS.findIndex((s) => s.label === selectedTarget);
-      const nextIdx = (idx + 1) % COMMON_SIGNS.length;
-      setSelectedTarget(COMMON_SIGNS[nextIdx].label);
+      if (isShuffle) {
+        const nextSigns = COMMON_SIGNS.filter((s) => s.label !== selectedTarget);
+        const randomSign = nextSigns[Math.floor(Math.random() * nextSigns.length)];
+        setSelectedTarget(randomSign.label);
+      } else {
+        const idx = COMMON_SIGNS.findIndex((s) => s.label === selectedTarget);
+        const nextIdx = (idx + 1) % COMMON_SIGNS.length;
+        setSelectedTarget(COMMON_SIGNS[nextIdx].label);
+      }
     }
   };
+
+  // Auto-advance trigger after success
+  useEffect(() => {
+    if (isSuccess && autoAdvance) {
+      autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+        handleNext();
+      }, 1100);
+    }
+    return () => {
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, [isSuccess, autoAdvance]);
 
   const handleReset = () => {
     setStreak(0);
@@ -76,7 +137,9 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
   };
 
   return (
-    <div className="practice-studio-root bg-slate-900/95 border border-slate-700/80 rounded-2xl p-6 text-white shadow-2xl backdrop-blur-md">
+    <div className={`practice-studio-root bg-slate-900/95 border rounded-2xl p-6 text-white shadow-2xl backdrop-blur-md transition-all duration-300 ${
+      isSuccess ? 'border-emerald-500/80 shadow-emerald-500/20' : 'border-slate-700/80'
+    }`}>
       {/* Studio Header */}
       <div className="flex items-center justify-between border-b border-slate-700/60 pb-4 mb-6">
         <div className="flex items-center gap-3">
@@ -91,17 +154,46 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
               </span>
             </h2>
             <p className="text-sm text-slate-400">
-              Practice authentic Indian Sign Language gestures with real-time accuracy scoring.
+              Practice authentic Indian Sign Language gestures with real-time pose guidance and streak rewards.
             </p>
           </div>
         </div>
 
-        {/* Score & Streak */}
-        <div className="flex items-center gap-4">
+        {/* Score, Streak & Settings */}
+        <div className="flex items-center gap-3">
+          {/* Auto-Advance Toggle */}
+          <button
+            onClick={() => setAutoAdvance(!autoAdvance)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+              autoAdvance
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                : 'bg-slate-800 text-slate-400 border-slate-700'
+            }`}
+            title="Auto-advance to next sign upon successful hold"
+          >
+            <PlayCircle className="w-3.5 h-3.5" />
+            Auto-Next: {autoAdvance ? 'ON' : 'OFF'}
+          </button>
+
+          {/* Shuffle Toggle */}
+          <button
+            onClick={() => setIsShuffle(!isShuffle)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+              isShuffle
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                : 'bg-slate-800 text-slate-400 border-slate-700'
+            }`}
+            title="Shuffle challenge sequence"
+          >
+            <Shuffle className="w-3.5 h-3.5" />
+            {isShuffle ? 'Shuffled' : 'Sequential'}
+          </button>
+
           <div className="flex items-center gap-2 px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
             <Award className="w-5 h-5 text-amber-400" />
             <span className="text-sm font-semibold text-amber-300">Streak: {streak}</span>
           </div>
+
           <button
             onClick={handleReset}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
@@ -238,7 +330,9 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
         </div>
 
         {/* Right: Live AI Feedback & Hold Gauge */}
-        <div className="flex flex-col justify-center items-center p-6 bg-slate-900/80 rounded-xl border border-slate-700/60 text-center">
+        <div className={`flex flex-col justify-center items-center p-6 bg-slate-900/80 rounded-xl border text-center transition-all duration-200 ${
+          isSuccess ? 'border-emerald-500/70 shadow-lg shadow-emerald-500/10' : 'border-slate-700/60'
+        }`}>
           <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
             Live Webcam Detection
           </div>
@@ -274,7 +368,7 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
           {/* Dynamic Status Guidance */}
           {isSuccess ? (
             <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm animate-bounce">
-              <CheckCircle2 className="w-5 h-5" /> Completed! Streak +1
+              <CheckCircle2 className="w-5 h-5" /> Completed! Streak +1 {autoAdvance && '• Advancing...'}
             </div>
           ) : isMatch ? (
             <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs">

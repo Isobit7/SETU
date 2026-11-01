@@ -137,6 +137,19 @@ class ModelRegistry:
 
 # Register production model engines
 ModelRegistry.register(
+    model_id="realsign_multisigner_mlp",
+    name="RealSign ISL 26-Class Multi-Signer Augmented MLP",
+    model_type=ModelType.STREAMING_ALPHABET,
+    input_dim=126,
+    num_classes=26,
+    weights_path=Path("models/weights/realsign_multisigner_mlp.pth"),
+    description="Multi-signer augmented 26-class ISL alphabet model trained on 42,867 spatial-augmented samples with anthropometric scale and camera-tilt invariance.",
+    factory=lambda: RealSignClassifier(Path("models/weights/realsign_multisigner_mlp.pth")),
+    version="2.0.0",
+    metrics={"test_accuracy": 0.9737, "macro_f1": 0.9742, "dataset_samples": 42867},
+)
+
+ModelRegistry.register(
     model_id="realsign_26class_alphabet",
     name="RealSign ISL 26-Class Alphabet PyTorch MLP",
     model_type=ModelType.STREAMING_ALPHABET,

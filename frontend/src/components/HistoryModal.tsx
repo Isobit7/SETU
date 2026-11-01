@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { History, Copy, Volume2, Bookmark, Trash2, Check, X } from 'lucide-react';
+import { History, Copy, Volume2, Bookmark, Trash2, Check, X, Download } from 'lucide-react';
 import type { HistoryItem } from '../types';
 
 interface HistoryModalProps {
@@ -55,6 +55,33 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
       else next.add(id);
       return next;
     });
+  };
+
+  const handleExportTranscript = () => {
+    if (history.length === 0) return;
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    let content = `# SETU — ISL Translation Session Transcript\n`;
+    content += `**Date:** ${now.toLocaleDateString()} ${now.toLocaleTimeString()}\n`;
+    content += `**Total Recorded Signs:** ${history.length}\n\n`;
+    content += `---\n\n`;
+    content += `## Chronological Dialogue\n\n`;
+    history.forEach((item, idx) => {
+      const timeStr = item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const conf = Math.round(item.confidence * 100);
+      content += `${idx + 1}. **[${timeStr}]** ${item.text} *(Confidence: ${conf}%)*\n`;
+    });
+    content += `\n---\n*Exported from SETU — Authentic Indian Sign Language Real-Time AI Workstation*\n`;
+
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `SETU_Session_Transcript_${dateStr}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -123,10 +150,20 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
         <div className="modal-footer history-modal-footer">
           {history.length > 0 && (
-            <button className="danger-text-btn" onClick={onClearHistory}>
-              <Trash2 size={15} />
-              <span>Clear History</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="secondary-btn flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition"
+                onClick={handleExportTranscript}
+                title="Download full session transcript as Markdown"
+              >
+                <Download size={14} />
+                <span>Export (.md)</span>
+              </button>
+              <button className="danger-text-btn" onClick={onClearHistory}>
+                <Trash2 size={15} />
+                <span>Clear</span>
+              </button>
+            </div>
           )}
           <button className="primary-btn" onClick={onClose}>
             <span>Close</span>

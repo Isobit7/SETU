@@ -136,3 +136,4 @@ class KineticEnergySegmenter:
                 self.settled_frame_count = 0
 
         return self.state, self.smoothed_energy, should_trigger
+

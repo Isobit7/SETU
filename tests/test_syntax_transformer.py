@@ -68,3 +68,4 @@ def test_empty_and_unknown_safety():
     assert tx.transform([]) == ""
     # Unknown tokens without verbs or subjects should return empty string so fallback operates
     assert tx.transform(["XYZ", "ABC"]) == ""
+

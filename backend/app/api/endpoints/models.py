@@ -32,6 +32,16 @@ async def list_models() -> Dict[str, Any]:
     return {
         "models": [
             {
+                "id": "realsign_multisigner",
+                "name": "RealSign ISL Multi-Signer Augmented MLP (v2.0)",
+                "type": "streaming_alphabet",
+                "classes_count": 26,
+                "input_dim": 126,
+                "is_ready": True,
+                "metrics": {"test_accuracy": 0.9737, "macro_f1": 0.9742, "dataset_samples": 42867},
+                "description": "Multi-signer augmented 26-class ISL alphabet model trained on 42,867 spatial-augmented samples with anthropometric scale and camera-tilt invariance.",
+            },
+            {
                 "id": "realsign",
                 "name": "RealSign 26-Class Alphabet PyTorch MLP",
                 "type": "streaming_alphabet",

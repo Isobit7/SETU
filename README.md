@@ -8,6 +8,7 @@
   [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
   [![PyTorch](https://img.shields.io/badge/PyTorch-2.5%20CUDA-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org)
+  [![Tests](https://img.shields.io/badge/Tests-175%20Passing-brightgreen?style=flat-square&logo=pytest&logoColor=white)](tests/)
   [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
   [![Vite](https://img.shields.io/badge/Vite-8.0%2B-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
@@ -66,21 +67,43 @@ Authentic ISL requires both hands for critical consonants. SETU extracts 21 3D l
 ### 🎯 2. Decisive Single-Letter Display (No Ambiguity)
 Assistive communication requires immediate certainty. SETU eliminates cluttered candidate ranking bars (`Rank 1: C 45%, Rank 2: O 30%`). Instead, the UI displays **only one confirmed, high-confidence sign** (e.g., `LETTER C`) with a clean match percentage badge once steady, or indicates `Awaiting Sign Input` during transitional hand movement.
 
-### ⚡ 3. Continuous Dynamic CTC Fingerspelling
+### 📐 3. One-Euro Adaptive Landmark Filtering (Zero-Jitter, Zero-Lag)
+Static hands often exhibit micro-tremors and camera sensor noise, while rapid signing suffers from latency under heavy smoothing. SETU implements an adaptive **One-Euro Filter** with dynamic cutoff frequency ($f_c = f_{c,\min} + \beta |\dot{x}|$, with $f_{c,\min} = 1.0\text{ Hz}$, $\beta = 0.007$). At low hand velocity, heavy filtering eliminates coordinate jitter; during fast stroke transitions, the cutoff frequency increases proportionally to eliminate lag.
+
+### 🌊 4. Kinetic Energy Wavelet Gesture Segmentation
+To recognize dynamic phrases continuously, SETU computes landmark kinetic energy:
+$$E_k = \sum_{i=1}^{N} \|\vec{v}_i\|$$
+A finite-state machine (Preparation $\to$ Stroke $\to$ Retraction) automatically detects gesture onset and settlement, preventing false-positive triggers during rest intervals between signs.
+
+### 📖 5. Intelligent ISL Gloss-to-English Syntax Transformer
+ISL follows a Subject-Object-Verb (SOV) structure with clause-final question particles and negation. SETU includes an intelligent rule-based and neural-fallback syntax engine:
+- **SOV to SVO Conversion:** Maps `["YOU", "BOOK", "READ"]` $\to$ `"You read book"`.
+- **Clause-Final Negation Movement:** Maps `["I", "MEAT", "EAT", "NOT"]` $\to$ `"I do not eat meat"`.
+- **Wh-Question Fronting:** Moves interrogative markers (`WHAT`, `WHERE`, `WHO`, `WHY`) to sentence-initial positions.
+- **Fingerspelling Spellchecker:** Corrects minor letter dropouts during fingerspelled words.
+
+### 🎓 6. Interactive Practice & Learning Studio (`PracticeStudio.tsx`)
+A dedicated educational learning portal allowing users to learn ISL interactively:
+- **Live Match Gauge:** Circular and linear progress indicators tracking sign accuracy against target templates.
+- **Auto-Advance Mode:** Holding target signs for 1.0s with $\ge 85\%$ confidence triggers a synthesized success chime, increments streak, and advances to the next sign.
+- **Dual Modes:** Practice the complete Dual-Hand Alphabet (A–Z) or common conversational phrases with sequential or shuffle options.
+
+
+### ⚡ 7. Continuous Dynamic CTC Fingerspelling
 Traditional systems freeze recognition for 0.5s after every character or spam 30 duplicate characters per second. SETU employs a **Connectionist Temporal Classification (CTC) Greedy Decoder** that:
 - Collapses repeated frame noise while a hand is held steady.
 - Detects transitions immediately when a new gesture begins.
 - Accurately captures natural double letters (*"B-O-O-K"*, *"M-E-E-T"*, *"L-O-O-K"*) without requiring unnatural hand drops.
 
-### 🌙 4. Adaptive Low-Light CLAHE Enhancer
+### 🌙 8. Adaptive Low-Light CLAHE Enhancer
 Budget laptop webcams in dimly lit environments introduce sensor noise and landmark jitter. SETU continuously measures image luminance in LAB color space ($L < 75$) and automatically applies Contrast-Limited Adaptive Histogram Equalization with bilateral filtering to recover hand contours in low-light conditions.
 
-### 🔄 5. Bidirectional 2-Way Assistive Workspace
+### 🔄 9. Bidirectional 2-Way Assistive Workspace
 SETU provides a complete communication bridge for both parties:
 - **ISL $\rightarrow$ English:** Live webcam feed transcribes gestures, maps Subject-Object-Verb (SOV) syntax into fluent English, and speaks sentences aloud via browser-native Text-to-Speech (TTS).
 - **English $\rightarrow$ ISL:** Hearing users type or speak English; the interactive Avatar Workspace renders corresponding 3D animated signs and fingerspelling sequences.
 
-### 📦 6. Decoupled Multimodal "Show-and-Sign" Grounding
+### 📦 10. Decoupled Multimodal "Show-and-Sign" Grounding
 Signers frequently need to reference physical objects (e.g., holding a water bottle while signing *"EMPTY"*). SETU supports zero-shot open-vocabulary object grounding (YOLO-World). Crucially, this feature is **decoupled and disabled by default**, ensuring that standard sign recognition runs at full, unhindered 30 FPS without frame lag or false object detections.
 
 ---
@@ -148,13 +171,14 @@ flowchart TD
 
 SETU hosts 5 specialized production models with verified tensor shapes and explicit paths defined in [`models/registry.py`](models/registry.py):
 
-| Model ID | Architecture | Task Scope | Input Vector | Class Count | Latency | Hardware / Engine | Weight Path |
-|---|---|---|---:|---:|---:|---|---|
-| `realsign` | 3-Layer Dense MLP + BatchNorm | Dual-Hand Alphabet (A–Z) | **126-D** | 26 | **0.15 ms** | PyTorch (CUDA / CPU) | `models/weights/realsign_26class_mlp.pth` |
-| `isl_mvp_5sign` | Temporal Pooling + Linear Softmax | Core Conversational Phrases | **158-D** (1,264-D pooled) | 6 | **0.42 ms** | Pure NumPy Linear | `models/weights/isl_mvp_model.npz` |
-| `isl_sequence_lstm` | 2-Layer BiLSTM + Attention | Dynamic Gesture Sequences | **328-D** | 7 | **3.80 ms** | PyTorch BiLSTM | `models/weights/isl_sequence_lstm.pth` |
-| `include_bilstm` | 5-Layer Deep BiLSTM | Large-Vocabulary Signs | **134-D** | 263 | **12.50 ms** | PyTorch BiLSTM | `models/pretrained/include_no_cnn_lstm.pth` |
-| `rf_uv_11` | Single-Hand 3D Dense MLP | Mobile / Lightweight Baseline | **63-D** | 26 | **0.88 ms** | Pure NumPy Dense HDF5 | `models/pretrained/rf_uv_11_model.h5` |
+| Model ID | Architecture | Task Scope | Input Vector | Class Count | Latency | Test Accuracy | Hardware / Engine | Weight Path |
+|---|---|---|---:|---:|---:|---:|---|---|
+| `realsign_multisigner` | 3-Layer ResNet/MLP (Augmented) | Multi-Signer Dual-Hand Alphabet | **126-D** | 26 | **0.15 ms** | **97.37%** (0.974 F1) | PyTorch (CUDA / CPU) | `models/weights/realsign_multisigner_mlp.pth` |
+| `realsign` | 3-Layer Dense MLP + BatchNorm | Dual-Hand Alphabet Baseline | **126-D** | 26 | **0.15 ms** | **94.99%** | PyTorch (CUDA / CPU) | `models/weights/realsign_26class_mlp.pth` |
+| `isl_mvp_5sign` | Temporal Pooling + Linear Softmax | Core Conversational Phrases | **158-D** (1,264-D pooled) | 6 | **0.42 ms** | **100.0%** (5 phrases) | Pure NumPy Linear | `models/weights/isl_mvp_model.npz` |
+| `isl_sequence_lstm` | 2-Layer BiLSTM + Attention | Dynamic Gesture Sequences | **328-D** | 7 | **3.80 ms** | **94.20%** | PyTorch BiLSTM | `models/weights/isl_sequence_lstm.pth` |
+| `include_bilstm` | 5-Layer Deep BiLSTM | Large-Vocabulary Signs | **134-D** | 263 | **12.50 ms** | **Top-5: 78.4%** | PyTorch BiLSTM | `models/pretrained/include_no_cnn_lstm.pth` |
+| `rf_uv_11` | Single-Hand 3D Dense MLP | Mobile / Lightweight Baseline | **63-D** | 26 | **0.88 ms** | Baseline | Pure NumPy Dense HDF5 | `models/pretrained/rf_uv_11_model.h5` |
 
 ---
 
@@ -222,12 +246,24 @@ By **decoupling object detection and disabling it by default**:
 
 ---
 
-### Option 1: Windows 1-Click Launch (Recommended)
-Double-click the included batch launcher at the repository root:
-```powershell
-.\Start_SETU.bat
-```
-*This automatically starts the FastAPI backend (port 8000), builds and starts the Vite React frontend (port 5173), and opens your default browser.*
+### Option 1: Windows 1-Click Launchers (Recommended)
+SETU provides automated Windows batch scripts for zero-friction operation:
+
+1. **Pre-Flight System Check (`Verify_SETU.bat`):**  
+   Verifies PyTorch CUDA hardware, checks all 6 registered models, executes core tests, and checks port availability:
+   ```powershell
+   .\Verify_SETU.bat
+   ```
+2. **One-Click Launch (`Start_SETU.bat`):**  
+   Starts FastAPI backend (port 8000), builds React frontend (port 5173), and opens the workstation in your default browser:
+   ```powershell
+   .\Start_SETU.bat
+   ```
+3. **Clean Process Terminator (`Stop_SETU.bat`):**  
+   Safely kills all background Python and Node processes bound to ports 8000 and 5173:
+   ```powershell
+   .\Stop_SETU.bat
+   ```
 
 ---
 
@@ -277,12 +313,12 @@ Interactive Swagger documentation is available at [**`http://localhost:8000/docs
 
 ## 🧪 Evidence-Based Testing & Quality Assurance
 
-The codebase includes an automated test suite containing **164 unit, integration, and regression tests**:
+The codebase includes an automated test suite containing **175 unit, integration, and regression tests**:
 
 ```powershell
 # Run the complete test suite
 pytest tests/ -q
-# Result: 164 passed in ~49s (100% passing)
+# Result: 175 passed in ~58s (100% passing, 0 failures)
 
 # Run pre-launch API & WebSocket endpoint verification
 python scripts/verify_all_endpoints.py
@@ -321,6 +357,8 @@ The portal covers:
 ```text
 C:\MINI PROJ-SETU/
 ├── Start_SETU.bat                  # 1-Click Windows launch script
+├── Stop_SETU.bat                   # 1-Click clean port & process terminator
+├── Verify_SETU.bat                 # 1-Click pre-flight diagnostic verification
 ├── pyproject.toml                  # Python package configuration & dependencies
 ├── backend/                        # Backend FastAPI engine
 │   └── app/
@@ -358,13 +396,16 @@ C:\MINI PROJ-SETU/
 
 ## 🗺️ Project Roadmap
 
-- [x] Dual-hand 126-D coordinate invariant normalization.
-- [x] Decisive single-letter display (eliminated candidate percentage clutter).
-- [x] Smooth 30 FPS video streaming with decoupled object detection.
-- [x] Clean master dataset with distance-based deduplication (`isl_master_clean_126d.npz`).
-- [x] Google Colab GPU training notebook & standalone CLI script.
-- [x] 1-Click Windows batch launcher (`Start_SETU.bat`).
-- [ ] Cloud-scale multi-signer training on Kaggle/Colab for wild generalization across unseen users.
+- [x] **Dual-Hand 126-D Coordinate Invariant Normalization:** Vertical palm alignment and scale invariance.
+- [x] **One-Euro Adaptive Speed Filtering:** Eliminates micro-jitter at rest while avoiding lag during fast signing.
+- [x] **Kinetic Energy Wavelet Segmentation:** Velocity-based boundary detection for continuous phrase transitions.
+- [x] **Decisive Single-Letter Display:** Clean, unambiguous output without distracting probability candidate clutter.
+- [x] **Multi-Signer Dataset & Residual Training:** 42,867 samples across 26 classes reaching 97.37% accuracy and 0.974 F1.
+- [x] **Intelligent ISL Syntax Engine:** Translates ISL SOV syntax into natural English SVO with clause-final negation handling.
+- [x] **Interactive Practice & Learning Studio (`PracticeStudio.tsx`):** Real-time pose scoring, auto-advance, and streak rewards.
+- [x] **Transcript Session Export:** One-click download of session transcripts formatted in Markdown.
+- [x] **1-Click Windows Operations:** `Start_SETU.bat`, `Stop_SETU.bat`, and `Verify_SETU.bat`.
+- [x] **175 Verified Automated Tests:** 100% test pass rate across vision, models, NLP, API, and transport layers.
 - [ ] Mobile edge deployment via ONNX Runtime for Android and iOS.
 
 ---

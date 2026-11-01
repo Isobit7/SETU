@@ -105,3 +105,4 @@ class OneEuroFilter:
         self.x_filter.reset()
         self.dx_filter.reset()
         self.last_time = None
+
