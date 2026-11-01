@@ -32,3 +32,4 @@ This discrepancy meant synthetic training examples deviated significantly from t
 ## 4. Acceptance Criteria & Verification
 - [ ] Synthetic dataset Landmark 9 has $\text{std} < 0.01$ along $X$ and $Z$ axes.
 - [ ] Synthetic and live canonical vectors match within $1e-4$ precision.
+

@@ -3,7 +3,8 @@ setlocal
 
 REM One-click launcher for the SETU backend and frontend.
 REM Update ROOT if your project folder is somewhere else.
-set "ROOT=C:\MINI PROJ-SETU"
+set "ROOT=%~dp0"
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 if not exist "%ROOT%\.venv\Scripts\python.exe" (
     echo ERROR: Python virtual environment not found:

@@ -19,12 +19,29 @@ const COMMON_SIGNS = [
   { id: 'help', label: 'HELP', desc: 'Place closed fist with thumb up onto flat open palm of other hand.' },
 ];
 
+let sharedAudioCtx: AudioContext | null = null;
+const getAudioContext = (): AudioContext | null => {
+  try {
+    if (typeof window === 'undefined') return null;
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      void sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+};
+
 /** Synthesize a gentle celebratory chime using the browser native Web Audio API */
 const playSuccessChime = () => {
   try {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';

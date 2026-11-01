@@ -136,6 +136,7 @@ class RealSignInferenceService:
 
         # Canonical production model weight paths (strict ordering: active production checkpoint only)
         self.candidate_paths = [
+            self.project_root / "models" / "weights" / "realsign_multisigner_mlp.pth",
             self.project_root / "models" / "weights" / "realsign_26class_mlp.pth",
         ]
 

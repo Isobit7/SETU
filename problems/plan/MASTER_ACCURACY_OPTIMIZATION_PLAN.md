@@ -71,3 +71,4 @@ All movements and tracking can be performed automatically using the standard Pyt
 ### Phase 4: Training Distribution Alignment & Negative Class Ingestion (PROB-03, PROB-04, PROB-08, PROB-10)
 - **PROB-04 & PROB-10**: Re-generate multi-signer dataset with strictly aligned canonical vectors and variable anthropometric proportions.
 - **PROB-03 & PROB-08**: Retrain RealSign MLP with 50% independent hand dropout and a 27th `NO_SIGN` class to eliminate false resting-hand collapses.
+

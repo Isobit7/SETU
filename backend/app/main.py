@@ -40,6 +40,7 @@ class HealthResponse(BaseModel):
     sequence_lstm_ready: bool = True
     sequence_lstm_classes_count: int = 7
     active_classifiers: List[str] = [
+        "realsign_multisigner_mlp",
         "realsign_26class_alphabet",
         "isl_mvp_5sign",
         "isl_sequence_lstm",

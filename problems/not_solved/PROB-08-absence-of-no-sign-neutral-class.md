@@ -30,3 +30,4 @@ Because probabilities sum to $1.0$, even a completely arbitrary resting posture 
 ## 4. Acceptance Criteria & Verification
 - [ ] Relaxed resting hands in camera view trigger `_NO_SIGN_` or empty prediction $> 90\%$ of the time.
 - [ ] Letter accuracy on valid active signs remains $\ge 90\%$.
+

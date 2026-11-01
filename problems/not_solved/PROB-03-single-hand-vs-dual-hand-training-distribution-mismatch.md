@@ -32,3 +32,4 @@ In the training dataset `isl_master_clean_126d.npz`:
 ## 4. Acceptance Criteria & Verification
 - [ ] Retrained model achieves $> 85\%$ accuracy when tested on pure single-hand inputs with Left Hand set to zero (`feat[0:63] = 0`).
 - [ ] Letters `D`, `E`, `M`, `N`, `X` achieve $> 80\%$ recall on single-hand test inputs.
+

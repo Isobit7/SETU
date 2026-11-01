@@ -59,7 +59,12 @@ export interface HealthStatusResponse {
 }
 
 export class ApiService {
-  private static baseUrl = 'http://localhost:8000';
+  private static baseUrl =
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL)
+      ? import.meta.env.VITE_API_BASE_URL
+      : (typeof window !== 'undefined'
+          ? `${window.location.protocol}//${window.location.hostname}:8000`
+          : 'http://localhost:8000');
 
   public static setBaseUrl(url: string) {
     this.baseUrl = url.replace(/\/$/, '');

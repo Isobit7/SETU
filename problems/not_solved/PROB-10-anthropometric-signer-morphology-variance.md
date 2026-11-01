@@ -36,3 +36,4 @@ Because synthetic signers are mere scaled clones of the original signer, the cla
 ## 4. Acceptance Criteria & Verification
 - [ ] Synthetic dataset exhibits diverse finger-to-palm ratio variance ($std > 0.04$).
 - [ ] Cross-signer test evaluation accuracy improves across distinct test signers.
+

@@ -34,3 +34,4 @@ The current 126-D feature representation forces the neural network to learn comp
 ## 4. Acceptance Criteria & Verification
 - [ ] Joint flexion angles return values in range $[0, \pi]$ invariant to 3D hand rotation.
 - [ ] Discrimination between 'U' (fingers closed together) and 'V' (fingers spread apart) achieves $> 95\%$ test accuracy on synthetic and real benchmarks.
+

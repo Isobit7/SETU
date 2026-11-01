@@ -1,3 +1,4 @@
+import { ApiService } from '../services/apiService';
 import React, { useState } from 'react';
 import { X, Check, Type, Cpu, Camera, BookOpen } from 'lucide-react';
 import { WebcamAlphabetRecognition } from './WebcamAlphabetRecognition';
@@ -61,7 +62,7 @@ export const AlphabetModal: React.FC<AlphabetModalProps> = ({ isOpen, onClose })
 
         <div className="modal-body">
           {activeTab === 'live' ? (
-            <WebcamAlphabetRecognition apiBaseUrl="http://localhost:8000" />
+            <WebcamAlphabetRecognition apiBaseUrl={ApiService.getBaseUrl()} />
           ) : (
             <>
               {/* Model Metrics Callout */}

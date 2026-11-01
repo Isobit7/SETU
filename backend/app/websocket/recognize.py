@@ -330,8 +330,10 @@ async def websocket_recognize(
                     })
             elif action == "set_model":
                 req_model = str(payload.get("model", "realsign")).lower()
-                if req_model == "include":
+                if req_model in ("include", "include_stream"):
                     req_model = "include_stream"
+                elif req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
+                    req_model = "realsign"
                 if req_model in ("realsign", "isl_mvp", "isl_sequence_lstm", "include_stream"):
                     active_model = req_model
                     rolling_features.clear()

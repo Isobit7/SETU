@@ -35,3 +35,4 @@ The Euclidean distance between wrists in the normalized representation is always
 - [ ] Relative inter-wrist distance varies proportionally with real world hand distance.
 - [ ] Two-handed letters that touch ('P', 'H', 'K') have distinct distance profiles from detached dual signs.
 - [ ] Geometry tests pass without breaking 126-D dimensionality constraints.
+

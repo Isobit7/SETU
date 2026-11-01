@@ -33,3 +33,4 @@ During live webcam signing (especially when the user signs near the center of th
 ## 4. Acceptance Criteria & Verification
 - [ ] No single-frame handedness inversions occur when hand is held steady near the center line.
 - [ ] Crossing hands or moving hand across center does not trigger spurious letter flickering.
+

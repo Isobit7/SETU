@@ -33,3 +33,4 @@ Applying a $14^\circ$ out-of-plane 3D rotation alters the apparent $(x,y)$ 2D pr
 ## 4. Acceptance Criteria & Verification
 - [ ] Landmark variance on static held hand is reduced by $\ge 40\%$.
 - [ ] 3D planar rotation does not oscillate wildly on consecutive webcam frames under monocular RGB.
+

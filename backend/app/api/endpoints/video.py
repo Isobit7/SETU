@@ -80,6 +80,11 @@ async def recognize_video(file: UploadFile = File(...)) -> Dict[str, Any]:
         )
     finally:
         try:
+            if not temp_file.closed:
+                temp_file.close()
+        except Exception:
+            pass
+        try:
             if temp_path.exists():
                 os.remove(temp_path)
         except Exception as e:

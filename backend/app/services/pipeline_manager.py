@@ -75,7 +75,8 @@ class PipelineManager:
 
         # Canonical explicit file paths
         self.model_path = Path("models/weights/isl_mvp_model.npz")
-        self.realsign_model_path = Path("models/weights/realsign_26class_mlp.pth")
+        multisigner_path = Path("models/weights/realsign_multisigner_mlp.pth")
+        self.realsign_model_path = multisigner_path if multisigner_path.exists() else Path("models/weights/realsign_26class_mlp.pth")
         self.sequence_lstm_model_path = Path("models/weights/isl_sequence_lstm.pth")
         self.task_path = Path("models/tasks/holistic_landmarker.task")
         self.hand_task_path = Path("models/tasks/hand_landmarker.task")
