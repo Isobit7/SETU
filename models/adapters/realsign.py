@@ -310,11 +310,20 @@ class RealSignClassifier:
             boosted_letter: Optional[str] = None
             try:
                 pts_to_eval = None
-                if raw_landmarks_21x3 is not None:
+                if raw_landmarks_21x3 is not None and np.count_nonzero(np.abs(raw_landmarks_21x3) > 1e-4) >= 15:
                     pts_to_eval = raw_landmarks_21x3
-                elif original_63d is not None:
+                elif original_63d is not None and np.count_nonzero(np.abs(original_63d) > 1e-4) >= 15:
                     pts_to_eval = original_63d.reshape(21, 3)
-                else:
+                elif feat_vec.shape[0] == 126:
+                    lh_energy = float(np.linalg.norm(feat_vec[0:63]))
+                    rh_energy = float(np.linalg.norm(feat_vec[63:126]))
+                    if rh_energy > 1e-3:
+                        pts_to_eval = feat_vec[63:126].reshape(21, 3)
+                    elif lh_energy > 1e-3:
+                        pts_to_eval = feat_vec[0:63].reshape(21, 3)
+                elif feat_vec.shape[0] == 63 and float(np.linalg.norm(feat_vec)) > 1e-3:
+                    pts_to_eval = feat_vec.reshape(21, 3)
+                elif feat_vec.shape[0] == 57 and float(np.linalg.norm(feat_vec)) > 1e-3:
                     from training.features.geometry import ACTIVE_COORDINATE_INDICES_57
                     recon_63 = np.zeros(63, dtype=np.float32)
                     recon_63[ACTIVE_COORDINATE_INDICES_57] = feat_vec[:57]

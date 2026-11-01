@@ -802,13 +802,21 @@ async def websocket_recognize(
                     is_pred_valid = bool(isl_pred and isl_pred.confidence >= active_threshold and isl_pred.is_known_sign and isl_pred.label != "no_sign")
                     pred_label = isl_pred.label if isl_pred else ""
 
+                # Kinetic Gating for Static Alphabet Recognition (PROB-09):
+                # When hand velocity exceeds threshold, user is in active transit between signs.
+                # In-flight frames must not accumulate streaks or emit false intermediate letters.
+                alphabet_in_motion = bool(active_model == "realsign" and kinetic_energy > 0.055)
+
                 if active_model == "realsign":
-                    if not hand_detected or not has_realsign_feat or not is_pred_valid:
+                    if not hand_detected or not has_realsign_feat or not is_pred_valid or alphabet_in_motion:
                         current_prediction = "Awaiting Sign Input"
                     else:
                         current_prediction = pred_label
 
-                    if current_prediction == alphabet_streak_candidate:
+                    if alphabet_in_motion:
+                        alphabet_streak_count = 0
+                        alphabet_streak_candidate = "Awaiting Sign Input"
+                    elif current_prediction == alphabet_streak_candidate:
                         alphabet_streak_count += 1
                     else:
                         alphabet_streak_candidate = current_prediction
@@ -840,7 +848,13 @@ async def websocket_recognize(
                             res_is_known = False
                             is_stable = False
                     else:
-                        if alphabet_last_committed and hand_detected and has_realsign_feat:
+                        if alphabet_in_motion and hand_detected:
+                            res_label = "Transitioning"
+                            res_display = "Moving..."
+                            res_conf = 0.0
+                            res_is_known = False
+                            is_stable = False
+                        elif alphabet_last_committed and hand_detected and has_realsign_feat:
                             res_label = alphabet_last_committed
                             res_display = f"LETTER {alphabet_last_committed}"
                             res_conf = raw_conf
@@ -1026,7 +1040,7 @@ async def websocket_recognize(
                     },
                     "kinetic_energy": round(float(kinetic_energy), 4),
                     "is_actively_signing": bool(is_actively_signing),
-                    "motion_state": "signing" if is_actively_signing else ("settled" if motion_settled_now else "idle"),
+                    "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model == "realsign" and is_stable)) else "idle"),
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
                     "sentence_tokens": list(accumulator.sentence_tokens),

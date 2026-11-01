@@ -442,6 +442,10 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
     if palm_len < 1e-6:
         return None
 
+    # Guard against zero-padded, degenerate, or single-landmark mock arrays
+    if np.count_nonzero(np.abs(arr) > 1e-4) < 15:
+        return None
+
     thumb_ext, index_ext, middle_ext, ring_ext, pinky_ext = get_finger_extension_states(arr)
 
     # Aperture distance between thumb tip (landmark 4) and index tip (landmark 8)

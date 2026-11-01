@@ -7,7 +7,7 @@
   "file_path": "models\\weights\\realsign_multisigner_mlp.pth",
   "file_size_bytes": 116651,
   "file_size_formatted": "113.92 KB",
-  "last_modified": "2026-11-01T06:01:40.815212+00:00",
+  "last_modified": "2026-11-01T06:10:14.200258+00:00",
   "status": "active",
   "total_parameters": 26972,
   "weights_parameters": 26176,

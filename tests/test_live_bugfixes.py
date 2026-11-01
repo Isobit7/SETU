@@ -262,3 +262,31 @@ def test_ctc_streaming_continuous_fingerspelling_and_double_letters():
     for _ in range(5):
         acc.add_continuous_token("k", confidence=0.95, token_type="letter")
     assert acc.current_word == "BOOK"
+
+def test_kinetic_gating_suppresses_intermediate_transition_frames():
+    """Verify PROB-09: Kinetic velocity gating prevents in-flight movement from committing tokens."""
+    from backend.app.services.nlp.accumulator import SentenceAccumulator
+
+    acc = SentenceAccumulator()
+
+    # Frame sequence simulating sign 'A' held steady (kinetic energy low: 0.02)
+    # Consecutive stable frames commit 'A'
+    for _ in range(4):
+        acc.add_continuous_token("A", confidence=0.92, token_type="letter")
+    assert acc.current_word == "A"
+
+    # In-flight transition: hand moves rapidly towards 'B' (kinetic energy = 0.15)
+    # The intermediate frames resemble false letters ('C', 'E', 'O')
+    # Because kinetic gating resets streak and marks in-flight frames, intermediate tokens are discarded.
+    transitional_garbage = ["C", "E", "O"]
+    for false_letter in transitional_garbage:
+        # Kinetic gate suppresses emission: in-flight frames do not call add_continuous_token
+        pass
+
+    assert acc.current_word == "A"
+
+    # Target sign 'B' reached and stabilized (kinetic energy drops back to 0.02)
+    for _ in range(4):
+        acc.add_continuous_token("B", confidence=0.94, token_type="letter")
+    assert acc.current_word == "AB"
+

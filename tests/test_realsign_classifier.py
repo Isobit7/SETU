@@ -431,5 +431,19 @@ def test_realsign_cpu_latency_and_letters():
     print(f"\nRealSign CPU Average Latency: {avg_latency_ms:.3f} ms")
     assert avg_latency_ms < 2.0, f"Expected < 2.0ms on CPU, got {avg_latency_ms:.3f} ms"
 
+def test_realsign_no_o_hijack_on_single_hand():
+    """Verify PROB-01 fix: single right-hand with zeroed left-hand is NOT hijacked to 'O'."""
+    weights_path = Path("models/weights/realsign_multisigner_mlp.pth")
+    if not weights_path.exists():
+        weights_path = Path("models/weights/realsign_26class_mlp.pth")
+    if not weights_path.exists():
+        pytest.skip("No weights found for test")
 
+    clf = RealSignClassifier(weights_path)
+    lh_zeros = np.zeros((21, 3), dtype=np.float32)
+    rh_pose_l = _make_hand_pose(thumb=True, index=True, middle=False, ring=False, pinky=False)
+    vec126 = np.concatenate([lh_zeros.flatten(), rh_pose_l.flatten()])
+
+    pred = clf.predict(vec126, confidence_threshold=0.0, apply_heuristic_boost=True)
+    assert pred.letter != "O" or pred.confidence < 0.9, "Single hand should not be hijacked to O"
 
