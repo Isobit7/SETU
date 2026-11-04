@@ -784,7 +784,7 @@ async def websocket_recognize(
                                     target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
-                                    apply_heuristic_boost=False,
+                                    apply_heuristic_boost=True,
                                     raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )
@@ -925,17 +925,28 @@ async def websocket_recognize(
                             res_is_known = True
                             is_stable = True
 
-                            # Continuous CTC Dynamic Token Emission (collapses duplicates, handles transitions & double letters)
-                            emitted = accumulator.add_continuous_token(
-                                alphabet_streak_candidate,
-                                confidence=raw_conf,
-                                token_type="letter",
-                                timestamp=now,
-                            )
-                            if emitted:
-                                alphabet_last_committed = alphabet_streak_candidate
-                                alphabet_last_committed_time = now
-                                alphabet_repeat_lock = True
+                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
+                            time_since_commit = now - alphabet_last_committed_time
+                            is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
+
+                            # Only emit if:
+                            # 1) It's a new letter, OR
+                            # 2) Hand went through an idle/rest baseline, OR
+                            # 3) User held continuously for >= 1.2s to intentionally sign a double letter
+                            can_emit = (not is_same_letter) or (not alphabet_repeat_lock) or (time_since_commit >= 1.2)
+
+                            if can_emit:
+                                emitted = accumulator.add_continuous_token(
+                                    alphabet_streak_candidate,
+                                    confidence=raw_conf,
+                                    token_type="letter",
+                                    timestamp=now,
+                                )
+                                if emitted:
+                                    alphabet_last_committed = alphabet_streak_candidate
+                                    alphabet_last_committed_time = now
+                                    alphabet_repeat_lock = True
+                                    had_idle_baseline = False
                         else:
                             res_label = "Awaiting Sign Input"
                             res_display = "Awaiting Sign Input"

@@ -483,10 +483,15 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
     if pinky_ext and not thumb_ext and not index_ext and not middle_ext and not ring_ext:
         return "I"
 
-    # 5. 'V': Index + Middle extended (apart), others curled
-    if index_ext and middle_ext and not ring_ext and not pinky_ext and not thumb_ext:
+    # 5. 'V': Index + Middle extended (apart), others curled (robust to thumb fold/rest)
+    if index_ext and middle_ext and not ring_ext and not pinky_ext:
         d_idx_mid = float(np.linalg.norm(arr[8] - arr[12])) / palm_len
-        return "V" if d_idx_mid >= 0.16 else "U"
+        return "V" if d_idx_mid >= 0.14 else "U"
+
+    # 6. 'F': Thumb + Index form aperture/touching, Middle + Ring + Pinky extended
+    if not index_ext and middle_ext and ring_ext and pinky_ext:
+        if d_thumb_idx <= 0.28:
+            return "F"
 
 
     # 6. 'W': Index + Middle + Ring extended, others curled

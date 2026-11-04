@@ -91,6 +91,10 @@ class SentenceAccumulator:
         normalized_type = str(token_type).lower().strip()
 
         if normalized_type == "letter":
+            # Anti-spam refractory guard: prevent identical letter repetition within 0.8s hold
+            if self.current_word and self.current_word.endswith(clean.upper()):
+                if (timestamp - self.last_token_time) < 0.8:
+                    return
             self.current_word += clean.upper()
             self.last_token_time = timestamp
             self._tokens_changed = True
