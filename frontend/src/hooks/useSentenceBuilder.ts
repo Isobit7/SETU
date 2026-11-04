@@ -104,7 +104,7 @@ export function useSentenceBuilder({
     const isSameSign = signText === lastAppendedSignRef.current;
 
     // Duplicate lockout: 350ms lockout AND requires idle baseline transition
-    if (isSameSign && (timeSinceLast < 350 || !hadHandDropRef.current)) {
+    if (isSameSign && (timeSinceLast < 800 || !hadHandDropRef.current)) {
       return;
     }
 
