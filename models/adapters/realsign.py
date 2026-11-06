@@ -305,10 +305,16 @@ class RealSignClassifier:
                     if float(np.max(logits_swapped)) > float(np.max(logits_arr)):
                         logits_arr = logits_swapped.copy()
 
-        # Optional geometric rule validation (only if explicitly enabled; disabled by default to avoid hijacking)
+        # Contextual Pairwise Geometric Disambiguation
         if apply_heuristic_boost:
             boosted_letter: Optional[str] = None
             try:
+                # Obtain the neural network's top-2 raw candidate predictions
+                sorted_raw_idx = np.argsort(logits_arr)[::-1]
+                raw_top1 = self.class_names[sorted_raw_idx[0]]
+                raw_top2 = self.class_names[sorted_raw_idx[1]]
+                top_pair = {raw_top1, raw_top2}
+
                 pts_to_eval = None
                 if raw_landmarks_21x3 is not None and np.count_nonzero(np.abs(raw_landmarks_21x3) > 1e-4) >= 15:
                     pts_to_eval = raw_landmarks_21x3
@@ -331,7 +337,7 @@ class RealSignClassifier:
                     pts_to_eval = recon_63.reshape(21, 3)
 
                 if pts_to_eval is not None:
-                    boosted_letter = evaluate_alphabet_heuristics(pts_to_eval)
+                    boosted_letter = evaluate_alphabet_heuristics(pts_to_eval, candidate_pair=top_pair)
             except Exception as e:
                 logger.debug("Failed evaluating alphabet heuristics: %s", e)
 
@@ -342,7 +348,7 @@ class RealSignClassifier:
                 other_logits = logits_arr[other_mask]
                 max_other = float(np.max(other_logits))
                 logsumexp_other = float(max_other + np.log(np.sum(np.exp(other_logits - max_other))))
-                logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 2.0)
+                logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 1.8)
 
         # Calibrated Softmax with Temperature Scaling (T=0.75) for high-confidence discriminability
         temperature = 0.75

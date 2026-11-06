@@ -409,8 +409,8 @@ export function useRecognitionStream({
         ws &&
         ws.readyState === WebSocket.OPEN
       ) {
-        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >120ms)
-        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 120);
+        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >40ms)
+        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 40);
         if (now - lastFrameSentTimeRef.current >= intervalMs && (!waitingForResponseRef.current || isStaleLock)) {
           lastFrameSentTimeRef.current = now;
           waitingForResponseRef.current = true;

@@ -504,11 +504,9 @@ async def websocket_recognize(
                             except Exception as e:
                                 logger.debug("HandLandmarker error: %s", e)
 
-                        # Only fallback to heavyweight Holistic if HandLandmarker found no hands
-                        if h_raw is None and pipeline.landmarker is not None:
-                            hl_res = pipeline.landmarker.detect(img)
-                        else:
-                            hl_res = HolisticLandmarkerResult()
+                        # High-speed alphabet mode: HandLandmarker alone handles hand detection.
+                        # Do not invoke heavyweight Holistic (saves 25-35ms per frame).
+                        hl_res = HolisticLandmarkerResult()
                     else:
                         # Sequence / Word models: need pose and face for 164-D vectors
                         if pipeline.landmarker is not None:

@@ -1,0 +1,417 @@
+{
+  "dataset_name": "Amrita SLR Dataset",
+  "total_samples": 978,
+  "num_classes": 49,
+  "class_names": [
+    "bird",
+    "you_are_perfect",
+    "monsoon",
+    "afternoon",
+    "angry",
+    "bad",
+    "boy",
+    "eat",
+    "friend",
+    "drinking",
+    "girl",
+    "black",
+    "brother",
+    "good",
+    "father",
+    "evening",
+    "help",
+    "mother",
+    "name",
+    "night",
+    "music",
+    "nose",
+    "cat",
+    "sleep",
+    "sit",
+    "sorry",
+    "stand",
+    "stop",
+    "student",
+    "study",
+    "teacher",
+    "thank_you",
+    "today",
+    "cow",
+    "tomorrow",
+    "welcome",
+    "work",
+    "yesterday",
+    "teeth",
+    "hand",
+    "write",
+    "umbrella",
+    "ring",
+    "dog",
+    "power",
+    "fish",
+    "good_morning",
+    "grey",
+    "hello"
+  ],
+  "splits": {
+    "train": 782,
+    "validation": 98,
+    "test": 98
+  },
+  "test_metrics": {
+    "overall_accuracy": 0.7857,
+    "overall_accuracy_pct": 78.57,
+    "top3_accuracy_pct": 90.82,
+    "top5_accuracy_pct": 94.9,
+    "macro_f1": 0.7532
+  },
+  "top_confusion_pairs": [
+    {
+      "true_sign": "eat",
+      "predicted_sign": "nose",
+      "count": 2
+    },
+    {
+      "true_sign": "grey",
+      "predicted_sign": "black",
+      "count": 2
+    },
+    {
+      "true_sign": "monsoon",
+      "predicted_sign": "sit",
+      "count": 1
+    },
+    {
+      "true_sign": "afternoon",
+      "predicted_sign": "nose",
+      "count": 1
+    },
+    {
+      "true_sign": "afternoon",
+      "predicted_sign": "eat",
+      "count": 1
+    },
+    {
+      "true_sign": "angry",
+      "predicted_sign": "bad",
+      "count": 1
+    },
+    {
+      "true_sign": "bad",
+      "predicted_sign": "sorry",
+      "count": 1
+    },
+    {
+      "true_sign": "friend",
+      "predicted_sign": "drinking",
+      "count": 1
+    },
+    {
+      "true_sign": "cat",
+      "predicted_sign": "ring",
+      "count": 1
+    },
+    {
+      "true_sign": "sit",
+      "predicted_sign": "mother",
+      "count": 1
+    }
+  ],
+  "per_class": {
+    "bird": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "you_are_perfect": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "monsoon": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "afternoon": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "angry": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "bad": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "boy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "eat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "friend": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "drinking": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "girl": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "black": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "brother": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "good": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "father": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "evening": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "help": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "mother": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "name": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "night": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "music": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "nose": {
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1_score": 0.5714,
+      "support": 2
+    },
+    "cat": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "sleep": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "sit": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "sorry": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "stand": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "stop": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "student": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "study": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "teacher": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "thank_you": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "today": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "cow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "tomorrow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "welcome": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "work": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "yesterday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "teeth": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "hand": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "write": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "umbrella": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "ring": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "dog": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "power": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "fish": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "good_morning": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "grey": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "hello": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    }
+  },
+  "trained_at": "2026-11-06T09:17:09.401275+00:00"
+}

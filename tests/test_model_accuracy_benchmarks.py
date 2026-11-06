@@ -16,7 +16,13 @@ and spatial invariance properties:
 from __future__ import annotations
 
 import math
+import sys
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 import numpy as np
 import pytest
 import torch
@@ -310,4 +316,9 @@ def test_multisigner_model_accuracy_benchmark():
     # Verify no class collapse: all 26 classes must have non-zero recall
     for c_name, c_stats in metrics["per_class"].items():
         assert c_stats["recall"] > 0.0, f"Class {c_name} suffered from mode collapse (recall = 0)"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
+
 

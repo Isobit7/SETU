@@ -59,8 +59,8 @@ class AdaptiveLowLightEnhancer:
             # Apply CLAHE to L channel to restore contrast and visibility
             enhanced_l = self.clahe.apply(l_channel)
 
-            # Subtle bilateral filter on enhanced luminance to smooth camera thermal grain
-            enhanced_l = cv2.bilateralFilter(enhanced_l, d=5, sigmaColor=35, sigmaSpace=35)
+            # High-speed Gaussian smoothing for thermal camera grain (<0.3ms vs ~20ms for bilateral)
+            enhanced_l = cv2.GaussianBlur(enhanced_l, (3, 3), 0)
 
             merged_lab = cv2.merge([enhanced_l, a_channel, b_channel])
             enhanced_bgr = cv2.cvtColor(merged_lab, cv2.COLOR_LAB2BGR)

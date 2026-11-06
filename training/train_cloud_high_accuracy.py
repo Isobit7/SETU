@@ -18,14 +18,20 @@ import json
 import logging
 import math
 import os
+import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+from training.train_isl_dualhand_mlp import RealSignMLP
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("setu.cloud_training")
@@ -162,15 +168,32 @@ def train_cloud_pipeline(
     logger.info("Using compute device: %s", device)
 
     # 1. Load or Generate Dataset
+    dataset_file: Optional[Path] = None
     if data_path and Path(data_path).exists():
-        logger.info("Loading existing dataset from %s", data_path)
-        data = np.load(data_path)
-        X = data["features"]
-        y = data["labels"]
+        dataset_file = Path(data_path)
+    else:
+        # Auto-detect existing processed multi-signer datasets
+        candidates = [
+            ROOT_DIR / "data" / "processed" / "isl_multisigner_augmented_26class.npz",
+            ROOT_DIR / "data" / "processed" / "isl_master_clean_126d.npz",
+            ROOT_DIR / "data" / "processed" / "isl_combined_master_26class.npz",
+            ROOT_DIR / "data" / "processed" / "isl_dualhand_26class.npz",
+        ]
+        dataset_file = next((c for c in candidates if c.exists()), None)
+
+    if dataset_file is not None and dataset_file.exists():
+        logger.info("Loading existing dataset from %s", dataset_file)
+        data = np.load(dataset_file, allow_pickle=True)
+        X = data["X"] if "X" in data else data["features"]
+        y = data["y"] if "y" in data else data["labels"]
     else:
         logger.info("Generating multi-signer benchmark dataset (42,000 samples)...")
-        from scripts.generate_multisigner_dataset import generate_dataset
-        X, y = generate_dataset(num_samples_per_class=1600, random_seed=42)
+        from scripts.generate_multisigner_dataset import generate_multisigner_dataset
+        gen_target = ROOT_DIR / "data" / "processed" / "isl_multisigner_augmented_26class.npz"
+        generate_multisigner_dataset(output_npz=str(gen_target))
+        data = np.load(gen_target, allow_pickle=True)
+        X = data["X"] if "X" in data else data["features"]
+        y = data["y"] if "y" in data else data["labels"]
 
     # Stratified Train / Validation Split (85% / 15%)
     indices = np.arange(len(X))
@@ -187,9 +210,16 @@ def train_cloud_pipeline(
 
     logger.info("Train set: %d samples | Validation set: %d samples", len(train_ds), len(val_ds))
 
-    # 2. Instantiate Model, Loss, Optimizer
-    model = HighAccuracyISLNet(input_dim=126, num_classes=26, hidden_dim=256).to(device)
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.08)
+    # 2. Instantiate Model, Loss, Optimizer (Canonical SETU RealSignMLP)
+    model = RealSignMLP(
+        input_dim=126,
+        hidden1=128,
+        hidden2=64,
+        num_classes=26,
+        dropout=0.2,
+        use_batchnorm=True,
+    ).to(device)
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.05)
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-5)
 
@@ -242,20 +272,43 @@ def train_cloud_pipeline(
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save({
+            ckpt_payload = {
                 "model_state_dict": model.state_dict(),
                 "val_acc": val_acc,
                 "val_top3_acc": val_top3_acc,
+                "test_accuracy": round(val_acc, 4),
                 "epoch": epoch,
                 "input_dim": 126,
                 "num_classes": 26,
                 "classes": CLASS_NAMES_26,
-            }, best_weights_path)
+                "architecture": {
+                    "input_dim": 126,
+                    "hidden1": 128,
+                    "hidden2": 64,
+                    "num_classes": 26,
+                    "use_batchnorm": True,
+                    "dropout": 0.2,
+                },
+            }
+            torch.save(ckpt_payload, best_weights_path)
+            multisigner_copy = out_path / "realsign_multisigner_mlp.pth"
+            torch.save(ckpt_payload, multisigner_copy)
             logger.info("Saved new best model checkpoint (Val Acc: %.2f%%) to %s", val_acc * 100, best_weights_path)
 
     # 4. Automated ONNX Export for Browser & Edge Inference
     onnx_path = out_path / "realsign_multisigner.onnx"
-    export_to_onnx(model, onnx_path, device=device)
+    # Load best weights before ONNX export
+    best_ckpt = torch.load(best_weights_path, map_location="cpu", weights_only=False)
+    best_model = RealSignMLP(
+        input_dim=126,
+        hidden1=128,
+        hidden2=64,
+        num_classes=26,
+        dropout=0.0,
+        use_batchnorm=True,
+    )
+    best_model.load_state_dict(best_ckpt["model_state_dict"])
+    export_to_onnx(best_model, onnx_path, device="cpu")
 
     return {
         "final_train_acc": train_acc,
@@ -270,15 +323,20 @@ def export_to_onnx(model: nn.Module, output_path: Path, device: str = "cpu") -> 
     """Exports PyTorch model to ONNX format with dynamic batching."""
     model.eval()
     dummy_input = torch.randn(1, 126, dtype=torch.float32, device=device)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     torch.onnx.export(
         model,
         dummy_input,
         str(output_path),
-        input_names=["landmarks_126d"],
+        input_names=["features_126d"],
         output_names=["logits"],
-        dynamic_axes={"landmarks_126d": {0: "batch_size"}, "logits": {0: "batch_size"}},
+        dynamic_axes={"features_126d": {0: "batch_size"}, "logits": {0: "batch_size"}},
         opset_version=14,
     )
+    frontend_models = ROOT_DIR / "frontend" / "public" / "models"
+    if frontend_models.exists():
+        import shutil
+        shutil.copy2(output_path, frontend_models / output_path.name)
     logger.info("Successfully exported ONNX model to %s (Size: %.1f KB)", output_path, output_path.stat().st_size / 1024)
 
 
@@ -309,3 +367,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

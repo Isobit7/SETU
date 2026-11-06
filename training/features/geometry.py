@@ -5,7 +5,7 @@ Provides scale, translation, and rotation invariant hand landmark normalization,
 15 finger joint angles (MCP, PIP, DIP for all 5 fingers), and pairwise fingertip distances.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import numpy as np
 
 
@@ -422,19 +422,14 @@ def get_finger_extension_states(
     return (thumb_ext, index_ext, middle_ext, ring_ext, pinky_ext)
 
 
-def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[str]:
+def evaluate_alphabet_heuristics(
+    pts: Union[np.ndarray, List[Any]],
+    candidate_pair: Optional[Set[str]] = None,
+) -> Optional[str]:
     """
-    Evaluates physical finger-extension heuristics for static 26-class alphabet:
-    - Index + Thumb extended, others curled ➔ Boost 'L'
-    - Pinky extended only, others curled ➔ Boost 'I'
-    - Index + Middle extended (apart), others curled ➔ Boost 'V'
-    - Index + Middle + Ring extended, others curled ➔ Boost 'W'
-    - Thumb + Pinky extended, middle three curled ➔ Boost 'Y'
-    - All 4 fingers extended together ➔ Boost 'B'
-    - All fingers curled into fist ➔ Boost 'A'
-
-    Returns:
-        Letter string ('L', 'I', 'V', 'W', 'Y', 'B', 'A') to boost, or None if no rule matches.
+    Evaluates physical finger-extension heuristics for static 26-class alphabet.
+    When candidate_pair is provided, applies targeted pairwise disambiguation to avoid
+    hijacking the neural network on signs it already classifies with high confidence.
     """
     if pts is None or len(pts) == 0:
         return None
@@ -459,40 +454,54 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
 
     # Aperture distance between thumb tip (landmark 4) and index tip (landmark 8)
     d_thumb_idx = float(np.linalg.norm(arr[4] - arr[8])) / palm_len
-    d_thumb_mid = float(np.linalg.norm(arr[4] - arr[12])) / palm_len
 
-    # 1. Non-extended finger poses: 'C' (open curved arc) vs 'A' (closed fist)
-    if not index_ext and not middle_ext and not ring_ext and not pinky_ext and not thumb_ext:
-        if d_thumb_idx >= 0.35:
-            return "C"
-        elif d_thumb_idx <= 0.16:
-            return "O"
-        elif d_thumb_idx < 0.28:
-            return "A"
-        return None
+    # --- Targeted Contextual Pairwise Disambiguation ---
+    if candidate_pair:
+        if candidate_pair & {"V", "F"}:
+            if index_ext and middle_ext and not ring_ext and not pinky_ext:
+                d_idx_mid = float(np.linalg.norm(arr[8] - arr[12])) / palm_len
+                return "V" if d_idx_mid >= 0.14 else "U"
+            if not index_ext and middle_ext and ring_ext and pinky_ext and d_thumb_idx <= 0.32:
+                return "F"
 
-    # 2. 'B': All 4 fingers extended together (thumb folded / curled)
-    if index_ext and middle_ext and ring_ext and pinky_ext and not thumb_ext:
-        return "B"
+        if candidate_pair & {"U", "V"}:
+            if index_ext and middle_ext and not ring_ext and not pinky_ext:
+                d_idx_mid = float(np.linalg.norm(arr[8] - arr[12])) / palm_len
+                return "V" if d_idx_mid >= 0.14 else "U"
 
-    # 3. 'L': Index + Thumb extended, others curled
-    if thumb_ext and index_ext and not middle_ext and not ring_ext and not pinky_ext:
-        return "L"
+        if candidate_pair & {"W", "V"}:
+            if index_ext and middle_ext and ring_ext and not pinky_ext:
+                return "W"
+            if index_ext and middle_ext and not ring_ext and not pinky_ext:
+                return "V"
 
-    # 4. 'I': Pinky extended only, others curled
-    if pinky_ext and not thumb_ext and not index_ext and not middle_ext and not ring_ext:
-        return "I"
+        if candidate_pair & {"L", "I"}:
+            if thumb_ext and index_ext and not middle_ext and not ring_ext and not pinky_ext:
+                return "L"
+            if pinky_ext and not thumb_ext and not index_ext and not middle_ext and not ring_ext:
+                return "I"
 
-    # 5. 'V': Index + Middle extended (apart), others curled (robust to thumb fold/rest)
+    # --- General Structural Disambiguation ---
+    # 1. 'V': Index + Middle extended (apart), others curled
     if index_ext and middle_ext and not ring_ext and not pinky_ext:
         d_idx_mid = float(np.linalg.norm(arr[8] - arr[12])) / palm_len
         return "V" if d_idx_mid >= 0.14 else "U"
 
-    # 6. 'F': Thumb + Index form aperture/touching, Middle + Ring + Pinky extended
-    if not index_ext and middle_ext and ring_ext and pinky_ext:
-        if d_thumb_idx <= 0.28:
-            return "F"
+    # 2. 'F': Thumb + Index form aperture/touching, Middle + Ring + Pinky extended
+    if not index_ext and middle_ext and ring_ext and pinky_ext and d_thumb_idx <= 0.30:
+        return "F"
 
+    # 3. 'B': All 4 fingers extended together (thumb folded / curled)
+    if index_ext and middle_ext and ring_ext and pinky_ext and not thumb_ext:
+        return "B"
+
+    # 4. 'L': Index + Thumb extended, others curled
+    if thumb_ext and index_ext and not middle_ext and not ring_ext and not pinky_ext:
+        return "L"
+
+    # 5. 'I': Pinky extended only, others curled
+    if pinky_ext and not thumb_ext and not index_ext and not middle_ext and not ring_ext:
+        return "I"
 
     # 6. 'W': Index + Middle + Ring extended, others curled
     if index_ext and middle_ext and ring_ext and not pinky_ext and not thumb_ext:
@@ -501,6 +510,15 @@ def evaluate_alphabet_heuristics(pts: Union[np.ndarray, List[Any]]) -> Optional[
     # 7. 'Y': Thumb + Pinky extended, middle three curled
     if thumb_ext and pinky_ext and not index_ext and not middle_ext and not ring_ext:
         return "Y"
+
+    # 8. Non-extended finger poses: 'C' (open curved arc) vs 'A' (closed fist)
+    if not index_ext and not middle_ext and not ring_ext and not pinky_ext and not thumb_ext:
+        if d_thumb_idx >= 0.35:
+            return "C"
+        elif d_thumb_idx <= 0.16:
+            return "O"
+        elif d_thumb_idx < 0.28:
+            return "A"
 
     return None
 

@@ -9,7 +9,13 @@ Validates:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 import numpy as np
 import onnx
 import onnxruntime as ort
@@ -126,4 +132,9 @@ def test_conversation_mode_message_formatting_and_transcript():
     assert "[10:30 AM] 🤟 Signer (ISL): I need help with my ticket." in transcript_text
     assert "[10:31 AM] 🎙️ Speaker (Voice): Sure, which train are you taking?" in transcript_text
     assert len(transcript_lines) == 2
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
+
 
