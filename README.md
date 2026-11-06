@@ -173,8 +173,10 @@ SETU hosts 5 specialized production models with verified tensor shapes and expli
 
 | Model ID | Architecture | Task Scope | Input Vector | Class Count | Latency | Test Accuracy | Hardware / Engine | Weight Path |
 |---|---|---|---:|---:|---:|---:|---|---|
-| `realsign_multisigner` | 3-Layer ResNet/MLP (Augmented) | Multi-Signer Dual-Hand Alphabet | **126-D** | 26 | **0.15 ms** | **97.37%** (0.974 F1) | PyTorch (CUDA / CPU) | `models/weights/realsign_multisigner_mlp.pth` |
-| `realsign` | 3-Layer Dense MLP + BatchNorm | Dual-Hand Alphabet Baseline | **126-D** | 26 | **0.15 ms** | **94.99%** | PyTorch (CUDA / CPU) | `models/weights/realsign_26class_mlp.pth` |
+| `realsign_multisigner` | 3-Layer Dense MLP + BatchNorm | Multi-Signer Dual-Hand Alphabet (IEEE/Mendeley) | **126-D** | 26 | **0.15 ms** | **92.00%** (0.921 F1, Top-3: 97.33%) | PyTorch (CUDA / CPU) & ONNX | `models/weights/realsign_26class_mlp.pth`<br>`realsign_multisigner.onnx` |
+| `isl_numerals` | 3-Layer Dense MLP + BatchNorm | Static ISL Numerals (0–9) | **126-D** | 10 | **0.12 ms** | **94.08%** (0.940 F1, Top-3: 98.95%) | PyTorch (CUDA / CPU) & ONNX | `models/weights/isl_numerals_mlp.pth`<br>`isl_numerals.onnx` |
+| `isl_hindi_vowels` | 3-Layer Dense MLP + BatchNorm | Static ISL Indic Vowels (अ–ऐ) | **126-D** | 8 | **0.12 ms** | **94.71%** (0.947 F1, Top-3: 97.60%) | PyTorch (CUDA / CPU) & ONNX | `models/weights/isl_hindi_vowels_mlp.pth`<br>`isl_hindi_vowels.onnx` |
+| `amrita_isl_phrase_bilstm` | 2-Layer BiLSTM + Temporal Attention | Authentic ISL Continuous Phrases (Amrita SLR) | **316-D** | 49 | **4.20 ms** | **78.57%** (Top-3: 90.82%, Top-5: 94.90%) | PyTorch BiLSTM (CUDA) | `models/weights/amrita_isl_phrase_bilstm.pth` |
 | `isl_mvp_5sign` | Temporal Pooling + Linear Softmax | Core Conversational Phrases | **158-D** (1,264-D pooled) | 6 | **0.42 ms** | **100.0%** (5 phrases) | Pure NumPy Linear | `models/weights/isl_mvp_model.npz` |
 | `isl_sequence_lstm` | 2-Layer BiLSTM + Attention | Dynamic Gesture Sequences | **328-D** | 7 | **3.80 ms** | **94.20%** | PyTorch BiLSTM | `models/weights/isl_sequence_lstm.pth` |
 | `include_bilstm` | 5-Layer Deep BiLSTM | Large-Vocabulary Signs | **134-D** | 263 | **12.50 ms** | **Top-5: 78.4%** | PyTorch BiLSTM | `models/pretrained/include_no_cnn_lstm.pth` |
@@ -184,36 +186,43 @@ SETU hosts 5 specialized production models with verified tensor shapes and expli
 
 ## ☁️ Dataset Engineering & The Cloud Training Roadmap
 
-### 1. The Reality of Sign Language Datasets & Overfitting
-In machine learning research, high accuracy on an offline test set (e.g., 97% on static landmark files) measures how well the network fits that specific landmark distribution. In real-world webcam conditions, performance can drop due to **domain shift**:
-- Subtle variations in finger curvature across different individuals.
-- Camera angle tilt, webcam focal length differences, and background lighting.
-- Frame correlation in raw video datasets (consecutive frames of the same video appearing in both training and test sets).
+### 1. Authentic IEEE / Mendeley Multi-Signer ISL Dataset (102,470 Images)
+We trained and evaluated SETU against the benchmark Mendeley / IEEE static dataset: `Static gestures of Indian Sign Language (ISL) for English Alphabet, Hindi Vowels and Numerals.zip` (6.36 GB):
+- **Demographic Cohorts:** Captures Kids, Teenagers, and Adults in both Half Sleeves and Full Sleeves to prevent overfitting to arm contours or single-signer hand morphology.
+- **Strict 80 / 10 / 10 Stratified Split:**
+  - **ISL Dual-Hand Alphabet (26 classes, A–Z):** 7,545 samples &rarr; **92.00% Top-1**, **97.33% Top-3**, **98.67% Top-5**, **0.9210 Macro-F1**.
+  - **ISL Numerals (10 classes, 0–9):** 2,841 samples &rarr; **94.08% Top-1**, **98.95% Top-3**, **99.65% Top-5**, **0.9396 Macro-F1**.
+  - **ISL Hindi Vowels (8 Indic vowels):** 2,082 samples &rarr; **94.71% Top-1**, **97.60% Top-3**, **98.56% Top-5**, **0.9473 Macro-F1**.
+- **ONNX Web Edge Export:** Models exported with dynamic batching and synced directly into `frontend/public/models/` for client-side Web Worker execution.
 
-To address this, SETU enforces strict dataset integrity and provides a transparent cloud training pipeline.
+### 2. Authentic Amrita SLR Dynamic Phrase Dataset (978 Real Videos)
+For continuous phrase recognition, we trained a 2-layer Bidirectional LSTM with Temporal Attention (`AmritaPhraseBiLSTM`) on the Amrita SLR dataset across 49 categories:
+- **Feature Extraction:** 316-D spatio-temporal representations (158-D Holistic coordinates + 158-D velocity vectors) sampled across 20 temporal steps.
+- **Stratified 80/10/10 Split:** 782 train (80%), 98 validation (10%), 98 held-out test (10%).
+- **Held-Out Test Results:** **78.57% Top-1 Accuracy**, **90.82% Top-3 Accuracy**, **94.90% Top-5 Accuracy**, **85.71% Peak Validation Accuracy**, **0.7532 Macro-F1**.
+- **Weights:** Saved to [`models/weights/amrita_isl_phrase_bilstm.pth`](models/weights/amrita_isl_phrase_bilstm.pth) (3.64 MB).
 
-### 2. The Clean Master Dataset (`isl_master_clean_126d.npz`)
-We generated a verified master dataset containing **14,300 clean samples** across all 26 alphabet classes:
-- **Zero Data Leakage:** Built with strict distance-based deduplication to ensure 0% sample overlap between splits.
-- **Stratified Split:** 80% Train (11,440), 10% Validation (1,430), 10% Test (1,430).
-- **Dual-Hand 126-D:** Balanced representation across all 26 letters (A–Z).
+### 3. One-Click Google Colab GPU Training Notebook
+For running high-accuracy cloud training on free Tesla T4 GPUs with zero setup:
+1. Open [`notebooks/SETU_Cloud_Training_STGCN.ipynb`](notebooks/SETU_Cloud_Training_STGCN.ipynb) in Google Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Isobit7/SETU/blob/main/notebooks/SETU_Cloud_Training_STGCN.ipynb).
+2. Connect to a free T4 GPU runtime.
+3. Run all cells:
+   - Automated git clone/pull handling with `PYTHONPATH` isolation.
+   - 40 epochs with Cosine Annealing learning rate schedule.
+   - 11 comprehensive automated accuracy and numerical parity verification tests.
+   - 1-click download of trained `.pth` and `.onnx` checkpoints directly to your local computer.
 
-### 3. One-Click Google Colab GPU Training
-For training models on massive multi-signer datasets without local compute limitations:
-1. Open [`scripts/train_isl_cloud_colab.ipynb`](scripts/train_isl_cloud_colab.ipynb) in Google Colab.
-2. Select a free GPU runtime (**Runtime &rarr; Change runtime type &rarr; T4 GPU**).
-3. Upload `isl_master_clean_126d.npz` (or your own custom `.npz` landmark dataset).
-4. Run all cells to execute training with online spatial data augmentation:
-   - Random planar rotation ($\pm 15^\circ$)
-   - Coordinate jittering ($N(0, 0.01)$)
-   - Spatial scale scaling ($0.9\times - 1.1\times$)
-   - Single-hand dropout simulation
-5. Download the exported `realsign_26class_mlp.pth` checkpoint directly into `models/weights/`.
-
-### 4. Standalone CLI Training
-You can also run training locally or on cloud compute using the command-line script:
+### 4. Standalone CLI Training Scripts
+You can reproduce training on local GPU or cloud servers using the specialized scripts:
 ```powershell
-python scripts/train_isl_cloud.py --data data/processed/isl_master_clean_126d.npz --epochs 50 --batch-size 64 --lr 0.001
+# 1. Train Authentic Static ISL Model (Alphabet, Numerals, or Hindi Vowels)
+python scripts/train_static_isl_model.py --mode alphabet --samples-per-class 350 --epochs 45 --workers 8
+
+# 2. Train Amrita Continuous ISL Dynamic Phrases Model
+python scripts/train_amrita_phrase_model.py --epochs 55 --batch-size 32 --lr 0.001
+
+# 3. High-Accuracy Cloud Training Pipeline
+python training/train_cloud_high_accuracy.py --epochs 40 --batch-size 64 --lr 0.001
 ```
 
 ---
@@ -372,21 +381,29 @@ C:\MINI PROJ-SETU/
 │   │   ├── hooks/                  # useRecognitionStream WebSocket hook
 │   │   └── types/                  # TypeScript interface definitions
 │   └── package.json
+├── notebooks/                      # Cloud GPU Jupyter & Colab Training Notebooks
+│   └── SETU_Cloud_Training_STGCN.ipynb # 1-Click Colab training notebook (Tesla T4 GPU)
 ├── models/                         # Model adapters, metadata, and production weights
 │   ├── adapters/                   # RealSign, MVP, Sequence LSTM, INCLUDE adapters
 │   ├── metadata/                   # Sequence label maps and class catalogs
 │   ├── pretrained/                 # INCLUDE and RF-UV-11 pretrained checkpoints
 │   ├── registry.py                 # Verified production model registry
-│   └── weights/                    # realsign_26class_mlp.pth, isl_mvp_model.npz
+│   └── weights/                    # realsign_26class_mlp.pth, realsign_multisigner.onnx,
+│                                   # amrita_isl_phrase_bilstm.pth, isl_numerals_mlp.pth,
+│                                   # isl_hindi_vowels_mlp.pth, isl_mvp_model.npz
 ├── data/                           # Data storage
-│   ├── processed/                  # isl_master_clean_126d.npz (14,300 clean samples)
-│   └── raw/                        # Baseline reference datasets
+│   ├── processed/                  # static_isl_alphabet_126d.npz, amrita_slr_sequences.npz
+│   └── raw/                        # Baseline reference datasets & authentic ISL ZIPs
 ├── reports/                        # Model evaluation matrices & verification logs
+│   ├── static_isl_alphabet_evaluation_report.json
+│   ├── static_isl_numerals_evaluation_report.json
+│   ├── static_isl_hindi_vowels_evaluation_report.json
+│   └── amrita_slr_evaluation_report.json
 ├── scripts/                        # Cloud training, evaluation, and smoke-test scripts
-│   ├── train_isl_cloud.py          # Standalone cloud training script
-│   ├── train_isl_cloud_colab.ipynb # Google Colab GPU training notebook
+│   ├── train_static_isl_model.py   # Multi-signer static ISL extraction & GPU trainer
+│   ├── train_amrita_phrase_model.py # Amrita SLR 49-class BiLSTM trainer
 │   └── verify_all_endpoints.py     # Automated endpoint verification smoke test
-├── tests/                          # 164 automated PyTest unit & integration tests
+├── tests/                          # 175+ automated PyTest unit & integration tests
 └── Sathwik/                        # Interactive HTML Viva & Documentation Portal
     ├── index.html                  # Documentation homepage
     └── assets/                     # Styles, scripts, and architectural diagrams
@@ -404,8 +421,12 @@ C:\MINI PROJ-SETU/
 - [x] **Intelligent ISL Syntax Engine:** Translates ISL SOV syntax into natural English SVO with clause-final negation handling.
 - [x] **Interactive Practice & Learning Studio (`PracticeStudio.tsx`):** Real-time pose scoring, auto-advance, and streak rewards.
 - [x] **Transcript Session Export:** One-click download of session transcripts formatted in Markdown.
+- [x] **Authentic Multi-Signer Static ISL Training:** 92.00% Top-1, 97.33% Top-3 on 750 unseen test images (Kids, Teens, Adults).
+- [x] **Authentic Amrita SLR Dynamic Phrase Model:** 49 phrase categories with 94.90% Top-5 accuracy on held-out test videos.
+- [x] **ISL Numerals (0–9) & Hindi Vowels (अ–ऐ) Models:** 94.08% and 94.71% test accuracy with dedicated browser ONNX graphs.
+- [x] **1-Click Google Colab Cloud GPU Pipeline:** Seamless training and validation on free Tesla T4 GPUs.
 - [x] **1-Click Windows Operations:** `Start_SETU.bat`, `Stop_SETU.bat`, and `Verify_SETU.bat`.
-- [x] **175 Verified Automated Tests:** 100% test pass rate across vision, models, NLP, API, and transport layers.
+- [x] **175+ Verified Automated Tests:** 100% test pass rate across vision, models, NLP, API, and transport layers.
 - [ ] Mobile edge deployment via ONNX Runtime for Android and iOS.
 
 ---
