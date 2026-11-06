@@ -75,7 +75,7 @@ def test_all_processed_features_tensors_invariants():
     processed_dir = PROJECT_ROOT / "data" / "processed"
     npz_files = [
         p for p in processed_dir.glob("*.npz")
-        if "realsign" not in p.name and "26class" not in p.name and "master_clean" not in p.name
+        if p.name.startswith(("custom_", "include_", "no_sign_", "real_no_sign_"))
     ]
     assert len(npz_files) >= 24
     

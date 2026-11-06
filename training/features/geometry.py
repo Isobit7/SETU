@@ -69,6 +69,10 @@ def normalize_wrist_coordinates(
     elif pts.shape != (21, 3):
         return np.zeros((21, 3), dtype=np.float32), 0.0
 
+    # Trust boundary check: Corrupt NaNs or Infs from tracking loss must not propagate
+    if not np.all(np.isfinite(pts)):
+        return np.zeros((21, 3), dtype=np.float32), 0.0
+
     # 1. Translate origin to Wrist (landmark 0)
     wrist = pts[0].copy()
     translated = pts - wrist

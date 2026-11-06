@@ -27,3 +27,4 @@ When a signer spells words in Hindi vowels:
 - The **RealSign Indic Classifier** decodes native Devanagari Unicode characters directly (`अ`, `आ`, `इ`, etc.).
 - The **SentenceAccumulator** buffers the Devanagari characters into words.
 - The **IndicTransformer** (`backend/app/services/nlp/indic_transformer.py`) maps the text into grammatically aligned Hindi, Telugu, Tamil, and Kannada translations.
+

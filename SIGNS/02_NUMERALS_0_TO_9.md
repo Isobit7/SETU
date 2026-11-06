@@ -29,3 +29,4 @@ SETU's real-time NLP tokenizer and SentenceAccumulator automatically format stre
 - **Consecutive Digits:** Streaming `["5", "0", "0"]` &rarr; Formatted as `"500"`.
 - **Currency Signs:** When signed in conjunction with the ISL "RUPEES" sign, `["RUPEES", "5", "0", "0"]` &rarr; Formatted as `"₹500"`.
 - **Time Indicators:** `["TIME", "5", "3", "0"]` &rarr; Formatted as `"5:30"`.
+

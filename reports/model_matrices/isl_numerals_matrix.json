@@ -1,0 +1,22 @@
+{
+  "model_id": "isl_numerals",
+  "name": "isl_numerals.onnx",
+  "task": "General Sign / Multimodal Processing",
+  "architecture_type": ".ONNX Model",
+  "file_name": "isl_numerals.onnx",
+  "file_path": "models\\weights\\isl_numerals.onnx",
+  "file_size_bytes": 105301,
+  "file_size_formatted": "102.83 KB",
+  "last_modified": "2026-11-06T09:55:07.673671+00:00",
+  "status": "active",
+  "total_parameters": 26972,
+  "weights_parameters": 26900,
+  "biases_parameters": 72,
+  "layers_count": 8,
+  "hyperparameters": {},
+  "evaluation_metrics": {},
+  "layers": [],
+  "checkpoint_metadata": {
+    "format": "ONNX Runtime Graph"
+  }
+}

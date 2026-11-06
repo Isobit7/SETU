@@ -69,3 +69,4 @@ All models in this catalog have been verified against strictly unseen test sets 
 - **Numerals (0–9):** **94.08% Top-1**, **98.95% Top-3**
 - **Hindi Vowels (8 Vowels):** **94.71% Top-1**, **97.60% Top-3**
 - **Conversational Phrases (49 Phrases):** **78.57% Top-1**, **90.82% Top-3**, **94.90% Top-5**
+

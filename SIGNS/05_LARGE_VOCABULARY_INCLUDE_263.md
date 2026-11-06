@@ -37,3 +37,4 @@ SETU integrates the official **AI4Bharat INCLUDE** benchmark model (`models/pret
 The AI4Bharat INCLUDE model operates in two execution modes:
 1. **Isolated Video Mode (`/api/v1/predict/video`):** Upload an MP4 video clip; the service extracts 134-D spatio-temporal keypoints, performs temporal sequence interpolation (32 frames), and outputs the top predicted sign.
 2. **Real-Time Streaming Adapter (`StreamingIncludeAdapter`):** Consumes streaming frame coordinates in a sliding 32-frame buffer with confidence hysteresis to emit recognized signs continuously during live webcam feeds.
+

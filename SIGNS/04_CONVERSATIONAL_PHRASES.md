@@ -97,3 +97,4 @@ To prevent background noise or casual movements from triggering false phrases:
 1. **Kinetic Energy Threshold ($E_k > 0.04$):** Gesture onset is detected only when cumulative hand landmark velocity exceeds the baseline threshold.
 2. **Phase Progression:** Preparation $\to$ Stroke $\to$ Settlement.
 3. **Streak Debouncing:** The model requires a **4-consecutive-frame prediction streak** before latching the word into the SentenceAccumulator.
+

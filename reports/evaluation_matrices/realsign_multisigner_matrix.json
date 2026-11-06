@@ -1,0 +1,22 @@
+{
+  "model_id": "realsign_multisigner",
+  "name": "realsign_multisigner.onnx",
+  "task": "General Sign / Multimodal Processing",
+  "architecture_type": ".ONNX Model",
+  "file_name": "realsign_multisigner.onnx",
+  "file_path": "models\\weights\\realsign_multisigner.onnx",
+  "file_size_bytes": 109461,
+  "file_size_formatted": "106.90 KB",
+  "last_modified": "2026-11-06T09:49:58.703538+00:00",
+  "status": "active",
+  "total_parameters": 26972,
+  "weights_parameters": 26900,
+  "biases_parameters": 72,
+  "layers_count": 8,
+  "hyperparameters": {},
+  "evaluation_metrics": {},
+  "layers": [],
+  "checkpoint_metadata": {
+    "format": "ONNX Runtime Graph"
+  }
+}

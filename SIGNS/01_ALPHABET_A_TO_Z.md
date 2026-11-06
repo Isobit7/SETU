@@ -76,3 +76,4 @@ In real-world webcam signing, four pairs of letters account for over **70% of mi
 * **The Confusion:** Tightly curled fingers resting against the palm thumb.
 * **The SETU Fix:**
   - In dual-hand ISL, `E` requires the right index touching the left index tip, whereas single-hand ASL-style `E` curls on the same hand. SETU enforces the dual-hand anchor check to eliminate false ASL conversions.
+

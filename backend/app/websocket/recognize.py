@@ -252,7 +252,9 @@ async def websocket_recognize(
         try:
             payload = json.loads(text_str)
             action = payload.get("action")
-            if action == "reset":
+            if action == "ping":
+                await websocket.send_json({"type": "pong", "time": time.time()})
+            elif action == "reset":
                 rolling_features.clear()
                 gesture_sequence_buffer.clear()
                 accumulator.reset()

@@ -32,6 +32,10 @@ class AmritaPrediction:
     top_5: List[Tuple[str, float]]
     raw_class_idx: int
 
+    @property
+    def label(self) -> str:
+        return self.phrase
+
 
 class AmritaPhraseBiLSTM(nn.Module):
     """2-Layer Bidirectional PyTorch LSTM with Temporal Attention."""
@@ -64,7 +68,7 @@ class AmritaPhraseBiLSTM(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(lstm_out_dim, 128),
-            nn.BatchNorm1d(128),
+            nn.LayerNorm(128),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(128, num_classes),
@@ -155,3 +159,4 @@ class AmritaPhraseClassifier:
             top_5=top_5,
             raw_class_idx=best_idx,
         )
+

@@ -55,3 +55,4 @@ To achieve **95%+ real-time accuracy** on standard laptop webcams, signers shoul
 
 * Between distinct sentences or phrases, rest your hands down near your lap or lower torso.
 * This returns the kinetic energy indicator to **Idle** ($E_k < 0.02$) and prompts the SentenceAccumulator to finalize sentence boundary translation into English and Indic languages.
+
