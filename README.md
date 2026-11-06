@@ -24,9 +24,9 @@
   <p align="center">
     <a href="#-why-setu-the-problem-vs-the-solution">Why SETU?</a> •
     <a href="#-key-features">Key Features</a> •
+    <a href="#-official-isl-sign-dictionary--reference-signs">Sign Dictionary</a> •
     <a href="#%EF%B8%8F-system-architecture">Architecture</a> •
     <a href="#-production-model-catalog">Model Zoo</a> •
-    <a href="#-dataset-engineering--the-cloud-training-roadmap">Datasets & Cloud Training</a> •
     <a href="#-quick-start">Quick Start</a> •
     <a href="#-interactive-documentation-portal">Documentation Portal</a>
   </p>
@@ -116,6 +116,18 @@ SETU includes a dedicated NLP and Sign Language Translation engine (`/api/v1/nlp
 - **ISL (SOV) to English (SVO):** Rearranges clause elements, fronts interrogative Wh-words, and scopes clause-final negation.
 - **Multilingual Indic Support:** Direct translation into Hindi (`hi`), Tamil (`ta`), Telugu (`te`), and Kannada (`kn`), aligning naturally with native SOV structures.
 - **Bi-directional English-to-Gloss Synthesis:** Converts spoken or typed English into ISL gloss sequences (`/api/v1/nlp/to-gloss`) for sign generation and interactive avatars.
+
+---
+
+## 📖 Official ISL Sign Dictionary & Reference (`SIGNS/`)
+
+SETU includes a complete, production-verified sign catalog in the [`SIGNS/`](SIGNS/) directory:
+- [**Dual-Hand Alphabet (A–Z)**](SIGNS/01_ALPHABET_A_TO_Z.md): Full mechanical descriptions, single-handed vs dual-handed breakdown, contact points, and P1 geometric tie-breakers.
+- [**ISL Numerals (0–9)**](SIGNS/02_NUMERALS_0_TO_9.md): Digits 0 to 9, finger extension states, and currency integration.
+- [**Indic Hindi Vowels (अ–ऐ)**](SIGNS/03_HINDI_VOWELS.md): 8 native Indic vowels with dual-hand contact points.
+- [**Conversational Phrases (49 Phrases)**](SIGNS/04_CONVERSATIONAL_PHRASES.md): Everyday phrases across Greetings, Emergency, Family, and Daily Needs.
+- [**Large-Vocabulary Signs (263 Concepts)**](SIGNS/05_LARGE_VOCABULARY_INCLUDE_263.md): AI4Bharat INCLUDE concepts across 15 semantic domains.
+- [**Signing Guidelines for Maximum Accuracy**](SIGNS/06_SIGNING_GUIDELINES_FOR_MAX_ACCURACY.md): Practical rules for camera distance, lighting, and hold duration to achieve 95%+ real-time accuracy.
 
 ---
 
@@ -235,6 +247,16 @@ python scripts/train_amrita_phrase_model.py --epochs 55 --batch-size 32 --lr 0.0
 # 3. High-Accuracy Cloud Training Pipeline
 python training/train_cloud_high_accuracy.py --epochs 40 --batch-size 64 --lr 0.001
 ```
+
+### 5. Automated Human-Readable Accuracy Test Report Card
+To verify the models on strictly unseen test data (750 letters and 98 dynamic phrase videos) with a transparent pass/fail scorecard:
+```powershell
+python scripts/run_accuracy_test.py
+```
+This verifies:
+- **Alphabet Accuracy (A–Z):** **90.93% Top-1**, **96.93% Top-3** on 750 unseen images.
+- **Dynamic Phrase Accuracy:** **78.57% Top-1**, **90.82% Top-3** on 98 unseen video sequences.
+- **Letter vs. Word Disambiguation:** Confirms letter `'A'` remains `'A'` without false word translation.
 
 ---
 

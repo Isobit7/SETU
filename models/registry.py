@@ -17,6 +17,7 @@ from models.adapters.mvp import ISLMvpClassifier
 from models.adapters.sequence_lstm import ISLSequenceLSTMClassifier
 from models.adapters.include import IncludeClassifier
 from models.adapters.rf_uv11 import RFUV11Adapter
+from models.adapters.amrita import AmritaPhraseClassifier
 
 logger = logging.getLogger("setu.models.registry")
 
@@ -215,6 +216,45 @@ ModelRegistry.register(
     factory=lambda: RFUV11Adapter(model_path=Path("models/pretrained/rf_uv_11_model.h5")),
     version="1.0.0",
     metrics={},
+)
+
+ModelRegistry.register(
+    model_id="isl_numerals",
+    name="ISL 10-Class Numerals MLP",
+    model_type=ModelType.STREAMING_ALPHABET,
+    input_dim=126,
+    num_classes=10,
+    weights_path=Path("models/weights/isl_numerals_mlp.pth"),
+    description="Authentic ISL numerical digits 0–9 recognition model trained on dual-hand 126-D normalized MediaPipe landmarks.",
+    factory=lambda: RealSignClassifier(Path("models/weights/isl_numerals_mlp.pth")),
+    version="1.0.0",
+    metrics={"test_accuracy": 0.9408, "macro_f1": 0.9396},
+)
+
+ModelRegistry.register(
+    model_id="isl_hindi_vowels",
+    name="ISL 8-Class Indic Hindi Vowels MLP",
+    model_type=ModelType.STREAMING_ALPHABET,
+    input_dim=126,
+    num_classes=8,
+    weights_path=Path("models/weights/isl_hindi_vowels_mlp.pth"),
+    description="Authentic ISL Indic Hindi vowels (अ to ऐ) recognition model trained on dual-hand 126-D normalized MediaPipe landmarks.",
+    factory=lambda: RealSignClassifier(Path("models/weights/isl_hindi_vowels_mlp.pth")),
+    version="1.0.0",
+    metrics={"test_accuracy": 0.9471, "macro_f1": 0.9473},
+)
+
+ModelRegistry.register(
+    model_id="amrita_isl_phrase_bilstm",
+    name="Amrita SLR 49-Class Continuous Dynamic Phrase BiLSTM",
+    model_type=ModelType.STREAMING_PHRASE,
+    input_dim=316,
+    num_classes=49,
+    weights_path=Path("models/weights/amrita_isl_phrase_bilstm.pth"),
+    description="2-Layer Bidirectional PyTorch LSTM with Temporal Attention for continuous 49-class ISL conversational phrase recognition from 316-D spatio-temporal features.",
+    factory=lambda: AmritaPhraseClassifier(Path("models/weights/amrita_isl_phrase_bilstm.pth")),
+    version="1.0.0",
+    metrics={"test_accuracy": 0.7857, "top3_accuracy": 0.9082, "top5_accuracy": 0.9490},
 )
 
 __all__ = [
