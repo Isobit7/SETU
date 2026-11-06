@@ -270,9 +270,13 @@ def test_multisigner_model_accuracy_benchmark():
     if not model_path.exists():
         pytest.skip(f"Model checkpoint not found at {model_path}")
 
-    dataset_path = Path("data/processed/isl_master_clean_126d.npz")
-    if not dataset_path.exists():
-        pytest.skip(f"Dataset not found at {dataset_path}")
+    candidates = [
+        Path("data/processed/static_isl_alphabet_126d.npz"),
+        Path("data/processed/isl_master_clean_126d.npz"),
+    ]
+    dataset_path = next((p for p in candidates if p.exists()), None)
+    if dataset_path is None or not dataset_path.exists():
+        pytest.skip("No processed benchmark dataset found")
 
     # Load model checkpoint
     ckpt = torch.load(model_path, map_location="cpu", weights_only=False)

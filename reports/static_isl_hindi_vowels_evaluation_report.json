@@ -1,0 +1,112 @@
+{
+  "dataset": "Static gestures of Indian Sign Language (ISL) for English Alphabet, Hindi Vowels and Numerals",
+  "mode": "hindi_vowels",
+  "num_classes": 8,
+  "classes": [
+    "अ",
+    "अं",
+    "आ",
+    "इ",
+    "ई",
+    "ऋ",
+    "ए",
+    "ऐ"
+  ],
+  "split": {
+    "train": 1666,
+    "val": 208,
+    "test": 208,
+    "train_ratio": 0.8,
+    "val_ratio": 0.1,
+    "test_ratio": 0.1
+  },
+  "training": {
+    "best_epoch": 36,
+    "best_val_acc": 0.9856,
+    "final_train_acc": 0.9802
+  },
+  "test_evaluation": {
+    "num_test_samples": 208,
+    "num_classes": 8,
+    "top1_accuracy": 0.9471,
+    "top3_accuracy": 0.976,
+    "top5_accuracy": 0.9856,
+    "macro_precision": 0.9467,
+    "macro_recall": 0.9507,
+    "macro_f1": 0.9473,
+    "top_confusion_pairs": [
+      [
+        "अं -> ऋ",
+        3
+      ],
+      [
+        "ऐ -> ए",
+        3
+      ],
+      [
+        "अ -> ऐ",
+        1
+      ],
+      [
+        "आ -> ई",
+        1
+      ],
+      [
+        "ए -> इ",
+        1
+      ]
+    ],
+    "per_class": {
+      "अ": {
+        "samples": 28,
+        "precision": 0.9643,
+        "recall": 0.9643,
+        "f1": 0.9643
+      },
+      "अं": {
+        "samples": 31,
+        "precision": 1.0,
+        "recall": 0.9032,
+        "f1": 0.9492
+      },
+      "आ": {
+        "samples": 26,
+        "precision": 1.0,
+        "recall": 0.9231,
+        "f1": 0.96
+      },
+      "इ": {
+        "samples": 25,
+        "precision": 0.9615,
+        "recall": 1.0,
+        "f1": 0.9804
+      },
+      "ई": {
+        "samples": 23,
+        "precision": 0.9565,
+        "recall": 0.9565,
+        "f1": 0.9565
+      },
+      "ऋ": {
+        "samples": 20,
+        "precision": 0.8696,
+        "recall": 1.0,
+        "f1": 0.9302
+      },
+      "ए": {
+        "samples": 26,
+        "precision": 0.8929,
+        "recall": 0.9615,
+        "f1": 0.9259
+      },
+      "ऐ": {
+        "samples": 29,
+        "precision": 0.9286,
+        "recall": 0.8966,
+        "f1": 0.9123
+      }
+    }
+  },
+  "weights_path": "C:\\MINI PROJ-SETU\\models\\weights\\isl_hindi_vowels_mlp.pth",
+  "onnx_path": "C:\\MINI PROJ-SETU\\models\\weights\\isl_hindi_vowels.onnx"
+}
