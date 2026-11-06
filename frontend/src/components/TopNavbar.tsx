@@ -18,6 +18,9 @@ import {
   VolumeX,
   Target,
   Users,
+  Sun,
+  Moon,
+  Contrast,
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -69,6 +72,31 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
   const resourcesRef = useRef<HTMLDivElement | null>(null);
   const historyRef = useRef<HTMLDivElement | null>(null);
+
+  // Theme & High-Contrast A11y State
+  const [theme, setTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+      return (localStorage.getItem('setu_theme') as 'dark' | 'light' | 'high-contrast') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('setu_theme', theme);
+    } catch {}
+  }, [theme]);
+
+  const cycleTheme = () => {
+    setTheme((prev) => {
+      if (prev === 'dark') return 'light';
+      if (prev === 'light') return 'high-contrast';
+      return 'dark';
+    });
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -341,6 +369,24 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
       {/* 7. Right: Status Badges & Quick Toggles */}
       <div className="navbar-actions">
+        {/* Theme Switcher Toggle (Dark / Light / High-Contrast WCAG AAA) */}
+        <button
+          type="button"
+          className={`nav-theme-toggle ${theme}`}
+          onClick={cycleTheme}
+          title={`Theme: ${
+            theme === 'dark' ? 'Dark Mode' : theme === 'light' ? 'Light Mode' : 'High-Contrast A11y (WCAG AAA)'
+          }. Click to switch.`}
+          aria-label="Switch Theme Mode"
+        >
+          {theme === 'dark' && <Moon size={13} className="theme-toggle-icon" />}
+          {theme === 'light' && <Sun size={13} className="theme-toggle-icon" />}
+          {theme === 'high-contrast' && <Contrast size={13} className="theme-toggle-icon a11y-gold" />}
+          <span className="theme-pill-label">
+            {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'A11y'}
+          </span>
+        </button>
+
         {/* Auto-Speak TTS Toggle */}
         {onToggleAutoSpeak && (
           <button
@@ -405,6 +451,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       {/* Mobile Nav Drawer */}
       {mobileMenuOpen && (
         <div className="mobile-nav-drawer" role="navigation">
+          <button
+            type="button"
+            className={`mobile-nav-item theme-mobile-item ${theme}`}
+            onClick={cycleTheme}
+          >
+            {theme === 'dark' && <Moon size={16} />}
+            {theme === 'light' && <Sun size={16} />}
+            {theme === 'high-contrast' && <Contrast size={16} className="a11y-gold" />}
+            <span>
+              Theme: {theme === 'dark' ? 'Dark Mode' : theme === 'light' ? 'Light Mode' : 'High-Contrast A11y'}
+            </span>
+          </button>
           {onToggleAutoSpeak && (
             <button
               className={`mobile-nav-item ${autoSpeakEnabled ? 'active' : ''}`}

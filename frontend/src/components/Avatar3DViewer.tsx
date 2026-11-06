@@ -38,8 +38,10 @@ export const Avatar3DViewer: React.FC<Avatar3DViewerProps> = ({ currentSign }) =
 
   // Generate 3D canonical skeletal keypoints based on active sign
   const getPoseForSign = (sign: string): SkeletonPose3D => {
-    const s = sign.toUpperCase();
-    const isTwoHanded = ['B', 'D', 'P', 'H', 'NAMASTE', 'THANK YOU', 'PLEASE'].includes(s);
+    const s = sign.toUpperCase().replace(/\s+/g, '_');
+    const isTwoHanded = [
+      'B', 'D', 'P', 'H', 'NAMASTE', 'THANK_YOU', 'THANK YOU', 'PLEASE', 'HELP', 'WELCOME', 'GOOD_MORNING'
+    ].includes(s);
 
     // Default neutral chest position
     let rightWristZ = 0.15;
@@ -57,13 +59,43 @@ export const Avatar3DViewer: React.FC<Avatar3DViewerProps> = ({ currentSign }) =
       rightWristY = 0.35;
       rightWristX = 0.30;
       rightWristZ = 0.25;
-    } else if (s === 'NAMASTE' || s === 'THANK YOU') {
+    } else if (s === 'NAMASTE' || s === 'THANK_YOU' || s === 'THANK YOU') {
       rightWristX = 0.05;
       leftWristX = -0.05;
-      rightWristY = 0.15;
-      leftWristY = 0.15;
+      rightWristY = 0.18;
+      leftWristY = 0.18;
       rightWristZ = 0.20;
       leftWristZ = 0.20;
+    } else if (s === 'WATER' || s === 'DRINK') {
+      rightWristX = 0.10;
+      rightWristY = 0.30;
+      rightWristZ = 0.18;
+    } else if (s === 'FOOD' || s === 'EAT') {
+      rightWristX = 0.08;
+      rightWristY = 0.32;
+      rightWristZ = 0.15;
+    } else if (s === 'HELP') {
+      rightWristX = 0.08;
+      rightWristY = 0.16;
+      rightWristZ = 0.22;
+      leftWristX = -0.05;
+      leftWristY = 0.12;
+      leftWristZ = 0.20;
+    } else if (s === 'YOU') {
+      rightWristX = 0.15;
+      rightWristY = 0.18;
+      rightWristZ = 0.35;
+    } else if (s === 'ME') {
+      rightWristX = 0.05;
+      rightWristY = 0.12;
+      rightWristZ = 0.10;
+    } else if (s === 'PLEASE' || s === 'WELCOME') {
+      rightWristX = 0.12;
+      leftWristX = -0.12;
+      rightWristY = 0.14;
+      leftWristY = 0.14;
+      rightWristZ = 0.22;
+      leftWristZ = 0.22;
     }
 
     const makeFingers = (wristX: number, wristY: number, wristZ: number, isRight: boolean) => {

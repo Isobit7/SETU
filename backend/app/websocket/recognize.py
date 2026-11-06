@@ -30,6 +30,7 @@ from models.adapters.realsign import RealSignPrediction
 from models.adapters.sequence_lstm import SequencePrediction as ISLSequencePrediction
 from models.adapters.mvp import MVPClassifierPrediction as ISLPrediction
 from models.adapters.include import StreamingIncludeAdapter, INCLUDEResult
+from models.registry import ModelRegistry
 from backend.app.services.nlp import SentenceAccumulator
 from backend.app.services.nlp.domain_packs import domain_packs_manager
 from backend.app.services.vision.non_manual_markers import non_manual_detector
@@ -347,7 +348,13 @@ async def websocket_recognize(
                     req_model = "include_stream"
                 elif req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
                     req_model = "realsign"
-                if req_model in ("realsign", "isl_mvp", "isl_sequence_lstm", "include_stream"):
+                elif req_model in ("numerals", "isl_numerals", "digits"):
+                    req_model = "isl_numerals"
+                elif req_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
+                    req_model = "isl_hindi_vowels"
+                elif req_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
+                    req_model = "amrita_isl_phrase_bilstm"
+                if req_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "amrita_isl_phrase_bilstm", "isl_mvp", "isl_sequence_lstm", "include_stream"):
                     active_model = req_model
                     rolling_features.clear()
                     gesture_sequence_buffer.clear()
@@ -488,15 +495,15 @@ async def websocket_recognize(
                     last_fps_calc = now
 
                 confidence_threshold = client_threshold if client_threshold is not None else (
-                    CONFIDENCE_THRESHOLD_ALPHABET if active_model == "realsign" else CONFIDENCE_THRESHOLD_SEQUENCE
+                    CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
 
                 def _extract_landmarks_sync(img: np.ndarray):
                     h_raw = None
                     hl_res = None
 
-                    if active_model == "realsign":
-                        # Fast-path for alphabet fingerspelling:
+                    if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
+                        # Fast-path for alphabet, numerals, and Hindi vowels fingerspelling:
                         # HandLandmarker detects up to 2 hands with high precision and low latency (~20ms).
                         if pipeline.hand_landmarker is not None:
                             try:
@@ -760,7 +767,11 @@ async def websocket_recognize(
                             confidence_threshold,
                         )
 
-                    elif active_model == "realsign" and pipeline.realsign_classifier is not None:
+                    elif active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
+                        curr_clf = ModelRegistry.get(active_model) if active_model in ("isl_numerals", "isl_hindi_vowels") else pipeline.realsign_classifier
+                        if curr_clf is None:
+                            curr_clf = pipeline.realsign_classifier
+
                         # PROB-08: If hand is resting low down in lap/desk, suppress alphabet emission
                         is_resting = False
                         if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=client_rest_y):
@@ -768,29 +779,32 @@ async def websocket_recognize(
                                 is_resting = True
 
                         if is_resting:
-                            realsign_pred = pipeline.realsign_classifier._empty_prediction()
-                            pipeline.realsign_classifier.reset_smoothing()
+                            realsign_pred = curr_clf._empty_prediction() if curr_clf else pipeline.realsign_classifier._empty_prediction()
+                            if curr_clf and hasattr(curr_clf, "reset_smoothing"):
+                                curr_clf.reset_smoothing()
                             accumulator.add_continuous_token("no_sign", confidence=1.0, token_type="letter", timestamp=now)
                             target_realsign_feat = None
                         else:
-                            target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(pipeline.realsign_classifier, "input_dim", 63) == 126) else realsign_feat_63d
+                            target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(curr_clf, "input_dim", 63) == 126) else realsign_feat_63d
                         if target_realsign_feat is None and realsign_feat_126d is not None:
                             target_realsign_feat = realsign_feat_126d
-                        if target_realsign_feat is not None:
+                        if target_realsign_feat is not None and curr_clf is not None:
                             raw_pts_arr = np.array(current_hand_pts_list, dtype=np.float32) if len(current_hand_pts_list) == 21 else None
                             realsign_pred = await loop.run_in_executor(
                                 None,
-                                lambda: pipeline.realsign_classifier.predict(
+                                lambda: curr_clf.predict(
                                     target_realsign_feat,
                                     confidence_threshold=confidence_threshold,
                                     apply_smoothing=True,
-                                    apply_heuristic_boost=True,
+                                    apply_heuristic_boost=(active_model == "realsign"),
                                     raw_landmarks_21x3=raw_pts_arr,
                                 ),
                             )
                         else:
-                            realsign_pred = pipeline.realsign_classifier._empty_prediction()
-                            pipeline.realsign_classifier.reset_smoothing()
+                            if curr_clf is not None:
+                                realsign_pred = curr_clf._empty_prediction()
+                                if hasattr(curr_clf, "reset_smoothing"):
+                                    curr_clf.reset_smoothing()
 
                     elif active_model == "isl_sequence_lstm" and pipeline.sequence_lstm_classifier is not None:
                         if len(segment_to_classify) >= 5:
@@ -853,13 +867,13 @@ async def websocket_recognize(
                 cuda_mem_mb = round(torch.cuda.memory_allocated() / (1024 * 1024), 1) if (torch.cuda.is_available() and torch.cuda.is_initialized()) else 0.0
 
                 active_threshold = client_threshold if client_threshold is not None else (
-                    CONFIDENCE_THRESHOLD_ALPHABET if active_model == "realsign" else CONFIDENCE_THRESHOLD_SEQUENCE
+                    CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
-                required_streak = STREAK_ALPHABET if active_model == "realsign" else STREAK_SEQUENCE
+                required_streak = STREAK_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else STREAK_SEQUENCE
 
                 has_realsign_feat = (realsign_feat_126d is not None) or (realsign_feat_63d is not None)
 
-                if active_model == "realsign":
+                if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
                     raw_conf = round(realsign_pred.confidence, 4) if realsign_pred else 0.0
                     raw_top_class = realsign_pred.top_3[0][0] if (realsign_pred and realsign_pred.top_3) else ("no_hand" if not hand_detected else "unknown")
@@ -897,12 +911,12 @@ async def websocket_recognize(
                     is_pred_valid = bool(isl_pred and isl_pred.confidence >= active_threshold and isl_pred.is_known_sign and isl_pred.label != "no_sign")
                     pred_label = isl_pred.label if isl_pred else ""
 
-                # Kinetic Gating for Static Alphabet Recognition (PROB-09):
+                # Kinetic Gating for Static Alphabet/Digits/Vowels Recognition (PROB-09):
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
-                alphabet_in_motion = bool(active_model == "realsign" and kinetic_energy > 0.055)
+                alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > 0.055)
 
-                if active_model == "realsign":
+                if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     if not hand_detected or not has_realsign_feat or not is_pred_valid or alphabet_in_motion:
                         current_prediction = "Awaiting Sign Input"
                     else:

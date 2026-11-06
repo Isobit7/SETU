@@ -11,7 +11,14 @@ export interface LandmarkGroups {
   face: LandmarkPoint[];
 }
 
-export type ActiveModelType = 'realsign' | 'isl_mvp' | 'isl_sequence_lstm' | 'include_stream';
+export type ActiveModelType =
+  | 'realsign'
+  | 'isl_numerals'
+  | 'isl_hindi_vowels'
+  | 'amrita_phrase'
+  | 'isl_mvp'
+  | 'isl_sequence_lstm'
+  | 'include_stream';
 
 export interface Candidate {
   label: string;

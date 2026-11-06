@@ -120,6 +120,104 @@
 }
 
 /* ==========================================================================
+   Theme Modes: Light Mode & High-Contrast Deaf Accessibility (WCAG AAA)
+   ========================================================================== */
+[data-theme="light"] {
+  --setu-bg-base: #F8F9FA;
+  --setu-bg-surface: #FFFFFF;
+  --setu-border-subtle: #DADCE0;
+  --setu-accent-primary: #1A73E8;
+  --setu-accent-hover: #1765CC;
+  --setu-text-main: #202124;
+  --setu-text-muted: #5F6368;
+
+  --bg-app: #F8F9FA;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F1F3F4;
+  --bg-surface-hover: #E8EAED;
+  --bg-surface-active: #DADCE0;
+  --bg-inset: #F1F3F4;
+  --bg-inset-subtle: #E8EAED;
+  --bg-navbar: #FFFFFF;
+
+  --border-subtle: #DADCE0;
+  --border-strong: #BDC1C6;
+  --border-focus: #1A73E8;
+  --border-highlight: #9AA0A6;
+
+  --color-primary: #1A73E8;
+  --color-primary-text: #FFFFFF;
+  --color-primary-hover: #1765CC;
+  --color-primary-dim: rgba(26, 115, 232, 0.1);
+  --color-primary-glow: rgba(26, 115, 232, 0.18);
+  --color-primary-border: rgba(26, 115, 232, 0.25);
+
+  --color-slate-blue: #3C4043;
+  --color-slate-blue-muted: #5F6368;
+  --color-slate-blue-dim: rgba(0, 0, 0, 0.04);
+  --color-slate-blue-border: #DADCE0;
+
+  --color-text-main: #202124;
+  --color-text-secondary: #5F6368;
+  --color-text-muted: #70757A;
+  --color-text-dim: #80868B;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+  --lm-left-hand: #0D904F;
+  --lm-right-hand: #1A73E8;
+}
+
+[data-theme="high-contrast"] {
+  --setu-bg-base: #000000;
+  --setu-bg-surface: #0a0a0a;
+  --setu-border-subtle: #FFD700;
+  --setu-accent-primary: #00FFFF;
+  --setu-accent-hover: #55FFFF;
+  --setu-text-main: #FFFFFF;
+  --setu-text-muted: #E0E0E0;
+
+  --bg-app: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-surface-elevated: #141414;
+  --bg-surface-hover: #222222;
+  --bg-surface-active: #333333;
+  --bg-inset: #000000;
+  --bg-inset-subtle: #111111;
+  --bg-navbar: #000000;
+
+  --border-subtle: #FFD700;
+  --border-strong: #00FFFF;
+  --border-focus: #00FFFF;
+  --border-highlight: #FFFFFF;
+
+  --color-primary: #00FFFF;
+  --color-primary-text: #000000;
+  --color-primary-hover: #55FFFF;
+  --color-primary-dim: rgba(0, 255, 255, 0.2);
+  --color-primary-glow: rgba(0, 255, 255, 0.4);
+  --color-primary-border: #00FFFF;
+
+  --color-slate-blue: #FFFFFF;
+  --color-slate-blue-muted: #E0E0E0;
+  --color-slate-blue-dim: rgba(255, 255, 255, 0.15);
+  --color-slate-blue-border: #FFD700;
+
+  --color-text-main: #FFFFFF;
+  --color-text-secondary: #FFD700;
+  --color-text-muted: #E0E0E0;
+  --color-text-dim: #CCCCCC;
+
+  --shadow-card: 0 0 0 2px #FFD700;
+  --shadow-elevated: 0 0 0 3px #00FFFF;
+
+  /* High-Contrast Vivid Neon Landmarks for Deaf & Low-Vision Users */
+  --lm-left-hand: #00FF66;
+  --lm-right-hand: #FFCC00;
+}
+
+/* ==========================================================================
    Global Reset & Baseline Constraints
    ========================================================================== */
 *, *::before, *::after {
@@ -4701,5 +4799,268 @@ button:active,
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+}
+
+/* ==========================================================================
+   Tier 1 & Tier 3: Multilingual Tabs, High-Contrast Theme, TTS Visualizer & Export
+   ========================================================================== */
+
+/* 1. Theme Switcher Pill in TopNavbar */
+.nav-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-state) var(--ease-out-quart);
+}
+
+.nav-theme-toggle:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.theme-toggle-icon.a11y-gold {
+  color: #FFD700;
+}
+
+.theme-mobile-item .a11y-gold {
+  color: #FFD700;
+}
+
+/* 2. Indic Multilingual Translation Bar */
+.indic-multilingual-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.indic-lang-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.indic-tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-state) var(--ease-out-quart);
+}
+
+.indic-tab-pill:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+}
+
+.indic-tab-pill.active {
+  background: var(--color-primary-dim);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--color-primary-border);
+}
+
+.indic-tab-native {
+  font-size: var(--font-size-xs);
+}
+
+.indic-tab-label {
+  font-size: var(--font-size-2xs);
+  opacity: 0.8;
+}
+
+.indic-tab-indicator {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-emerald);
+}
+
+.indic-neural-tag {
+  font-size: var(--font-size-2xs);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.indic-translation-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.indic-translation-fallback .fallback-en {
+  opacity: 0.88;
+}
+
+.indic-pending-notice {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* 3. Live TTS Waveform Indicator */
+.tts-live-waveform-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--color-primary-dim);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-primary-border);
+}
+
+.tts-live-waveform-indicator .soundwave-bar {
+  display: inline-block;
+  width: 2.5px;
+  background: var(--color-primary);
+  border-radius: 1px;
+  animation: tts-live-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.tts-live-waveform-indicator .soundwave-bar.bar-1 { height: 8px; animation-delay: 0.1s; }
+.tts-live-waveform-indicator .soundwave-bar.bar-2 { height: 14px; animation-delay: 0.3s; }
+.tts-live-waveform-indicator .soundwave-bar.bar-3 { height: 10px; animation-delay: 0.2s; }
+.tts-live-waveform-indicator .soundwave-bar.bar-4 { height: 13px; animation-delay: 0.4s; }
+
+.tts-live-waveform-indicator .waveform-label {
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-left: 4px;
+}
+
+@keyframes tts-live-pulse {
+  0% { transform: scaleY(0.35); }
+  100% { transform: scaleY(1.35); }
+}
+
+/* 4. Multi-Format Export Dropdown */
+.export-dropdown-container {
+  position: relative;
+  display: inline-flex;
+}
+
+.export-chevron {
+  margin-left: 2px;
+  transition: transform var(--duration-state) var(--ease-out-quart);
+}
+
+.export-chevron.open {
+  transform: rotate(180deg);
+}
+
+.export-subdropdown-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  min-width: 250px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+}
+
+.export-dropdown-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-instant) var(--ease-out-quart);
+  width: 100%;
+}
+
+.export-dropdown-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.export-item-icon {
+  margin-top: 2px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.export-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.export-item-title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.export-item-desc {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+/* 5. Print Stylesheet for Transcript Export */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .top-navbar,
+  .camera-controls-wrapper,
+  .unified-actions-row,
+  .mode-selector-segmented,
+  .live-detection-output-container,
+  .mobile-menu-toggle,
+  .indic-lang-tabs-bar {
+    display: none !important;
+  }
+  .workspace-grid {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  .unified-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+  .english-translation-box,
+  .sentence-integrated-box {
+    border: 1px solid #ccc !important;
+    color: #000000 !important;
+    background: #fafafa !important;
+  }
 }
 

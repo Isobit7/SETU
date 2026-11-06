@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Avatar3DViewer } from './Avatar3DViewer';
+import { ApiService } from '../services/apiService';
 import {
   Play,
   Pause,
@@ -12,6 +13,7 @@ import {
   Maximize2,
   Minimize2,
   BookOpen,
+  Cpu,
 } from 'lucide-react';
 
 interface TextToSignWorkspaceProps {
@@ -368,7 +370,72 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
   const animationFrameRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const { glossTokens } = convertEnglishToISLGloss(inputText);
+  const [glossTokens, setGlossTokens] = useState<string[]>(() => convertEnglishToISLGloss('Hello').glossTokens);
+  const [isGlossLoading, setIsGlossLoading] = useState<boolean>(false);
+  const [glossSource, setGlossSource] = useState<'ai_neural' | 'heuristic'>('ai_neural');
+
+  // Reverse-Gloss Integration: Calls /api/v1/nlp/to-gloss with debouncing and fallback
+  useEffect(() => {
+    const trimmed = inputText.trim();
+    if (!trimmed) {
+      setGlossTokens([]);
+      return;
+    }
+
+    let isMounted = true;
+    setIsGlossLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await ApiService.toGloss(trimmed);
+        if (isMounted && res && Array.isArray(res.gloss_tokens) && res.gloss_tokens.length > 0) {
+          const expanded: string[] = [];
+          for (const rawToken of res.gloss_tokens) {
+            const upper = rawToken.toUpperCase().replace(/\s+/g, '_');
+            const mapped =
+              upper === 'I' || upper === 'MY'
+                ? 'ME'
+                : upper === 'THANKS' || upper === 'THANK'
+                ? 'THANK_YOU'
+                : upper === 'DRINK'
+                ? 'WATER'
+                : upper === 'EAT'
+                ? 'FOOD'
+                : upper;
+
+            if (SIGN_DATABASE[mapped]) {
+              expanded.push(mapped);
+            } else {
+              for (const ch of mapped) {
+                if (/^[A-Z]$/.test(ch)) {
+                  expanded.push(ch);
+                }
+              }
+            }
+          }
+          setGlossTokens(expanded.length > 0 ? expanded : res.gloss_tokens);
+          setGlossSource('ai_neural');
+          setIsGlossLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('AI reverse gloss endpoint unavailable, using local rules:', err);
+      }
+
+      if (isMounted) {
+        const local = convertEnglishToISLGloss(trimmed);
+        setGlossTokens(local.glossTokens);
+        setGlossSource('heuristic');
+        setIsGlossLoading(false);
+      }
+    }, 280);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [inputText]);
+
   const activeToken = glossTokens[activeTokenIndex] || 'HELLO';
   const activeSignData = SIGN_DATABASE[activeToken] || SIGN_DATABASE['HELLO'];
 
@@ -937,8 +1004,19 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
           {/* ISL Grammar Gloss Breakdown Card */}
           <div className="gloss-breakdown-card">
             <div className="card-header-clean">
-              <span className="card-header-title">ISL Grammatical Gloss</span>
-              <span className="grammar-tag">Topic-Comment Syntax</span>
+              <span className="card-header-title">ISL Grammatical Gloss (SOV)</span>
+              <span className={`grammar-tag ${glossSource === 'ai_neural' ? 'ai-tag' : ''}`}>
+                {isGlossLoading ? (
+                  'Parsing...'
+                ) : glossSource === 'ai_neural' ? (
+                  <>
+                    <Cpu size={11} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                    AI SOV Reordering
+                  </>
+                ) : (
+                  'Topic-Comment Syntax'
+                )}
+              </span>
             </div>
 
             <div className="gloss-tokens-container">

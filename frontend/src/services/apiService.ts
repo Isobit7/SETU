@@ -58,6 +58,12 @@ export interface HealthStatusResponse {
   active_classifiers: string[];
 }
 
+export interface ReverseGlossResponse {
+  input_text: string;
+  gloss_tokens: string[];
+  gloss_string: string;
+}
+
 export class ApiService {
   private static baseUrl =
     (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL)
@@ -216,5 +222,16 @@ export class ApiService {
    */
   public static async fetchCustomSamples(): Promise<any> {
     return this.request<any>('/api/v1/dataset/custom_samples');
+  }
+
+  /**
+   * AI Reverse-Gloss: Convert English text to Indian Sign Language (ISL) SOV gloss tokens
+   */
+  public static async toGloss(text: string): Promise<ReverseGlossResponse> {
+    return this.request<ReverseGlossResponse>('/api/v1/nlp/to-gloss', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
   }
 }

@@ -15,6 +15,8 @@ import {
   Video,
   ChevronDown,
   Check,
+  Hash,
+  Languages,
 } from 'lucide-react';
 import type { ActiveModelType, CameraStatus, LandmarkStyles } from '../types';
 
@@ -86,7 +88,6 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   const isActive = isDetecting || isPaused;
   const handsActive = landmarkStyles.showLeftHand || landmarkStyles.showRightHand;
 
-  const isWordsMode = activeModel !== 'realsign';
 
   // Close popovers on click outside or escape
   useEffect(() => {
@@ -115,15 +116,25 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
   const getPhraseModeLabel = (model: ActiveModelType) => {
     switch (model) {
+      case 'amrita_phrase':
+        return 'Amrita (49 Phrases)';
       case 'isl_sequence_lstm':
         return 'Dynamic Sequences';
       case 'include_stream':
         return 'INCLUDE (263 Signs)';
       case 'isl_mvp':
-      default:
         return 'Conversational Signs';
+      default:
+        return 'Phrases & Vocabulary';
     }
   };
+
+  const isPhraseMode = (
+    activeModel === 'isl_mvp' ||
+    activeModel === 'amrita_phrase' ||
+    activeModel === 'isl_sequence_lstm' ||
+    activeModel === 'include_stream'
+  );
 
   return (
     <div className="camera-controls-wrapper">
@@ -166,10 +177,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           </div>
         )}
 
-        {/* 2. Primary 2-Tier Segmented Mode Selector */}
+        {/* 2. Direct Multi-Model Segmented Selector */}
         {onSwitchModel && (
-          <div className="control-group mode-selector-segmented" role="radiogroup" aria-label="Recognition Mode">
-            {/* Mode 1: Letters (A–Z) */}
+          <div className="control-group mode-selector-segmented" role="radiogroup" aria-label="Recognition Model">
+            {/* Model 1: Letters (A–Z) */}
             <button
               type="button"
               className={`segmented-mode-btn ${activeModel === 'realsign' ? 'active' : ''}`}
@@ -177,34 +188,66 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                 onSwitchModel('realsign');
                 setIsPhrasesDropdownOpen(false);
               }}
-              title="Alphabet (A–Z): RealSign fingerspelling recognition"
+              title="Alphabet (A–Z): RealSign static & continuous fingerspelling"
               role="radio"
               aria-checked={activeModel === 'realsign'}
             >
-              <Type size={14} />
+              <Type size={13} />
               <span>Letters (A–Z)</span>
             </button>
 
-            {/* Mode 2: Words & Phrases (with quick sub-tier dropdown) */}
+            {/* Model 2: Numbers (0–9 & ₹) */}
+            <button
+              type="button"
+              className={`segmented-mode-btn ${activeModel === 'isl_numerals' ? 'active' : ''}`}
+              onClick={() => {
+                onSwitchModel('isl_numerals');
+                setIsPhrasesDropdownOpen(false);
+              }}
+              title="Numerals (0–9 & ₹): ISL counting and currency signs"
+              role="radio"
+              aria-checked={activeModel === 'isl_numerals'}
+            >
+              <Hash size={13} />
+              <span>Numbers (0–9 & ₹)</span>
+            </button>
+
+            {/* Model 3: Hindi Vowels (अ–ऐ) */}
+            <button
+              type="button"
+              className={`segmented-mode-btn ${activeModel === 'isl_hindi_vowels' ? 'active' : ''}`}
+              onClick={() => {
+                onSwitchModel('isl_hindi_vowels');
+                setIsPhrasesDropdownOpen(false);
+              }}
+              title="Hindi Vowels (अ–ऐ): Devanagari ISL swar phonemes"
+              role="radio"
+              aria-checked={activeModel === 'isl_hindi_vowels'}
+            >
+              <Languages size={13} />
+              <span>Hindi Vowels</span>
+            </button>
+
+            {/* Model 4: Phrases & Sequences Dropdown */}
             <div className="segmented-dropdown-container" ref={phrasesDropdownRef}>
               <button
                 type="button"
-                className={`segmented-mode-btn ${isWordsMode ? 'active' : ''}`}
+                className={`segmented-mode-btn ${isPhraseMode ? 'active' : ''}`}
                 onClick={() => {
-                  if (activeModel === 'realsign') {
+                  if (!isPhraseMode) {
                     onSwitchModel('isl_mvp');
                   }
                   setIsPhrasesDropdownOpen((prev) => !prev);
                 }}
-                title="Words & Phrases: Common conversational and continuous sign recognition"
+                title="Continuous Phrases & Dynamic Sequences"
                 role="radio"
-                aria-checked={isWordsMode}
+                aria-checked={isPhraseMode}
                 aria-haspopup="true"
                 aria-expanded={isPhrasesDropdownOpen}
               >
-                <BookOpen size={14} />
-                <span>{isWordsMode ? getPhraseModeLabel(activeModel) : 'Words & Phrases'}</span>
-                <ChevronDown size={12} className={`mode-chevron ${isPhrasesDropdownOpen ? 'open' : ''}`} />
+                <BookOpen size={13} />
+                <span>{isPhraseMode ? getPhraseModeLabel(activeModel) : 'Phrases & Signs'}</span>
+                <ChevronDown size={11} className={`mode-chevron ${isPhrasesDropdownOpen ? 'open' : ''}`} />
               </button>
 
               {isPhrasesDropdownOpen && (
@@ -219,10 +262,26 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                     }}
                   >
                     <div className="subdropdown-text">
-                      <span className="subdropdown-title">Conversational Signs</span>
+                      <span className="subdropdown-title">Conversational Signs (5 Signs)</span>
                       <span className="subdropdown-desc">Core everyday phrases (Hello, Thank You, etc.)</span>
                     </div>
                     {activeModel === 'isl_mvp' && <Check size={14} className="text-primary" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={`subdropdown-item ${activeModel === 'amrita_phrase' ? 'selected' : ''}`}
+                    onClick={() => {
+                      onSwitchModel('amrita_phrase');
+                      setIsPhrasesDropdownOpen(false);
+                    }}
+                  >
+                    <div className="subdropdown-text">
+                      <span className="subdropdown-title">Amrita 49 Continuous Phrases (BiLSTM)</span>
+                      <span className="subdropdown-desc">Verified 49-phrase temporal deep neural network</span>
+                    </div>
+                    {activeModel === 'amrita_phrase' && <Check size={14} className="text-primary" />}
                   </button>
 
                   <button
@@ -235,7 +294,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                     }}
                   >
                     <div className="subdropdown-text">
-                      <span className="subdropdown-title">Dynamic Sequences (LSTM)</span>
+                      <span className="subdropdown-title">Dynamic Sequences (7 Gestures LSTM)</span>
                       <span className="subdropdown-desc">Continuous temporal gestures</span>
                     </div>
                     {activeModel === 'isl_sequence_lstm' && <Check size={14} className="text-primary" />}
@@ -251,8 +310,8 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                     }}
                   >
                     <div className="subdropdown-text">
-                      <span className="subdropdown-title">AI4Bharat Full Vocabulary</span>
-                      <span className="subdropdown-desc">263 Comprehensive ISL gestures</span>
+                      <span className="subdropdown-title">AI4Bharat INCLUDE Full Vocabulary</span>
+                      <span className="subdropdown-desc">263 Comprehensive Indian Sign Language gestures</span>
                     </div>
                     {activeModel === 'include_stream' && <Check size={14} className="text-primary" />}
                   </button>
