@@ -18,6 +18,7 @@ from backend.app.api.endpoints.models import router as models_router
 from backend.app.api.endpoints.predict import router as predict_router
 from backend.app.api.endpoints.video import router as video_router
 from backend.app.api.endpoints.vocabulary import router as vocabulary_router
+from backend.app.api.endpoints.nlp import router as nlp_router
 from backend.app.services.realsign_classifier_service import classifier_service
 from backend.app.services.pipeline_manager import pipeline
 from backend.app.websocket.recognize import websocket_recognize
@@ -112,6 +113,7 @@ app.include_router(models_router, prefix="/api")
 app.include_router(video_router, prefix="/api")
 app.include_router(dataset_router, prefix="/api")
 app.include_router(vocabulary_router, prefix="/api")
+app.include_router(nlp_router, prefix="/api")
 
 
 # WebSocket Streaming Endpoints

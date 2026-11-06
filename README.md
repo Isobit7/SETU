@@ -106,6 +106,17 @@ SETU provides a complete communication bridge for both parties:
 ### 📦 10. Decoupled Multimodal "Show-and-Sign" Grounding
 Signers frequently need to reference physical objects (e.g., holding a water bottle while signing *"EMPTY"*). SETU supports zero-shot open-vocabulary object grounding (YOLO-World). Crucially, this feature is **decoupled and disabled by default**, ensuring that standard sign recognition runs at full, unhindered 30 FPS without frame lag or false object detections.
 
+### 🔤 11. ISL Phonological Spell-Corrector & Geometric Joint Angle Tie-Breakers
+Fingerspelling in fast conversation inevitably encounters geometric ambiguity (e.g., `M` vs `N` 3-finger vs 2-finger tuck, `U` vs `V` parallel vs spread fingers, `O` vs `C` thumb aperture). SETU introduces a two-tier accuracy defense:
+- **P1 Geometric Angle Disambiguation:** Computes 15 anatomical joint flexions (`compute_joint_angles_15`). The ring finger PIP joint flexion cosine ($<0.78$) deterministically disambiguates `M` from `N`.
+- **P2 Phonological Levenshtein Auto-Correction:** When word timeout commits a string, SETU evaluates a weighted distance matrix reflecting authentic MediaPipe confusions (`M <-> N: 0.25`, `U <-> V: 0.25`, `O <-> C: 0.30`). Typo strings like `"THAMK"`, `"HELO"`, and `"WATR"` are recovered into `"THANK"`, `"HELLO"`, and `"WATER"` in $<0.1\text{ ms}$ while preserving proper names.
+
+### 🌐 12. Multilingual NLP Sign Language Translation (SLT) Layer
+SETU includes a dedicated NLP and Sign Language Translation engine (`/api/v1/nlp/`):
+- **ISL (SOV) to English (SVO):** Rearranges clause elements, fronts interrogative Wh-words, and scopes clause-final negation.
+- **Multilingual Indic Support:** Direct translation into Hindi (`hi`), Tamil (`ta`), Telugu (`te`), and Kannada (`kn`), aligning naturally with native SOV structures.
+- **Bi-directional English-to-Gloss Synthesis:** Converts spoken or typed English into ISL gloss sequences (`/api/v1/nlp/to-gloss`) for sign generation and interactive avatars.
+
 ---
 
 ## 🏛️ System Architecture

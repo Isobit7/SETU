@@ -20,6 +20,8 @@ import difflib
 import re
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
+from backend.app.services.nlp.spell_corrector import spell_corrector
+
 # Common ISL Vocabulary Taggers
 PRONOUNS_SUBJECT: Dict[str, str] = {
     "ME": "I",
@@ -128,9 +130,8 @@ class ISLSyntaxTransformer:
         # Check for single-letter fingerspelling run (e.g. ['H', 'E', 'L', 'P'])
         if all(len(t) == 1 for t in cleaned):
             spelled_word = "".join(cleaned).upper()
-            closest = difflib.get_close_matches(spelled_word, COMMON_DICTIONARY, n=1, cutoff=0.80)
-            word = closest[0].capitalize() if closest else spelled_word.capitalize()
-            return word
+            corrected = spell_corrector.correct(spelled_word)
+            return corrected.capitalize()
 
         # 1. Check for Question Patterns (final Wh-words: WHAT, WHERE, WHY, HOW, WHEN)
         last_tok = cleaned[-1]
@@ -294,3 +295,6 @@ class ISLSyntaxTransformer:
             return f"{subj.capitalize()} {copula} {obj_phrase}."
 
         return f"{subj.capitalize()}."
+
+
+syntax_transformer = ISLSyntaxTransformer()

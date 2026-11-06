@@ -13,6 +13,7 @@ from backend.app.services.nlp.gloss_parser import ISLGlossParser
 from backend.app.services.nlp.neural_translator import neural_translator as default_neural_translator
 from backend.app.services.nlp.indic_transformer import indic_transformer
 from backend.app.services.nlp.domain_packs import format_tokens_with_numbers_and_currency, domain_packs_manager
+from backend.app.services.nlp.spell_corrector import spell_corrector as default_spell_corrector
 from models.adapters.sequence_lstm import CTCGreedyDecoder
 
 
@@ -29,10 +30,14 @@ class SentenceAccumulator:
         sentence_timeout: float = 2.5,
         ctc_blank_token: str = "no_sign",
         ctc_min_confidence: float = 0.40,
+        spell_corrector: Optional[Any] = None,
     ) -> None:
         self.parser: ISLGlossParser = parser or ISLGlossParser()
         self.neural_translator: Any = (
             neural_translator if neural_translator is not None else default_neural_translator
+        )
+        self.spell_corrector: Any = (
+            spell_corrector if spell_corrector is not None else default_spell_corrector
         )
         self.word_timeout: float = word_timeout
         self.sentence_timeout: float = sentence_timeout
@@ -100,7 +105,12 @@ class SentenceAccumulator:
             self._tokens_changed = True
         elif normalized_type == "phrase":
             if self.current_word:
-                self.sentence_tokens.append(self.current_word)
+                committed_word = (
+                    self.spell_corrector.correct(self.current_word)
+                    if self.spell_corrector is not None
+                    else self.current_word
+                )
+                self.sentence_tokens.append(committed_word)
                 self.current_word = ""
 
             self.sentence_tokens.append(clean.upper())
@@ -116,7 +126,12 @@ class SentenceAccumulator:
         sentence_translated = False
 
         if self.current_word and (current_time - self.last_token_time > self.word_timeout):
-            self.sentence_tokens.append(self.current_word)
+            committed_word = (
+                self.spell_corrector.correct(self.current_word)
+                if self.spell_corrector is not None
+                else self.current_word
+            )
+            self.sentence_tokens.append(committed_word)
             self.current_word = ""
             self._tokens_changed = True
             word_committed = True

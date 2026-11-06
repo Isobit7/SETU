@@ -481,6 +481,27 @@ def evaluate_alphabet_heuristics(
             if pinky_ext and not thumb_ext and not index_ext and not middle_ext and not ring_ext:
                 return "I"
 
+        # Disambiguation: 'M' (3 fingers tucked/flexed) vs 'N' (2 fingers tucked/flexed) vs 'T' (1 finger)
+        if candidate_pair & {"M", "N"} or candidate_pair & {"M", "T"} or candidate_pair & {"N", "T"}:
+            j_angles = compute_joint_angles_15(arr)
+            # Index 10 is Ring finger PIP joint flexion cosine
+            ring_flex = float(j_angles[10])
+            mid_flex = float(j_angles[7])
+            if "M" in candidate_pair and "N" in candidate_pair:
+                # In M, ring finger is curled tightly (< 0.78); in N, ring finger is less flexed / extended (> 0.78)
+                return "M" if ring_flex < 0.78 else "N"
+            if "N" in candidate_pair and "T" in candidate_pair:
+                return "N" if mid_flex < 0.78 else "T"
+            if "M" in candidate_pair and "T" in candidate_pair:
+                return "M" if ring_flex < 0.78 else "T"
+
+        # Disambiguation: 'O' vs 'C' aperture clearance
+        if candidate_pair & {"O", "C"}:
+            if d_thumb_idx <= 0.20:
+                return "O"
+            if d_thumb_idx >= 0.28:
+                return "C"
+
     # --- General Structural Disambiguation ---
     # 1. 'V': Index + Middle extended (apart), others curled
     if index_ext and middle_ext and not ring_ext and not pinky_ext:
