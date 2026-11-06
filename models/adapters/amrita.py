@@ -160,3 +160,23 @@ class AmritaPhraseClassifier:
             raw_class_idx=best_idx,
         )
 
+    def predict_sequence(
+        self,
+        features_sequence: np.ndarray,
+        confidence_threshold: float = 0.40,
+    ) -> AmritaPrediction:
+        """Alias for predict() to maintain interface parity with ISLSequenceLSTMClassifier."""
+        return self.predict(features_sequence, confidence_threshold=confidence_threshold)
+
+    def _empty_prediction(self) -> AmritaPrediction:
+        """Returns baseline empty prediction structure when no motion or hands are detected."""
+        return AmritaPrediction(
+            phrase="Awaiting Sign Input",
+            confidence=0.0,
+            is_known_sign=False,
+            probabilities={},
+            top_3=[],
+            top_5=[],
+            raw_class_idx=-1,
+        )
+

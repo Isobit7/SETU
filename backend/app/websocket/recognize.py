@@ -160,9 +160,23 @@ async def websocket_recognize(
 
     # Per-connection state
     active_model = (model or "realsign").lower()
-    if active_model == "include":
+    if active_model in ("include", "include_stream"):
         active_model = "include_stream"
-    if active_model not in ("realsign", "isl_mvp", "isl_sequence_lstm", "include_stream"):
+    elif active_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
+        active_model = "amrita_isl_phrase_bilstm"
+    elif active_model in ("numerals", "isl_numerals", "digits"):
+        active_model = "isl_numerals"
+    elif active_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
+        active_model = "isl_hindi_vowels"
+    elif active_model not in (
+        "realsign",
+        "isl_numerals",
+        "isl_hindi_vowels",
+        "amrita_isl_phrase_bilstm",
+        "isl_mvp",
+        "isl_sequence_lstm",
+        "include_stream",
+    ):
         active_model = "realsign"
 
     streaming_include: Optional[StreamingIncludeAdapter] = None
@@ -726,14 +740,14 @@ async def websocket_recognize(
                 should_run_inference = False
                 motion_settled_now = False
 
-                if active_model == "realsign":
+                if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     should_run_inference = (realsign_feat_126d is not None or realsign_feat_63d is not None)
                 elif active_model == "include_stream":
                     should_run_inference = bool(streaming_include is not None and streaming_include.should_evaluate())
                 elif active_model == "isl_mvp":
                     # ISL MVP model is ultra-lightweight (numpy/scikit ~50us). Run every frame hands are present
                     should_run_inference = bool(hand_detected and len(rolling_features) >= 5)
-                elif active_model == "isl_sequence_lstm":
+                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
                     if kinetic_energy >= KINETIC_ENERGY_THRESHOLD:
                         is_actively_signing = True
                         settled_frames_count = 0
@@ -817,6 +831,40 @@ async def websocket_recognize(
                         else:
                             seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
 
+                    elif active_model == "amrita_isl_phrase_bilstm":
+                        amrita_clf = ModelRegistry.get("amrita_isl_phrase_bilstm")
+                        if amrita_clf is not None and len(segment_to_classify) >= 5:
+                            arr_amrita = feat_array
+                            if arr_amrita.shape[1] < 316:
+                                pad_width = 316 - arr_amrita.shape[1]
+                                arr_amrita = np.pad(arr_amrita, ((0, 0), (0, pad_width)), mode='constant')
+                            else:
+                                arr_amrita = arr_amrita[:, :316]
+                            amrita_res = await loop.run_in_executor(
+                                None,
+                                amrita_clf.predict,
+                                arr_amrita,
+                                confidence_threshold,
+                            )
+                            seq_pred = ISLSequencePrediction(
+                                label=amrita_res.phrase,
+                                confidence=amrita_res.confidence,
+                                is_known_sign=amrita_res.is_known_sign,
+                                probabilities=amrita_res.probabilities,
+                                top_3=amrita_res.top_3,
+                                raw_class_idx=amrita_res.raw_class_idx,
+                            )
+                        elif amrita_clf is not None:
+                            empty_amrita = amrita_clf._empty_prediction()
+                            seq_pred = ISLSequencePrediction(
+                                label=empty_amrita.phrase,
+                                confidence=0.0,
+                                is_known_sign=False,
+                                probabilities={},
+                                top_3=[],
+                                raw_class_idx=-1,
+                            )
+
                     elif pipeline.classifier is not None:
                         if len(segment_to_classify) >= 5:
                             arr_mvp = feat_array
@@ -891,7 +939,7 @@ async def websocket_recognize(
                     buffer_fill = round(len(streaming_include.frame_buffer) / 30.0, 2) if streaming_include else 0.0
                     is_pred_valid = bool(include_pred and include_pred.is_known_sign and include_pred.confidence >= active_threshold and include_pred.label != "awaiting_sign")
                     pred_label = include_pred.label if include_pred else ""
-                elif active_model == "isl_sequence_lstm":
+                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
                     res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()} if seq_pred else {}
                     raw_conf = round(seq_pred.confidence, 4) if seq_pred else 0.0
                     raw_top_class = seq_pred.top_3[0][0] if (seq_pred and seq_pred.top_3) else ("no_hand" if not hand_detected else "no_sign")
@@ -995,7 +1043,7 @@ async def websocket_recognize(
                         last_word_label = pred_label
                         if active_model == "include_stream" and include_pred is not None:
                             last_word_display = include_pred.display_name
-                        elif active_model == "isl_sequence_lstm":
+                        elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
                             last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
                         else:
                             last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper())

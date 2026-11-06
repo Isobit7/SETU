@@ -79,6 +79,7 @@ export function useRecognitionStream({
   // Fetch available cameras
   const refreshDevices = useCallback(async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((d) => d.kind === 'videoinput');
       setAvailableCameras(videoDevices);
@@ -89,6 +90,18 @@ export function useRecognitionStream({
       console.warn('Could not enumerate devices:', err);
     }
   }, [selectedCameraId]);
+
+  // Proactively enumerate video devices on mount and listen for hardware changes
+  useEffect(() => {
+    refreshDevices();
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices && 'addEventListener' in navigator.mediaDevices) {
+      const handleDeviceChange = () => refreshDevices();
+      navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+      return () => {
+        navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
+      };
+    }
+  }, [refreshDevices]);
 
   const connectWebSocketRef = useRef<() => void>(() => {});
 
@@ -264,32 +277,41 @@ export function useRecognitionStream({
     }
 
     try {
-      const constraints: MediaStreamConstraints = {
-        video: selectedCameraId
-          ? { deviceId: { exact: selectedCameraId }, width: { ideal: 640 }, height: { ideal: 480 } }
-          : { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
-        audio: false,
-      };
+      let stream: MediaStream | null = null;
 
-      let stream: MediaStream;
+      // Tier 1: Try requested device with ideal 640x480 resolution (using relaxed ideal deviceId)
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (firstErr: any) {
-        if (
-          selectedCameraId &&
-          (firstErr.name === 'OverconstrainedError' ||
-            firstErr.name === 'ConstraintNotSatisfiedError' ||
-            firstErr.name === 'NotFoundError')
-        ) {
-          console.warn('Overconstrained camera device, falling back to default camera:', firstErr);
+        const tier1Constraints: MediaStreamConstraints = {
+          video: selectedCameraId
+            ? { deviceId: { ideal: selectedCameraId }, width: { ideal: 640 }, height: { ideal: 480 } }
+            : { width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false,
+        };
+        stream = await navigator.mediaDevices.getUserMedia(tier1Constraints);
+      } catch (tier1Err) {
+        console.warn('Tier 1 camera constraints failed, attempting relaxed 640x480 constraints:', tier1Err);
+      }
+
+      // Tier 2: Try basic ideal 640x480 without deviceId or facingMode
+      if (!stream) {
+        try {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+            video: { width: { ideal: 640 }, height: { ideal: 480 } },
             audio: false,
           });
-        } else {
-          throw firstErr;
+        } catch (tier2Err) {
+          console.warn('Tier 2 camera constraints failed, attempting universal raw video fallback:', tier2Err);
         }
       }
+
+      // Tier 3: Universal unconstrained video fallback (guaranteed to acquire HP True Vision FHD and USB webcams)
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
       streamRef.current = stream;
 
       if (videoRef.current) {
@@ -308,16 +330,37 @@ export function useRecognitionStream({
     } catch (err: any) {
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setCameraStatus('permission_denied');
-        setErrorMessage('Camera access was denied. Please allow camera permissions in your browser settings.');
+        setErrorMessage('Camera access was denied. Please click the camera/lock icon in your browser URL bar and choose "Allow".');
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         setCameraStatus('no_camera');
-        setErrorMessage('No camera device detected on this system.');
+        setErrorMessage('No camera device detected. Please verify your webcam is connected and not disabled.');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setCameraStatus('error');
+        setErrorMessage('Camera is currently in use by another application (e.g. Zoom, Teams, or another browser tab). Please close other apps and retry.');
       } else {
         setCameraStatus('error');
         setErrorMessage(`Camera error: ${err.message || err.name}`);
       }
     }
   }, [connectWebSocket, refreshDevices, selectedCameraId, videoRef]);
+
+  // If browser already has granted camera permission, auto-start camera on mount
+  useEffect(() => {
+    let isCancelled = false;
+    if (typeof navigator !== 'undefined' && 'permissions' in navigator && navigator.permissions.query) {
+      navigator.permissions
+        .query({ name: 'camera' as any })
+        .then((perm) => {
+          if (!isCancelled && perm.state === 'granted') {
+            startCamera();
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      isCancelled = true;
+    };
+  }, [startCamera]);
 
   // Stop camera stream & release resources
   const stopCamera = useCallback(() => {

@@ -88,24 +88,35 @@ class ModelRegistry:
 
     @classmethod
     def get(cls, model_id: str) -> Optional[Any]:
-        """Retrieves or instantiates the singleton instance for a given model ID."""
-        if model_id in cls._instances:
-            return cls._instances[model_id]
+        """Retrieves or instantiates the singleton instance for a given model ID or alias."""
+        ALIASES = {
+            "realsign": "realsign_multisigner_mlp",
+            "realsign_alphabet": "realsign_26class_alphabet",
+            "amrita": "amrita_isl_phrase_bilstm",
+            "amrita_phrase": "amrita_isl_phrase_bilstm",
+            "include": "ai4bharat_include_263sign",
+            "include_stream": "ai4bharat_include_263sign",
+            "isl_mvp": "isl_mvp_5sign",
+        }
+        canonical_id = ALIASES.get(model_id, model_id)
 
-        factory = cls._factories.get(model_id)
+        if canonical_id in cls._instances:
+            return cls._instances[canonical_id]
+
+        factory = cls._factories.get(canonical_id)
         if not factory:
-            logger.warning("No factory registered for model_id '%s'", model_id)
+            logger.warning("No factory registered for model_id '%s' (canonical: '%s')", model_id, canonical_id)
             return None
 
         try:
             instance = factory()
-            cls._instances[model_id] = instance
-            if model_id in cls._metadata:
-                cls._metadata[model_id].is_ready = True
-            logger.info("Instantiated model engine '%s' via registry", model_id)
+            cls._instances[canonical_id] = instance
+            if canonical_id in cls._metadata:
+                cls._metadata[canonical_id].is_ready = True
+            logger.info("Instantiated model engine '%s' via registry", canonical_id)
             return instance
         except Exception as e:
-            logger.error("Failed to instantiate model '%s': %s", model_id, e, exc_info=True)
+            logger.error("Failed to instantiate model '%s': %s", canonical_id, e, exc_info=True)
             return None
 
     @classmethod

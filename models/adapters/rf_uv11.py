@@ -204,3 +204,36 @@ class RFUV11Adapter:
     def reset_window(self) -> None:
         """Clears the temporal smoothing window (called when hands leave the frame)."""
         self.prediction_window.clear()
+
+    def predict(
+        self,
+        landmarks_63: np.ndarray,
+        confidence_threshold: Optional[float] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Standardized interface parity with RealSignClassifier."""
+        from models.adapters.realsign import RealSignPrediction
+        thresh = confidence_threshold if confidence_threshold is not None else self.confidence_threshold
+        pred_label, confidence, top3 = self.predict_raw(landmarks_63)
+        is_known = confidence >= thresh
+        probs = {lbl: conf for lbl, conf in top3}
+        best_idx = self.labels.index(pred_label) if pred_label in self.labels else 0
+        return RealSignPrediction(
+            letter=pred_label if is_known else "Awaiting Sign Input",
+            confidence=confidence if is_known else 0.0,
+            is_known_sign=is_known,
+            probabilities=probs,
+            top_3=top3,
+            raw_class_idx=best_idx,
+        )
+
+    def _empty_prediction(self) -> Any:
+        from models.adapters.realsign import RealSignPrediction
+        return RealSignPrediction(
+            letter="Awaiting Sign Input",
+            confidence=0.0,
+            is_known_sign=False,
+            probabilities={},
+            top_3=[],
+            raw_class_idx=-1,
+        )
