@@ -58,6 +58,9 @@ export interface RecognitionPayload {
     entropy?: number;
   };
   buffer_fill?: number;
+  kinetic_energy?: number;
+  motion_threshold?: number;
+  rest_y_threshold?: number;
   hand_detected?: boolean;
   hands_in_subtitle_zone?: boolean;
   guidance?: string;

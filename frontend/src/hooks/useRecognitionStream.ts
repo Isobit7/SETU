@@ -547,7 +547,13 @@ export function useRecognitionStream({
 
   // Send personalized calibration settings to WebSocket
   const sendCalibration = useCallback(
-    (params: { rest_y: number; pitch_threshold: number; yaw_threshold: number }) => {
+    (params: {
+      rest_y: number;
+      pitch_threshold: number;
+      yaw_threshold: number;
+      motion_threshold?: number;
+      hand_scale?: number;
+    }) => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ action: 'calibrate', ...params }));
       }

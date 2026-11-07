@@ -6388,6 +6388,280 @@ button:active,
   color: #64748b;
 }
 
+.step-dot.completed {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.calib-progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.calib-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, #10b981);
+  transition: width 0.15s ease-out;
+}
+
+.calib-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.calib-metric-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.calib-metric-lbl {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.calib-metric-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #38bdf8;
+  margin: 2px 0;
+  font-family: monospace;
+}
+
+.calib-metric-sub {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.calib-finger-strip {
+  margin-top: 10px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.finger-strip-title {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.finger-chips-row {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+.finger-ratio-chip {
+  flex: 1;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 4px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.finger-name {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.finger-ratio {
+  font-size: 12px;
+  color: #34d399;
+  font-family: monospace;
+}
+
+.rest-boundary-display {
+  height: 90px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.rest-line-visual {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+
+.active-zone-label {
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.rest-zone-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.rest-threshold-divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+.rest-tag {
+  font-size: 10px;
+  background: #ef4444;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.head-meters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.head-meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.head-meter-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.head-meter-lbl {
+  color: #cbd5e1;
+}
+
+.status-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.status-pill.confirmed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.status-pill.pending {
+  background: rgba(14, 165, 233, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.calib-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.calib-summary-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.calib-summary-card .card-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.calib-summary-card .card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #34d399;
+  font-family: monospace;
+  margin: 2px 0;
+}
+
+.calib-summary-card .card-desc {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.manual-override-section {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+
+.manual-toggle-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+}
+
+.manual-toggle-btn:hover {
+  color: #38bdf8;
+}
+
+.manual-sliders-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
 /* ==========================================================================
    INTELLIGENT FALLBACK CHIPS (PREDICTIVE AUTOCOMPLETE & DISAMBIGUATION)
    ========================================================================== */

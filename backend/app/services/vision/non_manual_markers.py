@@ -43,12 +43,14 @@ class NonManualMarkerDetector:
     NOSE_TIP = 1
     CHIN = 152
 
-    def __init__(self, history_len: int = 12) -> None:
+    def __init__(self, history_len: int = 18) -> None:
         self.history_len = history_len
         self.nose_x_history: List[float] = []
         self.nose_y_history: List[float] = []
         self.last_nod_time: float = 0.0
         self.last_shake_time: float = 0.0
+        self.pitch_threshold: float = 0.035
+        self.yaw_threshold: float = 0.035
 
     def reset(self) -> None:
         self.nose_x_history.clear()
@@ -105,37 +107,37 @@ class NonManualMarkerDetector:
         avg_brow_elevation = (left_dist + right_dist) / 2.0
         is_question = bool(avg_brow_elevation > (baseline_eyebrow_ratio * 1.25))
 
+        # Continuous live oscillation values for HUD and calibration feedback
+        range_x = float(np.ptp(self.nose_x_history)) if len(self.nose_x_history) >= 4 else 0.0
+        range_y = float(np.ptp(self.nose_y_history)) if len(self.nose_y_history) >= 4 else 0.0
+        yaw_oscillation = range_x
+        pitch_oscillation = range_y
+
         # 2. Head Yaw Oscillation (horizontal head shake -> Negation / Cancel)
-        yaw_oscillation = 0.0
         raw_negation = False
         if len(self.nose_x_history) >= 6:
             diffs_x = np.diff(self.nose_x_history)
             sign_changes_x = np.sum(diffs_x[:-1] * diffs_x[1:] < 0)
-            range_x = float(np.ptp(self.nose_x_history))
-            if sign_changes_x >= 2 and range_x > 0.048:
-                yaw_oscillation = range_x
+            if sign_changes_x >= 1 and range_x >= self.yaw_threshold:
                 raw_negation = True
 
         # Debounced negation
         is_negation = False
-        if raw_negation and (now - self.last_shake_time > 0.75):
+        if raw_negation and (now - self.last_shake_time > 0.60):
             is_negation = True
             self.last_shake_time = now
 
         # 3. Head Pitch Oscillation (vertical nod -> Affirmation / Commit)
-        pitch_oscillation = 0.0
         raw_affirmation = False
         if len(self.nose_y_history) >= 6:
             diffs_y = np.diff(self.nose_y_history)
             sign_changes_y = np.sum(diffs_y[:-1] * diffs_y[1:] < 0)
-            range_y = float(np.ptp(self.nose_y_history))
-            if sign_changes_y >= 2 and range_y > 0.048:
-                pitch_oscillation = range_y
+            if sign_changes_y >= 1 and range_y >= self.pitch_threshold:
                 raw_affirmation = True
 
         # Debounced affirmation (nod)
         is_affirmation = False
-        if raw_affirmation and (now - self.last_nod_time > 0.75):
+        if raw_affirmation and (now - self.last_nod_time > 0.60):
             is_affirmation = True
             self.last_nod_time = now
 

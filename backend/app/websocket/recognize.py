@@ -228,7 +228,8 @@ async def websocket_recognize(
     gesture_sequence_buffer: List[np.ndarray] = []
     is_actively_signing: bool = False
     settled_frames_count: int = 0
-    KINETIC_ENERGY_THRESHOLD: float = 0.025
+    KINETIC_ENERGY_THRESHOLD: float = 0.012
+    client_motion_threshold: float = 0.016
 
     # Multimodal Object Detection & Show-and-Sign State (Disabled by default for 30 FPS smooth performance)
     enable_object_detection: bool = False
@@ -257,7 +258,7 @@ async def websocket_recognize(
     loop = asyncio.get_running_loop()
 
     async def _process_control_text(text_str: str) -> None:
-        nonlocal active_model, client_threshold, client_rest_y, is_actively_signing, settled_frames_count
+        nonlocal active_model, client_threshold, client_rest_y, client_motion_threshold, is_actively_signing, settled_frames_count
         nonlocal prev_hand_pts, candidate_label, candidate_streak, last_committed_sign
         nonlocal last_committed_time, had_idle_baseline
         nonlocal alphabet_streak_candidate, alphabet_streak_count, alphabet_last_committed
@@ -361,6 +362,9 @@ async def websocket_recognize(
                 new_rest_y = payload.get("rest_y")
                 if new_rest_y is not None:
                     client_rest_y = float(max(0.50, min(0.95, float(new_rest_y))))
+                new_motion = payload.get("motion_threshold")
+                if new_motion is not None:
+                    client_motion_threshold = float(max(0.008, min(0.06, float(new_motion))))
                 new_pitch = payload.get("pitch_threshold")
                 if new_pitch is not None and non_manual_detector is not None:
                     non_manual_detector.pitch_threshold = float(max(0.02, min(0.12, float(new_pitch))))
@@ -369,9 +373,10 @@ async def websocket_recognize(
                     non_manual_detector.yaw_threshold = float(max(0.02, min(0.12, float(new_yaw))))
                 await websocket.send_json({
                     "type": "info",
-                    "message": f"Personal calibration profile applied (rest_y={client_rest_y:.2f})",
+                    "message": f"Personal calibration profile applied (rest_y={client_rest_y:.2f}, motion={client_motion_threshold:.3f})",
                     "calibrated": True,
                     "rest_y": client_rest_y,
+                    "motion_threshold": client_motion_threshold,
                 })
             elif action == "reload_custom_signs":
                 num_protos = custom_sign_service.reload()
@@ -741,7 +746,7 @@ async def websocket_recognize(
                     if prev_hand_pts is not None and prev_hand_pts.shape == curr_pts_arr.shape:
                         time_scale = (1.0 / 30.0) / dt_frame
                         diff_vecs = (curr_pts_arr - prev_hand_pts) * time_scale
-                        kinetic_energy = float(np.sum(np.linalg.norm(diff_vecs, axis=-1)))
+                        kinetic_energy = float(np.mean(np.linalg.norm(diff_vecs, axis=-1)))
                     prev_hand_pts = curr_pts_arr
                 else:
                     prev_hand_pts = None
@@ -777,7 +782,7 @@ async def websocket_recognize(
                     # ISL MVP model is ultra-lightweight (numpy/scikit ~50us). Run every frame hands are present
                     should_run_inference = bool(hand_detected and len(rolling_features) >= 5)
                 elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
-                    if kinetic_energy >= KINETIC_ENERGY_THRESHOLD:
+                    if kinetic_energy >= client_motion_threshold:
                         is_actively_signing = True
                         settled_frames_count = 0
                         gesture_sequence_buffer.append(feat_176)
@@ -991,7 +996,7 @@ async def websocket_recognize(
                 # Kinetic Gating for Static Alphabet/Digits/Vowels Recognition (PROB-09):
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
-                alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > 0.055)
+                alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > client_motion_threshold)
 
                 # Prioritize user's personal few-shot custom sign prototypes if recorded
                 if hand_detected and not alphabet_in_motion and len(feat_176) >= 158:
@@ -1295,6 +1300,8 @@ async def websocket_recognize(
                         "cuda_memory_mb": cuda_mem_mb,
                     },
                     "kinetic_energy": round(float(kinetic_energy), 4),
+                    "motion_threshold": round(float(client_motion_threshold), 4),
+                    "rest_y_threshold": round(float(client_rest_y), 4),
                     "is_actively_signing": bool(is_actively_signing),
                     "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model == "realsign" and is_stable)) else "idle"),
                     "sentence_buffer": accumulator.sentence_buffer,

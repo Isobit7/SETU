@@ -130,3 +130,4 @@ class FewShotCustomSignService:
 
 # Global singleton instance
 custom_sign_service = FewShotCustomSignService()
+
