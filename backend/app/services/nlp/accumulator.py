@@ -140,13 +140,9 @@ class SentenceAccumulator:
         return word
 
     def reject_last(self) -> bool:
-        """Cancels/deletes the active candidate letter or pops the last token (e.g. on Head Shake)."""
+        """Cancels/deletes the active staged letter from current_word. Never pops committed sentence tokens."""
         if self.current_word:
             self.current_word = self.current_word[:-1]
-            self.translate_sentence()
-            return True
-        elif self.sentence_tokens:
-            self.sentence_tokens.pop()
             self.translate_sentence()
             return True
         return False

@@ -112,13 +112,13 @@ class NonManualMarkerDetector:
             diffs_x = np.diff(self.nose_x_history)
             sign_changes_x = np.sum(diffs_x[:-1] * diffs_x[1:] < 0)
             range_x = float(np.ptp(self.nose_x_history))
-            if sign_changes_x >= 2 and range_x > 0.028:
+            if sign_changes_x >= 2 and range_x > 0.048:
                 yaw_oscillation = range_x
                 raw_negation = True
 
         # Debounced negation
         is_negation = False
-        if raw_negation and (now - self.last_shake_time > 0.65):
+        if raw_negation and (now - self.last_shake_time > 0.75):
             is_negation = True
             self.last_shake_time = now
 
@@ -129,13 +129,13 @@ class NonManualMarkerDetector:
             diffs_y = np.diff(self.nose_y_history)
             sign_changes_y = np.sum(diffs_y[:-1] * diffs_y[1:] < 0)
             range_y = float(np.ptp(self.nose_y_history))
-            if sign_changes_y >= 2 and range_y > 0.028:
+            if sign_changes_y >= 2 and range_y > 0.048:
                 pitch_oscillation = range_y
                 raw_affirmation = True
 
         # Debounced affirmation (nod)
         is_affirmation = False
-        if raw_affirmation and (now - self.last_nod_time > 0.65):
+        if raw_affirmation and (now - self.last_nod_time > 0.75):
             is_affirmation = True
             self.last_nod_time = now
 

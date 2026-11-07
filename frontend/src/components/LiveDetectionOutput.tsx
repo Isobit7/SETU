@@ -69,11 +69,7 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
           <div className="idle-strip-left">
             <span className="idle-status-dot" aria-hidden="true" />
             <span className="idle-status-text">Ready for Sign Input</span>
-            {headGesture === 'shake' ? (
-              <span className="head-intent-badge shake">✕ Undone (Shake)</span>
-            ) : (
-              <span className="idle-status-hint">· Nod to commit word</span>
-            )}
+            <span className="idle-status-hint">· Position hands clearly in camera view</span>
           </div>
           <div className="idle-strip-right">
             <span className="idle-model-pill">{modelBadge}</span>
