@@ -68,12 +68,17 @@ export interface RecognitionPayload {
   translated_text?: string;
   translated_indic?: Record<string, string>;
   translations?: Record<string, string>;
+  head_gesture?: 'nod' | 'shake' | 'neutral';
+  current_word?: string;
+  effective_tokens?: string[];
   non_manual_markers?: {
     is_question: boolean;
     is_negation: boolean;
     is_affirmation: boolean;
     eyebrow_elevation: number;
     head_yaw_oscillation: number;
+    head_pitch_oscillation?: number;
+    head_gesture?: 'nod' | 'shake' | 'neutral';
     confidence: number;
   };
   sentence_tokens?: string[];

@@ -10,6 +10,7 @@ Extracts grammatical linguistic cues from face landmarks and head kinematics:
 from __future__ import annotations
 
 import math
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
@@ -25,10 +26,11 @@ class NonManualGrammar:
     head_yaw_oscillation: float
     head_pitch_oscillation: float
     confidence: float
+    head_gesture: str = "neutral"  # "nod" (affirmation), "shake" (negation), or "neutral"
 
 
 class NonManualMarkerDetector:
-    """Detects grammatical non-manual markers from 468/478 MediaPipe face landmarks."""
+    """Detects grammatical non-manual markers and user intent gestures (nod/shake) from MediaPipe face landmarks."""
 
     # Key landmark indices in MediaPipe Face Mesh:
     # Left eye top: 159, Left eyebrow mid: 105
@@ -41,21 +43,25 @@ class NonManualMarkerDetector:
     NOSE_TIP = 1
     CHIN = 152
 
-    def __init__(self, history_len: int = 10) -> None:
+    def __init__(self, history_len: int = 12) -> None:
         self.history_len = history_len
         self.nose_x_history: List[float] = []
         self.nose_y_history: List[float] = []
+        self.last_nod_time: float = 0.0
+        self.last_shake_time: float = 0.0
 
     def reset(self) -> None:
         self.nose_x_history.clear()
         self.nose_y_history.clear()
+        self.last_nod_time = 0.0
+        self.last_shake_time = 0.0
 
     def detect(
         self,
         face_landmarks: Optional[Union[List[Any], np.ndarray]],
         baseline_eyebrow_ratio: float = 0.055,
     ) -> NonManualGrammar:
-        """Evaluates facial blendshapes and head kinematics for grammatical cues."""
+        """Evaluates facial blendshapes and head kinematics for grammatical cues and intent gestures."""
         if face_landmarks is None or len(face_landmarks) < 400:
             return NonManualGrammar(
                 is_question=False,
@@ -65,7 +71,10 @@ class NonManualMarkerDetector:
                 head_yaw_oscillation=0.0,
                 head_pitch_oscillation=0.0,
                 confidence=0.0,
+                head_gesture="neutral",
             )
+
+        now = time.time()
 
         def _get_xy(idx: int) -> Tuple[float, float]:
             lm = face_landmarks[idx]
@@ -91,36 +100,51 @@ class NonManualMarkerDetector:
             self.nose_y_history.pop(0)
 
         # 1. Eyebrow Elevation (negative Y is upward in normalized screen coordinates)
-        # Distance from eye to eyebrow: (eye_y - brow_y)
         left_dist = max(0.0, ly_eye - ly_brow)
         right_dist = max(0.0, ry_eye - ry_brow)
         avg_brow_elevation = (left_dist + right_dist) / 2.0
-
-        # Eyebrows significantly raised above neutral baseline -> Question marker
         is_question = bool(avg_brow_elevation > (baseline_eyebrow_ratio * 1.25))
 
-        # 2. Head Yaw Oscillation (horizontal head shake -> Negation)
+        # 2. Head Yaw Oscillation (horizontal head shake -> Negation / Cancel)
         yaw_oscillation = 0.0
+        raw_negation = False
         if len(self.nose_x_history) >= 6:
-            # Measure directional reversals in X
-            diffs = np.diff(self.nose_x_history)
-            sign_changes = np.sum(diffs[:-1] * diffs[1:] < 0)
+            diffs_x = np.diff(self.nose_x_history)
+            sign_changes_x = np.sum(diffs_x[:-1] * diffs_x[1:] < 0)
             range_x = float(np.ptp(self.nose_x_history))
-            if sign_changes >= 2 and range_x > 0.03:
+            if sign_changes_x >= 2 and range_x > 0.028:
                 yaw_oscillation = range_x
+                raw_negation = True
 
-        is_negation = bool(yaw_oscillation > 0.035)
+        # Debounced negation
+        is_negation = False
+        if raw_negation and (now - self.last_shake_time > 0.65):
+            is_negation = True
+            self.last_shake_time = now
 
-        # 3. Head Pitch Oscillation (vertical nod -> Affirmation)
+        # 3. Head Pitch Oscillation (vertical nod -> Affirmation / Commit)
         pitch_oscillation = 0.0
+        raw_affirmation = False
         if len(self.nose_y_history) >= 6:
             diffs_y = np.diff(self.nose_y_history)
             sign_changes_y = np.sum(diffs_y[:-1] * diffs_y[1:] < 0)
             range_y = float(np.ptp(self.nose_y_history))
-            if sign_changes_y >= 2 and range_y > 0.03:
+            if sign_changes_y >= 2 and range_y > 0.028:
                 pitch_oscillation = range_y
+                raw_affirmation = True
 
-        is_affirmation = bool(pitch_oscillation > 0.035)
+        # Debounced affirmation (nod)
+        is_affirmation = False
+        if raw_affirmation and (now - self.last_nod_time > 0.65):
+            is_affirmation = True
+            self.last_nod_time = now
+
+        # Resolve primary head gesture
+        head_gesture = "neutral"
+        if is_affirmation:
+            head_gesture = "nod"
+        elif is_negation:
+            head_gesture = "shake"
 
         return NonManualGrammar(
             is_question=is_question,
@@ -130,6 +154,7 @@ class NonManualMarkerDetector:
             head_yaw_oscillation=round(float(yaw_oscillation), 4),
             head_pitch_oscillation=round(float(pitch_oscillation), 4),
             confidence=0.90 if (is_question or is_negation or is_affirmation) else 0.50,
+            head_gesture=head_gesture,
         )
 
 

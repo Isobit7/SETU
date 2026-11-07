@@ -168,6 +168,38 @@ CANONICAL_INDIC_IDIOMS: Dict[str, Dict[str, str]] = {
         "te": "నేను సంతోషంగా ఉన్నాను.",
         "kn": "ನಾನು ಸಂತೋಷವಾಗಿದ್ದೇನೆ.",
     },
+
+    # Common Need & Desire Idioms (Multi-Modal Signs)
+    "I WATER NEED": {
+        "hi": "मुझे पानी चाहिए।",
+        "ta": "எனக்கு தண்ணீர் வேண்டும்.",
+        "te": "నాకు నీళ్లు కావాలి.",
+        "kn": "ನನಗೆ ನೀರು ಬೇಕು.",
+    },
+    "I NEED WATER": {
+        "hi": "मुझे पानी चाहिए।",
+        "ta": "எனக்கு தண்ணீர் வேண்டும்.",
+        "te": "నాకు నీళ్లు కావాలి.",
+        "kn": "ನನಗೆ ನೀರು ಬೇಕು.",
+    },
+    "WATER NEED": {
+        "hi": "पानी चाहिए।",
+        "ta": "தண்ணீர் வேண்டும்.",
+        "te": "నీళ్లు కావాలి.",
+        "kn": "ನೀರು ಬೇಕು.",
+    },
+    "I HELP NEED": {
+        "hi": "मुझे मदद चाहिए।",
+        "ta": "எனக்கு உதவி வேண்டும்.",
+        "te": "నాకు సహాయం కావాలి.",
+        "kn": "ನನಗೆ ಸಹಾಯ ಬೇಕು.",
+    },
+    "I NEED HELP": {
+        "hi": "मुझे मदद चाहिए।",
+        "ta": "எனக்கு உதவி வேண்டும்.",
+        "te": "నాకు సహాయం కావాలి.",
+        "kn": "ನನಗೆ ಸಹಾಯ ಬೇಕು.",
+    },
 }
 
 # Individual Token Gloss Lexicon for SOV Morphological Composition
@@ -266,12 +298,20 @@ class IndicTransformer:
         translated_words: List[str] = []
         is_question = any(t in ("WHAT", "WHERE", "WHEN", "WHY", "HOW", "WHO", "WHICH") for t in clean_tokens)
         has_negation = any(t in ("NOT", "NO", "NEVER") for t in clean_tokens)
+        has_need_want = any(t in ("NEED", "WANT", "LIKE") for t in clean_tokens)
 
         for token in clean_tokens:
             if token in ("NOT", "NO") and has_negation:
                 continue  # Scoped at end for Indic verbs
 
-            if token in INDIC_LEXICON and norm_lang in INDIC_LEXICON[token]:
+            # In Indic languages, "I need / I want" uses the dative pronoun ("ME" -> मुझे / నాకు / ನನಗೆ / எனக்கு)
+            lookup_token = token
+            if token == "I" and has_need_want and "ME" in INDIC_LEXICON:
+                lookup_token = "ME"
+
+            if lookup_token in INDIC_LEXICON and norm_lang in INDIC_LEXICON[lookup_token]:
+                translated_words.append(INDIC_LEXICON[lookup_token][norm_lang])
+            elif token in INDIC_LEXICON and norm_lang in INDIC_LEXICON[token]:
                 translated_words.append(INDIC_LEXICON[token][norm_lang])
             else:
                 # Keep fingerspelled letters or unknown words as-is

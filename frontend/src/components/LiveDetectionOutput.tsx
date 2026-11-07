@@ -40,6 +40,8 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
       ? 'Hindi Vowels'
       : 'Conversational Signs';
 
+  const headGesture = currentResult?.head_gesture || currentResult?.non_manual_markers?.head_gesture;
+
   return (
     <div className={`live-detection-output-root ${className}`}>
       {isKnown && displayText ? (
@@ -49,6 +51,13 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
             <span className="active-pulse-dot" aria-hidden="true" />
             <span className="active-sign-token">{displayText}</span>
             <span className="active-sign-confidence">{confidencePct}% match</span>
+            {headGesture === 'nod' ? (
+              <span className="head-intent-badge nod">✓ Locked (Nod)</span>
+            ) : headGesture === 'shake' ? (
+              <span className="head-intent-badge shake">✕ Cancelled (Shake)</span>
+            ) : (
+              <span className="head-intent-hint">· Nod to lock</span>
+            )}
           </div>
           <div className="active-strip-right">
             <span className="active-model-pill">{modelBadge}</span>
@@ -60,7 +69,11 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
           <div className="idle-strip-left">
             <span className="idle-status-dot" aria-hidden="true" />
             <span className="idle-status-text">Ready for Sign Input</span>
-            <span className="idle-status-hint">· Position hands clearly in camera view</span>
+            {headGesture === 'shake' ? (
+              <span className="head-intent-badge shake">✕ Undone (Shake)</span>
+            ) : (
+              <span className="idle-status-hint">· Nod to commit word</span>
+            )}
           </div>
           <div className="idle-strip-right">
             <span className="idle-model-pill">{modelBadge}</span>

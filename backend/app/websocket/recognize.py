@@ -516,9 +516,18 @@ async def websocket_recognize(
                     h_raw = None
                     hl_res = None
 
+                    # Run Holistic landmarker to obtain face, pose, and hands across all modes
+                    if pipeline.landmarker is not None:
+                        try:
+                            hl_res = pipeline.landmarker.detect(img)
+                        except Exception as e:
+                            logger.debug("Holistic landmarker error: %s", e)
+                            hl_res = HolisticLandmarkerResult()
+                    else:
+                        hl_res = HolisticLandmarkerResult()
+
+                    # In alphabet / fingerspelling modes, HandLandmarker provides dedicated high-precision hand joints
                     if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
-                        # Fast-path for alphabet, numerals, and Hindi vowels fingerspelling:
-                        # HandLandmarker detects up to 2 hands with high precision and low latency (~20ms).
                         if pipeline.hand_landmarker is not None:
                             try:
                                 hld_res = pipeline.hand_landmarker.detect(img)
@@ -526,18 +535,8 @@ async def websocket_recognize(
                                     h_raw = hld_res
                             except Exception as e:
                                 logger.debug("HandLandmarker error: %s", e)
-
-                        # High-speed alphabet mode: HandLandmarker alone handles hand detection.
-                        # Do not invoke heavyweight Holistic (saves 25-35ms per frame).
-                        hl_res = HolisticLandmarkerResult()
                     else:
-                        # Sequence / Word models: need pose and face for 164-D vectors
-                        if pipeline.landmarker is not None:
-                            hl_res = pipeline.landmarker.detect(img)
-                        else:
-                            hl_res = HolisticLandmarkerResult()
-
-                        # Only fallback to HandLandmarker if Holistic detected neither left nor right hand
+                        # Fallback to HandLandmarker if Holistic detected neither left nor right hand
                         if not (hl_res.left_hand_landmarks or hl_res.right_hand_landmarks) and pipeline.hand_landmarker is not None:
                             try:
                                 hld_res = pipeline.hand_landmarker.detect(img)
@@ -1036,6 +1035,40 @@ async def websocket_recognize(
                             is_stable = False
 
                     candidate_streak = alphabet_streak_count
+
+                    # Intent confirmation via Head Gestures (Multimodal intent: nod to lock, shake to reject)
+                    if nmm_marker.head_gesture == "nod":
+                        if alphabet_streak_candidate != "Awaiting Sign Input" and raw_conf >= active_threshold:
+                            emitted = accumulator.add_continuous_token(
+                                alphabet_streak_candidate,
+                                confidence=raw_conf,
+                                token_type="letter",
+                                timestamp=now,
+                                bypass_debounce=True,
+                            )
+                            if emitted:
+                                alphabet_last_committed = alphabet_streak_candidate
+                                alphabet_last_committed_time = now
+                                alphabet_repeat_lock = True
+                                had_idle_baseline = False
+                                res_label = alphabet_streak_candidate
+                                res_display = f"✓ {alphabet_streak_candidate} (Nod Confirmed)"
+                                res_conf = raw_conf
+                                res_is_known = True
+                                is_stable = True
+                        elif accumulator.current_word:
+                            committed_w = accumulator.commit_current_word()
+                            if committed_w:
+                                res_display = f"✓ Word: {committed_w}"
+                    elif nmm_marker.head_gesture == "shake":
+                        accumulator.reject_last()
+                        alphabet_streak_candidate = "Awaiting Sign Input"
+                        alphabet_streak_count = 0
+                        res_label = "Awaiting Sign Input"
+                        res_display = "✕ Rejected (Shake)"
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
                 else:
                     # Word / Sequence Models (isl_mvp, isl_sequence_lstm, include_stream)
                     # If this inference produced a valid known sign, update the latched state
@@ -1107,6 +1140,26 @@ async def websocket_recognize(
                                 last_committed_sign = res_label
                                 last_committed_time = now
                                 had_idle_baseline = False
+
+                        # Multimodal Intent via Head Gestures in Word/Sequence Mode
+                        if nmm_marker.head_gesture == "nod" and last_word_label not in ("", "no_sign", "unknown", "Awaiting Sign Input", "awaiting_sign"):
+                            accumulator.add_token(last_word_display, token_type="phrase", timestamp=now)
+                            last_committed_sign = res_label
+                            last_committed_time = now
+                            had_idle_baseline = False
+                            res_display = f"✓ {last_word_display} (Nod Confirmed)"
+                            is_stable = True
+                        elif nmm_marker.head_gesture == "shake":
+                            accumulator.reject_last()
+                            last_word_label = ""
+                            last_word_display = ""
+                            candidate_streak = 0
+                            candidate_label = ""
+                            res_label = "Awaiting Sign Input"
+                            res_display = "✕ Rejected (Shake)"
+                            res_conf = 0.0
+                            res_is_known = False
+                            is_stable = False
                     else:
                         # Idle or Awaiting Sign
                         if not hand_detected:
@@ -1214,6 +1267,9 @@ async def websocket_recognize(
                     "translated_indic": accumulator.translated_indic,
                     "translations": {"en": accumulator.translated_text, **accumulator.translated_indic},
                     "sentence_tokens": list(accumulator.sentence_tokens),
+                    "current_word": accumulator.current_word,
+                    "effective_tokens": accumulator.get_effective_tokens(),
+                    "head_gesture": nmm_marker.head_gesture,
                     "detected_objects": [
                         {
                             "label": o.label,
@@ -1249,6 +1305,8 @@ async def websocket_recognize(
                         "is_affirmation": nmm_marker.is_affirmation,
                         "eyebrow_elevation": nmm_marker.eyebrow_elevation,
                         "head_yaw_oscillation": nmm_marker.head_yaw_oscillation,
+                        "head_pitch_oscillation": nmm_marker.head_pitch_oscillation,
+                        "head_gesture": nmm_marker.head_gesture,
                         "confidence": nmm_marker.confidence,
                     },
                     "realsign_prediction": {

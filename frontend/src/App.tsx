@@ -381,6 +381,7 @@ export const App: React.FC = () => {
                   isSpeaking={isSpeaking}
                   onSpeak={speak}
                   onStopSpeak={stop}
+                  onSelectLanguage={setTargetLanguage}
                 />
               )}
             </aside>

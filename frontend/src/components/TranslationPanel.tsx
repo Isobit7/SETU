@@ -44,6 +44,7 @@ interface TranslationPanelProps {
   isSpeaking?: boolean;
   onSpeak?: (text: string, lang?: string) => void;
   onStopSpeak?: () => void;
+  onSelectLanguage?: (langCode: string) => void;
 }
 
 export const TranslationPanel: React.FC<TranslationPanelProps> = ({
@@ -58,6 +59,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   isSpeaking: propIsSpeaking,
   onSpeak,
   onStopSpeak,
+  onSelectLanguage,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
@@ -115,8 +117,9 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Unified Text-to-Speech (speaks regional translation or English translation or buffer)
   const handleSpeak = () => {
+    const regionalTranslation = getTranslationForLang(selectedLang).trim();
     const textToSpeak = (
-      currentTranslationText.trim() ||
+      regionalTranslation ||
       activeTranslation.trim() ||
       activeSentence.trim() ||
       displayText ||
@@ -134,20 +137,22 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
       return;
     }
 
+    const langCodeToSpeak = (Boolean(regionalTranslation) && selectedLang !== 'en') ? currentTab.code : 'en-IN';
+
     if (onSpeak) {
-      onSpeak(textToSpeak, currentTab.code);
+      onSpeak(textToSpeak, langCodeToSpeak);
       return;
     }
 
     if (onSpeakSentence) {
-      onSpeakSentence(textToSpeak, currentTab.code);
+      onSpeakSentence(textToSpeak, langCodeToSpeak);
       return;
     }
 
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = currentTab.code;
+      utterance.lang = langCodeToSpeak;
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
 
@@ -286,7 +291,12 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                   type="button"
                   aria-selected={isSelected}
                   className={`modern-lang-tab ${isSelected ? 'active' : ''} ${hasContent ? 'has-translation' : ''}`}
-                  onClick={() => setSelectedLang(tab.key)}
+                  onClick={() => {
+                    setSelectedLang(tab.key);
+                    if (onSelectLanguage) {
+                      onSelectLanguage(tab.code);
+                    }
+                  }}
                   title={`${tab.label} (${tab.native}) · Click to switch language`}
                 >
                   <span className="modern-lang-primary">{primaryLabel}</span>

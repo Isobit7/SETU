@@ -2063,6 +2063,37 @@ html, body {
   border-radius: var(--radius-xs);
 }
 
+.head-intent-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  letter-spacing: 0.02em;
+}
+
+.head-intent-badge.nod {
+  color: #064E3B;
+  background: #34D399;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+  animation: pulseDot 0.8s infinite ease-in-out;
+}
+
+.head-intent-badge.shake {
+  color: #7F1D1D;
+  background: #F87171;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+}
+
+.head-intent-hint {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  opacity: 0.85;
+}
+
 .active-strip-right {
   display: flex;
   align-items: center;

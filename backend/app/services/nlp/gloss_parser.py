@@ -23,6 +23,10 @@ DEFAULT_ISL_RULES: Dict[Tuple[str, ...], str] = {
     ("PLEASE", "HELP", "ME"): "Please help me",
 
     # Needs & Actions (ISL SOV -> English SVO)
+    ("ME", "WATER", "NEED"): "I need water.",
+    ("I", "WATER", "NEED"): "I need water.",
+    ("I", "NEED", "WATER"): "I need water.",
+    ("WATER", "NEED"): "I need water.",
     ("ME", "WATER", "DRINK"): "I want water",
     ("I", "WATER", "DRINK"): "I want water",
     ("WATER", "DRINK"): "I want water",
