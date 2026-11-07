@@ -22,6 +22,7 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
 
   // Format main display label: Ensure RealSign letter renders cleanly as "LETTER X"
   let displayText: string | null = null;
+  const isHolding = !isKnown && Boolean(currentResult?.display_name?.startsWith('HOLDING'));
   if (isKnown && label !== 'Awaiting Sign Input' && label !== 'no_sign' && label !== 'unknown') {
     if (currentResult?.display_name) {
       displayText = currentResult.display_name;
@@ -30,6 +31,8 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
     } else {
       displayText = label.replace('_', ' ').toUpperCase();
     }
+  } else if (isHolding) {
+    displayText = currentResult?.display_name || null;
   }
 
   const modelBadge =
@@ -69,6 +72,18 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
           </div>
           <div className="active-strip-right">
             <span className="active-model-pill">{modelBadge}</span>
+          </div>
+        </div>
+      ) : isHolding && displayText ? (
+        /* Stabilizing / Holding State: Crisp feedback showing sign is being verified */
+        <div className="live-detection-holding-strip" aria-live="polite">
+          <div className="idle-strip-left">
+            <span className="holding-pulse-dot" aria-hidden="true" />
+            <span className="holding-status-text">{displayText}</span>
+            <span className="holding-status-hint">· Hold steady to lock ({confidencePct}%)</span>
+          </div>
+          <div className="idle-strip-right">
+            <span className="idle-model-pill">{modelBadge}</span>
           </div>
         </div>
       ) : (

@@ -548,6 +548,134 @@ def evaluate_alphabet_heuristics(
     return None
 
 
+def apply_anatomical_alphabet_constraints(
+    pts: Union[np.ndarray, List[Any]],
+    logits: np.ndarray,
+    class_names: List[str],
+) -> np.ndarray:
+    """
+    Enforces anatomical constraints on raw neural network logits for static 26-class alphabet.
+    
+    Uses physical finger extension states to suppress anatomically impossible letters
+    (e.g., suppressing fist letters when 2 or 4 fingers are upright, or suppressing
+    spread-finger letters when the hand is a closed fist).
+    
+    Eliminates inter-class jitter, probability dilution, and confusable flickering.
+    """
+    if pts is None or len(pts) == 0:
+        return logits
+
+    arr = np.asarray(pts, dtype=np.float32)
+    if arr.ndim == 1 and arr.shape[0] == 63:
+        arr = arr.reshape(21, 3)
+    elif arr.shape not in ((21, 3), (21, 2)):
+        return logits
+
+    if np.count_nonzero(np.abs(arr) > 1e-4) < 15:
+        return logits
+
+    wrist = arr[0]
+    middle_mcp = arr[9]
+    palm_len = float(np.linalg.norm(middle_mcp - wrist))
+    if palm_len < 1e-5:
+        return logits
+
+    thumb_ext, index_ext, middle_ext, ring_ext, pinky_ext = get_finger_extension_states(arr)
+    num_ext_digits = int(index_ext) + int(middle_ext) + int(ring_ext) + int(pinky_ext)
+
+    d_thumb_idx = float(np.linalg.norm(arr[4] - arr[8])) / palm_len
+
+    adjusted_logits = logits.copy()
+    PENALTY = -12.0  # Strongly suppress impossible letters
+
+    FIST_LETTERS = {"A", "E", "M", "N", "S", "T", "O", "C"}
+    TWO_FINGER_LETTERS = {"V", "U", "R", "K"}
+    FOUR_FINGER_LETTERS = {"B", "F"}
+    THREE_FINGER_LETTERS = {"W"}
+    ONE_FINGER_LETTERS = {"D", "I", "Z", "J"}
+    THUMB_INDEX_LETTERS = {"L"}
+    THUMB_PINKY_LETTERS = {"Y"}
+
+    def penalize_set(target_set: Set[str]) -> None:
+        for letter in target_set:
+            if letter in class_names:
+                idx = class_names.index(letter)
+                adjusted_logits[idx] += PENALTY
+
+    def boost_letter(letter: str, boost_val: float = 2.5) -> None:
+        if letter in class_names:
+            idx = class_names.index(letter)
+            adjusted_logits[idx] += boost_val
+
+    # 1. Four fingers extended (B, F)
+    if num_ext_digits == 4:
+        penalize_set(FIST_LETTERS)
+        penalize_set(TWO_FINGER_LETTERS)
+        penalize_set(ONE_FINGER_LETTERS)
+        penalize_set(THUMB_INDEX_LETTERS)
+        penalize_set(THUMB_PINKY_LETTERS)
+        if not thumb_ext:
+            boost_letter("B", 2.0)
+
+    # 2. Three fingers extended (W, F)
+    elif num_ext_digits == 3:
+        penalize_set(FIST_LETTERS)
+        penalize_set(TWO_FINGER_LETTERS)
+        penalize_set(ONE_FINGER_LETTERS)
+        if index_ext and middle_ext and ring_ext and not pinky_ext:
+            boost_letter("W", 2.2)
+        elif not index_ext and middle_ext and ring_ext and pinky_ext and d_thumb_idx <= 0.32:
+            boost_letter("F", 2.5)
+
+    # 3. Two fingers extended (V, U, R, K, L, Y)
+    elif num_ext_digits == 2:
+        penalize_set(FIST_LETTERS)
+        penalize_set(FOUR_FINGER_LETTERS)
+        penalize_set(ONE_FINGER_LETTERS)
+        if index_ext and middle_ext:
+            d_idx_mid = float(np.linalg.norm(arr[8] - arr[12])) / palm_len
+            if d_idx_mid >= 0.14:
+                boost_letter("V", 2.2)
+            else:
+                boost_letter("U", 2.2)
+        elif thumb_ext and pinky_ext:
+            boost_letter("Y", 3.0)
+            penalize_set(TWO_FINGER_LETTERS)
+        elif thumb_ext and index_ext and not middle_ext:
+            boost_letter("L", 3.0)
+            penalize_set(TWO_FINGER_LETTERS)
+
+    # 4. One finger extended (D, I, Z)
+    elif num_ext_digits == 1:
+        penalize_set(FIST_LETTERS)
+        penalize_set(FOUR_FINGER_LETTERS)
+        penalize_set(TWO_FINGER_LETTERS)
+        penalize_set(THREE_FINGER_LETTERS)
+        if index_ext:
+            boost_letter("D", 2.2)
+        elif pinky_ext:
+            boost_letter("I", 2.5)
+
+    # 5. Zero extended digits (Fist / Curled handshape)
+    elif num_ext_digits == 0:
+        penalize_set(FOUR_FINGER_LETTERS)
+        penalize_set(TWO_FINGER_LETTERS)
+        penalize_set(THREE_FINGER_LETTERS)
+        penalize_set(ONE_FINGER_LETTERS)
+        penalize_set(THUMB_INDEX_LETTERS)
+        penalize_set(THUMB_PINKY_LETTERS)
+
+        # Disambiguate within fist letters
+        if d_thumb_idx >= 0.35:
+            boost_letter("C", 2.0)
+        elif d_thumb_idx <= 0.16:
+            boost_letter("O", 2.0)
+        elif thumb_ext or arr[4][0] < arr[5][0]:
+            boost_letter("A", 1.8)
+
+    return adjusted_logits
+
+
 # 57 Active coordinate indices: 63 dimensions minus 6 dead coordinates
 # Excludes Landmark 0 (wrist origin: 0, 1, 2) and Landmark 9 (middle MCP unit vector: 27, 28, 29)
 ACTIVE_COORDINATE_INDICES_57 = np.array([

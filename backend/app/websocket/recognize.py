@@ -1008,19 +1008,23 @@ async def websocket_recognize(
                         raw_conf = max(raw_conf, c_score)
 
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
-                    if not hand_detected or not has_realsign_feat or not is_pred_valid or alphabet_in_motion:
+                    if not hand_detected or not has_realsign_feat or alphabet_in_motion:
                         current_prediction = "Awaiting Sign Input"
-                    else:
-                        current_prediction = pred_label
-
-                    if alphabet_in_motion:
                         alphabet_streak_count = 0
                         alphabet_streak_candidate = "Awaiting Sign Input"
-                    elif current_prediction == alphabet_streak_candidate:
-                        alphabet_streak_count += 1
+                    elif is_pred_valid:
+                        current_prediction = pred_label
+                        if current_prediction == alphabet_streak_candidate:
+                            alphabet_streak_count += 1
+                        else:
+                            alphabet_streak_candidate = current_prediction
+                            alphabet_streak_count = 1
                     else:
-                        alphabet_streak_candidate = current_prediction
-                        alphabet_streak_count = 1
+                        # Hand is present and stationary, but current frame is slightly below threshold.
+                        # Graceful decay: Do not instantly zero the streak on 1 noisy frame
+                        if alphabet_streak_count > 0:
+                            alphabet_streak_count = max(0, alphabet_streak_count - 1)
+                        current_prediction = alphabet_streak_candidate if alphabet_streak_count > 0 else "Awaiting Sign Input"
 
                     if alphabet_streak_count >= required_streak:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
@@ -1058,6 +1062,13 @@ async def websocket_recognize(
                             res_conf = 0.0
                             res_is_known = False
                             is_stable = False
+                    elif alphabet_streak_candidate != "Awaiting Sign Input" and alphabet_streak_count > 0:
+                        # Hand is actively stabilizing candidate
+                        res_label = alphabet_streak_candidate
+                        res_display = f"HOLDING {alphabet_streak_candidate}"
+                        res_conf = raw_conf
+                        res_is_known = False
+                        is_stable = False
                     else:
                         if alphabet_in_motion and hand_detected:
                             res_label = "Transitioning"

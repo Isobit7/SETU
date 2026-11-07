@@ -16,7 +16,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from training.features.geometry import normalize_hand_landmarks, evaluate_alphabet_heuristics
+from training.features.geometry import (
+    normalize_hand_landmarks,
+    evaluate_alphabet_heuristics,
+    apply_anatomical_alphabet_constraints,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -305,63 +309,65 @@ class RealSignClassifier:
                     if float(np.max(logits_swapped)) > float(np.max(logits_arr)):
                         logits_arr = logits_swapped.copy()
 
-        # Contextual Pairwise Geometric Disambiguation
-        if apply_heuristic_boost:
-            boosted_letter: Optional[str] = None
+        # Anatomical Feasibility Masking & Geometric Disambiguation
+        pts_to_eval = None
+        if raw_landmarks_21x3 is not None and np.count_nonzero(np.abs(raw_landmarks_21x3) > 1e-4) >= 15:
+            pts_to_eval = raw_landmarks_21x3
+        elif original_63d is not None and np.count_nonzero(np.abs(original_63d) > 1e-4) >= 15:
+            pts_to_eval = original_63d.reshape(21, 3)
+        elif feat_vec.shape[0] == 126:
+            lh_energy = float(np.linalg.norm(feat_vec[0:63]))
+            rh_energy = float(np.linalg.norm(feat_vec[63:126]))
+            if rh_energy > 1e-3:
+                pts_to_eval = feat_vec[63:126].reshape(21, 3)
+            elif lh_energy > 1e-3:
+                pts_to_eval = feat_vec[0:63].reshape(21, 3)
+        elif feat_vec.shape[0] == 63 and float(np.linalg.norm(feat_vec)) > 1e-3:
+            pts_to_eval = feat_vec.reshape(21, 3)
+        elif feat_vec.shape[0] == 57 and float(np.linalg.norm(feat_vec)) > 1e-3:
+            from training.features.geometry import ACTIVE_COORDINATE_INDICES_57
+            recon_63 = np.zeros(63, dtype=np.float32)
+            recon_63[ACTIVE_COORDINATE_INDICES_57] = feat_vec[:57]
+            recon_63[28] = -1.0
+            pts_to_eval = recon_63.reshape(21, 3)
+
+        if apply_heuristic_boost and pts_to_eval is not None:
             try:
-                # Obtain the neural network's top-2 raw candidate predictions
+                # 1. Enforce strict physical anatomical constraints (suppresses impossible handshapes)
+                logits_arr = apply_anatomical_alphabet_constraints(pts_to_eval, logits_arr, self.class_names)
+
+                # 2. Targeted Contextual Pairwise Disambiguation for close morphological pairs
                 sorted_raw_idx = np.argsort(logits_arr)[::-1]
                 raw_top1 = self.class_names[sorted_raw_idx[0]]
                 raw_top2 = self.class_names[sorted_raw_idx[1]]
                 top_pair = {raw_top1, raw_top2}
 
-                pts_to_eval = None
-                if raw_landmarks_21x3 is not None and np.count_nonzero(np.abs(raw_landmarks_21x3) > 1e-4) >= 15:
-                    pts_to_eval = raw_landmarks_21x3
-                elif original_63d is not None and np.count_nonzero(np.abs(original_63d) > 1e-4) >= 15:
-                    pts_to_eval = original_63d.reshape(21, 3)
-                elif feat_vec.shape[0] == 126:
-                    lh_energy = float(np.linalg.norm(feat_vec[0:63]))
-                    rh_energy = float(np.linalg.norm(feat_vec[63:126]))
-                    if rh_energy > 1e-3:
-                        pts_to_eval = feat_vec[63:126].reshape(21, 3)
-                    elif lh_energy > 1e-3:
-                        pts_to_eval = feat_vec[0:63].reshape(21, 3)
-                elif feat_vec.shape[0] == 63 and float(np.linalg.norm(feat_vec)) > 1e-3:
-                    pts_to_eval = feat_vec.reshape(21, 3)
-                elif feat_vec.shape[0] == 57 and float(np.linalg.norm(feat_vec)) > 1e-3:
-                    from training.features.geometry import ACTIVE_COORDINATE_INDICES_57
-                    recon_63 = np.zeros(63, dtype=np.float32)
-                    recon_63[ACTIVE_COORDINATE_INDICES_57] = feat_vec[:57]
-                    recon_63[28] = -1.0
-                    pts_to_eval = recon_63.reshape(21, 3)
-
-                if pts_to_eval is not None:
-                    boosted_letter = evaluate_alphabet_heuristics(pts_to_eval, candidate_pair=top_pair)
+                boosted_letter = evaluate_alphabet_heuristics(pts_to_eval, candidate_pair=top_pair)
+                if boosted_letter and boosted_letter in self.class_names:
+                    target_idx = self.class_names.index(boosted_letter)
+                    other_mask = np.ones(self.num_classes, dtype=bool)
+                    other_mask[target_idx] = False
+                    other_logits = logits_arr[other_mask]
+                    max_other = float(np.max(other_logits))
+                    logsumexp_other = float(max_other + np.log(np.sum(np.exp(other_logits - max_other))))
+                    logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 1.8)
             except Exception as e:
                 logger.debug("Failed evaluating alphabet heuristics: %s", e)
 
-            if boosted_letter and boosted_letter in self.class_names:
-                target_idx = self.class_names.index(boosted_letter)
-                other_mask = np.ones(self.num_classes, dtype=bool)
-                other_mask[target_idx] = False
-                other_logits = logits_arr[other_mask]
-                max_other = float(np.max(other_logits))
-                logsumexp_other = float(max_other + np.log(np.sum(np.exp(other_logits - max_other))))
-                logits_arr[target_idx] = max(float(logits_arr[target_idx]), logsumexp_other + 1.8)
-
-        # Calibrated Softmax with Temperature Scaling (T=0.75) for high-confidence discriminability
-        temperature = 0.75
+        # Calibrated Softmax with Temperature Scaling (T=0.70) for sharp, high-confidence discriminability
+        temperature = 0.70
         scaled_logits = (logits_arr - np.max(logits_arr)) / temperature
         exp_logits = np.exp(scaled_logits)
         raw_probs = (exp_logits / np.sum(exp_logits)).astype(np.float32)
 
         # Exponential Moving Average (EMA) Smoothing: S_t = alpha * P_t + (1 - alpha) * S_{t-1}
+        # Uses alpha = 0.25 to provide steady, flicker-free probability distribution during holds
         if apply_smoothing:
             if self._ema_probs is None or self._ema_probs.shape != raw_probs.shape:
                 self._ema_probs = raw_probs.copy()
             else:
-                self._ema_probs = (self.ema_alpha * raw_probs + (1.0 - self.ema_alpha) * self._ema_probs).astype(np.float32)
+                alpha = 0.25
+                self._ema_probs = (alpha * raw_probs + (1.0 - alpha) * self._ema_probs).astype(np.float32)
             probs = self._ema_probs
         else:
             probs = raw_probs
@@ -374,19 +380,17 @@ class RealSignClassifier:
         margin = p_top1 - p_top2
 
         # Confidence & Margin Gate:
-        # Respect user/client-configured confidence_threshold without forcing a 0.50 clamp,
-        # with a gentle 0.05 margin requirement to filter true noise while retaining responsiveness.
         effective_min_conf = float(confidence_threshold) if confidence_threshold > 0.0 else 0.0
-        effective_min_margin = 0.05 if confidence_threshold > 0.0 else 0.0
+        effective_min_margin = 0.04 if confidence_threshold > 0.0 else 0.0
 
-        if p_top1 < effective_min_conf or margin < effective_min_margin:
-            is_known = False
-            final_letter = "Awaiting Sign Input"
-            final_conf = 0.0
-        else:
+        if p_top1 >= effective_min_conf and margin >= effective_min_margin:
             is_known = True
             final_letter = best_letter
             final_conf = p_top1
+        else:
+            is_known = False
+            final_letter = best_letter if p_top1 >= 0.20 else "Awaiting Sign Input"
+            final_conf = p_top1 if p_top1 >= 0.20 else 0.0
 
         top_3 = [(self.class_names[int(i)], float(probs[int(i)])) for i in sorted_indices[:3]]
         probs_dict = {name: float(probs[i]) for i, name in enumerate(self.class_names)}
