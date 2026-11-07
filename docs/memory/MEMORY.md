@@ -48,6 +48,9 @@
 | **P15**| **Multimodal AI & Disambiguation** | ✅ Complete | 80-Class COCO detector, Hand-lift HUD, 176-D geometry, low-light CLAHE, capture CLI. |
 | **P16**| **YOLO-World & SLM Modernization** | ✅ Complete | YOLO-World v2 open-vocabulary grounding, Qwen2.5-0.5B causal SLM, Continuous CTC decoding, Hand symmetry, 160 tests passing. |
 | **P17**| **Automated Evaluation Matrices Engine** | ✅ Complete | `reports/evaluation_matrices/` folder auto-cataloging weights, biases stats, learning rates, epochs, layer metrics; dynamic auto-update CLI & REST API; 164 tests passing. |
+| **P18**| **Multi-Signer RealSign Training** | ✅ Complete | Trained RealSign multi-signer MLP (42,000 frames) achieving **92.00% benchmark accuracy** across 26 letters (A–Z) with scale and tilt invariance. |
+| **P19**| **UI Modernization & Multilingual Indic Speech** | ✅ Complete | Sleek 5-language segmented bar, canonical idioms (`I WATER NEED` -> `ನನಗೆ ನೀರು ಬೇಕು.` / `నాకు నీళ్లు కావాలి.`), regional browser voice TTS routing. |
+| **P20**| **Multimodal Head Intent & Codebase Restructuring** | ✅ Complete | Hands-free Head Nod (lock) and Head Shake (cancel) intent gating; buffer persistence on hand drop; 9.13 GB storage cleanup; `training/TRAINING_LOG.md`; dated test runner (`tests/runner.py`); unified `learning/` hub. |
 
 ---
 

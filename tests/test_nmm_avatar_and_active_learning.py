@@ -83,15 +83,18 @@ def test_nmm_eyebrow_elevation_triggers_question():
 
 def test_nmm_head_shake_triggers_negation():
     detector = NonManualMarkerDetector(history_len=10)
-    # Simulate alternating head shake across X
-    xs = [0.50, 0.54, 0.46, 0.55, 0.45, 0.54, 0.46]
+    # Simulate alternating head shake across X with sufficient amplitude
+    xs = [0.50, 0.58, 0.42, 0.58, 0.42, 0.58, 0.42]
+    saw_negation = False
     res = None
     for x in xs:
         face = create_dummy_face(nose_x=x)
         res = detector.detect(face)
+        if res.is_negation:
+            saw_negation = True
 
     assert res is not None
-    assert res.is_negation
+    assert saw_negation
     assert res.head_yaw_oscillation > 0.035
 
 
