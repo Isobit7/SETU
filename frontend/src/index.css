@@ -1744,6 +1744,140 @@ html, body {
   color: var(--color-text-muted);
 }
 
+/* Unified Recognition Mode Dropdown */
+.unified-mode-container {
+  position: relative;
+  display: inline-flex;
+}
+
+.unified-mode-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-main);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.unified-mode-trigger-btn:hover,
+.unified-mode-trigger-btn.active {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+}
+
+.unified-mode-trigger-btn .mode-trigger-label strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.unified-mode-menu {
+  width: 330px !important;
+  max-height: 440px;
+  overflow-y: auto;
+  left: 50% !important;
+  transform: translateX(-50%);
+  scrollbar-width: thin;
+}
+
+.dropdown-section-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  padding: 6px 10px 3px;
+  user-select: none;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 6px;
+}
+
+.library-dropdown-menu {
+  width: 290px !important;
+}
+
+/* More Options Dropdown (Translation Panel) */
+.more-actions-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.more-actions-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.more-menu-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  min-width: 260px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: fadeInUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  width: 100%;
+}
+
+.more-menu-item:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-subtle);
+}
+
+.more-menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.more-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.more-item-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.more-item-desc {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
 /* Right Group: View Options & Custom Record */
 .right-controls-group {
   display: flex;

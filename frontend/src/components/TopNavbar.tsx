@@ -70,11 +70,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   onCycleTheme,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [resourcesOpen, setResourcesOpen] = useState(false);
-  const [historyMenuOpen, setHistoryMenuOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
-  const resourcesRef = useRef<HTMLDivElement | null>(null);
-  const historyRef = useRef<HTMLDivElement | null>(null);
+  const libraryRef = useRef<HTMLDivElement | null>(null);
 
   // Theme & High-Contrast A11y State (Prefers lifted prop, falls back to local)
   const [localTheme, setLocalTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
@@ -110,11 +108,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (resourcesRef.current && !resourcesRef.current.contains(e.target as Node)) {
-        setResourcesOpen(false);
-      }
-      if (historyRef.current && !historyRef.current.contains(e.target as Node)) {
-        setHistoryMenuOpen(false);
+      if (libraryRef.current && !libraryRef.current.contains(e.target as Node)) {
+        setLibraryOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -205,37 +200,40 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span>Conversation</span>
         </button>
 
-        {/* 4. Resources Dropdown: 26 Letters, ISL Vocabulary, 263 Signs, Help */}
-        <div className="nav-dropdown-wrapper" ref={resourcesRef}>
+        {/* 4. Consolidated Library Dropdown: Sign Guides, Activity & History */}
+        <div className="nav-dropdown-wrapper" ref={libraryRef}>
           <button
-            className={`nav-link-btn dropdown-trigger ${resourcesOpen ? 'dropdown-active' : ''}`}
-            onClick={() => {
-              setResourcesOpen(!resourcesOpen);
-              setHistoryMenuOpen(false);
-            }}
-            aria-expanded={resourcesOpen}
+            className={`nav-link-btn dropdown-trigger ${libraryOpen ? 'dropdown-active' : ''}`}
+            onClick={() => setLibraryOpen(!libraryOpen)}
+            aria-expanded={libraryOpen}
             aria-haspopup="true"
+            title="Sign References, Guides, and Activity"
           >
             <BookOpen size={14} className="nav-icon" />
-            <span>Resources</span>
-            <ChevronDown size={12} className={`chevron-icon ${resourcesOpen ? 'open' : ''}`} />
+            <span>Library</span>
+            {historyCount > 0 && (
+              <span className="navbar-item-badge">{historyCount}</span>
+            )}
+            <ChevronDown size={12} className={`chevron-icon ${libraryOpen ? 'open' : ''}`} />
           </button>
 
-          {resourcesOpen && (
-            <div className="navbar-dropdown-menu" role="menu">
+          {libraryOpen && (
+            <div className="navbar-dropdown-menu library-dropdown-menu" role="menu">
+              <div className="dropdown-section-title">Sign Guides & References</div>
+
               {onOpenAlphabetModal && (
                 <button
                   className="dropdown-item"
                   role="menuitem"
                   onClick={() => {
                     onOpenAlphabetModal();
-                    setResourcesOpen(false);
+                    setLibraryOpen(false);
                   }}
                 >
                   <Type size={14} className="dropdown-item-icon" />
                   <div className="dropdown-item-text">
-                    <span className="item-title">26 Letters (RealSign)</span>
-                    <span className="item-desc">A–Z Alphabet classifier</span>
+                    <span className="item-title">Alphabet Guide (A–Z)</span>
+                    <span className="item-desc">Fingerspelling postures & cheatsheet</span>
                   </div>
                 </button>
               )}
@@ -245,13 +243,13 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 role="menuitem"
                 onClick={() => {
                   onOpenVocabulary();
-                  setResourcesOpen(false);
+                  setLibraryOpen(false);
                 }}
               >
                 <BookOpen size={14} className="dropdown-item-icon" />
                 <div className="dropdown-item-text">
-                  <span className="item-title">ISL Vocabulary</span>
-                  <span className="item-desc">5 Core conversational phrases</span>
+                  <span className="item-title">Common Signs (5 Phrases)</span>
+                  <span className="item-desc">Everyday conversational expressions</span>
                 </div>
               </button>
 
@@ -261,13 +259,13 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   role="menuitem"
                   onClick={() => {
                     onOpenIncludeModal();
-                    setResourcesOpen(false);
+                    setLibraryOpen(false);
                   }}
                 >
                   <Film size={14} className="dropdown-item-icon" />
                   <div className="dropdown-item-text">
-                    <span className="item-title">263 Signs (INCLUDE)</span>
-                    <span className="item-desc">Video file recognition</span>
+                    <span className="item-title">Sign Dictionary (263 Signs)</span>
+                    <span className="item-desc">INCLUDE video recognition & search</span>
                   </div>
                 </button>
               )}
@@ -278,70 +276,34 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   role="menuitem"
                   onClick={() => {
                     onOpenRecordModal();
-                    setResourcesOpen(false);
+                    setLibraryOpen(false);
                   }}
                 >
                   <Video size={14} className="dropdown-item-icon text-danger" />
                   <div className="dropdown-item-text">
-                    <span className="item-title">Record Custom Sign</span>
-                    <span className="item-desc">Gesture recording studio</span>
+                    <span className="item-title">Custom Sign Studio</span>
+                    <span className="item-desc">Record & train personal gestures</span>
                   </div>
                 </button>
               )}
 
-              <button
-                className="dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  onOpenHelp();
-                  setResourcesOpen(false);
-                }}
-              >
-                <HelpCircle size={14} className="dropdown-item-icon" />
-                <div className="dropdown-item-text">
-                  <span className="item-title">Help & Guide</span>
-                  <span className="item-desc">Framing and hand tips</span>
-                </div>
-              </button>
-            </div>
-          )}
-        </div>
+              <div className="dropdown-divider" />
+              <div className="dropdown-section-title">Your Activity</div>
 
-        {/* 5. History & Saved Dropdown */}
-        <div className="nav-dropdown-wrapper" ref={historyRef}>
-          <button
-            className={`nav-link-btn dropdown-trigger ${historyMenuOpen ? 'dropdown-active' : ''}`}
-            onClick={() => {
-              setHistoryMenuOpen(!historyMenuOpen);
-              setResourcesOpen(false);
-            }}
-            aria-expanded={historyMenuOpen}
-            aria-haspopup="true"
-          >
-            <History size={14} className="nav-icon" />
-            <span>History & Saved</span>
-            {historyCount > 0 && (
-              <span className="navbar-item-badge">{historyCount}</span>
-            )}
-            <ChevronDown size={12} className={`chevron-icon ${historyMenuOpen ? 'open' : ''}`} />
-          </button>
-
-          {historyMenuOpen && (
-            <div className="navbar-dropdown-menu" role="menu">
               {onOpenHistory && (
                 <button
                   className="dropdown-item"
                   role="menuitem"
                   onClick={() => {
                     onOpenHistory();
-                    setHistoryMenuOpen(false);
+                    setLibraryOpen(false);
                   }}
                 >
                   <History size={14} className="dropdown-item-icon" />
                   <div className="dropdown-item-text">
                     <span className="item-title">Session History</span>
                     <span className="item-desc">
-                      {historyCount > 0 ? `${historyCount} signs logged` : 'No signs logged yet'}
+                      {historyCount > 0 ? `${historyCount} signs logged this session` : 'No signs logged yet'}
                     </span>
                   </div>
                   {historyCount > 0 && (
@@ -356,16 +318,34 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   role="menuitem"
                   onClick={() => {
                     onOpenSaved();
-                    setHistoryMenuOpen(false);
+                    setLibraryOpen(false);
                   }}
                 >
                   <Bookmark size={14} className="dropdown-item-icon" />
                   <div className="dropdown-item-text">
-                    <span className="item-title">Saved Signs</span>
-                    <span className="item-desc">Bookmarked translations</span>
+                    <span className="item-title">Saved Bookmarks</span>
+                    <span className="item-desc">Saved signs and translations</span>
                   </div>
                 </button>
               )}
+
+              <div className="dropdown-divider" />
+              <div className="dropdown-section-title">Support</div>
+
+              <button
+                className="dropdown-item"
+                role="menuitem"
+                onClick={() => {
+                  onOpenHelp();
+                  setLibraryOpen(false);
+                }}
+              >
+                <HelpCircle size={14} className="dropdown-item-icon" />
+                <div className="dropdown-item-text">
+                  <span className="item-title">Camera Tips & Framing</span>
+                  <span className="item-desc">Optimal lighting and hand distance</span>
+                </div>
+              </button>
             </div>
           )}
         </div>
@@ -494,7 +474,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }}
             >
               <Type size={16} />
-              <span>26 Letters (RealSign)</span>
+              <span>Alphabet Guide (A–Z)</span>
             </button>
           )}
           <button
@@ -505,7 +485,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             }}
           >
             <BookOpen size={16} />
-            <span>ISL Vocabulary</span>
+            <span>Common Signs (5 Phrases)</span>
           </button>
           {onOpenIncludeModal && (
             <button
@@ -516,7 +496,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }}
             >
               <Film size={16} />
-              <span>263 Signs (INCLUDE)</span>
+              <span>Sign Dictionary (263 Signs)</span>
+            </button>
+          )}
+          {onOpenRecordModal && (
+            <button
+              className="mobile-nav-item"
+              onClick={() => {
+                onOpenRecordModal();
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Video size={16} />
+              <span>Custom Sign Studio</span>
             </button>
           )}
           {onOpenHistory && (
@@ -528,7 +520,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }}
             >
               <History size={16} />
-              <span>History {historyCount > 0 ? `(${historyCount})` : ''}</span>
+              <span>Session History {historyCount > 0 ? `(${historyCount})` : ''}</span>
             </button>
           )}
           {onOpenSaved && (
@@ -540,9 +532,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }}
             >
               <Bookmark size={16} />
-              <span>Saved Signs</span>
+              <span>Saved Bookmarks</span>
             </button>
           )}
+          <button
+            className="mobile-nav-item"
+            onClick={() => {
+              onOpenHelp();
+              setMobileMenuOpen(false);
+            }}
+          >
+            <HelpCircle size={16} />
+            <span>Camera Tips & Guide</span>
+          </button>
           <button
             className="mobile-nav-item"
             onClick={() => {

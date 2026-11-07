@@ -6,11 +6,11 @@ import {
   Trash2,
   Check,
   Delete,
-  Download,
   Printer,
   FileText,
   FileCode,
   ChevronDown,
+  MoreHorizontal,
 } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 import { LiveDetectionOutput } from './LiveDetectionOutput';
@@ -62,9 +62,9 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
   const [selectedLang, setSelectedLang] = useState<string>('en');
-  const [isExportMenuOpen, setIsExportMenuOpen] = useState<boolean>(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
 
-  const exportMenuRef = useRef<HTMLDivElement | null>(null);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
 
   const speaking = propIsSpeaking !== undefined ? propIsSpeaking : localIsSpeaking;
 
@@ -94,15 +94,15 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   const currentTranslationText = getTranslationForLang(selectedLang);
   const currentTab = INDIC_TABS.find((t) => t.key === selectedLang) || INDIC_TABS[0];
 
-  // Close export menu on click outside or Escape
+  // Close more menu on click outside or Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
-        setIsExportMenuOpen(false);
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setIsMoreMenuOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsExportMenuOpen(false);
+      if (e.key === 'Escape') setIsMoreMenuOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -177,7 +177,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Export 1: Markdown (.md)
   const handleExportMarkdown = () => {
-    setIsExportMenuOpen(false);
+    setIsMoreMenuOpen(false);
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     let md = `# SETU — Indian Sign Language Translation Transcript\n\n`;
@@ -209,7 +209,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Export 2: Plain Text (.txt)
   const handleExportPlainText = () => {
-    setIsExportMenuOpen(false);
+    setIsMoreMenuOpen(false);
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     let txt = `SETU — INDIAN SIGN LANGUAGE TRANSLATION TRANSCRIPT\n`;
@@ -241,7 +241,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Export 3: Print / Save as PDF
   const handlePrint = () => {
-    setIsExportMenuOpen(false);
+    setIsMoreMenuOpen(false);
     window.print();
   };
 
@@ -435,72 +435,81 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             </button>
           )}
 
-          {/* Button 4: Clear */}
-          <button
-            className="action-btn clear-action-btn"
-            disabled={!hasTextToOperate}
-            onClick={handleClear}
-            title="Clear all accumulated text and reset"
-            aria-label="Clear all sentence text"
-          >
-            <Trash2 size={14} />
-            <span>Clear</span>
-          </button>
-
-          {/* Button 5: Multi-Format Export Dropdown */}
-          <div className="export-dropdown-wrapper" ref={exportMenuRef}>
+          {/* Button 4: More Options Dropdown (Clear, Export, Print) */}
+          <div className="more-actions-wrapper" ref={moreMenuRef}>
             <button
               type="button"
-              className={`action-btn export-trigger-btn ${isExportMenuOpen ? 'open' : ''}`}
-              disabled={!hasSentenceContent}
-              onClick={() => setIsExportMenuOpen((prev) => !prev)}
-              title="Export translation transcripts"
-              aria-expanded={isExportMenuOpen}
+              className={`action-btn more-actions-trigger-btn ${isMoreMenuOpen ? 'open' : ''}`}
+              onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+              title="More options: Clear buffer, Export transcript, Print"
+              aria-expanded={isMoreMenuOpen}
               aria-haspopup="true"
             >
-              <Download size={14} />
-              <span>Export</span>
-              <ChevronDown size={11} className={`export-chevron ${isExportMenuOpen ? 'open' : ''}`} />
+              <MoreHorizontal size={14} />
+              <span>More</span>
+              <ChevronDown size={11} className={`export-chevron ${isMoreMenuOpen ? 'open' : ''}`} />
             </button>
 
-            {isExportMenuOpen && (
-              <div className="export-menu-dropdown" role="menu">
+            {isMoreMenuOpen && (
+              <div className="more-menu-dropdown" role="menu">
                 <button
                   type="button"
-                  className="export-menu-item"
+                  className="more-menu-item text-danger"
+                  disabled={!hasTextToOperate}
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    handleClear();
+                  }}
+                  role="menuitem"
+                >
+                  <Trash2 size={14} className="text-danger" />
+                  <div className="more-item-text">
+                    <span className="more-item-title text-danger">Clear Buffer</span>
+                    <span className="more-item-desc">Reset assembled signs and text</span>
+                  </div>
+                </button>
+
+                <div className="dropdown-divider" />
+
+                <button
+                  type="button"
+                  className="more-menu-item"
+                  disabled={!hasSentenceContent}
                   onClick={handleExportMarkdown}
                   role="menuitem"
                 >
                   <FileCode size={14} className="text-accent" />
-                  <div className="export-item-text">
-                    <span className="export-item-title">Markdown Document (.md)</span>
-                    <span className="export-item-desc">Formatted with timestamps and signs</span>
+                  <div className="more-item-text">
+                    <span className="more-item-title">Export Markdown (.md)</span>
+                    <span className="more-item-desc">Formatted transcript with timestamps</span>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  className="export-menu-item"
+                  className="more-menu-item"
+                  disabled={!hasSentenceContent}
                   onClick={handleExportPlainText}
                   role="menuitem"
                 >
                   <FileText size={14} className="text-muted" />
-                  <div className="export-item-text">
-                    <span className="export-item-title">Plain Text (.txt)</span>
-                    <span className="export-item-desc">Raw multiline text transcript</span>
+                  <div className="more-item-text">
+                    <span className="more-item-title">Export Plain Text (.txt)</span>
+                    <span className="more-item-desc">Raw multiline text transcript</span>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  className="export-menu-item"
+                  className="more-menu-item"
+                  disabled={!hasSentenceContent}
                   onClick={handlePrint}
                   role="menuitem"
                 >
                   <Printer size={14} className="text-muted" />
-                  <div className="export-item-text">
-                    <span className="export-item-title">Print / Save as PDF</span>
-                    <span className="export-item-desc">Opens system print dialog</span>
+                  <div className="more-item-text">
+                    <span className="more-item-title">Print / Save as PDF</span>
+                    <span className="more-item-desc">System print dialog</span>
                   </div>
                 </button>
               </div>

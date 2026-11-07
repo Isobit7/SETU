@@ -17,6 +17,8 @@ import {
   Check,
   Hash,
   Languages,
+  MessageSquare,
+  Activity,
 } from 'lucide-react';
 import type { ActiveModelType, CameraStatus, LandmarkStyles } from '../types';
 
@@ -78,16 +80,15 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   onOpenRecordModal,
 }) => {
   const [isViewOptionsOpen, setIsViewOptionsOpen] = useState<boolean>(false);
-  const [isPhrasesDropdownOpen, setIsPhrasesDropdownOpen] = useState<boolean>(false);
+  const [isModeDropdownOpen, setIsModeDropdownOpen] = useState<boolean>(false);
 
   const viewOptionsRef = useRef<HTMLDivElement | null>(null);
-  const phrasesDropdownRef = useRef<HTMLDivElement | null>(null);
+  const modeDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const isDetecting = cameraStatus === 'detecting';
   const isPaused = cameraStatus === 'paused';
   const isActive = isDetecting || isPaused;
   const handsActive = landmarkStyles.showLeftHand || landmarkStyles.showRightHand;
-
 
   // Close popovers on click outside or escape
   useEffect(() => {
@@ -95,14 +96,14 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       if (viewOptionsRef.current && !viewOptionsRef.current.contains(e.target as Node)) {
         setIsViewOptionsOpen(false);
       }
-      if (phrasesDropdownRef.current && !phrasesDropdownRef.current.contains(e.target as Node)) {
-        setIsPhrasesDropdownOpen(false);
+      if (modeDropdownRef.current && !modeDropdownRef.current.contains(e.target as Node)) {
+        setIsModeDropdownOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsViewOptionsOpen(false);
-        setIsPhrasesDropdownOpen(false);
+        setIsModeDropdownOpen(false);
       }
     };
 
@@ -114,27 +115,47 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
     };
   }, []);
 
-  const getPhraseModeLabel = (model: ActiveModelType) => {
+  const getModeShortLabel = (model: ActiveModelType): string => {
     switch (model) {
-      case 'amrita_phrase':
-        return 'Amrita (49 Phrases)';
-      case 'isl_sequence_lstm':
-        return 'Dynamic Sequences';
-      case 'include_stream':
-        return 'INCLUDE (263 Signs)';
+      case 'realsign':
+        return 'Alphabet (A–Z)';
+      case 'isl_numerals':
+        return 'Numbers & Currency';
+      case 'isl_hindi_vowels':
+        return 'Hindi Vowels';
       case 'isl_mvp':
-        return 'Conversational Signs';
+        return 'Everyday Signs (5)';
+      case 'amrita_phrase':
+        return 'Phrases (49)';
+      case 'isl_sequence_lstm':
+        return 'Dynamic Gestures';
+      case 'include_stream':
+        return 'Dictionary (263)';
       default:
-        return 'Phrases & Vocabulary';
+        return 'Alphabet (A–Z)';
     }
   };
 
-  const isPhraseMode = (
-    activeModel === 'isl_mvp' ||
-    activeModel === 'amrita_phrase' ||
-    activeModel === 'isl_sequence_lstm' ||
-    activeModel === 'include_stream'
-  );
+  const renderModeIcon = (model: ActiveModelType) => {
+    switch (model) {
+      case 'realsign':
+        return <Type size={13} className="mode-btn-icon text-primary" />;
+      case 'isl_numerals':
+        return <Hash size={13} className="mode-btn-icon text-primary" />;
+      case 'isl_hindi_vowels':
+        return <Languages size={13} className="mode-btn-icon text-primary" />;
+      case 'isl_mvp':
+        return <BookOpen size={13} className="mode-btn-icon text-primary" />;
+      case 'amrita_phrase':
+        return <MessageSquare size={13} className="mode-btn-icon text-primary" />;
+      case 'isl_sequence_lstm':
+        return <Activity size={13} className="mode-btn-icon text-primary" />;
+      case 'include_stream':
+        return <Layers size={13} className="mode-btn-icon text-primary" />;
+      default:
+        return <Type size={13} className="mode-btn-icon text-primary" />;
+    }
+  };
 
   return (
     <div className="camera-controls-wrapper">
@@ -177,147 +198,151 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           </div>
         )}
 
-        {/* 2. Direct Multi-Model Segmented Selector */}
+        {/* 2. Unified Recognition Mode Dropdown */}
         {onSwitchModel && (
-          <div className="control-group mode-selector-segmented" role="radiogroup" aria-label="Recognition Model">
-            {/* Model 1: Letters (A–Z) */}
+          <div className="control-group unified-mode-container" ref={modeDropdownRef}>
             <button
               type="button"
-              className={`segmented-mode-btn ${activeModel === 'realsign' ? 'active' : ''}`}
-              onClick={() => {
-                onSwitchModel('realsign');
-                setIsPhrasesDropdownOpen(false);
-              }}
-              title="Alphabet (A–Z): RealSign static & continuous fingerspelling"
-              role="radio"
-              aria-checked={activeModel === 'realsign'}
+              className={`ctrl-btn unified-mode-trigger-btn ${isModeDropdownOpen ? 'active' : ''}`}
+              onClick={() => setIsModeDropdownOpen((prev) => !prev)}
+              title="Click to switch active recognition mode and vocabulary"
+              aria-haspopup="true"
+              aria-expanded={isModeDropdownOpen}
             >
-              <Type size={13} />
-              <span>Letters (A–Z)</span>
+              {renderModeIcon(activeModel)}
+              <span className="mode-trigger-label">
+                Mode: <strong>{getModeShortLabel(activeModel)}</strong>
+              </span>
+              <ChevronDown size={11} className={`mode-chevron ${isModeDropdownOpen ? 'open' : ''}`} />
             </button>
 
-            {/* Model 2: Numbers (0–9 & ₹) */}
-            <button
-              type="button"
-              className={`segmented-mode-btn ${activeModel === 'isl_numerals' ? 'active' : ''}`}
-              onClick={() => {
-                onSwitchModel('isl_numerals');
-                setIsPhrasesDropdownOpen(false);
-              }}
-              title="Numerals (0–9 & ₹): ISL counting and currency signs"
-              role="radio"
-              aria-checked={activeModel === 'isl_numerals'}
-            >
-              <Hash size={13} />
-              <span>Numbers (0–9 & ₹)</span>
-            </button>
+            {isModeDropdownOpen && (
+              <div className="mode-subdropdown-menu unified-mode-menu" role="menu">
+                <div className="dropdown-section-title">Letters & Numbers</div>
 
-            {/* Model 3: Hindi Vowels (अ–ऐ) */}
-            <button
-              type="button"
-              className={`segmented-mode-btn ${activeModel === 'isl_hindi_vowels' ? 'active' : ''}`}
-              onClick={() => {
-                onSwitchModel('isl_hindi_vowels');
-                setIsPhrasesDropdownOpen(false);
-              }}
-              title="Hindi Vowels (अ–ऐ): Devanagari ISL swar phonemes"
-              role="radio"
-              aria-checked={activeModel === 'isl_hindi_vowels'}
-            >
-              <Languages size={13} />
-              <span>Hindi Vowels</span>
-            </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'realsign' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('realsign');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Type size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Alphabet Fingerspelling (A–Z)</span>
+                    <span className="subdropdown-desc">RealSign static & continuous alphabet posture recognition</span>
+                  </div>
+                  {activeModel === 'realsign' && <Check size={14} className="text-primary check-icon" />}
+                </button>
 
-            {/* Model 4: Phrases & Sequences Dropdown */}
-            <div className="segmented-dropdown-container" ref={phrasesDropdownRef}>
-              <button
-                type="button"
-                className={`segmented-mode-btn ${isPhraseMode ? 'active' : ''}`}
-                onClick={() => {
-                  if (!isPhraseMode) {
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'isl_numerals' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('isl_numerals');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Hash size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Numbers & Currency (0–9 & ₹)</span>
+                    <span className="subdropdown-desc">Indian sign language counting digits and rupee currency</span>
+                  </div>
+                  {activeModel === 'isl_numerals' && <Check size={14} className="text-primary check-icon" />}
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'isl_hindi_vowels' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('isl_hindi_vowels');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Languages size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Hindi Vowels (अ–ऐ)</span>
+                    <span className="subdropdown-desc">Devanagari swar phoneme signs</span>
+                  </div>
+                  {activeModel === 'isl_hindi_vowels' && <Check size={14} className="text-primary check-icon" />}
+                </button>
+
+                <div className="dropdown-divider" />
+                <div className="dropdown-section-title">Words & Continuous Phrases</div>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'isl_mvp' ? 'selected' : ''}`}
+                  onClick={() => {
                     onSwitchModel('isl_mvp');
-                  }
-                  setIsPhrasesDropdownOpen((prev) => !prev);
-                }}
-                title="Continuous Phrases & Dynamic Sequences"
-                role="radio"
-                aria-checked={isPhraseMode}
-                aria-haspopup="true"
-                aria-expanded={isPhrasesDropdownOpen}
-              >
-                <BookOpen size={13} />
-                <span>{isPhraseMode ? getPhraseModeLabel(activeModel) : 'Phrases & Signs'}</span>
-                <ChevronDown size={11} className={`mode-chevron ${isPhrasesDropdownOpen ? 'open' : ''}`} />
-              </button>
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <BookOpen size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Common Signs (5 Core Signs)</span>
+                    <span className="subdropdown-desc">Everyday phrases (Hello, Thank You, Yes, No, Please)</span>
+                  </div>
+                  {activeModel === 'isl_mvp' && <Check size={14} className="text-primary check-icon" />}
+                </button>
 
-              {isPhrasesDropdownOpen && (
-                <div className="mode-subdropdown-menu" role="menu">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={`subdropdown-item ${activeModel === 'isl_mvp' ? 'selected' : ''}`}
-                    onClick={() => {
-                      onSwitchModel('isl_mvp');
-                      setIsPhrasesDropdownOpen(false);
-                    }}
-                  >
-                    <div className="subdropdown-text">
-                      <span className="subdropdown-title">Conversational Signs (5 Signs)</span>
-                      <span className="subdropdown-desc">Core everyday phrases (Hello, Thank You, etc.)</span>
-                    </div>
-                    {activeModel === 'isl_mvp' && <Check size={14} className="text-primary" />}
-                  </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'amrita_phrase' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('amrita_phrase');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <MessageSquare size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Conversational Phrases (Amrita 49)</span>
+                    <span className="subdropdown-desc">Everyday conversational dialogs & full sentence queries</span>
+                  </div>
+                  {activeModel === 'amrita_phrase' && <Check size={14} className="text-primary check-icon" />}
+                </button>
 
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={`subdropdown-item ${activeModel === 'amrita_phrase' ? 'selected' : ''}`}
-                    onClick={() => {
-                      onSwitchModel('amrita_phrase');
-                      setIsPhrasesDropdownOpen(false);
-                    }}
-                  >
-                    <div className="subdropdown-text">
-                      <span className="subdropdown-title">Amrita 49 Continuous Phrases (BiLSTM)</span>
-                      <span className="subdropdown-desc">Verified 49-phrase temporal deep neural network</span>
-                    </div>
-                    {activeModel === 'amrita_phrase' && <Check size={14} className="text-primary" />}
-                  </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'isl_sequence_lstm' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('isl_sequence_lstm');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Activity size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Dynamic Gestures (7 Sequences)</span>
+                    <span className="subdropdown-desc">Continuous temporal gestures & motion patterns</span>
+                  </div>
+                  {activeModel === 'isl_sequence_lstm' && <Check size={14} className="text-primary check-icon" />}
+                </button>
 
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={`subdropdown-item ${activeModel === 'isl_sequence_lstm' ? 'selected' : ''}`}
-                    onClick={() => {
-                      onSwitchModel('isl_sequence_lstm');
-                      setIsPhrasesDropdownOpen(false);
-                    }}
-                  >
-                    <div className="subdropdown-text">
-                      <span className="subdropdown-title">Dynamic Sequences (7 Gestures LSTM)</span>
-                      <span className="subdropdown-desc">Continuous temporal gestures</span>
-                    </div>
-                    {activeModel === 'isl_sequence_lstm' && <Check size={14} className="text-primary" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={`subdropdown-item ${activeModel === 'include_stream' ? 'selected' : ''}`}
-                    onClick={() => {
-                      onSwitchModel('include_stream');
-                      setIsPhrasesDropdownOpen(false);
-                    }}
-                  >
-                    <div className="subdropdown-text">
-                      <span className="subdropdown-title">AI4Bharat INCLUDE Full Vocabulary</span>
-                      <span className="subdropdown-desc">263 Comprehensive Indian Sign Language gestures</span>
-                    </div>
-                    {activeModel === 'include_stream' && <Check size={14} className="text-primary" />}
-                  </button>
-                </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'include_stream' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('include_stream');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Layers size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Extended Dictionary (263 Signs)</span>
+                    <span className="subdropdown-desc">Comprehensive AI4Bharat Indian Sign Language library</span>
+                  </div>
+                  {activeModel === 'include_stream' && <Check size={14} className="text-primary check-icon" />}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
