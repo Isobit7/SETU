@@ -890,18 +890,15 @@ def extract_dual_hand_126d(
     has_rh = right_hand is not None and len(right_hand) == 21
 
     if has_lh and not has_rh:
-        # Single-handed signing with left hand:
-        # Mirror X coordinate so geometry matches canonical right hand and slot into active hand [63:126].
-        # The secondary hand slot [0:63] remains zero-padded as expected for single-hand signs.
+        # Single-handed signing: placed in primary canonical slot [63:126]
         lh_arr, _ = normalize_wrist_coordinates(left_hand)
-        lh_mirrored = lh_arr.copy()
-        lh_mirrored[:, 0] = -lh_mirrored[:, 0]
-        norm_rh = lh_mirrored.flatten().astype(np.float32)
+        norm_rh = lh_arr.flatten().astype(np.float32)
         norm_lh = np.zeros(63, dtype=np.float32)
     elif has_rh and not has_lh:
         # Single-handed signing with right hand
         rh_arr, _ = normalize_wrist_coordinates(right_hand)
         norm_rh = rh_arr.flatten().astype(np.float32)
+        norm_lh = np.zeros(63, dtype=np.float32)
     elif has_lh and has_rh:
         # Both hands present: dual-hand sign
         lh_arr, _ = normalize_wrist_coordinates(left_hand)

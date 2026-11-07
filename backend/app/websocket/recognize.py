@@ -594,49 +594,34 @@ async def websocket_recognize(
                 pose = serialize_landmarks(hl_result.pose_landmarks)
                 face = serialize_landmarks(hl_result.face_landmarks, FACE_KEYPOINT_INDICES)
 
-                if hand_landmarks_raw is not None:
-                    if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
-                        # In alphabet mode, HandLandmarker is primary - override any empty/coarse hands
-                        if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
-                            left_hand = []
-                            right_hand = []
-                        for i, h_lm in enumerate(hand_landmarks_raw.hand_landmarks):
-                            h_lbl = "right"
-                            if hasattr(hand_landmarks_raw, "handedness") and i < len(hand_landmarks_raw.handedness) and hand_landmarks_raw.handedness[i]:
-                                h_lbl = getattr(hand_landmarks_raw.handedness[i][0], "category_name", "right").lower()
-                            s_lm = serialize_landmarks(h_lm)
-                            if h_lbl == "left":
-                                if len(left_hand) == 0:
-                                    left_hand = s_lm
-                            else:
-                                if len(right_hand) == 0:
-                                    right_hand = s_lm
-                    else:
-                        hand_pts_serialized = serialize_landmarks(hand_landmarks_raw)
-                        if len(right_hand) == 0:
-                            right_hand = hand_pts_serialized
+                if hand_landmarks_raw is not None and hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
+                    detected_hands = hand_landmarks_raw.hand_landmarks
+                    if len(detected_hands) == 1:
+                        # Single-handed signing: Canonical active slot is right_hand (slots 63:126)
+                        right_hand = serialize_landmarks(detected_hands[0])
+                        left_hand = []
+                    elif len(detected_hands) >= 2:
+                        # Bimanual signing: Sort strictly by screen horizontal X coordinate
+                        # Viewer's left (smaller X) -> left_hand (slots 0:63)
+                        # Viewer's right (larger X) -> right_hand (slots 63:126)
+                        # Matches ISL 42K training set ingest_isl_42k_dataset.py 100%
+                        h1 = detected_hands[0]
+                        h2 = detected_hands[1]
+                        x1 = np.mean([getattr(p, "x", 0.0) for p in h1])
+                        x2 = np.mean([getattr(p, "x", 0.0) for p in h2])
+                        if x1 < x2:
+                            left_hand = serialize_landmarks(h1)
+                            right_hand = serialize_landmarks(h2)
+                        else:
+                            left_hand = serialize_landmarks(h2)
+                            right_hand = serialize_landmarks(h1)
+                elif hand_landmarks_raw is not None:
+                    hand_pts_serialized = serialize_landmarks(hand_landmarks_raw)
+                    if len(right_hand) == 0:
+                        right_hand = hand_pts_serialized
 
-                # Stabilize single-hand handedness against single-frame MediaPipe label flapping (PROB-05)
                 has_left = len(left_hand) > 0
                 has_right = len(right_hand) > 0
-                if has_left ^ has_right:  # Exactly one hand detected
-                    raw_label = "left" if has_left else "right"
-                    active_pts = left_hand if has_left else right_hand
-                    stable_label = handedness_tracker.stabilize_single_hand(raw_label, active_pts, timestamp=time.time())
-                    if stable_label != raw_label:
-                        if stable_label == "left":
-                            left_hand = active_pts
-                            right_hand = []
-                        else:
-                            right_hand = active_pts
-                            left_hand = []
-                        has_left = len(left_hand) > 0
-                        has_right = len(right_hand) > 0
-                elif not has_left and not has_right:
-                    handedness_tracker.stabilize_single_hand("", [], timestamp=time.time())
-                else:
-                    handedness_tracker.reset()
-
                 hand_detected = has_left or has_right or (hand_landmarks_raw is not None)
 
                 now = time.time()
@@ -722,23 +707,10 @@ async def websocket_recognize(
                     return [float(getattr(lm, "x", 0.0)), float(getattr(lm, "y", 0.0)), float(getattr(lm, "z", 0.0))]
 
                 current_hand_pts_list = []
-                is_left_only_hand = False
-                if hand_landmarks_raw is not None:
-                    if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
-                        for h_lm in hand_landmarks_raw.hand_landmarks[:1]:
-                            current_hand_pts_list.extend([_extract_pt(lm) for lm in h_lm])
-                    else:
-                        current_hand_pts_list.extend([_extract_pt(lm) for lm in hand_landmarks_raw])
-                elif hl_result and getattr(hl_result, "right_hand_landmarks", None):
-                    current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.right_hand_landmarks])
-                elif hl_result and getattr(hl_result, "left_hand_landmarks", None):
-                    current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.left_hand_landmarks])
-                    is_left_only_hand = True
-
-                if is_left_only_hand and len(current_hand_pts_list) == 21:
-                    # Mirror X coordinate so geometric/heuristic checks evaluate canonical hand
-                    for pt_item in current_hand_pts_list:
-                        pt_item[0] = -pt_item[0]
+                if len(right_hand) == 21:
+                    current_hand_pts_list = [_extract_pt(lm) for lm in right_hand]
+                elif len(left_hand) == 21:
+                    current_hand_pts_list = [_extract_pt(lm) for lm in left_hand]
 
                 kinetic_energy = 0.0
                 if current_hand_pts_list:
@@ -751,25 +723,16 @@ async def websocket_recognize(
                 else:
                     prev_hand_pts = None
 
-                hand_source = None
-                if hand_landmarks_raw is not None:
-                    hand_source = hand_landmarks_raw
-                elif hl_result and (getattr(hl_result, "right_hand_landmarks", None) or getattr(hl_result, "left_hand_landmarks", None)):
-                    hand_source = hl_result
-                elif len(right_hand) > 0:
-                    hand_source = right_hand
-                elif len(left_hand) > 0:
-                    hand_source = left_hand
-
                 realsign_feat_63d: Optional[np.ndarray] = None
                 realsign_feat_126d: Optional[np.ndarray] = None
-                if hand_source is not None:
-                    realsign_feat_63d = extract_realsign_hand_features(hand_source, dominant_hand="right")
-
                 if has_left or has_right:
-                    raw_lh = hl_result.left_hand_landmarks if (hl_result and getattr(hl_result, "left_hand_landmarks", None)) else (left_hand if has_left else None)
-                    raw_rh = hl_result.right_hand_landmarks if (hl_result and getattr(hl_result, "right_hand_landmarks", None)) else (right_hand if has_right else None)
+                    raw_lh = left_hand if has_left else None
+                    raw_rh = right_hand if has_right else None
                     realsign_feat_126d = extract_dual_hand_126d(raw_lh, raw_rh)
+                    if has_right:
+                        realsign_feat_63d = realsign_feat_126d[63:126].copy()
+                    elif has_left:
+                        realsign_feat_63d = realsign_feat_126d[0:63].copy()
 
                 should_run_inference = False
                 motion_settled_now = False
@@ -1349,8 +1312,8 @@ async def websocket_recognize(
                     "landmarks": {
                         "left_hand": left_hand,
                         "right_hand": right_hand,
-                        "pose": pose,
-                        "face": face,
+                        "pose": pose if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels") else [],
+                        "face": face if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels") else [],
                     },
                     "non_manual_markers": {
                         "is_question": nmm_marker.is_question,

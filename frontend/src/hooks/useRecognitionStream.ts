@@ -458,11 +458,12 @@ export function useRecognitionStream({
         ws &&
         ws.readyState === WebSocket.OPEN
       ) {
-        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >40ms)
-        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 40);
-        if (now - lastFrameSentTimeRef.current >= intervalMs && (!waitingForResponseRef.current || isStaleLock)) {
+        // Smooth 30 FPS non-stalling streaming:
+        // Use browser native ws.bufferedAmount backpressure (< 65536 bytes)
+        // so frames stream at steady 30 FPS without locking or freezing the render loop
+        const isSocketReady = ws.bufferedAmount < 65536;
+        if (now - lastFrameSentTimeRef.current >= intervalMs && isSocketReady) {
           lastFrameSentTimeRef.current = now;
-          waitingForResponseRef.current = true;
 
           // Preserve camera aspect ratio dynamically to prevent squishing 16:9 frames into 4:3
           if (video.videoWidth > 0 && video.videoHeight > 0) {
@@ -493,19 +494,13 @@ export function useRecognitionStream({
                     .then((buf) => {
                       if (ws.readyState === WebSocket.OPEN) {
                         ws.send(buf);
-                      } else {
-                        waitingForResponseRef.current = false;
                       }
                     })
-                    .catch(() => {
-                      waitingForResponseRef.current = false;
-                    });
-                } else {
-                  waitingForResponseRef.current = false;
+                    .catch(() => {});
                 }
               },
               'image/jpeg',
-              0.60
+              0.55
             );
           }
         }
