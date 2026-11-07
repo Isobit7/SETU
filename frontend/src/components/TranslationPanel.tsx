@@ -267,10 +267,10 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
     <div className="unified-translation-container">
       {/* SINGLE UNIFIED TRANSLATION CARD */}
       <div className="unified-card" id="unified-translation-card">
-        {/* Live Detection Output & Candidate Scores Component */}
+        {/* Top: Compact Live Detection Status Strip */}
         <LiveDetectionOutput currentResult={currentResult} />
 
-        {/* 1. Indic Multilingual Translation Bar */}
+        {/* Middle: Clean Language Tabs without Native Scrollbar */}
         <div className="indic-multilingual-section">
           <div className="indic-lang-tabs-bar" role="tablist" aria-label="Indic Regional Language Selection">
             {INDIC_TABS.map((tab) => {
@@ -293,18 +293,20 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
               );
             })}
           </div>
+        </div>
 
-          {/* Active Language Translation Box */}
-          <div className="english-translation-section">
-            <div className="translation-section-header">
-              <div className="translation-header-left">
-                <span className="translation-section-badge">
-                  {currentTab.native} ({currentTab.label})
-                </span>
-                <span className="translation-rule-tag">
-                  {selectedLang === 'en' ? 'SOV → SVO Syntax' : 'Indic Neural Transfer'}
-                </span>
-              </div>
+        {/* Main: Unified Translation & Sentence Workspace (NO duplicate boxes!) */}
+        <div className="unified-canvas-section">
+          <div className="canvas-header-bar">
+            <div className="canvas-header-left">
+              <span className="canvas-lang-badge">
+                {currentTab.native} ({currentTab.label})
+              </span>
+              <span className="canvas-syntax-tag">
+                {selectedLang === 'en' ? 'Natural English' : 'Indic Neural Transfer'}
+              </span>
+            </div>
+            <div className="canvas-header-right">
               {speaking && (
                 <div className="tts-live-waveform-indicator" aria-label="Audio speaking">
                   <span className="soundwave-bar bar-1" />
@@ -314,69 +316,68 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                   <span className="waveform-label">{currentTab.label} TTS</span>
                 </div>
               )}
-            </div>
-
-            <div className="english-translation-box">
-              {currentTranslationText ? (
-                <p className="english-translation-text">"{currentTranslationText}"</p>
-              ) : activeTranslation ? (
-                <div className="indic-translation-fallback">
-                  <p className="english-translation-text fallback-en">"{activeTranslation}"</p>
-                  {selectedLang !== 'en' && (
-                    <span className="indic-pending-notice">
-                      (Synthesizing {currentTab.label} translation...)
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <p className="english-translation-placeholder">
-                  Sign in front of camera or assemble a sentence to generate translations.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Sentence Builder Text Area */}
-        <div className="sentence-integrated-section">
-          <div className="sentence-section-header">
-            <span className="sentence-section-label">Sentence Buffer</span>
-            <div className="sentence-stats-mini">
-              <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
-              <span className="stats-dot">·</span>
-              <span>{charCount} chars</span>
+              <div className="sentence-stats-mini">
+                <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+                <span className="stats-dot">·</span>
+                <span>{charCount} chars</span>
+              </div>
             </div>
           </div>
 
           <div
-            className="sentence-integrated-box"
+            className="unified-canvas-body"
             tabIndex={0}
             role="textbox"
-            aria-label="Accumulated sentence text"
+            aria-label="Accumulated translation output"
             aria-multiline="true"
           >
-            {activeSentence && activeSentence.length > 0 ? (
-              <div className="sentence-content-wrap">
-                <span className="sentence-text-string">{activeSentence}</span>
-                <span className="sentence-cursor" aria-hidden="true">|</span>
+            {hasSentenceContent ? (
+              <div className="canvas-content-flow">
+                {/* 1. Primary Output String */}
+                <div className="canvas-primary-translation">
+                  <span className="canvas-main-text">
+                    {currentTranslationText.trim()
+                      ? currentTranslationText
+                      : activeTranslation.trim()
+                      ? activeTranslation
+                      : activeSentence}
+                  </span>
+                  <span className="sentence-cursor" aria-hidden="true">|</span>
+                </div>
+
+                {/* 2. Secondary Gloss Tokens (Rendered ONLY if translation differs from raw tokens) */}
+                {Boolean(activeSentence.trim()) &&
+                  Boolean(
+                    (currentTranslationText.trim() && currentTranslationText.trim().toLowerCase() !== activeSentence.trim().toLowerCase()) ||
+                    (activeTranslation.trim() && activeTranslation.trim().toLowerCase() !== activeSentence.trim().toLowerCase())
+                  ) && (
+                    <div className="canvas-secondary-gloss">
+                      <span className="gloss-tag">ISL Signs:</span>
+                      <span className="gloss-text">{activeSentence.trim()}</span>
+                    </div>
+                  )}
               </div>
             ) : (
-              <div className="sentence-calm-empty-state" aria-live="polite">
-                <p className="sentence-calm-placeholder">
+              <div className="canvas-empty-state" aria-live="polite">
+                <p className="canvas-empty-title">
                   Signed letters and words will assemble here...
                   <span className="sentence-cursor" aria-hidden="true">|</span>
                 </p>
-                <span className="sentence-shortcut-hint">
-                  Press <kbd className="hint-kbd">Space</kbd> for word break · <kbd className="hint-kbd">⌫</kbd> to delete · <kbd className="hint-kbd">S</kbd> to speak
-                </span>
+                <div className="canvas-shortcut-hints">
+                  <span>Press <kbd className="hint-kbd">Space</kbd> for word break</span>
+                  <span className="stats-dot">·</span>
+                  <span><kbd className="hint-kbd">⌫</kbd> to delete</span>
+                  <span className="stats-dot">·</span>
+                  <span><kbd className="hint-kbd">S</kbd> to speak</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* 3. Action Toolbar: Speak, Copy, Backspace, Multi-Format Export, Clear */}
+        {/* Bottom: Streamlined Action Toolbar */}
         <div className="unified-actions-row" role="toolbar" aria-label="Translation Actions">
-          {/* Button 1: Speak (Regional Sync) */}
+          {/* Button 1: Speak */}
           <button
             className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
             disabled={!hasSentenceContent}
@@ -386,12 +387,6 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
           >
             {speaking ? (
               <>
-                <div className="soundwave-bars" aria-hidden="true">
-                  <span className="soundwave-bar" />
-                  <span className="soundwave-bar" />
-                  <span className="soundwave-bar" />
-                  <span className="soundwave-bar" />
-                </div>
                 <VolumeX size={14} />
                 <span>Stop</span>
               </>
@@ -410,100 +405,111 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             disabled={!hasTextToOperate}
             onClick={handleCopy}
             title="Copy translation to clipboard [C]"
-            aria-label="Copy text"
+            aria-label="Copy translated text to clipboard"
           >
-            {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            {copied ? (
+              <>
+                <Check size={14} className="text-emerald" />
+                <span className="text-emerald">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={14} />
+                <span>Copy</span>
+              </>
+            )}
             <kbd className="action-kbd-badge">C</kbd>
           </button>
 
           {/* Button 3: Backspace */}
+          {onBackspaceSentence && (
+            <button
+              className="action-btn backspace-action-btn"
+              disabled={!activeSentence}
+              onClick={onBackspaceSentence}
+              title="Delete previous sign [Backspace]"
+              aria-label="Delete last recognized sign"
+            >
+              <Delete size={14} />
+              <span>Backspace</span>
+            </button>
+          )}
+
+          {/* Button 4: Clear */}
           <button
-            className="action-btn backspace-action-btn"
-            disabled={!activeSentence}
-            onClick={onBackspaceSentence}
-            title="Delete last letter or word [Backspace]"
-            aria-label="Backspace last character"
+            className="action-btn clear-action-btn"
+            disabled={!hasTextToOperate}
+            onClick={handleClear}
+            title="Clear all accumulated text and reset"
+            aria-label="Clear all sentence text"
           >
-            <Delete size={14} />
-            <span>Backspace</span>
-            <kbd className="action-kbd-badge">⌫</kbd>
+            <Trash2 size={14} />
+            <span>Clear</span>
           </button>
 
-          {/* Button 4: Multi-Format Export Dropdown */}
-          <div className="export-dropdown-container" ref={exportMenuRef}>
+          {/* Button 5: Multi-Format Export Dropdown */}
+          <div className="export-dropdown-wrapper" ref={exportMenuRef}>
             <button
-              className="action-btn export-action-btn"
-              disabled={!hasTextToOperate}
+              type="button"
+              className={`action-btn export-trigger-btn ${isExportMenuOpen ? 'open' : ''}`}
+              disabled={!hasSentenceContent}
               onClick={() => setIsExportMenuOpen((prev) => !prev)}
-              title="Export transcript in multiple formats [E]"
-              aria-label="Export transcript"
-              aria-haspopup="true"
+              title="Export translation transcripts"
               aria-expanded={isExportMenuOpen}
+              aria-haspopup="true"
             >
               <Download size={14} />
               <span>Export</span>
-              <ChevronDown size={12} className={`export-chevron ${isExportMenuOpen ? 'open' : ''}`} />
+              <ChevronDown size={11} className={`export-chevron ${isExportMenuOpen ? 'open' : ''}`} />
             </button>
 
             {isExportMenuOpen && (
-              <div className="export-subdropdown-menu" role="menu">
+              <div className="export-menu-dropdown" role="menu">
                 <button
                   type="button"
-                  role="menuitem"
-                  className="export-dropdown-item"
+                  className="export-menu-item"
                   onClick={handleExportMarkdown}
+                  role="menuitem"
                 >
-                  <FileCode size={14} className="export-item-icon" />
+                  <FileCode size={14} className="text-accent" />
                   <div className="export-item-text">
                     <span className="export-item-title">Markdown Document (.md)</span>
-                    <span className="export-item-desc">Structured report with all Indic translations</span>
+                    <span className="export-item-desc">Formatted with timestamps and signs</span>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  role="menuitem"
-                  className="export-dropdown-item"
+                  className="export-menu-item"
                   onClick={handleExportPlainText}
+                  role="menuitem"
                 >
-                  <FileText size={14} className="export-item-icon" />
+                  <FileText size={14} className="text-muted" />
                   <div className="export-item-text">
                     <span className="export-item-title">Plain Text (.txt)</span>
-                    <span className="export-item-desc">Clean transcript for easy sharing</span>
+                    <span className="export-item-desc">Raw multiline text transcript</span>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  role="menuitem"
-                  className="export-dropdown-item"
+                  className="export-menu-item"
                   onClick={handlePrint}
+                  role="menuitem"
                 >
-                  <Printer size={14} className="export-item-icon" />
+                  <Printer size={14} className="text-muted" />
                   <div className="export-item-text">
                     <span className="export-item-title">Print / Save as PDF</span>
-                    <span className="export-item-desc">Formatted printable transcript</span>
+                    <span className="export-item-desc">Opens system print dialog</span>
                   </div>
                 </button>
               </div>
             )}
           </div>
-
-          {/* Button 5: Clear */}
-          <button
-            className="action-btn clear-action-btn"
-            disabled={!hasTextToOperate}
-            onClick={handleClear}
-            title="Clear all text from buffer"
-            aria-label="Clear all text"
-          >
-            <Trash2 size={14} />
-            <span>Clear</span>
-            <kbd className="action-kbd-badge">Del</kbd>
-          </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default TranslationPanel;

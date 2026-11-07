@@ -8,7 +8,6 @@ import {
   HelpCircle,
   Menu,
   X,
-  ShieldCheck,
   Film,
   Type,
   ChevronDown,
@@ -43,6 +42,8 @@ interface TopNavbarProps {
   isSpeaking?: boolean;
   translationDirection?: 'isl-to-en' | 'en-to-isl';
   onToggleDirection?: () => void;
+  theme?: 'dark' | 'light' | 'high-contrast';
+  onCycleTheme?: () => void;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -65,6 +66,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   isSpeaking = false,
   translationDirection = 'isl-to-en',
   onToggleDirection,
+  theme: propTheme,
+  onCycleTheme,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -73,8 +76,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const resourcesRef = useRef<HTMLDivElement | null>(null);
   const historyRef = useRef<HTMLDivElement | null>(null);
 
-  // Theme & High-Contrast A11y State
-  const [theme, setTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
+  // Theme & High-Contrast A11y State (Prefers lifted prop, falls back to local)
+  const [localTheme, setLocalTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
     if (typeof window === 'undefined') return 'dark';
     try {
       return (localStorage.getItem('setu_theme') as 'dark' | 'light' | 'high-contrast') || 'dark';
@@ -83,15 +86,21 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     }
   });
 
+  const activeTheme = propTheme || localTheme;
+
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', activeTheme);
     try {
-      localStorage.setItem('setu_theme', theme);
+      localStorage.setItem('setu_theme', activeTheme);
     } catch {}
-  }, [theme]);
+  }, [activeTheme]);
 
   const cycleTheme = () => {
-    setTheme((prev) => {
+    if (onCycleTheme) {
+      onCycleTheme();
+      return;
+    }
+    setLocalTheme((prev) => {
       if (prev === 'dark') return 'light';
       if (prev === 'light') return 'high-contrast';
       return 'dark';
@@ -263,6 +272,23 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 </button>
               )}
 
+              {onOpenRecordModal && (
+                <button
+                  className="dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    onOpenRecordModal();
+                    setResourcesOpen(false);
+                  }}
+                >
+                  <Video size={14} className="dropdown-item-icon text-danger" />
+                  <div className="dropdown-item-text">
+                    <span className="item-title">Record Custom Sign</span>
+                    <span className="item-desc">Gesture recording studio</span>
+                  </div>
+                </button>
+              )}
+
               <button
                 className="dropdown-item"
                 role="menuitem"
@@ -344,53 +370,14 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           )}
         </div>
 
-        {/* 6. Settings Link */}
-        <button
-          className="nav-link-btn"
-          onClick={onOpenSettings}
-          title="Settings & Calibration"
-        >
-          <Settings size={14} className="nav-icon" />
-          <span>Settings</span>
-        </button>
-
-        {/* 7. Record Custom Sign Button */}
-        {onOpenRecordModal && (
-          <button
-            className="nav-link-btn record-nav-link"
-            onClick={onOpenRecordModal}
-            title="Custom Gesture Recording Studio"
-          >
-            <Video size={14} className="nav-icon text-danger" />
-            <span>Record Sign</span>
-          </button>
-        )}
       </nav>
 
-      {/* 7. Right: Status Badges & Quick Toggles */}
+      {/* 6. Right Utilities: Clean Minimalist Icon Bar & Status */}
       <div className="navbar-actions">
-        {/* Theme Switcher Toggle (Dark / Light / High-Contrast WCAG AAA) */}
-        <button
-          type="button"
-          className={`nav-theme-toggle ${theme}`}
-          onClick={cycleTheme}
-          title={`Theme: ${
-            theme === 'dark' ? 'Dark Mode' : theme === 'light' ? 'Light Mode' : 'High-Contrast A11y (WCAG AAA)'
-          }. Click to switch.`}
-          aria-label="Switch Theme Mode"
-        >
-          {theme === 'dark' && <Moon size={13} className="theme-toggle-icon" />}
-          {theme === 'light' && <Sun size={13} className="theme-toggle-icon" />}
-          {theme === 'high-contrast' && <Contrast size={13} className="theme-toggle-icon a11y-gold" />}
-          <span className="theme-pill-label">
-            {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'A11y'}
-          </span>
-        </button>
-
-        {/* Auto-Speak TTS Toggle */}
+        {/* Auto-Speak TTS Icon Toggle */}
         {onToggleAutoSpeak && (
           <button
-            className={`nav-tts-toggle ${autoSpeakEnabled ? 'active' : 'muted'} ${isSpeaking ? 'speaking' : ''}`}
+            className={`nav-icon-action-btn ${autoSpeakEnabled ? 'active' : 'muted'} ${isSpeaking ? 'speaking' : ''}`}
             onClick={onToggleAutoSpeak}
             title={
               autoSpeakEnabled
@@ -407,36 +394,49 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 <span className="soundwave-bar" />
               </div>
             ) : autoSpeakEnabled ? (
-              <Volume2 size={13} className="tts-active-icon" />
+              <Volume2 size={15} className="tts-active-icon" />
             ) : (
-              <VolumeX size={13} className="tts-muted-icon" />
+              <VolumeX size={15} className="tts-muted-icon" />
             )}
-            <span className="tts-pill-label">Auto-TTS</span>
           </button>
         )}
 
-        {/* Consolidated System Status Pill */}
+        {/* Theme Switcher Icon (Dark / Light / High-Contrast) */}
+        <button
+          type="button"
+          className={`nav-icon-action-btn ${activeTheme}`}
+          onClick={cycleTheme}
+          title={`Theme: ${
+            activeTheme === 'dark' ? 'Dark Mode' : activeTheme === 'light' ? 'Light Mode' : 'High-Contrast A11y (WCAG AAA)'
+          }. Click to switch.`}
+          aria-label="Switch Theme Mode"
+        >
+          {activeTheme === 'dark' && <Moon size={15} className="theme-toggle-icon" />}
+          {activeTheme === 'light' && <Sun size={15} className="theme-toggle-icon" />}
+          {activeTheme === 'high-contrast' && <Contrast size={15} className="theme-toggle-icon a11y-gold" />}
+        </button>
+
+        {/* Settings Icon Button */}
+        <button
+          className="nav-icon-action-btn"
+          onClick={onOpenSettings}
+          title="Settings, Calibration & Developer Options"
+          aria-label="Open Settings"
+        >
+          <Settings size={15} />
+        </button>
+
+        {/* Clean System Status Pill (Telemetry on hover tooltip) */}
         <div
-          className={`connection-pill ${isBackendConnected ? 'connected' : 'disconnected'}`}
-          title={`SETU Engine WebSocket: ${
+          className={`connection-pill-clean ${isBackendConnected ? 'connected' : 'disconnected'}`}
+          title={`SETU Engine: ${
             isBackendConnected ? 'Connected (ws://localhost:8000)' : 'Disconnected'
-          }${fps > 0 ? ` · ${fps} FPS` : ''}${latencyMs > 0 ? ` · ${latencyMs}ms` : ''}`}
+          } · Local Processing · Zero Cloud Recording${fps > 0 ? ` · ${fps} FPS` : ''}${latencyMs > 0 ? ` · ${latencyMs}ms` : ''}`}
         >
           <span className="connection-status-dot" aria-hidden="true" />
-          <span className="status-label">{isBackendConnected ? 'Connected' : 'Offline'}</span>
-          {isBackendConnected && fps > 0 && (
-            <span className="status-telemetry-text">· {fps} FPS</span>
-          )}
-          {isBackendConnected && latencyMs > 0 && (
-            <span className="status-telemetry-latency">· {latencyMs}ms</span>
-          )}
+          <span className="status-label-clean">{isBackendConnected ? 'Live' : 'Offline'}</span>
         </div>
 
-        {/* Privacy Pill */}
-        <div className="privacy-pill" title="Local frame processing. No external cloud recording.">
-          <ShieldCheck size={13} className="privacy-icon" />
-          <span className="privacy-text">Local</span>
-        </div>
 
         {/* Mobile Menu Toggle */}
         <button
@@ -453,14 +453,14 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         <div className="mobile-nav-drawer" role="navigation">
           <button
             type="button"
-            className={`mobile-nav-item theme-mobile-item ${theme}`}
+            className={`mobile-nav-item theme-mobile-item ${activeTheme}`}
             onClick={cycleTheme}
           >
-            {theme === 'dark' && <Moon size={16} />}
-            {theme === 'light' && <Sun size={16} />}
-            {theme === 'high-contrast' && <Contrast size={16} className="a11y-gold" />}
+            {activeTheme === 'dark' && <Moon size={16} />}
+            {activeTheme === 'light' && <Sun size={16} />}
+            {activeTheme === 'high-contrast' && <Contrast size={16} className="a11y-gold" />}
             <span>
-              Theme: {theme === 'dark' ? 'Dark Mode' : theme === 'light' ? 'Light Mode' : 'High-Contrast A11y'}
+              Theme: {activeTheme === 'dark' ? 'Dark Mode' : activeTheme === 'light' ? 'Light Mode' : 'High-Contrast A11y'}
             </span>
           </button>
           {onToggleAutoSpeak && (

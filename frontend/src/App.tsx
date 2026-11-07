@@ -29,6 +29,31 @@ export const App: React.FC = () => {
   // Active top navigation section
   const [activeTab, setActiveTab] = useState<string>('translator');
 
+  // Theme & High-Contrast A11y State (Synchronized across App & Settings)
+  const [theme, setTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+      return (localStorage.getItem('setu_theme') as 'dark' | 'light' | 'high-contrast') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('setu_theme', theme);
+    } catch {}
+  }, [theme]);
+
+  const cycleTheme = () => {
+    setTheme((prev) => {
+      if (prev === 'dark') return 'light';
+      if (prev === 'light') return 'high-contrast';
+      return 'dark';
+    });
+  };
+
   // Modals
   const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(false);
   const [isAlphabetModalOpen, setIsAlphabetModalOpen] = useState<boolean>(false);
@@ -264,6 +289,8 @@ export const App: React.FC = () => {
         onToggleDirection={() =>
           setTranslationDirection((prev) => (prev === 'isl-to-en' ? 'en-to-isl' : 'isl-to-en'))
         }
+        theme={theme}
+        onCycleTheme={cycleTheme}
       />
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
@@ -377,12 +404,25 @@ export const App: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        landmarkStyles={landmarkStyles}
-        setLandmarkStyles={setLandmarkStyles}
+        theme={theme}
+        setTheme={setTheme}
+        subtitleVisible={subtitleVisible}
+        setSubtitleVisible={setSubtitleVisible}
         subtitleSize={subtitleSize}
         setSubtitleSize={setSubtitleSize}
+        activeModel={activeModel}
+        onSwitchModel={switchModel}
         confidenceThreshold={confidenceThreshold}
         setConfidenceThreshold={setConfidenceThreshold}
+        availableCameras={availableCameras}
+        selectedCameraId={selectedCameraId}
+        onSelectCamera={(id) => setSelectedCameraId(id)}
+        landmarkStyles={landmarkStyles}
+        setLandmarkStyles={setLandmarkStyles}
+        showFramingGuide={showFramingGuide}
+        onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
+        enforceFraming={enforceFraming}
+        onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
         autoSpeakEnabled={autoSpeakEnabled}
         onToggleAutoSpeak={toggleAutoSpeak}
         targetLanguage={targetLanguage}
@@ -390,9 +430,13 @@ export const App: React.FC = () => {
         availableVoices={availableVoices}
         selectedVoice={selectedVoice}
         onSelectVoice={setSelectedVoice}
+        onTestSpeak={(text, lang) => speak(text, lang)}
         isSpeaking={isSpeaking}
-        enforceFraming={enforceFraming}
-        onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
+        isBackendConnected={isBackendConnected}
+        fps={currentResult?.fps || 0}
+        latencyMs={currentResult?.latency_ms || 0}
+        onResetSession={handleResetSession}
+        onClearSentence={handleClearSentence}
       />
 
       <HistoryModal

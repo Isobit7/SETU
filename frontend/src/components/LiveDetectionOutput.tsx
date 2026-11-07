@@ -1,5 +1,4 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 
 export interface LiveDetectionOutputProps {
@@ -28,55 +27,46 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
     }
   }
 
+  const modelBadge =
+    currentResult?.active_model === 'realsign'
+      ? 'Alphabet (A–Z)'
+      : currentResult?.active_model === 'isl_sequence_lstm'
+      ? 'Dynamic Sequences'
+      : currentResult?.active_model === 'include_stream'
+      ? 'INCLUDE 263'
+      : currentResult?.active_model === 'isl_numerals'
+      ? 'Numbers (0–9 & ₹)'
+      : currentResult?.active_model === 'isl_hindi_vowels'
+      ? 'Hindi Vowels'
+      : 'Conversational Signs';
+
   return (
     <div className={`live-detection-output-root ${className}`}>
-      {/* Header bar */}
-      <div className="unified-header">
-        <div className="unified-header-left">
-          <Activity size={14} className="unified-header-icon" />
-          <h3 className="unified-title font-semibold">Live Detection Output</h3>
-        </div>
-        <div className="unified-header-right">
-          {isKnown && displayText && (
-            <span className="unified-conf-pill font-semibold" title="Model confidence score">
-              {confidencePct}% Match
-            </span>
-          )}
-          <span className="unified-model-badge font-semibold">
-            {currentResult?.active_model === 'realsign'
-              ? 'Alphabet'
-              : currentResult?.active_model === 'isl_sequence_lstm'
-              ? 'Sequence'
-              : currentResult?.active_model === 'include_stream'
-              ? 'INCLUDE 263'
-              : 'Phrases'}
-          </span>
-        </div>
-      </div>
-
-      {/* 1. Live Output Box: Single, Decisive, High-Confidence Output */}
-      <div className="live-output-box" aria-live="polite" aria-atomic="true">
-        {isKnown && displayText ? (
-          <div className="live-sign-display">
-            <span className="live-sign-text">{displayText}</span>
-            <span className="live-sign-meta">
-              {currentResult?.active_model === 'realsign'
-                ? 'RealSign ISL Letter'
-                : currentResult?.active_model === 'isl_sequence_lstm'
-                ? 'Dynamic ISL Gesture'
-                : currentResult?.active_model === 'include_stream'
-                ? 'AI4Bharat 263 Sign'
-                : 'Common ISL Phrase'}
-            </span>
+      {isKnown && displayText ? (
+        /* Active Recognized Sign: Vibrant, clean, high-confidence pill strip */
+        <div className="live-detection-active-strip" aria-live="polite" aria-atomic="true">
+          <div className="active-strip-left">
+            <span className="active-pulse-dot" aria-hidden="true" />
+            <span className="active-sign-token">{displayText}</span>
+            <span className="active-sign-confidence">{confidencePct}% match</span>
           </div>
-        ) : (
-          <div className="live-sign-waiting">
-            <span className="waiting-dots-pulse"></span>
-            <span className="waiting-sign-text">Awaiting Sign Input</span>
-            <span className="waiting-sign-hint">Position hands clearly in camera view</span>
+          <div className="active-strip-right">
+            <span className="active-model-pill">{modelBadge}</span>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        /* Idle / Awaiting State: Subtle, compact 1-line status */
+        <div className="live-detection-idle-strip" aria-live="polite">
+          <div className="idle-strip-left">
+            <span className="idle-status-dot" aria-hidden="true" />
+            <span className="idle-status-text">Ready for Sign Input</span>
+            <span className="idle-status-hint">· Position hands clearly in camera view</span>
+          </div>
+          <div className="idle-strip-right">
+            <span className="idle-model-pill">{modelBadge}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

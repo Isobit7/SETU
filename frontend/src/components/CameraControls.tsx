@@ -439,23 +439,25 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                       </select>
                     </div>
                   )}
+
+                  {/* Record Custom Sign Studio Modal Trigger */}
+                  {onOpenRecordModal && (
+                    <button
+                      type="button"
+                      className="popover-action-item"
+                      onClick={() => {
+                        setIsViewOptionsOpen(false);
+                        onOpenRecordModal();
+                      }}
+                    >
+                      <Video size={14} className="text-danger" />
+                      <span>Custom Gesture Studio...</span>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
           </div>
-
-          {/* 4. Record Sign Button */}
-          {onOpenRecordModal && (
-            <button
-              type="button"
-              className="ctrl-btn record-sign-btn"
-              onClick={onOpenRecordModal}
-              title="Open In-Browser Custom Gesture Recording Studio"
-            >
-              <Video size={14} className="text-danger" />
-              <span>Record Sign</span>
-            </button>
-          )}
         </div>
       </div>
     </div>
