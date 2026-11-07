@@ -270,57 +270,56 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
         {/* Top: Compact Live Detection Status Strip */}
         <LiveDetectionOutput currentResult={currentResult} />
 
-        {/* Middle: Clean Language Tabs without Native Scrollbar */}
-        <div className="indic-multilingual-section">
-          <div className="indic-lang-tabs-bar" role="tablist" aria-label="Indic Regional Language Selection">
+        {/* Modern Segmented Language Switcher (100% width, 5 balanced tabs, zero overflow) */}
+        <div className="modern-language-wrapper">
+          <div className="modern-language-bar" role="tablist" aria-label="Target Translation Language">
             {INDIC_TABS.map((tab) => {
               const hasContent = Boolean(getTranslationForLang(tab.key).trim());
               const isSelected = selectedLang === tab.key;
+              const primaryLabel = tab.key === 'en' ? 'English' : tab.native;
+              const secondaryLabel = tab.key === 'en' ? 'EN' : tab.label;
+
               return (
                 <button
                   key={tab.key}
                   role="tab"
                   type="button"
                   aria-selected={isSelected}
-                  className={`indic-tab-pill ${isSelected ? 'active' : ''} ${hasContent ? 'has-content' : ''}`}
+                  className={`modern-lang-tab ${isSelected ? 'active' : ''} ${hasContent ? 'has-translation' : ''}`}
                   onClick={() => setSelectedLang(tab.key)}
-                  title={`Switch to ${tab.label} (${tab.native})`}
+                  title={`${tab.label} (${tab.native}) · Click to switch language`}
                 >
-                  <span className="indic-tab-native">{tab.native}</span>
-                  <span className="indic-tab-label">{tab.label}</span>
-                  {hasContent && <span className="indic-tab-indicator" />}
+                  <span className="modern-lang-primary">{primaryLabel}</span>
+                  <span className="modern-lang-secondary">{secondaryLabel}</span>
+                  {hasContent && <span className="modern-lang-dot" aria-hidden="true" />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Main: Unified Translation & Sentence Workspace (NO duplicate boxes!) */}
+        {/* Main: Unified Translation & Sentence Workspace */}
         <div className="unified-canvas-section">
-          <div className="canvas-header-bar">
-            <div className="canvas-header-left">
-              <span className="canvas-lang-badge">
-                {currentTab.native} ({currentTab.label})
-              </span>
-              <span className="canvas-syntax-tag">
-                {selectedLang === 'en' ? 'Natural English' : 'Indic Neural Transfer'}
-              </span>
-            </div>
-            <div className="canvas-header-right">
-              {speaking && (
+          <div className="canvas-meta-strip">
+            <div className="meta-strip-left">
+              {speaking ? (
                 <div className="tts-live-waveform-indicator" aria-label="Audio speaking">
                   <span className="soundwave-bar bar-1" />
                   <span className="soundwave-bar bar-2" />
                   <span className="soundwave-bar bar-3" />
                   <span className="soundwave-bar bar-4" />
-                  <span className="waveform-label">{currentTab.label} TTS</span>
+                  <span className="waveform-label">{currentTab.label} Voice</span>
                 </div>
+              ) : (
+                <span className="meta-target-hint">
+                  Target: <strong>{currentTab.label}</strong> ({currentTab.native})
+                </span>
               )}
-              <div className="sentence-stats-mini">
-                <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
-                <span className="stats-dot">·</span>
-                <span>{charCount} chars</span>
-              </div>
+            </div>
+            <div className="meta-strip-right">
+              <span className="canvas-stats-text">
+                {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} chars
+              </span>
             </div>
           </div>
 
