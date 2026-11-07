@@ -19,6 +19,7 @@ import {
   Languages,
   MessageSquare,
   Activity,
+  Sliders,
 } from 'lucide-react';
 import type { ActiveModelType, CameraStatus, LandmarkStyles } from '../types';
 
@@ -47,6 +48,9 @@ interface CameraControlsProps {
   onToggleLandmarks: () => void;
   onToggleMirror: () => void;
   onToggleSubtitles: () => void;
+  showDiagnosticHUD?: boolean;
+  onToggleDiagnosticHUD?: () => void;
+  onOpenCalibrationModal?: () => void;
   onOpenIncludeModal?: () => void;
   onOpenRecordModal?: () => void;
 }
@@ -76,6 +80,9 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   onToggleLandmarks,
   onToggleMirror,
   onToggleSubtitles,
+  showDiagnosticHUD = false,
+  onToggleDiagnosticHUD,
+  onOpenCalibrationModal,
   onOpenIncludeModal: _onOpenIncludeModal,
   onOpenRecordModal,
 }) => {
@@ -348,6 +355,33 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
         {/* 3. Right Group: View Options Popover + Record Sign Button */}
         <div className="control-group right-controls-group">
+          {/* Live Diagnostic HUD Toggle */}
+          {onToggleDiagnosticHUD && (
+            <button
+              type="button"
+              className={`ctrl-btn hud-toggle-btn ${showDiagnosticHUD ? 'active text-cyan' : ''}`}
+              onClick={onToggleDiagnosticHUD}
+              title="Toggle Live Vision & Model Diagnostic HUD"
+              aria-pressed={showDiagnosticHUD}
+            >
+              <Activity size={14} />
+              <span>Diagnostics</span>
+            </button>
+          )}
+
+          {/* Quick Calibration Wizard Trigger */}
+          {onOpenCalibrationModal && (
+            <button
+              type="button"
+              className="ctrl-btn calib-trigger-btn"
+              onClick={onOpenCalibrationModal}
+              title="Open Personal Webcam & Pose Calibration Wizard"
+            >
+              <Sliders size={14} />
+              <span>Calibrate</span>
+            </button>
+          )}
+
           {/* View Options Popover Trigger */}
           <div className="view-options-wrapper" ref={viewOptionsRef}>
             <button

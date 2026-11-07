@@ -1,14 +1,19 @@
 import React from 'react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 
 export interface LiveDetectionOutputProps {
   currentResult: RecognitionPayload | null;
   className?: string;
+  onAcceptPrediction?: (word: string) => void;
+  onResolveDisambiguation?: (choice: string) => void;
 }
 
 export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
   currentResult,
   className = '',
+  onAcceptPrediction,
+  onResolveDisambiguation,
 }) => {
   const isKnown = currentResult?.is_known_sign || false;
   const label = currentResult?.label || 'no_sign';
@@ -41,6 +46,9 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
       : 'Conversational Signs';
 
   const headGesture = currentResult?.head_gesture || currentResult?.non_manual_markers?.head_gesture;
+  const predictiveSuggestions = currentResult?.predictive_suggestions || [];
+  const disambigActive = currentResult?.disambiguation?.active;
+  const disambigOptions = currentResult?.disambiguation?.options || [];
 
   return (
     <div className={`live-detection-output-root ${className}`}>
@@ -73,6 +81,50 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
           </div>
           <div className="idle-strip-right">
             <span className="idle-model-pill">{modelBadge}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Intelligent Fallback 1: Disambiguation Pills if top-2 are close */}
+      {disambigActive && disambigOptions.length >= 2 && (
+        <div className="live-disambiguation-strip" role="region" aria-label="Sign disambiguation choices">
+          <span className="disambig-label">Close match — select one:</span>
+          <div className="disambig-chips-group">
+            {disambigOptions.slice(0, 3).map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                className="disambig-chip-btn"
+                onClick={() => onResolveDisambiguation?.(opt.label)}
+                title={`Select ${opt.display}`}
+              >
+                <span>{opt.display}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Intelligent Fallback 2: Predictive Autocomplete Suggestions */}
+      {predictiveSuggestions.length > 0 && (
+        <div className="live-predictive-strip" role="region" aria-label="Word completion suggestions">
+          <span className="predictive-label">
+            <Sparkles size={11} className="text-cyan" />
+            <span>Complete Word:</span>
+          </span>
+          <div className="predictive-chips-group">
+            {predictiveSuggestions.slice(0, 4).map((word) => (
+              <button
+                key={word}
+                type="button"
+                className="predictive-chip-btn"
+                onClick={() => onAcceptPrediction?.(word)}
+                title={`Autocomplete with ${word}`}
+              >
+                <span>{word}</span>
+                <ArrowRight size={10} className="chip-arrow" />
+              </button>
+            ))}
           </div>
         </div>
       )}

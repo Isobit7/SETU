@@ -21,6 +21,7 @@ import { drawLandmarksOnCanvas } from '../utils/landmarksDrawer';
 import { evaluateFraming } from '../utils/framingEvaluator';
 import { VisualFramingGuide } from './VisualFramingGuide';
 import { DisambiguationOverlay } from './DisambiguationOverlay';
+import { DiagnosticHUD } from './DiagnosticHUD';
 
 interface CameraWorkspaceProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -41,6 +42,8 @@ interface CameraWorkspaceProps {
   onOpenVocabulary?: () => void;
   onResolveDisambiguation?: (label: string) => void;
   onAcceptPrediction?: (phrase: string) => void;
+  showDiagnosticHUD?: boolean;
+  confidenceThreshold?: number;
 }
 
 export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
@@ -61,6 +64,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   onOpenVocabulary,
   onResolveDisambiguation,
   onAcceptPrediction: _onAcceptPrediction,
+  showDiagnosticHUD = true,
+  confidenceThreshold = 0.35,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -480,6 +485,13 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
             onSelect={(label) => onResolveDisambiguation?.(label)}
           />
         )}
+
+        {/* Live Computer Vision & Model Diagnostic HUD */}
+        <DiagnosticHUD
+          currentResult={currentResult}
+          activeThreshold={confidenceThreshold}
+          visible={showDiagnosticHUD && cameraStatus === 'detecting'}
+        />
 
         {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
         {subtitleVisible && cameraStatus === 'detecting' && isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (

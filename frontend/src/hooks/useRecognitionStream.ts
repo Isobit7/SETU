@@ -156,6 +156,12 @@ export function useRecognitionStream({
         // Sync active model and confidence threshold
         ws.send(JSON.stringify({ action: 'set_model', model: activeModel }));
         ws.send(JSON.stringify({ action: 'set_threshold', threshold: confidenceThresholdRef.current }));
+        try {
+          const savedCalib = localStorage.getItem('setu_user_calibration');
+          if (savedCalib) {
+            ws.send(JSON.stringify({ action: 'calibrate', ...JSON.parse(savedCalib) }));
+          }
+        } catch {}
       };
 
       ws.onmessage = (event) => {
@@ -539,6 +545,16 @@ export function useRecognitionStream({
     }
   }, []);
 
+  // Send personalized calibration settings to WebSocket
+  const sendCalibration = useCallback(
+    (params: { rest_y: number; pitch_threshold: number; yaw_threshold: number }) => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ action: 'calibrate', ...params }));
+      }
+    },
+    []
+  );
+
   const initRef = useRef({ connectWebSocket, refreshDevices, stopCamera });
   useEffect(() => {
     initRef.current = { connectWebSocket, refreshDevices, stopCamera };
@@ -589,5 +605,6 @@ export function useRecognitionStream({
     setErrorMessage,
     resolveDisambiguation,
     acceptPrediction,
+    sendCalibration,
   };
 }

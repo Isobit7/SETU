@@ -34,6 +34,7 @@ from models.registry import ModelRegistry
 from backend.app.services.nlp import SentenceAccumulator
 from backend.app.services.nlp.domain_packs import domain_packs_manager
 from backend.app.services.vision.non_manual_markers import non_manual_detector
+from backend.app.services.vision.few_shot_custom_signs import custom_sign_service
 from config.settings import (
     CONFIDENCE_THRESHOLD_ALPHABET,
     CONFIDENCE_THRESHOLD_SEQUENCE,
@@ -356,6 +357,29 @@ async def websocket_recognize(
                         "message": f"Accepted predictive phrase: {phrase}",
                         "sentence_buffer": accumulator.sentence_buffer,
                     })
+            elif action == "calibrate":
+                new_rest_y = payload.get("rest_y")
+                if new_rest_y is not None:
+                    client_rest_y = float(max(0.50, min(0.95, float(new_rest_y))))
+                new_pitch = payload.get("pitch_threshold")
+                if new_pitch is not None and non_manual_detector is not None:
+                    non_manual_detector.pitch_threshold = float(max(0.02, min(0.12, float(new_pitch))))
+                new_yaw = payload.get("yaw_threshold")
+                if new_yaw is not None and non_manual_detector is not None:
+                    non_manual_detector.yaw_threshold = float(max(0.02, min(0.12, float(new_yaw))))
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Personal calibration profile applied (rest_y={client_rest_y:.2f})",
+                    "calibrated": True,
+                    "rest_y": client_rest_y,
+                })
+            elif action == "reload_custom_signs":
+                num_protos = custom_sign_service.reload()
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Personal few-shot sign prototypes reloaded ({num_protos} active)",
+                    "active_custom_signs": list(custom_sign_service.prototypes.keys()),
+                })
             elif action == "set_model":
                 req_model = str(payload.get("model", "realsign")).lower()
                 if req_model in ("include", "include_stream"):
@@ -968,6 +992,15 @@ async def websocket_recognize(
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
                 alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > 0.055)
+
+                # Prioritize user's personal few-shot custom sign prototypes if recorded
+                if hand_detected and not alphabet_in_motion and len(feat_176) >= 158:
+                    custom_match = custom_sign_service.match(feat_176, threshold=0.88)
+                    if custom_match is not None:
+                        c_lbl, c_score, c_disp = custom_match
+                        pred_label = c_lbl
+                        is_pred_valid = True
+                        raw_conf = max(raw_conf, c_score)
 
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     if not hand_detected or not has_realsign_feat or not is_pred_valid or alphabet_in_motion:

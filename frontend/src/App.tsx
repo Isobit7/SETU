@@ -11,6 +11,7 @@ import { SavedModal } from './components/SavedModal';
 import { HelpModal } from './components/HelpModal';
 import { IncludeVideoModal } from './components/IncludeVideoModal';
 import { RecordSignModal } from './components/RecordSignModal';
+import { CalibrationWizardModal } from './components/CalibrationWizardModal';
 import { TextToSignWorkspace } from './components/TextToSignWorkspace';
 import { PracticeStudio } from './components/PracticeStudio';
 import { ConversationStudio } from './components/ConversationStudio';
@@ -63,6 +64,8 @@ export const App: React.FC = () => {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(false);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
+  const [isCalibrationModalOpen, setIsCalibrationModalOpen] = useState<boolean>(false);
+  const [showDiagnosticHUD, setShowDiagnosticHUD] = useState<boolean>(true);
 
   // Subtitle & Overlay Preferences
   const [subtitleVisible, setSubtitleVisible] = useState<boolean>(true);
@@ -149,6 +152,7 @@ export const App: React.FC = () => {
     clearHistory,
     resolveDisambiguation,
     acceptPrediction,
+    sendCalibration,
   } = useRecognitionStream({
     videoRef,
     confidenceThreshold,
@@ -326,6 +330,8 @@ export const App: React.FC = () => {
                 onOpenVocabulary={() => setIsVocabModalOpen(true)}
                 onResolveDisambiguation={resolveDisambiguation}
                 onAcceptPrediction={acceptPrediction}
+                showDiagnosticHUD={showDiagnosticHUD}
+                confidenceThreshold={confidenceThreshold}
               />
 
               {/* Under-Camera Controls */}
@@ -345,6 +351,9 @@ export const App: React.FC = () => {
                 onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
                 enforceFraming={enforceFraming}
                 onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
+                showDiagnosticHUD={showDiagnosticHUD}
+                onToggleDiagnosticHUD={() => setShowDiagnosticHUD((prev) => !prev)}
+                onOpenCalibrationModal={() => setIsCalibrationModalOpen(true)}
                 onStart={startCamera}
                 onPause={pauseDetection}
                 onResume={resumeDetection}
@@ -378,6 +387,8 @@ export const App: React.FC = () => {
                   onClearSentence={handleClearSentence}
                   onBackspaceSentence={handleBackspaceSentence}
                   onAddSpaceSentence={handleAddSpaceSentence}
+                  onAcceptPrediction={acceptPrediction}
+                  onResolveDisambiguation={resolveDisambiguation}
                   isSpeaking={isSpeaking}
                   onSpeak={speak}
                   onStopSpeak={stop}
@@ -468,6 +479,13 @@ export const App: React.FC = () => {
         onClose={() => setIsRecordModalOpen(false)}
         currentLandmarks={currentResult?.landmarks}
         isCameraActive={cameraStatus === 'detecting'}
+      />
+
+      <CalibrationWizardModal
+        isOpen={isCalibrationModalOpen}
+        onClose={() => setIsCalibrationModalOpen(false)}
+        currentResult={currentResult}
+        onApplyCalibration={sendCalibration}
       />
     </div>
   );

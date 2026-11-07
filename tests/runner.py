@@ -281,3 +281,4 @@ def run_tests_and_generate_report() -> bool:
 if __name__ == "__main__":
     success = run_tests_and_generate_report()
     sys.exit(0 if success else 1)
+

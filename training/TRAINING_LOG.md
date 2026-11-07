@@ -77,3 +77,4 @@
   - Canonical idiom translation:
     - `I WATER NEED` $\rightarrow$ Kannada: `ನನಗೆ ನೀರು ಬೇಕು.`, Telugu: `నాకు నీళ్లు కావాలి.`, Hindi: `मुझे पानी चाहिए।`, Tamil: `எனக்கு தண்ணீர் வேண்டும்.`.
   - Zero-delay real-time update on every emitted token.
+

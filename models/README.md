@@ -65,3 +65,4 @@ models/
 - **Qwen2.5-0.5B Instruct:** Transforms raw gloss (e.g. `I WATER NEED`) into fluent English (`I need water.`).
 - **Indic Transformer:** High-speed real-time transformer for native Kannada (`ನನಗೆ ನೀರು ಬೇಕು.`), Telugu (`నాకు నీళ్లు కావాలి.`), Hindi (`मुझे पानी चाहिए।`), and Tamil (`எனக்கு தண்ணீர் வேண்டும்.`).
 - **YOLO-World v2:** Open-vocabulary detector for Show-and-Sign multimodal interaction.
+

@@ -45,6 +45,8 @@ interface TranslationPanelProps {
   onSpeak?: (text: string, lang?: string) => void;
   onStopSpeak?: () => void;
   onSelectLanguage?: (langCode: string) => void;
+  onAcceptPrediction?: (word: string) => void;
+  onResolveDisambiguation?: (choice: string) => void;
 }
 
 export const TranslationPanel: React.FC<TranslationPanelProps> = ({
@@ -60,6 +62,8 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   onSpeak,
   onStopSpeak,
   onSelectLanguage,
+  onAcceptPrediction,
+  onResolveDisambiguation,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
@@ -273,7 +277,11 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
       {/* SINGLE UNIFIED TRANSLATION CARD */}
       <div className="unified-card" id="unified-translation-card">
         {/* Top: Compact Live Detection Status Strip */}
-        <LiveDetectionOutput currentResult={currentResult} />
+        <LiveDetectionOutput
+          currentResult={currentResult}
+          onAcceptPrediction={onAcceptPrediction}
+          onResolveDisambiguation={onResolveDisambiguation}
+        />
 
         {/* Modern Segmented Language Switcher (100% width, 5 balanced tabs, zero overflow) */}
         <div className="modern-language-wrapper">
