@@ -14,6 +14,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
+import { Practice3DHandViewer } from './Practice3DHandViewer';
 
 export interface PracticeStudioProps {
   currentResult: RecognitionPayload | null;
@@ -333,6 +334,9 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
         <div className="challenge-target-name">
           {mode === 'alphabet' ? `Letter ${selectedTarget}` : selectedTarget}
         </div>
+
+        {/* 3D Skeletal Perspective Rigged Hand Model Demonstration */}
+        <Practice3DHandViewer sign={selectedTarget} />
 
         <p className="challenge-instruction">
           {mode === 'alphabet'
