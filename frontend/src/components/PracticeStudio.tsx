@@ -24,6 +24,118 @@ export interface PracticeStudioProps {
 
 const ALPHABET_LIST = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+const ALPHABET_GUIDES: Record<string, { desc: string; tips: string; isTwoHanded?: boolean }> = {
+  A: {
+    desc: 'Form a closed fist with your dominant hand. Keep thumb straight upright against index knuckle.',
+    tips: 'Ensure other four fingers are completely folded into palm.',
+  },
+  B: {
+    desc: 'Dual-Hand Sign: Hold left hand flat upright with palm facing you; tap flat right hand fingertips against left palm.',
+    tips: 'Bring both hands into camera view so contact is visible.',
+    isTwoHanded: true,
+  },
+  C: {
+    desc: 'Curve thumb and four fingers into an open semi-circular "C" arch facing forward.',
+    tips: 'Keep a clear 2-inch gap between fingertips and thumb tip. Use Side Profile view on 3D model to inspect curve!',
+  },
+  D: {
+    desc: 'Dual-Hand Sign: Left index points straight up (stem); right index and thumb touch left index to form the round loop.',
+    tips: 'Hold both hands steady at chest height.',
+    isTwoHanded: true,
+  },
+  E: {
+    desc: 'Curl all four fingers downward so tips rest lightly on top edge of folded thumb.',
+    tips: 'Keep fingers tightly grouped together.',
+  },
+  F: {
+    desc: 'Touch index fingertip to thumb tip forming a circle; keep middle, ring, and pinky standing tall.',
+    tips: 'Similar to the classic "OK" gesture.',
+  },
+  G: {
+    desc: 'Extend index and thumb horizontally forward in parallel, pointing sideways.',
+    tips: 'Keep middle, ring, and pinky folded.',
+  },
+  H: {
+    desc: 'Extend index and middle fingers together horizontally forward like a horizontal bar.',
+    tips: 'Keep both fingers closed side-by-side.',
+  },
+  I: {
+    desc: 'Form a closed fist with dominant hand and extend only the pinky straight up.',
+    tips: 'Thumb folds across index and middle fingers.',
+  },
+  J: {
+    desc: 'Extend pinky straight up, then trace a gentle "J" curve in the air.',
+    tips: 'Keep wrist relaxed.',
+  },
+  K: {
+    desc: 'Extend index straight up; angle middle finger forward with thumb placed between them.',
+    tips: 'Thumb supports middle finger joint.',
+  },
+  L: {
+    desc: 'Extend index finger straight up and thumb outward at 90 degrees to form an "L".',
+    tips: 'Fingers should form a sharp right angle.',
+  },
+  M: {
+    desc: 'Fold three fingers (index, middle, ring) tightly over tucked thumb.',
+    tips: 'Only thumb tip peeks out beneath ring finger.',
+  },
+  N: {
+    desc: 'Fold two fingers (index and middle) tightly over tucked thumb.',
+    tips: 'Thumb tip peeks out between middle and ring finger.',
+  },
+  O: {
+    desc: 'Curve all fingertips to meet thumb tip, forming a hollow circle ("O").',
+    tips: 'Fingers should touch gently without collapsing.',
+  },
+  P: {
+    desc: 'Dual-Hand Sign: Left index points straight up; right index and thumb form an upper loop touching left fingertip.',
+    tips: 'Keep left index steady as the vertical anchor.',
+    isTwoHanded: true,
+  },
+  Q: {
+    desc: 'Dual-Hand Sign: Left hand forms a circle; right index points straight down through the circle.',
+    tips: 'Align right finger through the center of left loop.',
+    isTwoHanded: true,
+  },
+  R: {
+    desc: 'Cross middle finger over index finger; fold ring and pinky into palm.',
+    tips: 'Keep thumb folded over ring finger.',
+  },
+  S: {
+    desc: 'Make a tight fist with thumb wrapped across the front of all folded fingers.',
+    tips: 'Contrast with "A" where thumb is beside the fingers.',
+  },
+  T: {
+    desc: 'Dual-Hand Sign: Left index stands straight up; right index rests horizontally across top of left index.',
+    tips: 'Forms a clean cross/T-bar.',
+    isTwoHanded: true,
+  },
+  U: {
+    desc: 'Hold index and middle fingers together pointing straight up, closed side-by-side.',
+    tips: 'Ensure fingers are touching, not spread.',
+  },
+  V: {
+    desc: 'Extend index and middle fingers straight up and spread apart in a "V" shape (peace sign).',
+    tips: 'Spread fingers wide apart.',
+  },
+  W: {
+    desc: 'Extend index, middle, and ring fingers upright and spread apart in a "W" shape.',
+    tips: 'Thumb holds pinky tip down.',
+  },
+  X: {
+    desc: 'Curl index finger into a hooked shape; keep other fingers closed.',
+    tips: 'Looks like a small pirate hook.',
+  },
+  Y: {
+    desc: 'Extend thumb and pinky outwards (shaka sign); fold middle three fingers into palm.',
+    tips: 'Keep wrist centered in camera.',
+  },
+  Z: {
+    desc: 'Extend index finger and trace the letter "Z" in the air.',
+    tips: 'Draw two horizontal lines connected by a diagonal.',
+  },
+};
+
 const COMMON_SIGNS = [
   { id: 'hello', label: 'HELLO', desc: 'Raise dominant hand near temple and wave gently outward.' },
   { id: 'thank_you', label: 'THANK YOU', desc: 'Touch fingertips of flat hand to chin and move forward toward other person.' },
@@ -340,11 +452,15 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
 
         <p className="challenge-instruction">
           {mode === 'alphabet'
-            ? isDualHandedAlphabet
-              ? `Authentic ISL letter "${selectedTarget}" is a dual-handed sign. Place both hands into view with contact between them.`
-              : `Hold your hand in canonical ISL pose for "${selectedTarget}". Center your wrist in the camera view.`
+            ? ALPHABET_GUIDES[selectedTarget]?.desc || `Hold your hand in canonical ISL pose for "${selectedTarget}".`
             : COMMON_SIGNS.find((s) => s.label === selectedTarget)?.desc}
         </p>
+
+        {mode === 'alphabet' && ALPHABET_GUIDES[selectedTarget]?.tips && (
+          <div className="challenge-pro-tip">
+            <strong>Pro Tip:</strong> {ALPHABET_GUIDES[selectedTarget].tips}
+          </div>
+        )}
 
         <div className="challenge-actions-row">
           {onSpeak && (

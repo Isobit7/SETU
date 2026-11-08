@@ -30,7 +30,7 @@ interface Practice3DHandViewerProps {
 }
 
 // Generate anatomically accurate 3D MediaPipe hand joint coordinates for ISL signs
-export function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
+function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
   const sign = rawSign.toUpperCase().replace(/\s+/g, '_');
 
   const createHand = (
@@ -117,13 +117,41 @@ export function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
       break;
 
     case 'C':
-      // Distinct C-arc curve
-      rightHand = createHand(
-        { x: 0, y: -0.2, z: 0 },
-        [0.55, 0.55, 0.55, 0.55, 0.55],
-        [0.2, 0.3, 0.3, 0.3, 0.3],
-        [-0.1, -0.05, 0, 0.05, 0.1]
-      );
+      // Anatomically authentic ISL C-arc:
+      // Thumb curves outward & up; 4 fingers arc up and curl down toward thumb, forming open C
+      rightHand = {
+        wrist: { x: 0.0, y: -0.22, z: 0.0 },
+        thumb: [
+          { x: 0.09, y: -0.16, z: 0.04 },
+          { x: 0.16, y: -0.10, z: 0.09 },
+          { x: 0.14, y: -0.01, z: 0.14 },
+          { x: 0.08, y: 0.05, z: 0.17 },
+        ],
+        index: [
+          { x: 0.08, y: 0.02, z: 0.02 },
+          { x: 0.09, y: 0.16, z: 0.08 },
+          { x: 0.08, y: 0.19, z: 0.16 },
+          { x: 0.06, y: 0.13, z: 0.20 },
+        ],
+        middle: [
+          { x: 0.01, y: 0.03, z: 0.01 },
+          { x: 0.01, y: 0.18, z: 0.08 },
+          { x: 0.01, y: 0.21, z: 0.17 },
+          { x: 0.01, y: 0.14, z: 0.21 },
+        ],
+        ring: [
+          { x: -0.06, y: 0.02, z: 0.0 },
+          { x: -0.06, y: 0.16, z: 0.07 },
+          { x: -0.06, y: 0.19, z: 0.16 },
+          { x: -0.06, y: 0.12, z: 0.19 },
+        ],
+        pinky: [
+          { x: -0.12, y: -0.01, z: -0.01 },
+          { x: -0.12, y: 0.12, z: 0.06 },
+          { x: -0.12, y: 0.15, z: 0.13 },
+          { x: -0.12, y: 0.09, z: 0.16 },
+        ],
+      };
       break;
 
     case 'D':
@@ -171,8 +199,40 @@ export function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
       break;
 
     case 'L':
-      // Distinct L-shape: Thumb at 90 deg, index vertical
-      rightHand = createHand({ x: 0, y: -0.2, z: 0 }, [1.0, 1.0, 0, 0, 0], [0, 0, 0, 0, 0], [-0.75, 0, 0, 0, 0]);
+      // Distinct L-shape: Index straight vertical (+y), thumb extended 90 degrees outward (+x)
+      rightHand = {
+        wrist: { x: 0.0, y: -0.22, z: 0.0 },
+        thumb: [
+          { x: 0.09, y: -0.15, z: 0.02 },
+          { x: 0.17, y: -0.12, z: 0.03 },
+          { x: 0.25, y: -0.12, z: 0.03 },
+          { x: 0.33, y: -0.12, z: 0.03 },
+        ],
+        index: [
+          { x: 0.07, y: 0.02, z: 0.01 },
+          { x: 0.08, y: 0.12, z: 0.01 },
+          { x: 0.08, y: 0.21, z: 0.01 },
+          { x: 0.08, y: 0.30, z: 0.01 },
+        ],
+        middle: [
+          { x: 0.01, y: 0.03, z: 0.0 },
+          { x: 0.01, y: 0.08, z: 0.05 },
+          { x: 0.01, y: 0.03, z: 0.09 },
+          { x: 0.01, y: -0.03, z: 0.07 },
+        ],
+        ring: [
+          { x: -0.05, y: 0.02, z: 0.0 },
+          { x: -0.05, y: 0.07, z: 0.05 },
+          { x: -0.05, y: 0.02, z: 0.09 },
+          { x: -0.05, y: -0.03, z: 0.07 },
+        ],
+        pinky: [
+          { x: -0.11, y: -0.01, z: 0.0 },
+          { x: -0.11, y: 0.04, z: 0.04 },
+          { x: -0.11, y: 0.00, z: 0.08 },
+          { x: -0.11, y: -0.04, z: 0.06 },
+        ],
+      };
       break;
 
     case 'M':
@@ -186,8 +246,40 @@ export function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
       break;
 
     case 'O':
-      // All fingertips touching thumb forming O circle
-      rightHand = createHand({ x: 0, y: -0.2, z: 0 }, [0.5, 0.5, 0.5, 0.5, 0.5], [0.3, 0.3, 0.3, 0.3, 0.3]);
+      // Authentically closed O-loop: all fingertips touch thumb tip
+      rightHand = {
+        wrist: { x: 0.0, y: -0.22, z: 0.0 },
+        thumb: [
+          { x: 0.08, y: -0.15, z: 0.04 },
+          { x: 0.14, y: -0.08, z: 0.10 },
+          { x: 0.12, y: 0.02, z: 0.16 },
+          { x: 0.04, y: 0.08, z: 0.18 },
+        ],
+        index: [
+          { x: 0.07, y: 0.02, z: 0.02 },
+          { x: 0.08, y: 0.15, z: 0.08 },
+          { x: 0.07, y: 0.16, z: 0.17 },
+          { x: 0.04, y: 0.09, z: 0.19 },
+        ],
+        middle: [
+          { x: 0.01, y: 0.03, z: 0.01 },
+          { x: 0.02, y: 0.16, z: 0.08 },
+          { x: 0.02, y: 0.17, z: 0.17 },
+          { x: 0.02, y: 0.09, z: 0.19 },
+        ],
+        ring: [
+          { x: -0.05, y: 0.02, z: 0.0 },
+          { x: -0.04, y: 0.14, z: 0.07 },
+          { x: -0.04, y: 0.15, z: 0.16 },
+          { x: -0.03, y: 0.08, z: 0.18 },
+        ],
+        pinky: [
+          { x: -0.11, y: -0.01, z: -0.01 },
+          { x: -0.10, y: 0.11, z: 0.06 },
+          { x: -0.09, y: 0.12, z: 0.14 },
+          { x: -0.08, y: 0.07, z: 0.16 },
+        ],
+      };
       break;
 
     case 'P':
@@ -233,8 +325,40 @@ export function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
       break;
 
     case 'V':
-      // Peace sign / V spread
-      rightHand = createHand({ x: 0, y: -0.2, z: 0 }, [0, 1.0, 1.0, 0, 0], [0, 0, 0, 0, 0], [0, -0.25, 0.25, 0, 0]);
+      // Peace sign / V spread: Index and Middle upright in spread V; Ring, Pinky curled; Thumb folded
+      rightHand = {
+        wrist: { x: 0.0, y: -0.22, z: 0.0 },
+        thumb: [
+          { x: 0.08, y: -0.14, z: 0.02 },
+          { x: 0.10, y: -0.06, z: 0.05 },
+          { x: 0.04, y: -0.02, z: 0.08 },
+          { x: -0.02, y: -0.02, z: 0.09 },
+        ],
+        index: [
+          { x: 0.06, y: 0.02, z: 0.01 },
+          { x: 0.09, y: 0.11, z: 0.01 },
+          { x: 0.13, y: 0.20, z: 0.01 },
+          { x: 0.17, y: 0.29, z: 0.01 },
+        ],
+        middle: [
+          { x: 0.00, y: 0.03, z: 0.01 },
+          { x: -0.03, y: 0.12, z: 0.01 },
+          { x: -0.07, y: 0.21, z: 0.01 },
+          { x: -0.11, y: 0.30, z: 0.01 },
+        ],
+        ring: [
+          { x: -0.06, y: 0.02, z: 0.0 },
+          { x: -0.06, y: 0.07, z: 0.05 },
+          { x: -0.06, y: 0.02, z: 0.09 },
+          { x: -0.06, y: -0.03, z: 0.07 },
+        ],
+        pinky: [
+          { x: -0.12, y: -0.01, z: 0.0 },
+          { x: -0.12, y: 0.04, z: 0.04 },
+          { x: -0.12, y: 0.00, z: 0.08 },
+          { x: -0.12, y: -0.04, z: 0.06 },
+        ],
+      };
       break;
 
     case 'W':
@@ -302,20 +426,36 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Orbit camera rotation & zoom state
-  const [rotX, setRotX] = useState<number>(15); // Pitch (degrees)
-  const [rotY, setRotY] = useState<number>(-20); // Yaw (degrees)
+  const [rotX, setRotX] = useState<number>(sign.toUpperCase() === 'C' ? 8 : 15);
+  const [rotY, setRotY] = useState<number>(sign.toUpperCase() === 'C' ? -55 : -20);
   const [zoom, setZoom] = useState<number>(1.05);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  // Update default angle when target sign switches
+  useEffect(() => {
+    if (sign.toUpperCase() === 'C') {
+      setRotX(8);
+      setRotY(-55);
+    } else {
+      setRotX(15);
+      setRotY(-20);
+    }
+  }, [sign]);
+
   // Reset to ideal 3/4 angle
   const handleResetCamera = useCallback(() => {
-    setRotX(15);
-    setRotY(-20);
+    if (sign.toUpperCase() === 'C') {
+      setRotX(8);
+      setRotY(-55);
+    } else {
+      setRotX(15);
+      setRotY(-20);
+    }
     setZoom(1.05);
-  }, []);
+  }, [sign]);
 
-  // Mouse drag orbit controls
+  // Mouse & Touch drag orbit controls
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     lastMousePos.current = { x: e.clientX, y: e.clientY };
@@ -332,6 +472,22 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
 
   const handleMouseUp = () => setIsDragging(false);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - lastMousePos.current.x;
+    const dy = e.touches[0].clientY - lastMousePos.current.y;
+    setRotY((prev) => prev + dx * 0.7);
+    setRotX((prev) => Math.max(-60, Math.min(60, prev + dy * 0.7)));
+    lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
   // Wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -344,8 +500,20 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 360;
+    const height = rect.height || 250;
+
+    const pixelW = Math.round(width * dpr);
+    const pixelH = Math.round(height * dpr);
+    if (canvas.width !== pixelW || canvas.height !== pixelH) {
+      canvas.width = pixelW;
+      canvas.height = pixelH;
+    }
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
     const skeleton = generateHand3DCoordinates(sign);
@@ -370,7 +538,7 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
       const z2 = y1 * sinX + z1 * cosX;
 
       // 3. Perspective Projection
-      const focalLength = 460 * zoom;
+      const focalLength = 480 * zoom;
       const cameraDistance = 1.35;
       const zEff = z2 + cameraDistance;
       const scale = focalLength / Math.max(0.2, zEff);
@@ -382,6 +550,16 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         scale,
       };
     };
+
+    // Subtle holographic ground grid under wrist
+    const groundCenter = transform3D({ x: 0, y: -0.28, z: 0 });
+    ctx.beginPath();
+    ctx.ellipse(groundCenter.x, groundCenter.y, 65 * (groundCenter.scale / 400), 20 * (groundCenter.scale / 400), 0, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
     // Render single hand with joints and bones
     const renderHand = (hand: HandSkeleton3D, primaryColor: string, secondaryColor: string) => {
@@ -490,6 +668,8 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         ctx.fill();
       });
     }
+
+    ctx.restore();
   }, [sign, rotX, rotY, zoom]);
 
   const skeletonInfo = generateHand3DCoordinates(sign);
@@ -503,13 +683,14 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleMouseUp}
         onWheel={handleWheel}
-        title="Click & drag to rotate 3D hand skeleton in 360°"
+        title="Click & drag or swipe to rotate 3D hand skeleton in 360°"
       >
         <canvas
           ref={canvasRef}
-          width={360}
-          height={260}
           className="practice-3d-canvas"
         />
 
@@ -517,9 +698,9 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         <div className="canvas-badge-overlay">
           <span className="hand-model-badge">
             <Layers size={11} className="text-cyan" />
-            <span>3D ISL Canonical Rig</span>
+            <span>3D ISL MediaPipe Rig</span>
           </span>
-          <span className="orbit-hint">Drag to rotate 360°</span>
+          <span className="orbit-hint">Drag 360° • Scroll Zoom</span>
         </div>
 
         {/* View Controls Toolbar */}
@@ -552,6 +733,42 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
             <RotateCw size={13} />
           </button>
         </div>
+      </div>
+
+      {/* Quick Camera Angle Presets */}
+      <div className="canvas-presets-bar">
+        <button
+          type="button"
+          className={`preset-pill ${Math.abs(rotY - (-20)) < 12 && Math.abs(rotX - 15) < 12 ? 'active' : ''}`}
+          onClick={() => { setRotX(15); setRotY(-20); }}
+          title="Angled 3/4 perspective"
+        >
+          3/4 View
+        </button>
+        <button
+          type="button"
+          className={`preset-pill ${Math.abs(rotY - (-75)) < 15 ? 'active' : ''}`}
+          onClick={() => { setRotX(5); setRotY(-75); }}
+          title="Side profile to view depth curvature"
+        >
+          Side Profile {sign.toUpperCase() === 'C' ? '★ (C-Curve)' : ''}
+        </button>
+        <button
+          type="button"
+          className={`preset-pill ${Math.abs(rotY) < 12 && Math.abs(rotX) < 12 ? 'active' : ''}`}
+          onClick={() => { setRotX(0); setRotY(0); }}
+          title="Direct front facing view"
+        >
+          Front Palm
+        </button>
+        <button
+          type="button"
+          className={`preset-pill ${Math.abs(rotX - 35) < 12 ? 'active' : ''}`}
+          onClick={() => { setRotX(35); setRotY(0); }}
+          title="Looking down at your own hand"
+        >
+          Signer POV
+        </button>
       </div>
 
       {/* Dual Hand / Contact Guidance Callout */}

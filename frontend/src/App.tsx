@@ -283,7 +283,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
-      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''}`} role="main">
+      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''} ${activeTab === 'practice' ? 'practice-mode-active' : ''}`} role="main">
         {activeTab === 'conversation' ? (
           <ConversationStudio
             currentResult={currentResult}

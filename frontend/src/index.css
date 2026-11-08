@@ -924,6 +924,11 @@ html, body {
   background-color: var(--bg-app);
 }
 
+.workspace-grid.practice-mode-active {
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 1.05fr);
+  gap: 18px;
+}
+
 .workspace-camera-section {
   display: flex;
   flex-direction: column;
@@ -6295,4 +6300,52 @@ button:active,
   color: #fbbf24;
   font-size: 0.72rem;
   font-weight: 600;
+}
+
+/* 3D Perspective Preset Pills */
+.canvas-presets-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-pill {
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.preset-pill:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.preset-pill.active {
+  background: rgba(6, 182, 212, 0.16);
+  color: #22d3ee;
+  border-color: rgba(6, 182, 212, 0.5);
+}
+
+/* Practice Pro-Tip Badge */
+.challenge-pro-tip {
+  font-size: 0.74rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-xs);
+  padding: 6px 10px;
+  margin: 6px 0 10px;
+  line-height: 1.4;
+  text-align: left;
 }
