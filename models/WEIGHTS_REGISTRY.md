@@ -87,3 +87,4 @@
 ##### `isl_mvp_model.npz` (Trained: 2026-10-26)
 - **Size:** 38 KB
 - **Why archived:** Linear Ridge regression model used for Day 1 proof-of-concept. Replaced by deep neural MLP.
+

@@ -53,3 +53,4 @@ Instead of having the WebSocket code directly deal with raw PyTorch tensor shape
    - `confidence`: Float probability between $0.0$ and $1.0$.
    - `is_known_sign`: Boolean indicating whether the confidence meets the threshold.
    - `probabilities`: Dictionary mapping all candidate classes to their softmax scores.
+

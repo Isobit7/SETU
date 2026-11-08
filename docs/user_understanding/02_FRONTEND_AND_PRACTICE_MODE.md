@@ -68,3 +68,4 @@ Following modern enterprise standards (similar to Apple System Preferences and G
 - **Tab 2: Recognition:** Adjust AI confidence threshold, toggle dual-hand mode, and select between Cloud Deep Model or Browser ONNX Edge Model.
 - **Tab 3: Speech & Audio:** Choose Text-to-Speech voice, speech speed, volume, and automatic pronunciation upon sign detection.
 - **Tab 4: Captions & Display:** Configure subtitle font size, caption persistence duration, and high-contrast dark theme mode.
+

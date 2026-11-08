@@ -71,3 +71,4 @@ Students often get confused about what Computer Vision does versus what Natural 
 ```
 - **Computer Vision** converts physical hand gestures into raw sign tokens.
 - **NLP** takes those raw tokens, fixes any typo or missed letter, applies grammar rules, and translates them into natural Indian languages.
+

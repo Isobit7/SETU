@@ -21,6 +21,16 @@
 
 ### Detailed Checkpoint Catalog
 
+#### [Checkpoint 11] 2026-11-09 — Repository Cleanup & Storage Optimization
+- **Git Commit:** `HEAD (nov6-working)`
+- **Key Deliverables:**
+  - Removed duplicate 337.58 MB root `weights/` directory (`weights/clip/ViT-B-32.pt`), verifying 100% SHA-256 match with canonical `models/experimental/clip/ViT-B-32.pt`.
+  - Purged obsolete HuggingFace raw parquet dataset from October 26 (`data/raw/huggingface_isl/`), freeing 516 MB.
+  - Cleaned temporary scratch files and video frame crops (`scratch/`), saving 4.54 MB.
+  - Removed stale `.pytest_cache/` and non-venv compiled bytecode (`__pycache__`) across backend, training, models, tests, and scripts.
+  - Removed empty `data/captured_sessions/` directories and old single-signer backup `models/weights/realsign_26class_mlp.pth.bak`.
+  - Reclaimed **~858 MB** of redundant disk space while maintaining 100% production functionality and test coverage.
+
 #### [Checkpoint 10] 2026-11-09 — Complete Codebase Line-by-Line Annotation & Architecture Registry
 - **Git Commit:** `HEAD (nov6-working)`
 - **Key Deliverables:**
@@ -89,3 +99,4 @@
 - **Key Deliverables:**
   - FastAPI asynchronous backend initialized with WebSocket duplex streaming at `/ws/recognize`.
   - Vite + React + TypeScript frontend scaffolded with high-FPS webcam canvas capture.
+

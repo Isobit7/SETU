@@ -20,6 +20,7 @@
 | **ADR-009** | 2026-11-07 | Head-Nod Gating for Affirmative & Sentence Termination | Accepted | Natural non-manual marker integration without requiring UI button presses |
 | **ADR-010** | 2026-11-08 | Pure Scoped CSS Replacement of Uncompiled Utility Classes | Accepted | Guarantees instant, zero-build CSS rendering and pixel-perfect dark theme UI |
 | **ADR-011** | 2026-11-08 | Enterprise Apple/Linear Modal Design for Settings | Accepted | Replaced distracting cyber/gimmick UI with intuitive 4-tab system configuration |
+| **ADR-012** | 2026-11-09 | Weight Consolidation & Deprecated Dataset Purge | Accepted | Removed 338MB duplicate weights and 516MB obsolete parquet data, reclaiming 858MB |
 
 ---
 
@@ -78,3 +79,11 @@
 - **Context:** Raw MediaPipe landmark outputs experience high-frequency jitter in poor lighting, causing spurious sign classification flips.
 - **Decision:** Integrate a low-pass 1-Euro adaptive filter (`backend/app/services/vision/one_euro_filter.py`) on all 42 hand landmarks.
 - **Consequence:** Zero perceivable lag during fast signing gestures, but rock-solid stability during stationary holds.
+
+---
+
+#### ADR-012: Weight Consolidation & Deprecated Dataset Purge
+- **Context:** The repository accumulated duplicate weights (root `weights/clip/ViT-B-32.pt` duplicating `models/experimental/clip/ViT-B-32.pt`), raw HuggingFace parquet files (`data/raw/huggingface_isl/` taking 516 MB) that were superseded by RealSign, and temporary scratch frames.
+- **Decision:** Delete unreferenced duplicate weight directories, purge obsolete raw parquet files (extracted features already safely preserved in `data/processed/`), clean `scratch/`, and remove compiled bytecode caches.
+- **Consequence:** Reclaimed **~858 MB** of storage, speeding up git operations and backups with zero loss of functionality or training capability.
+

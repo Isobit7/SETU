@@ -73,3 +73,4 @@ The project systematically documented and resolved 25 major technical engineerin
 | **Facial Expression Depth** | Vision | 2D Facial mesh markers active (head nod, eyebrows) | Train 3D blendshape classifier for complex emotions |
 | **Low-Light Night Mode** | Camera | Contrast enhancement active | Adaptive exposure normalization in WebGL shader |
 | **Expanded Regional Sign Dialects** | NLP | Standard Northern/Southern ISL covered | Collect community dialect samples (Mumbai vs Kerala ISL) |
+

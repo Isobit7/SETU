@@ -44,3 +44,4 @@ The detected signs are arranged into proper grammatical sentences
 - **Privacy-Safe:** No video is ever stored on the server. Only mathematical joint coordinates are processed in memory and discarded.
 - **Works on Normal Laptops:** Because we use skeletal landmarks rather than raw RGB pixels, you do not need an expensive supercomputer. It runs smoothly on budget GPUs (like NVIDIA RTX 3050) and standard laptop CPUs.
 - **Edge ONNX Capable:** Even if you lose internet connection, the basic alphabet recognition can run completely inside your browser using WebAssembly/ONNX!
+

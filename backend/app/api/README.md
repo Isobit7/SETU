@@ -23,3 +23,4 @@ This directory houses all backend REST endpoints mounted on FastAPI (`/api/*`). 
 1. **Real-Time Streaming:** The live webcam feed does **NOT** use these REST endpoints. It connects directly to the high-throughput WebSocket at `ws://127.0.0.1:8000/ws/recognize` (implemented in [`backend/app/websocket/recognize.py`](file:///c:/MINI%20PROJ-SETU/backend/app/websocket/recognize.py)) to maintain 30 FPS with <32ms latency.
 2. **REST Endpoints:** These endpoints handle infrequent configuration actions (fetching sign lists, changing language, uploading videos, or requesting spelling suggestions).
 3. **Frontend API Client:** All client-side HTTP calls to these endpoints are centralized in [`frontend/src/services/apiService.ts`](file:///c:/MINI%20PROJ-SETU/frontend/src/services/apiService.ts).
+

@@ -74,3 +74,4 @@ The training pipeline in SETU follows a rigorous 4-stage architecture:
 | **RealSign Hindi Vowels** | RGB Images | 2,082 | 8 (अ–ऐ) | 640×480 @ 30 FPS | 80% Train (1,666), 10% Val (208), 10% Test (208) |
 | **Amrita Continuous SLR** | Video Clips | 978 | 49 Phrases | 1280×720 @ 30 FPS | 70% Train (684), 15% Val (147), 15% Test (147) |
 | **SETU In-House Synthetic** | Spatial Vectors | 4,000 | 2 (Rest / Noise) | N/A (Normalized vectors) | 100% Negative conditioning |
+

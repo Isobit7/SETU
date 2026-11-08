@@ -70,3 +70,4 @@ c:\MINI PROJ-SETU\
 ├── docs/user_understanding/  # Dedicated human-readable guides for viva defense
 └── Sathwik/                  # Standalone interactive HTML portal for demonstration
 ```
+

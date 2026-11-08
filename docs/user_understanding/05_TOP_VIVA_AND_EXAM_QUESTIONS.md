@@ -91,3 +91,4 @@
 ### Q15: "What are your future enhancements for this project?"
 **Model Answer:**
 > *"Sir, our future roadmap includes: 1) Expanding domain-specific vocabularies for legal and emergency services, 2) Supporting localized Indian sign dialects (such as Southern vs Northern ISL variations), and 3) Integrating generative 3D full-body avatars that translate spoken doctor instructions back into sign language for deaf patients."*
+

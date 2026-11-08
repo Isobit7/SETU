@@ -92,3 +92,4 @@ Webcams produce subtle landmark shaking (jitter). If you apply a standard heavy 
 When transitioning between Letter 'A' and Letter 'C', your fingers temporarily pass through random intermediate shapes.
 - Without debouncing, the screen would flash letters like 'E' or 'S' for 1 frame.
 - **Our Debouncer:** Requires the neural network to output the same sign for at least **3 consecutive frames** with confidence $\ge 50\%$ before committing it.
+
