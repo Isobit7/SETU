@@ -5734,3 +5734,456 @@ button:active,
   color: #f87171;
   text-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
 }
+
+/* ==========================================================================
+   ISL Interactive Practice Studio (Zero-Tailwind Pure CSS Component)
+   ========================================================================== */
+.practice-studio-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  gap: 12px;
+  box-shadow: var(--shadow-surface);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  scrollbar-width: thin;
+}
+
+.practice-studio-card.practice-success-state {
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.2);
+}
+
+/* Practice Header */
+.practice-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.practice-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.practice-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.practice-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.practice-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.practice-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.practice-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.practice-streak-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+}
+
+.practice-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.practice-mini-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.practice-close-btn:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Practice Controls Strip */
+.practice-controls-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.practice-mode-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-inset);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.practice-tab-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.practice-tab-btn:hover:not(.active) {
+  color: var(--color-text-main);
+}
+
+.practice-tab-btn.active {
+  background: var(--bg-surface-elevated);
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.practice-toggles-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.practice-pill-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.practice-pill-toggle:hover {
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.practice-pill-toggle.active {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #22d3ee;
+}
+
+/* Horizontal Target Selector Carousel */
+.practice-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: thin;
+}
+
+.practice-chip {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.12s ease;
+}
+
+.practice-chip:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.practice-chip.active {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: #06b6d4;
+  color: #22d3ee;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+.practice-chip.phrase-chip {
+  min-width: auto;
+  font-size: 0.72rem;
+  padding: 0 12px;
+}
+
+/* Practice Challenge Card */
+.practice-challenge-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.challenge-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.challenge-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.challenge-dual-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.challenge-target-name {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+.challenge-instruction {
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.challenge-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.practice-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.practice-action-btn.speak-btn {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+}
+
+.practice-action-btn.speak-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+}
+
+.practice-action-btn.next-btn {
+  background: #0284c7;
+  border: 1px solid #0369a1;
+  color: #ffffff;
+  margin-left: auto;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+.practice-action-btn.next-btn:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+/* Practice Feedback Card & Hold Gauge */
+.practice-feedback-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.practice-feedback-card.matching {
+  border-color: rgba(6, 182, 212, 0.5);
+  background: rgba(6, 182, 212, 0.05);
+}
+
+.practice-feedback-card.success {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.feedback-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.feedback-conf {
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.feedback-detected-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.practice-hold-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-inset);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.practice-hold-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.15s ease-out;
+}
+
+.practice-hold-fill.empty {
+  width: 0%;
+  background: transparent;
+}
+
+.practice-hold-fill.filling {
+  background: linear-gradient(90deg, #06b6d4, #10b981);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.practice-hold-fill.completed {
+  width: 100% !important;
+  background: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
+}
+
+.practice-status-hint {
+  font-size: var(--font-size-xs);
+  min-height: 20px;
+}
+
+.status-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.status-matching-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.status-waiting-text {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}

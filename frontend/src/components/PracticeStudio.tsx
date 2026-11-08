@@ -1,5 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Award, CheckCircle2, ChevronRight, RotateCcw, Target, Sparkles, Volume2, X, PlayCircle, Shuffle } from 'lucide-react';
+import {
+  Award,
+  CheckCircle2,
+  ChevronRight,
+  RotateCcw,
+  Target,
+  Sparkles,
+  Volume2,
+  X,
+  PlayCircle,
+  PauseCircle,
+  Shuffle,
+  AlertCircle,
+} from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 
 export interface PracticeStudioProps {
@@ -23,7 +36,9 @@ let sharedAudioCtx: AudioContext | null = null;
 const getAudioContext = (): AudioContext | null => {
   try {
     if (typeof window === 'undefined') return null;
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return null;
     if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
       sharedAudioCtx = new AudioContextClass();
@@ -37,7 +52,7 @@ const getAudioContext = (): AudioContext | null => {
   }
 };
 
-/** Synthesize a gentle celebratory chime using the browser native Web Audio API */
+/** Synthesize a gentle celebratory chime using browser native Web Audio API */
 const playSuccessChime = () => {
   try {
     const ctx = getAudioContext();
@@ -49,11 +64,11 @@ const playSuccessChime = () => {
     osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.12); // E5
     osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.25); // G5
     gain.gain.setValueAtTime(0.18, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.40);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.40);
+    osc.stop(ctx.currentTime + 0.4);
   } catch {
     // AudioContext blocked or unsupported, fail silently
   }
@@ -74,11 +89,20 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
 
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
 
-  const currentDetected = currentResult?.label?.toUpperCase() || 'NO_SIGN';
+  const rawLabel = currentResult?.label || 'no_sign';
+  const currentDetected = rawLabel.replace('_', ' ').toUpperCase();
   const currentConfidence = currentResult?.confidence || 0;
-  const isMatch = currentDetected === selectedTarget.toUpperCase() && currentConfidence >= 0.60;
 
-  // Hold timer: User must hold the correct sign steady for ~1.0s (7 intervals of 15%) to score
+  // Flexible target match (letter "A" or "LETTER A" or phrase match)
+  const isMatch = Boolean(
+    currentResult?.is_known_sign &&
+      (currentDetected === selectedTarget.toUpperCase() ||
+        currentDetected === `LETTER ${selectedTarget.toUpperCase()}` ||
+        rawLabel.toLowerCase() === selectedTarget.toLowerCase()) &&
+      currentConfidence >= 0.45
+  );
+
+  // Hold timer: User must hold the correct sign steady for ~1.0s to score
   useEffect(() => {
     let timer: number | null = null;
     if (isMatch && !isSuccess) {
@@ -88,12 +112,12 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
             setIsSuccess(true);
             setStreak((s) => s + 1);
             playSuccessChime();
-            if (onSpeak) onSpeak(`Excellent! You signed ${selectedTarget}!`);
+            if (onSpeak) onSpeak(`Correct! That is ${selectedTarget}!`);
             return 100;
           }
-          return prev + 15;
+          return prev + 20;
         });
-      }, 150);
+      }, 140);
     } else if (!isMatch && !isSuccess) {
       setHoldProgress(0);
     }
@@ -138,7 +162,7 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
     if (isSuccess && autoAdvance) {
       autoAdvanceTimeoutRef.current = window.setTimeout(() => {
         handleNext();
-      }, 1100);
+      }, 1200);
     }
     return () => {
       if (autoAdvanceTimeoutRef.current) {
@@ -153,133 +177,125 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
     setHoldProgress(0);
   };
 
+  const isDualHandedAlphabet = mode === 'alphabet' && 'BDPTQ'.includes(selectedTarget);
+
   return (
-    <div className={`practice-studio-root bg-slate-900/95 border rounded-2xl p-6 text-white shadow-2xl backdrop-blur-md transition-all duration-300 ${
-      isSuccess ? 'border-emerald-500/80 shadow-emerald-500/20' : 'border-slate-700/80'
-    }`}>
-      {/* Studio Header */}
-      <div className="flex items-center justify-between border-b border-slate-700/60 pb-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-500/20 text-indigo-400 rounded-xl border border-indigo-500/30">
-            <Target className="w-6 h-6" />
+    <div className={`practice-studio-card ${isSuccess ? 'practice-success-state' : ''}`}>
+      {/* 1. Header Toolbar */}
+      <div className="practice-header">
+        <div className="practice-header-left">
+          <div className="practice-icon-wrap" aria-hidden="true">
+            <Target size={16} className="text-cyan" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              ISL Interactive Practice Studio
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-medium">
-                Live AI Scoring
-              </span>
-            </h2>
-            <p className="text-sm text-slate-400">
-              Practice authentic Indian Sign Language gestures with real-time pose guidance and streak rewards.
-            </p>
+          <div className="practice-title-group">
+            <h3 className="practice-title">Practice Studio</h3>
+            <span className="practice-badge">Live AI Scoring</span>
           </div>
         </div>
 
-        {/* Score, Streak & Settings */}
-        <div className="flex items-center gap-3">
-          {/* Auto-Advance Toggle */}
-          <button
-            onClick={() => setAutoAdvance(!autoAdvance)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-              autoAdvance
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700'
-            }`}
-            title="Auto-advance to next sign upon successful hold"
-          >
-            <PlayCircle className="w-3.5 h-3.5" />
-            Auto-Next: {autoAdvance ? 'ON' : 'OFF'}
-          </button>
-
-          {/* Shuffle Toggle */}
-          <button
-            onClick={() => setIsShuffle(!isShuffle)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-              isShuffle
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700'
-            }`}
-            title="Shuffle challenge sequence"
-          >
-            <Shuffle className="w-3.5 h-3.5" />
-            {isShuffle ? 'Shuffled' : 'Sequential'}
-          </button>
-
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-            <Award className="w-5 h-5 text-amber-400" />
-            <span className="text-sm font-semibold text-amber-300">Streak: {streak}</span>
+        <div className="practice-header-right">
+          <div className="practice-streak-pill" title="Consecutive correct signs held">
+            <Award size={13} className="text-amber" />
+            <span>Streak: <strong>{streak}</strong></span>
           </div>
 
           <button
+            type="button"
+            className="practice-mini-btn"
             onClick={handleReset}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            title="Reset Score"
+            title="Reset streak to 0"
+            aria-label="Reset streak"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw size={13} />
           </button>
+
           {onClose && (
             <button
+              type="button"
+              className="practice-mini-btn practice-close-btn"
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
-              title="Close Practice Studio"
+              title="Return to live translator"
+              aria-label="Close practice studio"
             >
-              <X className="w-5 h-5" />
+              <X size={14} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Mode Selector Tabs */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => {
-            setMode('alphabet');
-            setSelectedTarget('A');
-            setIsSuccess(false);
-            setHoldProgress(0);
-          }}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-            mode === 'alphabet'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-          }`}
-        >
-          Dual-Hand Alphabet (A–Z)
-        </button>
-        <button
-          onClick={() => {
-            setMode('phrases');
-            setSelectedTarget(COMMON_SIGNS[0].label);
-            setIsSuccess(false);
-            setHoldProgress(0);
-          }}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-            mode === 'phrases'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-          }`}
-        >
-          Common Phrases & Signs
-        </button>
+      {/* 2. Mode Selector & Exercise Options */}
+      <div className="practice-controls-strip">
+        <div className="practice-mode-pills" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'alphabet'}
+            className={`practice-tab-btn ${mode === 'alphabet' ? 'active' : ''}`}
+            onClick={() => {
+              setMode('alphabet');
+              setSelectedTarget('A');
+              setIsSuccess(false);
+              setHoldProgress(0);
+            }}
+          >
+            Alphabet (A–Z)
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'phrases'}
+            className={`practice-tab-btn ${mode === 'phrases' ? 'active' : ''}`}
+            onClick={() => {
+              setMode('phrases');
+              setSelectedTarget(COMMON_SIGNS[0].label);
+              setIsSuccess(false);
+              setHoldProgress(0);
+            }}
+          >
+            Conversational Signs
+          </button>
+        </div>
+
+        <div className="practice-toggles-group">
+          {/* Auto-Next Toggle */}
+          <button
+            type="button"
+            className={`practice-pill-toggle ${autoAdvance ? 'active' : ''}`}
+            onClick={() => setAutoAdvance(!autoAdvance)}
+            title="Auto-advance to next sign upon successful hold"
+          >
+            {autoAdvance ? <PlayCircle size={12} /> : <PauseCircle size={12} />}
+            <span>Auto: {autoAdvance ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Shuffle Toggle */}
+          <button
+            type="button"
+            className={`practice-pill-toggle ${isShuffle ? 'active' : ''}`}
+            onClick={() => setIsShuffle(!isShuffle)}
+            title="Shuffle sign sequence"
+          >
+            <Shuffle size={12} />
+            <span>{isShuffle ? 'Random' : 'Linear'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Target Selector Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-thin scrollbar-thumb-slate-700">
+      {/* 3. Horizontal Target Selector Carousel */}
+      <div className="practice-chips-scroll" role="radiogroup" aria-label="Select Target Sign">
         {mode === 'alphabet'
           ? ALPHABET_LIST.map((letter) => (
               <button
                 key={letter}
+                type="button"
+                role="radio"
+                aria-checked={selectedTarget === letter}
                 onClick={() => {
                   setSelectedTarget(letter);
                   setIsSuccess(false);
                   setHoldProgress(0);
                 }}
-                className={`w-10 h-10 rounded-xl font-bold text-sm shrink-0 transition ${
-                  selectedTarget === letter
-                    ? 'bg-indigo-500 text-white ring-2 ring-indigo-400 shadow-md'
-                    : 'bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white'
-                }`}
+                className={`practice-chip ${selectedTarget === letter ? 'active' : ''}`}
               >
                 {letter}
               </button>
@@ -287,117 +303,116 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
           : COMMON_SIGNS.map((s) => (
               <button
                 key={s.id}
+                type="button"
+                role="radio"
+                aria-checked={selectedTarget === s.label}
                 onClick={() => {
                   setSelectedTarget(s.label);
                   setIsSuccess(false);
                   setHoldProgress(0);
                 }}
-                className={`px-3 py-2 rounded-xl font-medium text-xs shrink-0 transition ${
-                  selectedTarget === s.label
-                    ? 'bg-indigo-500 text-white ring-2 ring-indigo-400 shadow-md'
-                    : 'bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white'
-                }`}
+                className={`practice-chip phrase-chip ${selectedTarget === s.label ? 'active' : ''}`}
               >
                 {s.label}
               </button>
             ))}
       </div>
 
-      {/* Practice Challenge Center */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
-        {/* Left: Target Sign & Guidance */}
-        <div className="flex flex-col justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-              Target Sign
-            </div>
-            <div className="text-4xl font-extrabold text-indigo-400 tracking-wide mb-3">
-              {mode === 'alphabet' ? `LETTER ${selectedTarget}` : selectedTarget}
-            </div>
-
-            {mode === 'alphabet' && 'BDPTQ'.includes(selectedTarget) && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 font-medium mb-3">
-                <span>⚠️ Dual-Handed Sign: Both hands required in frame!</span>
-              </div>
-            )}
-
-            <p className="text-sm text-slate-300 leading-relaxed mb-4">
-              {mode === 'alphabet'
-                ? `Hold your hands in the canonical ISL pose for "${selectedTarget}". Keep both wrists centered within the camera view.`
-                : COMMON_SIGNS.find((s) => s.label === selectedTarget)?.desc}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {onSpeak && (
-              <button
-                onClick={() => onSpeak(selectedTarget)}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-semibold text-slate-200 transition"
-              >
-                <Volume2 className="w-4 h-4" /> Speak Sign
-              </button>
-            )}
-            <button
-              onClick={handleNext}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white transition ml-auto"
-            >
-              Next Sign <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+      {/* 4. Target Challenge Details Card */}
+      <div className="practice-challenge-card">
+        <div className="challenge-card-header">
+          <span className="challenge-label">Target Challenge</span>
+          {isDualHandedAlphabet && (
+            <span className="challenge-dual-badge">
+              <AlertCircle size={11} />
+              <span>Two Hands Required</span>
+            </span>
+          )}
         </div>
 
-        {/* Right: Live AI Feedback & Hold Gauge */}
-        <div className={`flex flex-col justify-center items-center p-6 bg-slate-900/80 rounded-xl border text-center transition-all duration-200 ${
-          isSuccess ? 'border-emerald-500/70 shadow-lg shadow-emerald-500/10' : 'border-slate-700/60'
-        }`}>
-          <div className="text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">
-            Live Webcam Detection
-          </div>
+        <div className="challenge-target-name">
+          {mode === 'alphabet' ? `Letter ${selectedTarget}` : selectedTarget}
+        </div>
 
-          <div className="text-3xl font-black mb-1">
-            {currentDetected !== 'NO_SIGN' && currentDetected !== 'UNKNOWN' ? (
-              <span className={isMatch ? 'text-emerald-400' : 'text-slate-300'}>
-                {currentDetected}
-              </span>
-            ) : (
-              <span className="text-slate-500">Awaiting Sign</span>
-            )}
-          </div>
+        <p className="challenge-instruction">
+          {mode === 'alphabet'
+            ? isDualHandedAlphabet
+              ? `Authentic ISL letter "${selectedTarget}" is a dual-handed sign. Place both hands into view with contact between them.`
+              : `Hold your hand in canonical ISL pose for "${selectedTarget}". Center your wrist in the camera view.`
+            : COMMON_SIGNS.find((s) => s.label === selectedTarget)?.desc}
+        </p>
 
-          <div className="text-xs text-slate-400 mb-4">
-            Confidence: {Math.round(currentConfidence * 100)}%
-          </div>
+        <div className="challenge-actions-row">
+          {onSpeak && (
+            <button
+              type="button"
+              className="practice-action-btn speak-btn"
+              onClick={() => onSpeak(selectedTarget)}
+              title="Hear pronunciation"
+            >
+              <Volume2 size={13} />
+              <span>Hear Sign</span>
+            </button>
+          )}
 
-          {/* Progress / Hold Ring Gauge */}
-          <div className="w-full bg-slate-800 rounded-full h-3 mb-3 overflow-hidden border border-slate-700">
-            <div
-              className={`h-full transition-all duration-150 ${
-                isSuccess
-                  ? 'bg-emerald-400'
-                  : isMatch
-                  ? 'bg-gradient-to-r from-indigo-500 to-emerald-400'
-                  : 'bg-transparent'
-              }`}
-              style={{ width: `${holdProgress}%` }}
-            />
-          </div>
+          <button
+            type="button"
+            className="practice-action-btn next-btn"
+            onClick={handleNext}
+            title="Skip to next sign"
+          >
+            <span>Next Sign</span>
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
 
-          {/* Dynamic Status Guidance */}
+      {/* 5. Live AI Match Gauge & Verification Box */}
+      <div className={`practice-feedback-card ${isSuccess ? 'success' : isMatch ? 'matching' : 'idle'}`}>
+        <div className="feedback-header">
+          <span className="feedback-label">Live Webcam Recognition</span>
+          <span className="feedback-conf">
+            {currentConfidence > 0 ? `${Math.round(currentConfidence * 100)}% Match` : 'Awaiting'}
+          </span>
+        </div>
+
+        <div className="feedback-detected-value">
+          {currentDetected !== 'NO SIGN' && currentDetected !== 'UNKNOWN' && currentDetected !== 'NO_SIGN' ? (
+            <span className={isMatch ? 'text-emerald' : 'text-main'}>{currentDetected}</span>
+          ) : (
+            <span className="text-muted">Show hands to camera</span>
+          )}
+        </div>
+
+        {/* Dynamic Hold Gauge Progress Bar */}
+        <div className="practice-hold-bar" role="progressbar" aria-valuenow={holdProgress} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className={`practice-hold-fill ${isSuccess ? 'completed' : isMatch ? 'filling' : 'empty'}`}
+            style={{ width: `${holdProgress}%` }}
+          />
+        </div>
+
+        {/* Dynamic Status Text */}
+        <div className="practice-status-hint">
           {isSuccess ? (
-            <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm animate-bounce">
-              <CheckCircle2 className="w-5 h-5" /> Completed! Streak +1 {autoAdvance && '• Advancing...'}
+            <div className="status-success-banner">
+              <CheckCircle2 size={15} className="text-emerald" />
+              <span>Perfect! Streak +1 {autoAdvance ? '• Next sign in 1s...' : ''}</span>
             </div>
           ) : isMatch ? (
-            <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs">
-              <Sparkles className="w-4 h-4 animate-spin" /> Perfect match! Hold steady to score...
+            <div className="status-matching-banner">
+              <Sparkles size={14} className="text-cyan animate-spin" />
+              <span>Matching! Hold steady to score ({holdProgress}%)...</span>
             </div>
           ) : (
-            <div className="text-xs text-slate-400">
-              Form the sign and hold steady in front of camera
-            </div>
+            <span className="status-waiting-text">
+              Hold the sign steady in camera view for 1 second
+            </span>
           )}
         </div>
       </div>
     </div>
   );
 };
+
+export default PracticeStudio;
