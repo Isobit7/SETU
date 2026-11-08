@@ -18,6 +18,22 @@ LOCAL_MODEL_DIR = Path("models/weights/qwen_0.5b")
 DEFAULT_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 
 
+def _has_semantic_content(gloss_input: str) -> bool:
+    """Checks whether the gloss input contains plausible linguistic content rather than random consonant noise."""
+    tokens = [t.upper().strip() for t in gloss_input.split() if t.strip()]
+    if not tokens:
+        return False
+    # If all tokens are single letters or consonant clusters, check for vowels
+    joined = "".join(tokens)
+    vowels = set("AEIOUY")
+    has_vowel = any(c in vowels for c in joined)
+    if not has_vowel and len(joined) > 1:
+        return False
+    if len(tokens) >= 3 and not has_vowel:
+        return False
+    return True
+
+
 class NeuralGlossTranslator:
     """
     Translates arbitrary sequences of ISL glosses, words, and fingerspelled letters
@@ -107,8 +123,8 @@ class NeuralGlossTranslator:
                 deduped.append(w)
         gloss_input = " ".join(deduped)
 
-        if not self.is_loaded or self.model is None or self.tokenizer is None:
-            # Fallback to Title-cased join if model is not loaded
+        if not self.is_loaded or self.model is None or self.tokenizer is None or not _has_semantic_content(gloss_input):
+            # Fallback to clean capitalized join if model is not loaded or content is non-semantic/unvalidated
             return gloss_input.capitalize() + "."
 
         try:

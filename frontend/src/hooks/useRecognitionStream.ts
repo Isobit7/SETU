@@ -458,11 +458,17 @@ export function useRecognitionStream({
         ws &&
         ws.readyState === WebSocket.OPEN
       ) {
-        // Smooth 30 FPS non-stalling streaming:
-        // Use browser native ws.bufferedAmount backpressure (< 65536 bytes)
-        // so frames stream at steady 30 FPS without locking or freezing the render loop
-        const isSocketReady = ws.bufferedAmount < 65536;
+        // Zero-Lag Ping-Pong Gating:
+        // Watchdog: If waiting for response for > 150ms (timeout or dropped packet), release lock
+        if (waitingForResponseRef.current && now - lastFrameSentTimeRef.current > 150) {
+          waitingForResponseRef.current = false;
+        }
+
+        // Only capture and transmit when previous response has returned and socket buffer is 0.
+        // This eliminates queued frame delay entirely: returned landmarks match the exact current hand position.
+        const isSocketReady = ws.bufferedAmount === 0 && !waitingForResponseRef.current;
         if (now - lastFrameSentTimeRef.current >= intervalMs && isSocketReady) {
+          waitingForResponseRef.current = true;
           lastFrameSentTimeRef.current = now;
 
           // Preserve camera aspect ratio dynamically to prevent squishing 16:9 frames into 4:3
@@ -494,9 +500,15 @@ export function useRecognitionStream({
                     .then((buf) => {
                       if (ws.readyState === WebSocket.OPEN) {
                         ws.send(buf);
+                      } else {
+                        waitingForResponseRef.current = false;
                       }
                     })
-                    .catch(() => {});
+                    .catch(() => {
+                      waitingForResponseRef.current = false;
+                    });
+                } else {
+                  waitingForResponseRef.current = false;
                 }
               },
               'image/jpeg',

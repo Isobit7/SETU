@@ -14,7 +14,7 @@ export const DiagnosticHUD: React.FC<DiagnosticHUDProps> = ({
   activeThreshold,
   visible,
 }) => {
-  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [collapsed, setCollapsed] = useState<boolean>(true);
 
   if (!visible) return null;
 
@@ -49,7 +49,7 @@ export const DiagnosticHUD: React.FC<DiagnosticHUDProps> = ({
       <div className="hud-header">
         <div className="hud-title">
           <Activity size={14} className="hud-icon text-cyan" />
-          <span>Live Vision & Model Diagnostics</span>
+          <span>{collapsed ? 'Diagnostics' : 'Live Vision & Model Diagnostics'}</span>
         </div>
         <button
           type="button"
