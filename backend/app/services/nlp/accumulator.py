@@ -215,12 +215,17 @@ class SentenceAccumulator:
         confidence: float = 1.0,
         token_type: str = "phrase",
         timestamp: Optional[float] = None,
+        bypass_debounce: bool = False,
     ) -> Optional[str]:
         """
         Ingests continuous streaming frame emissions using internal CTC greedy collapsing.
         Returns the committed token string if a new gesture boundary was crossed, else None.
         Enables seamless fluid co-articulation without 1.2s freeze requirements.
         """
+        if bypass_debounce:
+            self.add_token(token, token_type=token_type, timestamp=timestamp, bypass_debounce=True)
+            return token
+
         emitted = self.ctc_decoder.step(token, confidence=confidence)
         if emitted:
             self.add_token(emitted, token_type=token_type, timestamp=timestamp, bypass_debounce=True)
@@ -254,3 +259,14 @@ class SentenceAccumulator:
             self.sentence_tokens.pop()
             self.last_token_time = time.time()
             self._tokens_changed = True
+
+    def reject_last(self) -> bool:
+        """Undo last committed token/letter (triggered by Head Shake). Returns True if something was removed."""
+        had_content = bool(self.current_word or self.sentence_tokens)
+        self.backspace()
+        if had_content:
+            try:
+                self.translate_sentence(async_neural=False)
+            except Exception:
+                pass
+        return had_content

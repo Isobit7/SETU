@@ -200,10 +200,10 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   if (cameraStatus === 'paused') {
     subtitleText = 'Detection Paused';
   } else if (cameraStatus === 'detecting') {
-    if (isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input') {
-      if (currentResult?.display_name) {
-        subtitleText = currentResult.display_name;
-      } else if (currentResult?.active_model === 'realsign' && label.length === 1) {
+    if (currentResult?.display_name && currentResult.display_name !== 'Awaiting Sign Input') {
+      subtitleText = currentResult.display_name;
+    } else if (isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input') {
+      if (currentResult?.active_model === 'realsign' && label.length === 1) {
         subtitleText = `Letter ${label.toUpperCase()}`;
       } else {
         subtitleText = label.replace('_', ' ').toUpperCase();
@@ -482,9 +482,9 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         )}
 
         {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
-        {subtitleVisible && cameraStatus === 'detecting' && isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
+        {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (currentResult?.display_name && (currentResult.display_name.includes('✓') || currentResult.display_name.includes('✕') || currentResult.display_name.includes('Nod')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
           <div className="center-camera-prediction" aria-live="polite">
-            <div className="center-prediction-badge active-sign">
+            <div className={`center-prediction-badge ${currentResult?.display_name?.includes('✓') ? 'confirmed-sign' : currentResult?.display_name?.includes('✕') ? 'undone-sign' : 'active-sign'}`}>
               <div className="center-sign-text">
                 {subtitleText}
               </div>

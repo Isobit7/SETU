@@ -17,7 +17,7 @@ import { ConversationStudio } from './components/ConversationStudio';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
 import { useSentenceBuilder } from './hooks/useSentenceBuilder';
-import type { FramingFeedback, LandmarkStyles, SubtitleSize } from './types';
+import type { BufferInsertionMode, FramingFeedback, LandmarkStyles, SubtitleSize } from './types';
 import './index.css';
 
 export const App: React.FC = () => {
@@ -84,7 +84,10 @@ export const App: React.FC = () => {
     speak,
     stop,
     onClearBackend: () => clearSentence(),
-    onBackspaceBackend: () => backspaceSentence(),
+    onBackspaceBackend: () => {
+      backspaceSentence();
+      undoLastToken();
+    },
   });
 
   // Filtered prediction callback: passes clean predictions to sentence builder
@@ -124,12 +127,25 @@ export const App: React.FC = () => {
     clearHistory,
     resolveDisambiguation,
     acceptPrediction,
+    setBufferMode,
+    undoLastToken,
   } = useRecognitionStream({
     videoRef,
     confidenceThreshold,
     onPredictionChange: handleFilteredPredictionChange,
     isFramingGated,
   });
+
+  // Sentence Buffer Insertion Mode ('auto' stream vs 'head_nod' confirmed)
+  const [bufferInsertionMode, setBufferInsertionMode] = useState<BufferInsertionMode>('auto');
+
+  const handleSetBufferInsertionMode = useCallback(
+    (mode: BufferInsertionMode) => {
+      setBufferInsertionMode(mode);
+      setBufferMode(mode);
+    },
+    [setBufferMode]
+  );
 
   // Toggle hand landmarks on/off together
   const handleToggleLandmarks = () => {
@@ -377,12 +393,19 @@ export const App: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        activeModel={activeModel}
+        onSwitchModel={switchModel}
+        confidenceThreshold={confidenceThreshold}
+        setConfidenceThreshold={setConfidenceThreshold}
+        bufferInsertionMode={bufferInsertionMode}
+        onSetBufferInsertionMode={handleSetBufferInsertionMode}
+        availableCameras={availableCameras}
+        selectedCameraId={selectedCameraId}
+        onSelectCamera={setSelectedCameraId}
         landmarkStyles={landmarkStyles}
         setLandmarkStyles={setLandmarkStyles}
         subtitleSize={subtitleSize}
         setSubtitleSize={setSubtitleSize}
-        confidenceThreshold={confidenceThreshold}
-        setConfidenceThreshold={setConfidenceThreshold}
         autoSpeakEnabled={autoSpeakEnabled}
         onToggleAutoSpeak={toggleAutoSpeak}
         targetLanguage={targetLanguage}
@@ -390,9 +413,12 @@ export const App: React.FC = () => {
         availableVoices={availableVoices}
         selectedVoice={selectedVoice}
         onSelectVoice={setSelectedVoice}
+        onTestSpeak={speak}
         isSpeaking={isSpeaking}
         enforceFraming={enforceFraming}
         onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
+        showFramingGuide={showFramingGuide}
+        onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
       />
 
       <HistoryModal

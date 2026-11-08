@@ -246,6 +246,9 @@ async def websocket_recognize(
     disambiguation_options: List[Dict[str, Any]] = []
     disambiguation_start_time: float = 0.0
 
+    # Intentional Head-Gesture Gated Sentence Buffer State
+    require_head_nod_confirm: bool = False
+
     # Real-Time Sentence Accumulator & ISL Gloss Parser
     accumulator = SentenceAccumulator()
 
@@ -263,7 +266,7 @@ async def websocket_recognize(
         nonlocal last_word_label, last_word_display, last_word_conf, last_word_is_known
         nonlocal last_word_probs, last_word_top3, last_word_pred_time
         nonlocal disambiguation_active, disambiguation_top1, disambiguation_top2, disambiguation_options
-        nonlocal enable_object_detection, current_detected_objects
+        nonlocal enable_object_detection, current_detected_objects, require_head_nod_confirm
         try:
             payload = json.loads(text_str)
             action = payload.get("action")
@@ -356,6 +359,23 @@ async def websocket_recognize(
                         "message": f"Accepted predictive phrase: {phrase}",
                         "sentence_buffer": accumulator.sentence_buffer,
                     })
+            elif action in ("set_buffer_mode", "set_insertion_mode"):
+                mode = str(payload.get("mode", "auto")).lower()
+                require_head_nod_confirm = (mode in ("head_nod", "nod", "intentional", "nod_confirm"))
+                await websocket.send_json({
+                    "type": "info",
+                    "message": f"Buffer insertion mode: {'Head-Nod Confirmed' if require_head_nod_confirm else 'Auto-Stream'}",
+                    "require_head_nod_confirm": require_head_nod_confirm,
+                })
+            elif action in ("undo", "reject_last", "backspace"):
+                accumulator.reject_last()
+                await websocket.send_json({
+                    "type": "info",
+                    "message": "Removed last token from sentence buffer",
+                    "sentence_buffer": accumulator.sentence_buffer,
+                    "translated_text": accumulator.translated_text,
+                    "translated_indic": accumulator.translated_indic,
+                })
             elif action == "set_model":
                 req_model = str(payload.get("model", "realsign")).lower()
                 if req_model in ("include", "include_stream"):
@@ -964,6 +984,7 @@ async def websocket_recognize(
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
                 alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > 0.055)
 
+                awaiting_nod = False
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     if not hand_detected or not has_realsign_feat or not is_pred_valid or alphabet_in_motion:
                         current_prediction = "Awaiting Sign Input"
@@ -979,36 +1000,64 @@ async def websocket_recognize(
                         alphabet_streak_candidate = current_prediction
                         alphabet_streak_count = 1
 
-                    if alphabet_streak_count >= required_streak:
+                    # Hands-Free Intent Confirmation via Head Nod & Head Shake
+                    if hand_detected and nmm_marker.head_gesture == "nod":
+                        if alphabet_streak_candidate != "Awaiting Sign Input" and raw_conf >= active_threshold:
+                            emitted = accumulator.add_continuous_token(
+                                alphabet_streak_candidate,
+                                confidence=raw_conf,
+                                token_type="letter",
+                                timestamp=now,
+                                bypass_debounce=True,
+                            )
+                            if emitted:
+                                alphabet_last_committed = alphabet_streak_candidate
+                                alphabet_last_committed_time = now
+                                alphabet_repeat_lock = True
+                                had_idle_baseline = False
+                                res_label = alphabet_streak_candidate
+                                res_display = f"✓ {alphabet_streak_candidate} (Confirmed)"
+                                res_conf = raw_conf
+                                res_is_known = True
+                                is_stable = True
+                    elif hand_detected and nmm_marker.head_gesture == "shake":
+                        accumulator.reject_last()
+                        alphabet_streak_candidate = "Awaiting Sign Input"
+                        alphabet_streak_count = 0
+                        res_label = "Awaiting Sign Input"
+                        res_display = "✕ Undone (Shake)"
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
+                    elif alphabet_streak_count >= required_streak:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
                             res_label = alphabet_streak_candidate
-                            res_display = f"LETTER {alphabet_streak_candidate}"
                             res_conf = raw_conf
                             res_is_known = True
                             is_stable = True
 
-                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
-                            time_since_commit = now - alphabet_last_committed_time
-                            is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
+                            if require_head_nod_confirm:
+                                awaiting_nod = True
+                                res_display = f"LETTER {alphabet_streak_candidate} (Nod to Insert)"
+                            else:
+                                res_display = f"LETTER {alphabet_streak_candidate}"
+                                # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
+                                time_since_commit = now - alphabet_last_committed_time
+                                is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
+                                can_emit = (not is_same_letter) or (not alphabet_repeat_lock) or (time_since_commit >= 1.2)
 
-                            # Only emit if:
-                            # 1) It's a new letter, OR
-                            # 2) Hand went through an idle/rest baseline, OR
-                            # 3) User held continuously for >= 1.2s to intentionally sign a double letter
-                            can_emit = (not is_same_letter) or (not alphabet_repeat_lock) or (time_since_commit >= 1.2)
-
-                            if can_emit:
-                                emitted = accumulator.add_continuous_token(
-                                    alphabet_streak_candidate,
-                                    confidence=raw_conf,
-                                    token_type="letter",
-                                    timestamp=now,
-                                )
-                                if emitted:
-                                    alphabet_last_committed = alphabet_streak_candidate
-                                    alphabet_last_committed_time = now
-                                    alphabet_repeat_lock = True
-                                    had_idle_baseline = False
+                                if can_emit:
+                                    emitted = accumulator.add_continuous_token(
+                                        alphabet_streak_candidate,
+                                        confidence=raw_conf,
+                                        token_type="letter",
+                                        timestamp=now,
+                                    )
+                                    if emitted:
+                                        alphabet_last_committed = alphabet_streak_candidate
+                                        alphabet_last_committed_time = now
+                                        alphabet_repeat_lock = True
+                                        had_idle_baseline = False
                         else:
                             res_label = "Awaiting Sign Input"
                             res_display = "Awaiting Sign Input"
@@ -1092,21 +1141,35 @@ async def websocket_recognize(
                                 disambiguation_start_time = now
 
                         # Debounce gate for committing to backend accumulator (gated by disambiguation)
-                        if candidate_streak >= required_streak and not disambiguation_active:
-                            time_since_last = now - last_committed_time
-                            is_same_sign = (res_label == last_committed_sign)
-                            can_commit = False
-                            if is_same_sign:
-                                if hand_absent_duration >= 0.5 and had_idle_baseline:
-                                    can_commit = True
+                        if hand_detected and nmm_marker.head_gesture == "nod" and candidate_streak >= required_streak and not disambiguation_active:
+                            accumulator.add_token(res_display, token_type="phrase", timestamp=now)
+                            last_committed_sign = res_label
+                            last_committed_time = now
+                            had_idle_baseline = False
+                            res_display = f"✓ {res_display} (Confirmed)"
+                        elif hand_detected and nmm_marker.head_gesture == "shake":
+                            accumulator.reject_last()
+                            candidate_streak = 0
+                            res_display = "✕ Undone (Shake)"
+                        elif candidate_streak >= required_streak and not disambiguation_active:
+                            if require_head_nod_confirm:
+                                awaiting_nod = True
+                                res_display = f"{res_display} (Nod to Insert)"
                             else:
-                                can_commit = True
+                                time_since_last = now - last_committed_time
+                                is_same_sign = (res_label == last_committed_sign)
+                                can_commit = False
+                                if is_same_sign:
+                                    if hand_absent_duration >= 0.5 and had_idle_baseline:
+                                        can_commit = True
+                                else:
+                                    can_commit = True
 
-                            if can_commit:
-                                accumulator.add_token(res_display, token_type="phrase", timestamp=now)
-                                last_committed_sign = res_label
-                                last_committed_time = now
-                                had_idle_baseline = False
+                                if can_commit:
+                                    accumulator.add_token(res_display, token_type="phrase", timestamp=now)
+                                    last_committed_sign = res_label
+                                    last_committed_time = now
+                                    had_idle_baseline = False
                     else:
                         # Idle or Awaiting Sign
                         if not hand_detected:
@@ -1249,8 +1312,13 @@ async def websocket_recognize(
                         "is_affirmation": nmm_marker.is_affirmation,
                         "eyebrow_elevation": nmm_marker.eyebrow_elevation,
                         "head_yaw_oscillation": nmm_marker.head_yaw_oscillation,
+                        "head_pitch_oscillation": nmm_marker.head_pitch_oscillation,
                         "confidence": nmm_marker.confidence,
+                        "head_gesture": nmm_marker.head_gesture,
                     },
+                    "head_gesture": nmm_marker.head_gesture,
+                    "awaiting_nod": bool(awaiting_nod),
+                    "require_head_nod_confirm": require_head_nod_confirm,
                     "realsign_prediction": {
                         "letter": realsign_pred.letter if realsign_pred else "no_sign",
                         "confidence": round(realsign_pred.confidence, 4) if realsign_pred else 0.0,

@@ -102,7 +102,12 @@ export interface RecognitionPayload {
     enhanced: boolean;
   };
   predictive_suggestions?: string[];
+  head_gesture?: 'nod' | 'shake' | 'none';
+  awaiting_nod?: boolean;
+  require_head_nod_confirm?: boolean;
 }
+
+export type BufferInsertionMode = 'auto' | 'head_nod';
 
 export interface HistoryItem {
   id: string;

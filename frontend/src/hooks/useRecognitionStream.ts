@@ -539,6 +539,20 @@ export function useRecognitionStream({
     }
   }, []);
 
+  // Set buffer insertion mode ('auto' or 'head_nod')
+  const setBufferMode = useCallback((mode: 'auto' | 'head_nod') => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'set_buffer_mode', mode }));
+    }
+  }, []);
+
+  // Hands-free or manual Undo last token from sentence buffer
+  const undoLastToken = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'undo' }));
+    }
+  }, []);
+
   const initRef = useRef({ connectWebSocket, refreshDevices, stopCamera });
   useEffect(() => {
     initRef.current = { connectWebSocket, refreshDevices, stopCamera };
@@ -589,5 +603,7 @@ export function useRecognitionStream({
     setErrorMessage,
     resolveDisambiguation,
     acceptPrediction,
+    setBufferMode,
+    undoLastToken,
   };
 }
