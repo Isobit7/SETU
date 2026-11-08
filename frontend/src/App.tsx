@@ -137,7 +137,7 @@ export const App: React.FC = () => {
   });
 
   // Sentence Buffer Insertion Mode ('auto' stream vs 'head_nod' confirmed)
-  const [bufferInsertionMode, setBufferInsertionMode] = useState<BufferInsertionMode>('auto');
+  const [bufferInsertionMode, setBufferInsertionMode] = useState<BufferInsertionMode>('head_nod');
 
   const handleSetBufferInsertionMode = useCallback(
     (mode: BufferInsertionMode) => {

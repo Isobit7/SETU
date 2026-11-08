@@ -33,17 +33,22 @@ class NonManualMarkerDetector:
     """Detects grammatical non-manual markers from 468/478 MediaPipe face landmarks."""
 
     # Key landmark indices in MediaPipe Face Mesh:
+    # Forehead top: 10, Chin bottom: 152
+    # Left cheek / ear: 234, Right cheek / ear: 454
     # Left eye top: 159, Left eyebrow mid: 105
     # Right eye top: 386, Right eyebrow mid: 334
-    # Nose tip: 1, Chin: 152
+    # Nose tip: 1
+    FOREHEAD = 10
+    CHIN = 152
+    LEFT_FACE = 234
+    RIGHT_FACE = 454
     LEFT_EYE_TOP = 159
     LEFT_EYEBROW = 105
     RIGHT_EYE_TOP = 386
     RIGHT_EYEBROW = 334
     NOSE_TIP = 1
-    CHIN = 152
 
-    def __init__(self, history_len: int = 12) -> None:
+    def __init__(self, history_len: int = 14) -> None:
         self.history_len = history_len
         self.nose_x_history: List[float] = []
         self.nose_y_history: List[float] = []
@@ -82,15 +87,27 @@ class NonManualMarkerDetector:
                 return float(lm[0]), float(lm[1])
             return 0.0, 0.0
 
+        fh_x, fh_y = _get_xy(self.FOREHEAD)
+        ch_x, ch_y = _get_xy(self.CHIN)
+        lf_x, lf_y = _get_xy(self.LEFT_FACE)
+        rf_x, rf_y = _get_xy(self.RIGHT_FACE)
         lx_eye, ly_eye = _get_xy(self.LEFT_EYE_TOP)
         lx_brow, ly_brow = _get_xy(self.LEFT_EYEBROW)
         rx_eye, ry_eye = _get_xy(self.RIGHT_EYE_TOP)
         rx_brow, ry_brow = _get_xy(self.RIGHT_EYEBROW)
         nx, ny = _get_xy(self.NOSE_TIP)
 
+        # Scale-invariant normalization using face bounding geometry
+        face_h = abs(ch_y - fh_y)
+        face_w = abs(rf_x - lf_x)
+
+        # In face-normalized coordinates, natural body drift/breathing is canceled out!
+        rel_y = (ny - fh_y) / face_h if face_h >= 0.05 else ny
+        rel_x = (nx - lf_x) / face_w if face_w >= 0.05 else nx
+
         # Update nose displacement history for head oscillations
-        self.nose_x_history.append(nx)
-        self.nose_y_history.append(ny)
+        self.nose_x_history.append(rel_x)
+        self.nose_y_history.append(rel_y)
         if len(self.nose_x_history) > self.history_len:
             self.nose_x_history.pop(0)
             self.nose_y_history.pop(0)
@@ -99,33 +116,46 @@ class NonManualMarkerDetector:
         left_dist = max(0.0, ly_eye - ly_brow)
         right_dist = max(0.0, ry_eye - ry_brow)
         avg_brow_elevation = (left_dist + right_dist) / 2.0
-        is_question = bool(avg_brow_elevation > (baseline_eyebrow_ratio * 1.25))
+        is_question = bool(
+            (avg_brow_elevation / face_h > 0.18) if face_h >= 0.05
+            else (avg_brow_elevation > (baseline_eyebrow_ratio * 1.25))
+        )
 
-        # 2. Head Yaw Oscillation (horizontal head shake -> Negation / Undo)
-        yaw_oscillation = 0.0
-        if len(self.nose_x_history) >= 6:
-            diffs = np.diff(self.nose_x_history)
-            sign_changes = np.sum(diffs[:-1] * diffs[1:] < 0)
-            range_x = float(np.ptp(self.nose_x_history))
-            if sign_changes >= 2 and range_x > 0.022:
-                yaw_oscillation = range_x
-
-        is_negation = bool(yaw_oscillation > 0.025)
-
-        # 3. Head Pitch Oscillation (vertical nod up-down -> Affirmation / Commit)
+        # Kinematic Oscillation Analysis (requires at least 6 frames)
         pitch_oscillation = 0.0
-        if len(self.nose_y_history) >= 6:
-            diffs_y = np.diff(self.nose_y_history)
-            sign_changes_y = np.sum(diffs_y[:-1] * diffs_y[1:] < 0)
-            range_y = float(np.ptp(self.nose_y_history))
-            if sign_changes_y >= 2 and range_y > 0.020:
-                pitch_oscillation = range_y
+        yaw_oscillation = 0.0
+        is_affirmation = False
+        is_negation = False
 
-        is_affirmation = bool(pitch_oscillation > 0.022)
+        if len(self.nose_y_history) >= 6:
+            ptp_y = float(np.ptp(self.nose_y_history))
+            ptp_x = float(np.ptp(self.nose_x_history))
+
+            diffs_y = np.diff(self.nose_y_history)
+            sign_changes_y = int(np.sum(diffs_y[:-1] * diffs_y[1:] < 0))
+
+            diffs_x = np.diff(self.nose_x_history)
+            sign_changes_x = int(np.sum(diffs_x[:-1] * diffs_x[1:] < 0))
+
+            # Thresholds: scaled face coords vs unscaled fallback
+            min_ptp_y = 0.055 if face_h >= 0.05 else 0.025
+            min_ptp_x = 0.065 if face_w >= 0.05 else 0.025
+
+            # 2. Head Pitch Oscillation (vertical nod up-down -> Affirmation / Commit)
+            if ptp_y >= min_ptp_y and ptp_y > (ptp_x * 1.20):
+                if sign_changes_y >= 1:
+                    pitch_oscillation = ptp_y
+                    is_affirmation = True
+
+            # 3. Head Yaw Oscillation (horizontal head shake -> Negation / Undo)
+            if ptp_x >= min_ptp_x and ptp_x > (ptp_y * 1.20):
+                if sign_changes_x >= 1:
+                    yaw_oscillation = ptp_x
+                    is_negation = True
 
         now = time.time()
         head_gesture = "none"
-        if now - self.last_gesture_time >= 0.65:
+        if now - self.last_gesture_time >= 0.70:
             if is_affirmation and pitch_oscillation >= (yaw_oscillation * 1.15):
                 head_gesture = "nod"
                 self.last_gesture_time = now

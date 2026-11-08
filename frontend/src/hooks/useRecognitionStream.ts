@@ -153,9 +153,10 @@ export function useRecognitionStream({
           clearTimeout(reconnectTimeoutRef.current);
           reconnectTimeoutRef.current = null;
         }
-        // Sync active model and confidence threshold
+        // Sync active model, confidence threshold, and default buffer mode
         ws.send(JSON.stringify({ action: 'set_model', model: activeModel }));
         ws.send(JSON.stringify({ action: 'set_threshold', threshold: confidenceThresholdRef.current }));
+        ws.send(JSON.stringify({ action: 'set_buffer_mode', mode: 'head_nod' }));
       };
 
       ws.onmessage = (event) => {
@@ -212,18 +213,23 @@ export function useRecognitionStream({
                   }
 
                   if (canCommit && !isFramingGatedRef.current) {
-                    lastCommittedSignRef.current = label;
-                    lastCommittedTimeRef.current = now;
-                    hadIdleBaselineRef.current = false;
+                    if (data.require_head_nod_confirm && !data.display_name?.includes('✓')) {
+                      // Waiting for deliberate head-nod confirmation before adding to session history
+                    } else {
+                      lastCommittedSignRef.current = label;
+                      lastCommittedTimeRef.current = now;
+                      hadIdleBaselineRef.current = false;
 
-                    const newItem: HistoryItem = {
-                      id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                      timestamp: new Date(),
-                      signKey: label,
-                      text: data.display_name || label.toUpperCase(),
-                      confidence: data.confidence || 0,
-                    };
-                    setHistory((prev) => [newItem, ...prev.slice(0, 49)]);
+                      const cleanText = (data.display_name || label.toUpperCase()).replace('✓ ', '').replace(' (Confirmed)', '').trim();
+                      const newItem: HistoryItem = {
+                        id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                        timestamp: new Date(),
+                        signKey: label,
+                        text: cleanText,
+                        confidence: data.confidence || 0,
+                      };
+                      setHistory((prev) => [newItem, ...prev.slice(0, 49)]);
+                    }
                   }
                 }
               } else {

@@ -246,8 +246,8 @@ async def websocket_recognize(
     disambiguation_options: List[Dict[str, Any]] = []
     disambiguation_start_time: float = 0.0
 
-    # Intentional Head-Gesture Gated Sentence Buffer State
-    require_head_nod_confirm: bool = False
+    # Intentional Head-Gesture Gated Sentence Buffer State (True by default: signs ONLY enter buffer upon head nod)
+    require_head_nod_confirm: bool = True
 
     # Real-Time Sentence Accumulator & ISL Gloss Parser
     accumulator = SentenceAccumulator()
@@ -1037,8 +1037,12 @@ async def websocket_recognize(
                             is_stable = True
 
                             if require_head_nod_confirm:
-                                awaiting_nod = True
-                                res_display = f"LETTER {alphabet_streak_candidate} (Nod to Insert)"
+                                if (now - alphabet_last_committed_time < 1.0) and (alphabet_streak_candidate == alphabet_last_committed):
+                                    res_display = f"✓ {alphabet_last_committed} (Confirmed)"
+                                    awaiting_nod = False
+                                else:
+                                    awaiting_nod = True
+                                    res_display = f"LETTER {alphabet_streak_candidate} (Nod to Insert)"
                             else:
                                 res_display = f"LETTER {alphabet_streak_candidate}"
                                 # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
@@ -1141,20 +1145,28 @@ async def websocket_recognize(
                                 disambiguation_start_time = now
 
                         # Debounce gate for committing to backend accumulator (gated by disambiguation)
+                        clean_phrase_text = DISPLAY_NAMES.get(res_label, res_label.upper().replace("_", " "))
+
                         if hand_detected and nmm_marker.head_gesture == "nod" and candidate_streak >= required_streak and not disambiguation_active:
-                            accumulator.add_token(res_display, token_type="phrase", timestamp=now)
+                            accumulator.add_token(clean_phrase_text, token_type="phrase", timestamp=now)
                             last_committed_sign = res_label
                             last_committed_time = now
                             had_idle_baseline = False
-                            res_display = f"✓ {res_display} (Confirmed)"
+                            res_display = f"✓ {clean_phrase_text} (Confirmed)"
+                            awaiting_nod = False
                         elif hand_detected and nmm_marker.head_gesture == "shake":
                             accumulator.reject_last()
                             candidate_streak = 0
                             res_display = "✕ Undone (Shake)"
+                            awaiting_nod = False
                         elif candidate_streak >= required_streak and not disambiguation_active:
                             if require_head_nod_confirm:
-                                awaiting_nod = True
-                                res_display = f"{res_display} (Nod to Insert)"
+                                if (now - last_committed_time < 1.0) and (res_label == last_committed_sign):
+                                    res_display = f"✓ {clean_phrase_text} (Confirmed)"
+                                    awaiting_nod = False
+                                else:
+                                    awaiting_nod = True
+                                    res_display = f"{clean_phrase_text} (Nod to Insert)"
                             else:
                                 time_since_last = now - last_committed_time
                                 is_same_sign = (res_label == last_committed_sign)
@@ -1166,7 +1178,7 @@ async def websocket_recognize(
                                     can_commit = True
 
                                 if can_commit:
-                                    accumulator.add_token(res_display, token_type="phrase", timestamp=now)
+                                    accumulator.add_token(clean_phrase_text, token_type="phrase", timestamp=now)
                                     last_committed_sign = res_label
                                     last_committed_time = now
                                     had_idle_baseline = False
@@ -1207,7 +1219,15 @@ async def websocket_recognize(
                         is_letter = (len(resolved_choice) == 1 and resolved_choice.isalpha())
                         disp = resolved_choice.upper() if is_letter else DISPLAY_NAMES.get(resolved_choice.lower(), resolved_choice.upper().replace("_", " "))
                         token_type = "letter" if is_letter else "phrase"
-                        accumulator.add_token(disp, token_type=token_type, timestamp=now)
+                        if not require_head_nod_confirm:
+                            accumulator.add_token(disp, token_type=token_type, timestamp=now)
+                        else:
+                            if is_letter:
+                                alphabet_streak_candidate = resolved_choice
+                                alphabet_streak_count = required_streak
+                            else:
+                                candidate_label = resolved_choice
+                                candidate_streak = required_streak
                         disambiguation_active = False
                         disambiguation_options = []
                         disambiguation_top1 = ""

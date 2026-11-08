@@ -91,7 +91,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSwitchModel,
   confidenceThreshold,
   setConfidenceThreshold,
-  bufferInsertionMode = 'auto',
+  bufferInsertionMode = 'head_nod',
   onSetBufferInsertionMode,
   availableCameras = [],
   selectedCameraId = '',
