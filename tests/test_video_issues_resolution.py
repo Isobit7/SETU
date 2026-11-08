@@ -61,15 +61,14 @@ def test_neural_translator_semantic_filter():
 
 def test_kinetic_energy_motion_gate():
     """Verify that in-flight hand velocities are flagged as in motion to suppress letter streaks."""
-    # Typical resting/holding hand jitter: < 0.015
-    stationary_raw_kinetic = 0.012
-    stationary_kinetic_energy = 0.0 if stationary_raw_kinetic < 0.022 else (stationary_raw_kinetic - 0.022) * 1.25
-    is_motion_stationary = (stationary_raw_kinetic >= 0.022 or stationary_kinetic_energy > 0.010)
-    assert not is_motion_stationary, "Stationary hand should NOT be flagged as in motion"
+    motion_cutoff = 0.040
+    # Natural hand tremor / webcam landmark jitter (< 0.025)
+    stationary_raw_kinetic = 0.018
+    is_motion_stationary = (stationary_raw_kinetic >= motion_cutoff)
+    assert not is_motion_stationary, "Stationary hand with natural tremor must NOT be flagged as in motion"
 
-    # In-flight transition hand velocity: 0.035
-    in_flight_raw_kinetic = 0.035
-    in_flight_kinetic_energy = 0.0 if in_flight_raw_kinetic < 0.022 else (in_flight_raw_kinetic - 0.022) * 1.25
-    is_motion_in_flight = (in_flight_raw_kinetic >= 0.022 or in_flight_kinetic_energy > 0.010)
+    # In-flight transition hand velocity (> 0.045)
+    in_flight_raw_kinetic = 0.055
+    is_motion_in_flight = (in_flight_raw_kinetic >= motion_cutoff)
     assert is_motion_in_flight, "In-flight transition hand MUST be flagged as in motion to prevent letter spam"
 

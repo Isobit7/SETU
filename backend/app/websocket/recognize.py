@@ -235,6 +235,7 @@ async def websocket_recognize(
     settled_frames_count: int = 0
     KINETIC_ENERGY_THRESHOLD: float = 0.035
     client_motion_threshold: float = 0.045
+    post_phrase_cooldown_until: float = 0.0
 
     # 2-Second Hands-Up Auto-Calibration State
     auto_calibrating: bool = True
@@ -278,7 +279,7 @@ async def websocket_recognize(
         nonlocal last_word_label, last_word_display, last_word_conf, last_word_is_known
         nonlocal last_word_probs, last_word_top3, last_word_pred_time
         nonlocal disambiguation_active, disambiguation_top1, disambiguation_top2, disambiguation_options
-        nonlocal enable_object_detection, current_detected_objects
+        nonlocal enable_object_detection, current_detected_objects, post_phrase_cooldown_until
         try:
             payload = json.loads(text_str)
             action = payload.get("action")
@@ -438,6 +439,7 @@ async def websocket_recognize(
                     alphabet_streak_candidate = ""
                     alphabet_streak_count = 0
                     alphabet_last_committed = ""
+                    post_phrase_cooldown_until = 0.0
                     last_word_label = ""
                     last_word_display = ""
                     last_word_conf = 0.0
@@ -1023,7 +1025,9 @@ async def websocket_recognize(
                 active_threshold = client_threshold if client_threshold is not None else (
                     CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
-                required_streak = max(3, STREAK_ALPHABET) if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else STREAK_SEQUENCE
+                required_streak = 2 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else (
+                    max(3, STREAK_ALPHABET) if active_model == "unified" else STREAK_SEQUENCE
+                )
 
                 has_realsign_feat = (realsign_feat_126d is not None) or (realsign_feat_63d is not None)
                 unified_mode_branch = "none"
@@ -1127,9 +1131,11 @@ async def websocket_recognize(
                 # Kinetic Gating for Static Alphabet/Digits/Vowels Recognition (PROB-09):
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
+                # Use client_motion_threshold (calibrated to webcam jitter, ~0.045) to avoid false resets from hand tremor.
+                motion_cutoff = max(0.040, client_motion_threshold)
                 alphabet_in_motion = bool(
                     (active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch != "phrase"))
-                    and (raw_kinetic >= 0.022 or kinetic_energy > 0.010)
+                    and (raw_kinetic >= motion_cutoff or kinetic_energy > (motion_cutoff * 0.5))
                 )
 
                 # Prioritize user's personal few-shot custom sign prototypes if recorded
@@ -1158,8 +1164,10 @@ async def websocket_recognize(
                     had_idle_baseline = False
                     alphabet_streak_count = 0
                     alphabet_streak_candidate = "Awaiting Sign Input"
+                    post_phrase_cooldown_until = now + 0.8  # Shield against post-gesture end-pose static trigger
                 elif active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch == "letter"):
-                    if not hand_detected or not has_realsign_feat or alphabet_in_motion:
+                    in_post_phrase_shield = (active_model == "unified" and now < post_phrase_cooldown_until)
+                    if not hand_detected or not has_realsign_feat or alphabet_in_motion or in_post_phrase_shield:
                         current_prediction = "Awaiting Sign Input"
                         alphabet_streak_count = 0
                         alphabet_streak_candidate = "Awaiting Sign Input"
@@ -1190,10 +1198,10 @@ async def websocket_recognize(
                             is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
 
                             # Only emit if:
-                            # 1) It's a new letter and inter-letter cooldown (>= 350ms) or transition rest passed, OR
+                            # 1) It's a new letter and inter-letter cooldown (>= 300ms) or transition rest passed, OR
                             # 2) Hand went through an idle/rest/motion baseline, OR
-                            # 3) User held continuously for >= 1.2s to intentionally sign a double letter
-                            can_emit = (not is_same_letter and (time_since_commit >= 0.35 or had_idle_baseline)) or (is_same_letter and (not alphabet_repeat_lock or time_since_commit >= 1.2))
+                            # 3) User held continuously for >= 1.0s to intentionally sign a double letter
+                            can_emit = (not is_same_letter and (time_since_commit >= 0.30 or had_idle_baseline)) or (is_same_letter and (not alphabet_repeat_lock or time_since_commit >= 1.0))
 
                             if can_emit:
                                 emitted = accumulator.add_continuous_token(
@@ -1221,9 +1229,9 @@ async def websocket_recognize(
                         res_is_known = False
                         is_stable = False
                     else:
-                        if alphabet_in_motion and hand_detected:
+                        if (alphabet_in_motion or in_post_phrase_shield) and hand_detected:
                             res_label = "Transitioning"
-                            res_display = "Moving..."
+                            res_display = "Moving..." if alphabet_in_motion else "Settling..."
                             res_conf = 0.0
                             res_is_known = False
                             is_stable = False
