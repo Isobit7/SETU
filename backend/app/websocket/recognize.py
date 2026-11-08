@@ -209,12 +209,14 @@ async def websocket_recognize(
     alphabet_last_committed: str = ""
     last_settled_candidate: str = ""
     last_settled_time: float = 0.0
+    alphabet_nod_committed: bool = False
     alphabet_last_committed_time: float = 0.0
     alphabet_had_baseline: bool = True
     alphabet_repeat_lock: bool = False
     last_hand_seen_time: float = time.time()
 
     # Word / Phrase Persistence & Latching State
+    phrase_nod_committed: bool = False
     last_word_label: str = ""
     last_word_display: str = ""
     last_word_conf: float = 0.0
@@ -985,11 +987,13 @@ async def websocket_recognize(
                     if alphabet_in_motion:
                         alphabet_streak_count = 0
                         alphabet_streak_candidate = "Awaiting Sign Input"
+                        alphabet_nod_committed = False
                     elif current_prediction == alphabet_streak_candidate:
                         alphabet_streak_count += 1
                     else:
                         alphabet_streak_candidate = current_prediction
                         alphabet_streak_count = 1
+                        alphabet_nod_committed = False
 
                     if alphabet_streak_count >= required_streak and alphabet_streak_candidate != "Awaiting Sign Input":
                         last_settled_candidate = alphabet_streak_candidate
@@ -998,7 +1002,8 @@ async def websocket_recognize(
                     # Hands-Free Intent Confirmation via Head Nod & Head Shake
                     if nmm_marker.head_gesture == "nod":
                         target_sign = alphabet_streak_candidate if (alphabet_streak_candidate != "Awaiting Sign Input") else (last_settled_candidate if (now - last_settled_time < 2.5) else "")
-                        if target_sign:
+                        # Guard: One nod commits exactly ONE instance of the sign!
+                        if target_sign and not alphabet_nod_committed:
                             emitted = accumulator.add_continuous_token(
                                 target_sign,
                                 confidence=max(raw_conf, 0.85),
@@ -1010,6 +1015,7 @@ async def websocket_recognize(
                                 alphabet_last_committed = target_sign
                                 alphabet_last_committed_time = now
                                 alphabet_repeat_lock = True
+                                alphabet_nod_committed = True
                                 had_idle_baseline = False
                                 res_label = target_sign
                                 res_display = f"✓ {target_sign}"
@@ -1024,6 +1030,7 @@ async def websocket_recognize(
                         alphabet_streak_candidate = "Awaiting Sign Input"
                         alphabet_streak_count = 0
                         last_settled_candidate = ""
+                        alphabet_nod_committed = False
                         res_label = "Awaiting Sign Input"
                         res_display = "✕ Undone"
                         res_conf = 0.0
@@ -1131,6 +1138,7 @@ async def websocket_recognize(
                         else:
                             candidate_label = res_label
                             candidate_streak = 1
+                            phrase_nod_committed = False
 
                         # Disambiguation Check (when margin < 0.20 or is_ambiguous)
                         if seq_pred and getattr(seq_pred, "is_ambiguous", False) and len(seq_pred.top_3) >= 2 and not disambiguation_active:
@@ -1149,10 +1157,11 @@ async def websocket_recognize(
                         # Debounce gate for committing to backend accumulator (gated by disambiguation)
                         clean_phrase_text = DISPLAY_NAMES.get(res_label, res_label.upper().replace("_", " "))
 
-                        if nmm_marker.head_gesture == "nod" and (candidate_streak >= required_streak or last_word_is_known) and not disambiguation_active:
+                        if nmm_marker.head_gesture == "nod" and not phrase_nod_committed and (candidate_streak >= required_streak or last_word_is_known) and not disambiguation_active:
                             accumulator.add_token(clean_phrase_text, token_type="phrase", timestamp=now)
                             last_committed_sign = res_label
                             last_committed_time = now
+                            phrase_nod_committed = True
                             had_idle_baseline = False
                             res_display = f"✓ {clean_phrase_text}"
                             awaiting_nod = False
@@ -1160,6 +1169,7 @@ async def websocket_recognize(
                         elif nmm_marker.head_gesture == "shake":
                             had_undone = accumulator.reject_last()
                             candidate_streak = 0
+                            phrase_nod_committed = False
                             res_display = "✕ Undone"
                             awaiting_nod = False
                             logger.info("UNDID LAST PHRASE VIA HEAD SHAKE (undone=%s)", had_undone)
@@ -1193,6 +1203,8 @@ async def websocket_recognize(
                             last_word_display = ""
                             last_word_conf = 0.0
                             last_word_is_known = False
+                            phrase_nod_committed = False
+                            alphabet_nod_committed = False
                             last_word_probs = {}
                             last_word_top3 = []
                             had_idle_baseline = True

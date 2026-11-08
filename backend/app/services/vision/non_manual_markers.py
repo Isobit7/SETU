@@ -159,7 +159,7 @@ class NonManualMarkerDetector:
 
         now = time.time()
         head_gesture = "none"
-        if now - self.last_gesture_time >= 0.50:
+        if now - self.last_gesture_time >= 0.90:
             if is_affirmation and pitch_oscillation >= (yaw_oscillation * 1.05):
                 head_gesture = "nod"
                 self.last_gesture_time = now

@@ -249,21 +249,32 @@ class SentenceAccumulator:
         """Alias for reset()."""
         self.reset()
 
-    def backspace(self) -> None:
-        """Removes the last letter from current_word, or the last token from sentence_tokens."""
+    def backspace(self) -> bool:
+        """Removes exactly one letter from current_word, or the last character from the last sentence token."""
         if self.current_word:
             self.current_word = self.current_word[:-1]
             self.last_token_time = time.time()
             self._tokens_changed = True
+            return True
         elif self.sentence_tokens:
-            self.sentence_tokens.pop()
+            last_tok = self.sentence_tokens.pop()
+            if len(last_tok) > 1:
+                # Remove only the last character from the token, preserving the rest
+                self.sentence_tokens.append(last_tok[:-1])
             self.last_token_time = time.time()
             self._tokens_changed = True
+            return True
+        return False
 
     def reject_last(self) -> bool:
         """Undo last committed token/letter (triggered by Head Shake). Returns True if something was removed."""
-        had_content = bool(self.current_word or self.sentence_tokens)
-        self.backspace()
+        now = time.time()
+        # Cooldown guard: prevent a single continuous head shake from deleting multiple letters
+        if hasattr(self, "_last_reject_time") and (now - self._last_reject_time < 0.9):
+            return False
+
+        self._last_reject_time = now
+        had_content = self.backspace()
         if had_content:
             try:
                 self.translate_sentence(async_neural=False)

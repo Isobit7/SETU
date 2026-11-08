@@ -49,7 +49,7 @@ def test_head_shake_detection():
 
 
 def test_sentence_accumulator_reject_last():
-    """Verify that reject_last() removes the last word/token from the sentence buffer."""
+    """Verify that reject_last() removes exactly one letter from the sentence buffer, preserving the rest."""
     acc = SentenceAccumulator()
     now = time.time()
     acc.add_token("HELLO", token_type="phrase", timestamp=now)
@@ -57,17 +57,19 @@ def test_sentence_accumulator_reject_last():
 
     assert acc.sentence_buffer == "HELLO WORLD"
 
-    # User shakes head -> Undo last token
+    # User shakes head once -> Removes only the last character 'D' from 'WORLD'
     undone = acc.reject_last()
     assert undone is True
-    assert acc.sentence_buffer == "HELLO"
+    assert acc.sentence_buffer == "HELLO WORL"
 
-    # Undo again
+    # Simulate passing cooldown before next shake
+    acc._last_reject_time = 0.0
     undone = acc.reject_last()
     assert undone is True
-    assert acc.sentence_buffer == ""
+    assert acc.sentence_buffer == "HELLO WOR"
 
-    # Undo on empty buffer returns False
+    # Empty buffer test
+    acc.reset()
     assert acc.reject_last() is False
 
 
