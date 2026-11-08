@@ -426,9 +426,9 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Orbit camera rotation & zoom state
-  const [rotX, setRotX] = useState<number>(sign.toUpperCase() === 'C' ? 8 : 15);
-  const [rotY, setRotY] = useState<number>(sign.toUpperCase() === 'C' ? -55 : -20);
-  const [zoom, setZoom] = useState<number>(1.05);
+  const [rotX, setRotX] = useState<number>(sign.toUpperCase() === 'C' ? 8 : 12);
+  const [rotY, setRotY] = useState<number>(sign.toUpperCase() === 'C' ? -55 : -18);
+  const [zoom, setZoom] = useState<number>(1.0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -438,9 +438,10 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
       setRotX(8);
       setRotY(-55);
     } else {
-      setRotX(15);
-      setRotY(-20);
+      setRotX(12);
+      setRotY(-18);
     }
+    setZoom(1.0);
   }, [sign]);
 
   // Reset to ideal 3/4 angle
@@ -449,10 +450,10 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
       setRotX(8);
       setRotY(-55);
     } else {
-      setRotX(15);
-      setRotY(-20);
+      setRotX(12);
+      setRotY(-18);
     }
-    setZoom(1.05);
+    setZoom(1.0);
   }, [sign]);
 
   // Mouse & Touch drag orbit controls
@@ -526,6 +527,47 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
     const cosY = Math.cos(radY);
     const sinY = Math.sin(radY);
 
+    // Gather all 3D points from active hand(s) to compute bounding bounds after rotation
+    const allHands: HandSkeleton3D[] = [skeleton.rightHand];
+    if (skeleton.isTwoHanded && skeleton.leftHand) {
+      allHands.push(skeleton.leftHand);
+    }
+
+    let minX2 = Infinity;
+    let maxX2 = -Infinity;
+    let minY2 = Infinity;
+    let maxY2 = -Infinity;
+
+    allHands.forEach((hand) => {
+      const pts: Point3D[] = [hand.wrist, ...hand.thumb, ...hand.index, ...hand.middle, ...hand.ring, ...hand.pinky];
+      pts.forEach((pt) => {
+        // Rotate Y (Yaw)
+        const x1 = pt.x * cosY + pt.z * sinY;
+        const y1 = pt.y;
+        const z1 = -pt.x * sinY + pt.z * cosY;
+
+        // Rotate X (Pitch)
+        const x2 = x1;
+        const y2 = y1 * cosX - z1 * sinX;
+
+        if (x2 < minX2) minX2 = x2;
+        if (x2 > maxX2) maxX2 = x2;
+        if (y2 < minY2) minY2 = y2;
+        if (y2 > maxY2) maxY2 = y2;
+      });
+    });
+
+    const midX2 = (minX2 + maxX2) / 2;
+    const midY2 = (minY2 + maxY2) / 2;
+    const spanX2 = Math.max(0.28, maxX2 - minX2);
+    const spanY2 = Math.max(0.35, maxY2 - minY2);
+
+    // Auto-fit scale to ensure all 5 fingertips and joints fit comfortably with breathing room
+    // Header overlay takes ~30px, preset bar takes ~24px
+    const safeHeight = Math.max(120, height - 76);
+    const safeWidth = Math.max(140, width - 80);
+    const fitScale = Math.min(safeHeight / spanY2, safeWidth / spanX2, 260) * zoom;
+
     const transform3D = (pt: Point3D) => {
       // 1. Rotate Y (Yaw)
       const x1 = pt.x * cosY + pt.z * sinY;
@@ -538,23 +580,31 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
       const z2 = y1 * sinX + z1 * cosX;
 
       // 3. Perspective Projection
-      const focalLength = 480 * zoom;
-      const cameraDistance = 1.35;
+      const cameraDistance = 1.65;
       const zEff = z2 + cameraDistance;
-      const scale = focalLength / Math.max(0.2, zEff);
+      const perspFactor = cameraDistance / Math.max(0.35, zEff);
+      const scale = fitScale * perspFactor;
 
       return {
-        x: width / 2 + x2 * scale,
-        y: height / 2 - y2 * scale,
+        x: width / 2 + (x2 - midX2) * scale,
+        y: height * 0.52 - (y2 - midY2) * scale,
         z: z2,
         scale,
       };
     };
 
-    // Subtle holographic ground grid under wrist
-    const groundCenter = transform3D({ x: 0, y: -0.28, z: 0 });
+    // Subtle holographic ground grid under the wrist base
+    const groundCenter = transform3D({ x: midX2, y: minY2 - 0.04, z: 0 });
     ctx.beginPath();
-    ctx.ellipse(groundCenter.x, groundCenter.y, 65 * (groundCenter.scale / 400), 20 * (groundCenter.scale / 400), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      groundCenter.x,
+      groundCenter.y,
+      Math.min(75, 55 * (groundCenter.scale / 220)),
+      Math.min(22, 16 * (groundCenter.scale / 220)),
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
     ctx.lineWidth = 1.2;
     ctx.setLineDash([4, 4]);
@@ -587,7 +637,7 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         ctx.moveTo(wProj.x, wProj.y);
         ctx.lineTo(pMcp.x, pMcp.y);
         ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-        ctx.lineWidth = 2.5 * (wProj.scale / 400);
+        ctx.lineWidth = 2.2 * (wProj.scale / 220);
         ctx.stroke();
       });
 
@@ -605,7 +655,7 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
           ctx.strokeStyle = grad;
-          ctx.lineWidth = Math.max(2, 4.5 * (p1.scale / 400));
+          ctx.lineWidth = Math.max(2, 4.0 * (p1.scale / 220));
           ctx.lineCap = 'round';
           ctx.stroke();
         }
@@ -623,18 +673,20 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
 
       allJoints.forEach(({ pt, isTip }) => {
         const proj = transform3D(pt);
-        const radius = isTip ? Math.max(3.5, 6 * (proj.scale / 400)) : Math.max(2.5, 4.5 * (proj.scale / 400));
+        const radius = isTip ? Math.max(3.5, 5.5 * (proj.scale / 220)) : Math.max(2.5, 4.0 * (proj.scale / 220));
 
-        // Glow ring
+        // Glow ring for all five ends
         ctx.beginPath();
         ctx.arc(proj.x, proj.y, radius * 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = isTip ? 'rgba(34, 211, 238, 0.25)' : 'rgba(148, 163, 184, 0.15)';
+        ctx.fillStyle = isTip
+          ? (primaryColor === '#06B6D4' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(192, 132, 252, 0.35)')
+          : 'rgba(148, 163, 184, 0.15)';
         ctx.fill();
 
         // Solid joint sphere
         ctx.beginPath();
         ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = isTip ? '#22D3EE' : '#F8FAFC';
+        ctx.fillStyle = isTip ? (primaryColor === '#06B6D4' ? '#22D3EE' : '#C084FC') : '#F8FAFC';
         ctx.fill();
         ctx.strokeStyle = '#0F172A';
         ctx.lineWidth = 1.2;
@@ -739,8 +791,8 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
       <div className="canvas-presets-bar">
         <button
           type="button"
-          className={`preset-pill ${Math.abs(rotY - (-20)) < 12 && Math.abs(rotX - 15) < 12 ? 'active' : ''}`}
-          onClick={() => { setRotX(15); setRotY(-20); }}
+          className={`preset-pill ${Math.abs(rotY - (-18)) < 10 && Math.abs(rotX - 12) < 10 ? 'active' : ''}`}
+          onClick={() => { setRotX(12); setRotY(-18); }}
           title="Angled 3/4 perspective"
         >
           3/4 View
@@ -755,7 +807,7 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         </button>
         <button
           type="button"
-          className={`preset-pill ${Math.abs(rotY) < 12 && Math.abs(rotX) < 12 ? 'active' : ''}`}
+          className={`preset-pill ${Math.abs(rotY) < 10 && Math.abs(rotX) < 10 ? 'active' : ''}`}
           onClick={() => { setRotX(0); setRotY(0); }}
           title="Direct front facing view"
         >
@@ -763,8 +815,8 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
         </button>
         <button
           type="button"
-          className={`preset-pill ${Math.abs(rotX - 35) < 12 ? 'active' : ''}`}
-          onClick={() => { setRotX(35); setRotY(0); }}
+          className={`preset-pill ${Math.abs(rotX - 30) < 10 && Math.abs(rotY) < 10 ? 'active' : ''}`}
+          onClick={() => { setRotX(30); setRotY(0); }}
           title="Looking down at your own hand"
         >
           Signer POV

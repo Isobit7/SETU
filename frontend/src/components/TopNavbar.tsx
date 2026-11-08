@@ -3,13 +3,10 @@ import {
   Video,
   History,
   Bookmark,
-  BookOpen,
   Settings,
   HelpCircle,
   Menu,
   X,
-  Film,
-  Type,
   ChevronDown,
   ArrowRight,
   ArrowLeftRight,
@@ -27,7 +24,7 @@ interface TopNavbarProps {
   fps?: number;
   latencyMs?: number;
   onOpenSettings: () => void;
-  onOpenVocabulary: () => void;
+  onOpenVocabulary?: () => void;
   onOpenAlphabetModal?: () => void;
   onOpenHistory?: () => void;
   onOpenSaved?: () => void;
@@ -49,12 +46,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   fps = 0,
   latencyMs = 0,
   onOpenSettings,
-  onOpenVocabulary,
-  onOpenAlphabetModal,
   onOpenHistory,
   onOpenSaved,
   onOpenHelp,
-  onOpenIncludeModal,
   onOpenRecordModal,
   historyCount = 0,
   translationDirection = 'isl-to-en',
@@ -181,75 +175,23 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
       {/* 3. Right: Single Consolidated Dropdown + Theme + Status + Settings */}
       <div className="navbar-actions">
-        {/* Single Consolidated "Resources & Tools ▾" Dropdown */}
+        {/* Consolidated "Records & Tools ▾" Dropdown */}
         <div className="nav-dropdown-wrapper" ref={resourcesRef}>
           <button
             className={`nav-link-btn dropdown-trigger ${resourcesOpen ? 'dropdown-active' : ''}`}
             onClick={() => setResourcesOpen(!resourcesOpen)}
             aria-expanded={resourcesOpen}
             aria-haspopup="true"
-            title="Explore reference guides, history, and developer tools"
+            title="Explore session history, saved signs, and tools"
           >
-            <BookOpen size={14} className="nav-icon" />
-            <span>Resources</span>
+            <History size={14} className="nav-icon" />
+            <span>Records & Tools</span>
             {historyCount > 0 && <span className="navbar-item-badge">{historyCount}</span>}
             <ChevronDown size={11} className={`chevron-icon ${resourcesOpen ? 'open' : ''}`} />
           </button>
 
           {resourcesOpen && (
             <div className="navbar-dropdown-menu" role="menu">
-              {/* Guides */}
-              <div className="dropdown-section-title">Reference Guides</div>
-
-              {onOpenAlphabetModal && (
-                <button
-                  className="dropdown-item"
-                  role="menuitem"
-                  onClick={() => {
-                    onOpenAlphabetModal();
-                    setResourcesOpen(false);
-                  }}
-                >
-                  <Type size={14} className="dropdown-item-icon text-cyan" />
-                  <div className="dropdown-item-text">
-                    <span className="item-title">Alphabet Guide (A–Z)</span>
-                    <span className="item-desc">RealSign 26-letter fingerspelling</span>
-                  </div>
-                </button>
-              )}
-
-              <button
-                className="dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  onOpenVocabulary();
-                  setResourcesOpen(false);
-                }}
-              >
-                <BookOpen size={14} className="dropdown-item-icon text-indigo" />
-                <div className="dropdown-item-text">
-                  <span className="item-title">ISL Vocabulary</span>
-                  <span className="item-desc">Common everyday conversational phrases</span>
-                </div>
-              </button>
-
-              {onOpenIncludeModal && (
-                <button
-                  className="dropdown-item"
-                  role="menuitem"
-                  onClick={() => {
-                    onOpenIncludeModal();
-                    setResourcesOpen(false);
-                  }}
-                >
-                  <Film size={14} className="dropdown-item-icon text-rose" />
-                  <div className="dropdown-item-text">
-                    <span className="item-title">263 Signs Video Library</span>
-                    <span className="item-desc">AI4Bharat INCLUDE dataset</span>
-                  </div>
-                </button>
-              )}
-
               {/* Session History & Saved */}
               <div className="dropdown-section-title">Session & Records</div>
 
@@ -420,40 +362,6 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             <Users size={16} />
             <span>Conversation</span>
           </button>
-          {onOpenAlphabetModal && (
-            <button
-              className="mobile-nav-item"
-              onClick={() => {
-                onOpenAlphabetModal();
-                setMobileMenuOpen(false);
-              }}
-            >
-              <Type size={16} />
-              <span>Alphabet Guide (A–Z)</span>
-            </button>
-          )}
-          <button
-            className="mobile-nav-item"
-            onClick={() => {
-              onOpenVocabulary();
-              setMobileMenuOpen(false);
-            }}
-          >
-            <BookOpen size={16} />
-            <span>ISL Vocabulary</span>
-          </button>
-          {onOpenIncludeModal && (
-            <button
-              className="mobile-nav-item"
-              onClick={() => {
-                onOpenIncludeModal();
-                setMobileMenuOpen(false);
-              }}
-            >
-              <Film size={16} />
-              <span>263 Signs (INCLUDE)</span>
-            </button>
-          )}
           {onOpenHistory && (
             <button
               className="mobile-nav-item"
