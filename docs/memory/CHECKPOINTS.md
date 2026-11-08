@@ -3,8 +3,8 @@
 > **System:** SETU (Indian Sign Language Translator)  
 > **Status:** Active Audit & Rollback Registry  
 > **Repository:** `c:\MINI PROJ-SETU`  
-> **Last Updated:** October 2026  
-> **Test Status:** 100% Passing (164/164 Backend Unit & Integration Tests | Clean TypeScript Vite Build)
+> **Last Updated:** November 2026  
+> **Test Status:** 100% Passing (250/250 Backend Unit & Integration Tests | Clean TypeScript Vite Build)
 
 This document serves as the canonical audit trail and rollback safety net for the SETU project. If any component, model weight, or UI feature suffers corruption, degradation, or regression, developers, teammates, and evaluators can inspect the exact commit hash, review what changed, and execute precise rollback procedures.
 

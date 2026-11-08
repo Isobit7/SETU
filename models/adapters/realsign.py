@@ -361,12 +361,12 @@ class RealSignClassifier:
         raw_probs = (exp_logits / np.sum(exp_logits)).astype(np.float32)
 
         # Exponential Moving Average (EMA) Smoothing: S_t = alpha * P_t + (1 - alpha) * S_{t-1}
-        # Uses alpha = 0.25 to provide steady, flicker-free probability distribution during holds
+        # Uses self.ema_alpha to provide steady, flicker-free probability distribution during holds
         if apply_smoothing:
             if self._ema_probs is None or self._ema_probs.shape != raw_probs.shape:
                 self._ema_probs = raw_probs.copy()
             else:
-                alpha = 0.25
+                alpha = self.ema_alpha
                 self._ema_probs = (alpha * raw_probs + (1.0 - alpha) * self._ema_probs).astype(np.float32)
             probs = self._ema_probs
         else:

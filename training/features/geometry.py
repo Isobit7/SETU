@@ -890,8 +890,10 @@ def extract_dual_hand_126d(
     has_rh = right_hand is not None and len(right_hand) == 21
 
     if has_lh and not has_rh:
-        # Single-handed signing: placed in primary canonical slot [63:126]
+        # Single-handed signing with left hand:
+        # Reflect across sagittal X axis (x -> -x) to map to canonical right-hand space in [63:126]
         lh_arr, _ = normalize_wrist_coordinates(left_hand)
+        lh_arr[:, 0] = -lh_arr[:, 0]
         norm_rh = lh_arr.flatten().astype(np.float32)
         norm_lh = np.zeros(63, dtype=np.float32)
     elif has_rh and not has_lh:
