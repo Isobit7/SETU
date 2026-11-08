@@ -972,32 +972,56 @@ async def websocket_recognize(
                     is_pred_valid = bool(isl_pred and isl_pred.confidence >= active_threshold and isl_pred.is_known_sign and isl_pred.label != "no_sign")
                     pred_label = isl_pred.label if isl_pred else ""
 
-                # Kinetic Gating for Static Alphabet/Digits/Vowels Recognition (PROB-09):
-                # When hand velocity exceeds threshold, user is in active transit between signs.
-                # In-flight frames must not accumulate streaks or emit false intermediate letters.
-                alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > 0.055)
+                # Dynamic Handshape Recognition & Continuous Fluid Signing:
+                # In authentic sign language, a sign (such as letter 'A') can be performed statically OR dynamically
+                # (while the hand is in motion). Handshape (normalized 21 landmarks relative to wrist) is invariant
+                # to translational hand velocity. We only throttle sentence-commit during extreme wild transit (>0.35).
+                is_wild_transit = bool(kinetic_energy > 0.35)
+                alphabet_in_motion = bool(kinetic_energy > 0.08)
 
                 awaiting_nod = False
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
-                    if not hand_detected or not has_realsign_feat or not is_pred_valid or alphabet_in_motion:
-                        current_prediction = "Awaiting Sign Input"
-                    else:
-                        current_prediction = pred_label
+                    # Continuous live handshape prediction is valid whenever hand is detected with sufficient confidence
+                    is_candidate_valid = bool(
+                        hand_detected
+                        and has_realsign_feat
+                        and is_pred_valid
+                        and pred_label not in ("", "no_sign", "unknown", "Awaiting Sign Input")
+                    )
 
-                    if alphabet_in_motion:
+                    if is_candidate_valid and not is_wild_transit:
+                        current_prediction = pred_label
+                    else:
+                        current_prediction = "Awaiting Sign Input"
+
+                    if is_wild_transit:
                         alphabet_streak_count = 0
                         alphabet_streak_candidate = "Awaiting Sign Input"
                         alphabet_nod_committed = False
-                    elif current_prediction == alphabet_streak_candidate:
+                    elif current_prediction == alphabet_streak_candidate and current_prediction != "Awaiting Sign Input":
                         alphabet_streak_count += 1
                     else:
                         alphabet_streak_candidate = current_prediction
-                        alphabet_streak_count = 1
+                        alphabet_streak_count = 1 if current_prediction != "Awaiting Sign Input" else 0
                         alphabet_nod_committed = False
 
                     if alphabet_streak_count >= required_streak and alphabet_streak_candidate != "Awaiting Sign Input":
                         last_settled_candidate = alphabet_streak_candidate
                         last_settled_time = now
+
+                    # Always display real neural handshape prediction even while in natural motion
+                    if is_candidate_valid:
+                        res_label = pred_label
+                        res_display = f"LETTER {pred_label}" if len(pred_label) == 1 else pred_label.upper()
+                        res_conf = raw_conf
+                        res_is_known = True
+                        is_stable = bool(alphabet_streak_count >= required_streak)
+                    else:
+                        res_label = "Awaiting Sign Input"
+                        res_display = "Signing in progress..." if is_actively_signing else ("Waiting for a hand..." if not hand_detected else "Awaiting Sign Input")
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
 
                     # Hands-Free Intent Confirmation via Head Nod & Head Shake
                     if nmm_marker.head_gesture == "nod":
@@ -1038,64 +1062,38 @@ async def websocket_recognize(
                         is_stable = False
                         awaiting_nod = False
                         logger.info("UNDID LAST SIGN VIA HEAD SHAKE (undone=%s)", had_undone)
-                    elif alphabet_streak_count >= required_streak:
-                        if alphabet_streak_candidate != "Awaiting Sign Input":
-                            res_label = alphabet_streak_candidate
-                            res_conf = raw_conf
-                            res_is_known = True
-                            is_stable = True
+                    elif alphabet_streak_count >= required_streak and alphabet_streak_candidate != "Awaiting Sign Input":
+                        res_label = alphabet_streak_candidate
+                        res_conf = raw_conf
+                        res_is_known = True
+                        is_stable = True
 
-                            if require_head_nod_confirm:
-                                if (now - alphabet_last_committed_time < 1.0) and (alphabet_streak_candidate == alphabet_last_committed):
-                                    res_display = f"✓ {alphabet_last_committed}"
-                                    awaiting_nod = False
-                                else:
-                                    awaiting_nod = True
-                                    res_display = f"Letter {alphabet_streak_candidate}"
+                        if require_head_nod_confirm:
+                            if (now - alphabet_last_committed_time < 1.0) and (alphabet_streak_candidate == alphabet_last_committed):
+                                res_display = f"✓ {alphabet_last_committed}"
+                                awaiting_nod = False
                             else:
+                                awaiting_nod = True
                                 res_display = f"Letter {alphabet_streak_candidate}"
-                                # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
-                                time_since_commit = now - alphabet_last_committed_time
-                                is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
-                                can_emit = (not is_same_letter) or (not alphabet_repeat_lock) or (time_since_commit >= 1.2)
+                        else:
+                            res_display = f"Letter {alphabet_streak_candidate}"
+                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
+                            time_since_commit = now - alphabet_last_committed_time
+                            is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
+                            can_emit = (not is_same_letter) or (not alphabet_repeat_lock) or (time_since_commit >= 1.2)
 
-                                if can_emit:
-                                    emitted = accumulator.add_continuous_token(
-                                        alphabet_streak_candidate,
-                                        confidence=raw_conf,
-                                        token_type="letter",
-                                        timestamp=now,
-                                    )
-                                    if emitted:
-                                        alphabet_last_committed = alphabet_streak_candidate
-                                        alphabet_last_committed_time = now
-                                        alphabet_repeat_lock = True
-                                        had_idle_baseline = False
-                        else:
-                            res_label = "Awaiting Sign Input"
-                            res_display = "Awaiting Sign Input"
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
-                    else:
-                        if alphabet_in_motion and hand_detected:
-                            res_label = "Transitioning"
-                            res_display = "Moving..."
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
-                        elif alphabet_last_committed and hand_detected and has_realsign_feat:
-                            res_label = alphabet_last_committed
-                            res_display = f"LETTER {alphabet_last_committed}"
-                            res_conf = raw_conf
-                            res_is_known = True
-                            is_stable = False
-                        else:
-                            res_label = "Awaiting Sign Input"
-                            res_display = "Awaiting Sign Input"
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
+                            if can_emit:
+                                emitted = accumulator.add_continuous_token(
+                                    alphabet_streak_candidate,
+                                    confidence=raw_conf,
+                                    token_type="letter",
+                                    timestamp=now,
+                                )
+                                if emitted:
+                                    alphabet_last_committed = alphabet_streak_candidate
+                                    alphabet_last_committed_time = now
+                                    alphabet_repeat_lock = True
+                                    had_idle_baseline = False
 
                     candidate_streak = alphabet_streak_count
                 else:
