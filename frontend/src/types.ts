@@ -12,6 +12,7 @@ export interface LandmarkGroups {
 }
 
 export type ActiveModelType =
+  | 'unified'
   | 'realsign'
   | 'isl_numerals'
   | 'isl_hindi_vowels'
@@ -61,6 +62,9 @@ export interface RecognitionPayload {
   kinetic_energy?: number;
   motion_threshold?: number;
   rest_y_threshold?: number;
+  auto_calibrating?: boolean;
+  auto_calib_progress?: number;
+  auto_calib_message?: string;
   hand_detected?: boolean;
   hands_in_subtitle_zone?: boolean;
   guidance?: string;

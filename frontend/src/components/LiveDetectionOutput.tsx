@@ -36,7 +36,9 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
   }
 
   const modelBadge =
-    currentResult?.active_model === 'realsign'
+    currentResult?.active_model === 'unified'
+      ? 'Unified Autonomous'
+      : currentResult?.active_model === 'realsign'
       ? 'Alphabet (A–Z)'
       : currentResult?.active_model === 'isl_sequence_lstm'
       ? 'Dynamic Sequences'
@@ -48,6 +50,9 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
       ? 'Hindi Vowels'
       : 'Conversational Signs';
 
+  const isCalibrating = Boolean(currentResult?.auto_calibrating);
+  const calibProgress = currentResult?.auto_calib_progress ?? 0;
+
   const headGesture = currentResult?.head_gesture || currentResult?.non_manual_markers?.head_gesture;
   const predictiveSuggestions = currentResult?.predictive_suggestions || [];
   const disambigActive = currentResult?.disambiguation?.active;
@@ -55,7 +60,21 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
 
   return (
     <div className={`live-detection-output-root ${className}`}>
-      {isKnown && displayText ? (
+      {isCalibrating ? (
+        /* Hands-Up Auto Calibration Strip */
+        <div className="live-detection-holding-strip" aria-live="polite">
+          <div className="idle-strip-left">
+            <span className="holding-pulse-dot" aria-hidden="true" />
+            <span className="holding-status-text font-semibold">
+              {currentResult?.auto_calib_message || 'Calibrating user hand distance & tremor...'}
+            </span>
+            <span className="holding-status-hint">· {calibProgress}% completed</span>
+          </div>
+          <div className="active-strip-right">
+            <span className="active-model-pill">Auto-Calibrating</span>
+          </div>
+        </div>
+      ) : isKnown && displayText ? (
         /* Active Recognized Sign: Vibrant, clean, high-confidence pill strip */
         <div className="live-detection-active-strip" aria-live="polite" aria-atomic="true">
           <div className="active-strip-left">

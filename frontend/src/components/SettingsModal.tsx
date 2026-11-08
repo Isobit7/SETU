@@ -83,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   setSubtitleVisible,
   subtitleSize,
   setSubtitleSize,
-  activeModel = 'realsign',
+  activeModel = 'unified',
   onSwitchModel,
   confidenceThreshold,
   setConfidenceThreshold,
@@ -279,6 +279,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="setting-card-group">
                   <div className="studio-card-grid">
                     {[
+                      {
+                        id: 'unified',
+                        name: 'Unified Autonomous Engine',
+                        type: 'Multi-Modal Hybrid',
+                        desc: 'Intelligently routes between dynamic phrases (Namaste, Hello, etc.) and fingerspelling (A–Z)',
+                        badge: 'Autonomous',
+                      },
                       {
                         id: 'realsign',
                         name: 'RealSign Alphabet (A–Z)',

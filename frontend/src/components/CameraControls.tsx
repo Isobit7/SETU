@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Activity,
   Sliders,
+  Sparkles,
 } from 'lucide-react';
 import type { ActiveModelType, CameraStatus, LandmarkStyles } from '../types';
 
@@ -124,6 +125,8 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
   const getModeShortLabel = (model: ActiveModelType): string => {
     switch (model) {
+      case 'unified':
+        return 'Unified (All Signs)';
       case 'realsign':
         return 'Alphabet (A–Z)';
       case 'isl_numerals':
@@ -139,12 +142,14 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       case 'include_stream':
         return 'Dictionary (263)';
       default:
-        return 'Alphabet (A–Z)';
+        return 'Unified (All Signs)';
     }
   };
 
   const renderModeIcon = (model: ActiveModelType) => {
     switch (model) {
+      case 'unified':
+        return <Sparkles size={13} className="mode-btn-icon text-primary" />;
       case 'realsign':
         return <Type size={13} className="mode-btn-icon text-primary" />;
       case 'isl_numerals':
@@ -225,6 +230,27 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
             {isModeDropdownOpen && (
               <div className="mode-subdropdown-menu unified-mode-menu" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item highlight-item ${activeModel === 'unified' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('unified');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Sparkles size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <div className="flex items-center gap-1.5">
+                      <span className="subdropdown-title font-semibold">Unified Autonomous (All Signs)</span>
+                      <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Auto</span>
+                    </div>
+                    <span className="subdropdown-desc">Seamlessly recognizes dynamic phrases (Namaste, Hello, etc.) and fingerspelling (A–Z)</span>
+                  </div>
+                  {activeModel === 'unified' && <Check size={14} className="text-primary check-icon" />}
+                </button>
+
+                <div className="dropdown-divider" />
                 <div className="dropdown-section-title">Letters & Numbers</div>
 
                 <button

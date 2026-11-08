@@ -159,9 +159,11 @@ async def websocket_recognize(
             await websocket.close()
             return
 
-    # Per-connection state
-    active_model = (model or "realsign").lower()
-    if active_model in ("include", "include_stream"):
+    # Per-connection state (defaults to Unified Autonomous Mode)
+    active_model = (model or "unified").lower()
+    if active_model in ("unified", "auto", "hybrid", "master", "all"):
+        active_model = "unified"
+    elif active_model in ("include", "include_stream"):
         active_model = "include_stream"
     elif active_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
         active_model = "amrita_isl_phrase_bilstm"
@@ -170,6 +172,7 @@ async def websocket_recognize(
     elif active_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
         active_model = "isl_hindi_vowels"
     elif active_model not in (
+        "unified",
         "realsign",
         "isl_numerals",
         "isl_hindi_vowels",
@@ -178,7 +181,7 @@ async def websocket_recognize(
         "isl_sequence_lstm",
         "include_stream",
     ):
-        active_model = "realsign"
+        active_model = "unified"
 
     streaming_include: Optional[StreamingIncludeAdapter] = None
     if pipeline.include_service is not None:
@@ -228,8 +231,16 @@ async def websocket_recognize(
     gesture_sequence_buffer: List[np.ndarray] = []
     is_actively_signing: bool = False
     settled_frames_count: int = 0
-    KINETIC_ENERGY_THRESHOLD: float = 0.012
-    client_motion_threshold: float = 0.016
+    KINETIC_ENERGY_THRESHOLD: float = 0.035
+    client_motion_threshold: float = 0.045
+
+    # 2-Second Hands-Up Auto-Calibration State
+    auto_calibrating: bool = True
+    auto_calib_frame_count: int = 0
+    calib_scales: List[float] = []
+    calib_tremors: List[float] = []
+    calib_rest_ys: List[float] = []
+    auto_calib_message: str = "Hold hands up in view to auto-calibrate..."
 
     # Multimodal Object Detection & Show-and-Sign State (Disabled by default for 30 FPS smooth performance)
     enable_object_detection: bool = False
@@ -385,9 +396,19 @@ async def websocket_recognize(
                     "message": f"Personal few-shot sign prototypes reloaded ({num_protos} active)",
                     "active_custom_signs": list(custom_sign_service.prototypes.keys()),
                 })
+            elif action in ("trigger_auto_calibrate", "auto_calibrate"):
+                auto_calibrating = True
+                auto_calib_frame_count = 0
+                calib_scales.clear()
+                calib_tremors.clear()
+                calib_rest_ys.clear()
+                auto_calib_message = "Hold hands up in view to auto-calibrate..."
+                await websocket.send_json({"type": "info", "message": "Hands-up auto calibration started"})
             elif action == "set_model":
-                req_model = str(payload.get("model", "realsign")).lower()
-                if req_model in ("include", "include_stream"):
+                req_model = str(payload.get("model", "unified")).lower()
+                if req_model in ("unified", "auto", "hybrid", "master", "all"):
+                    req_model = "unified"
+                elif req_model in ("include", "include_stream"):
                     req_model = "include_stream"
                 elif req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
                     req_model = "realsign"
@@ -397,7 +418,7 @@ async def websocket_recognize(
                     req_model = "isl_hindi_vowels"
                 elif req_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
                     req_model = "amrita_isl_phrase_bilstm"
-                if req_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "amrita_isl_phrase_bilstm", "isl_mvp", "isl_sequence_lstm", "include_stream"):
+                if req_model in ("unified", "realsign", "isl_numerals", "isl_hindi_vowels", "amrita_isl_phrase_bilstm", "isl_mvp", "isl_sequence_lstm", "include_stream"):
                     active_model = req_model
                     rolling_features.clear()
                     gesture_sequence_buffer.clear()
@@ -713,15 +734,40 @@ async def websocket_recognize(
                     current_hand_pts_list = [_extract_pt(lm) for lm in left_hand]
 
                 kinetic_energy = 0.0
+                raw_kinetic = 0.0
                 if current_hand_pts_list:
                     curr_pts_arr = np.array(current_hand_pts_list, dtype=np.float32)
                     if prev_hand_pts is not None and prev_hand_pts.shape == curr_pts_arr.shape:
                         time_scale = (1.0 / 30.0) / dt_frame
                         diff_vecs = (curr_pts_arr - prev_hand_pts) * time_scale
-                        kinetic_energy = float(np.mean(np.linalg.norm(diff_vecs, axis=-1)))
+                        raw_kinetic = float(np.mean(np.linalg.norm(diff_vecs, axis=-1)))
+                        # Micro-jitter deadzone: physiological tremor & webcam pixel noise (< 0.022 is stationary hold)
+                        kinetic_energy = 0.0 if raw_kinetic < 0.022 else float((raw_kinetic - 0.022) * 1.25)
                     prev_hand_pts = curr_pts_arr
                 else:
                     prev_hand_pts = None
+
+                # 2-Second Hands-Up Auto-Calibration
+                if auto_calibrating and hand_detected:
+                    auto_calib_frame_count += 1
+                    if raw_kinetic > 0.005:
+                        calib_tremors.append(raw_kinetic)
+                    if current_hand_pts_list:
+                        wrist_pt = current_hand_pts_list[0]
+                        mid_mcp_pt = current_hand_pts_list[9]
+                        palm_dist = float(np.linalg.norm(np.array(mid_mcp_pt) - np.array(wrist_pt)))
+                        if palm_dist > 0.05:
+                            calib_scales.append(palm_dist)
+                        calib_rest_ys.append(wrist_pt[1])
+
+                    if auto_calib_frame_count >= 25:
+                        auto_calibrating = False
+                        measured_tremor = float(np.mean(calib_tremors)) if calib_tremors else 0.020
+                        client_motion_threshold = float(max(0.035, min(0.080, measured_tremor * 2.2)))
+                        avg_scale = float(np.mean(calib_scales)) if calib_scales else 0.20
+                        avg_y = float(np.mean(calib_rest_ys)) if calib_rest_ys else 0.70
+                        client_rest_y = min(0.92, max(0.60, avg_y + 0.15))
+                        auto_calib_message = f"✓ Ready to Sign (Palm: {avg_scale:.2f})"
 
                 realsign_feat_63d: Optional[np.ndarray] = None
                 realsign_feat_126d: Optional[np.ndarray] = None
@@ -739,6 +785,23 @@ async def websocket_recognize(
 
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     should_run_inference = (realsign_feat_126d is not None or realsign_feat_63d is not None)
+                elif active_model == "unified":
+                    if kinetic_energy >= client_motion_threshold:
+                        is_actively_signing = True
+                        settled_frames_count = 0
+                        gesture_sequence_buffer.append(feat_176)
+                        if len(gesture_sequence_buffer) > 60:
+                            gesture_sequence_buffer.pop(0)
+                    elif is_actively_signing:
+                        settled_frames_count += 1
+                        gesture_sequence_buffer.append(feat_176)
+                        if settled_frames_count >= 1:
+                            should_run_inference = True
+                            motion_settled_now = True
+                    else:
+                        # Stationary hand: evaluate static alphabet if hand is present and not resting
+                        if hand_detected and (realsign_feat_126d is not None or realsign_feat_63d is not None):
+                            should_run_inference = True
                 elif active_model == "include_stream":
                     should_run_inference = bool(streaming_include is not None and streaming_include.should_evaluate())
                 elif active_model == "isl_mvp":
@@ -862,6 +925,51 @@ async def websocket_recognize(
                                 raw_class_idx=-1,
                             )
 
+                    elif active_model == "unified":
+                        # 1. Dynamic phrase check if motion just settled
+                        if motion_settled_now and len(segment_to_classify) >= 5:
+                            if pipeline.sequence_lstm_classifier is not None:
+                                seq_pred = await loop.run_in_executor(
+                                    None,
+                                    pipeline.sequence_lstm_classifier.predict_sequence,
+                                    feat_array,
+                                    confidence_threshold,
+                                )
+                            elif pipeline.classifier is not None:
+                                arr_mvp = feat_array
+                                if arr_mvp.shape[0] < 30:
+                                    pad = np.repeat(arr_mvp[-1:], 30 - arr_mvp.shape[0], axis=0)
+                                    arr_mvp = np.concatenate([arr_mvp, pad], axis=0)
+                                isl_pred = await loop.run_in_executor(
+                                    None,
+                                    pipeline.classifier.predict_features,
+                                    arr_mvp[:, :158],
+                                    confidence_threshold,
+                                )
+
+                        # 2. Static alphabet check if hand is stationary and not resting
+                        is_resting = False
+                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=client_rest_y):
+                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=client_rest_y):
+                                is_resting = True
+
+                        if not is_resting and not is_actively_signing and pipeline.realsign_classifier is not None:
+                            target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(pipeline.realsign_classifier, "input_dim", 63) == 126) else realsign_feat_63d
+                            if target_realsign_feat is None and realsign_feat_126d is not None:
+                                target_realsign_feat = realsign_feat_126d
+                            if target_realsign_feat is not None:
+                                raw_pts_arr = np.array(current_hand_pts_list, dtype=np.float32) if len(current_hand_pts_list) == 21 else None
+                                realsign_pred = await loop.run_in_executor(
+                                    None,
+                                    lambda: pipeline.realsign_classifier.predict(
+                                        target_realsign_feat,
+                                        confidence_threshold=confidence_threshold,
+                                        apply_smoothing=True,
+                                        apply_heuristic_boost=True,
+                                        raw_landmarks_21x3=raw_pts_arr,
+                                    ),
+                                )
+
                     elif pipeline.classifier is not None:
                         if len(segment_to_classify) >= 5:
                             arr_mvp = feat_array
@@ -912,11 +1020,12 @@ async def websocket_recognize(
                 cuda_mem_mb = round(torch.cuda.memory_allocated() / (1024 * 1024), 1) if (torch.cuda.is_available() and torch.cuda.is_initialized()) else 0.0
 
                 active_threshold = client_threshold if client_threshold is not None else (
-                    CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else CONFIDENCE_THRESHOLD_SEQUENCE
+                    CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
-                required_streak = STREAK_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else STREAK_SEQUENCE
+                required_streak = STREAK_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else STREAK_SEQUENCE
 
                 has_realsign_feat = (realsign_feat_126d is not None) or (realsign_feat_63d is not None)
+                unified_mode_branch = "none"
 
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
@@ -927,6 +1036,59 @@ async def websocket_recognize(
                     buffer_fill = 1.0 if (hand_detected and has_realsign_feat) else 0.0
                     is_pred_valid = bool(realsign_pred and realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign)
                     pred_label = realsign_pred.letter if realsign_pred else ""
+                elif active_model == "unified":
+                    dynamic_valid = bool(
+                        seq_pred
+                        and seq_pred.is_known_sign
+                        and seq_pred.confidence >= active_threshold
+                        and seq_pred.label not in ("", "no_sign", "unknown")
+                    )
+                    if not dynamic_valid and isl_pred:
+                        dynamic_valid = bool(
+                            isl_pred.is_known_sign
+                            and isl_pred.confidence >= active_threshold
+                            and isl_pred.label not in ("", "no_sign", "unknown")
+                        )
+
+                    letter_valid = bool(
+                        realsign_pred
+                        and realsign_pred.is_known_sign
+                        and realsign_pred.confidence >= (client_threshold or CONFIDENCE_THRESHOLD_ALPHABET)
+                        and realsign_pred.letter not in ("", "no_sign", "unknown")
+                        and not is_actively_signing
+                        and kinetic_energy < client_motion_threshold
+                    )
+
+                    if dynamic_valid and motion_settled_now:
+                        res_probs = {k: round(v, 4) for k, v in (seq_pred.probabilities if seq_pred else isl_pred.probabilities).items()}
+                        raw_conf = round(seq_pred.confidence, 4) if seq_pred else round(isl_pred.confidence, 4)
+                        raw_top_class = seq_pred.label if seq_pred else isl_pred.label
+                        raw_top_conf = raw_conf
+                        raw_top_3 = seq_pred.top_3 if seq_pred else []
+                        buffer_fill = 1.0
+                        is_pred_valid = True
+                        pred_label = raw_top_class
+                        unified_mode_branch = "phrase"
+                    elif letter_valid:
+                        res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
+                        raw_conf = round(realsign_pred.confidence, 4) if realsign_pred else 0.0
+                        raw_top_class = realsign_pred.top_3[0][0] if (realsign_pred and realsign_pred.top_3) else "unknown"
+                        raw_top_conf = float(realsign_pred.top_3[0][1]) if (realsign_pred and realsign_pred.top_3) else 0.0
+                        raw_top_3 = realsign_pred.top_3 if realsign_pred else []
+                        buffer_fill = 1.0
+                        is_pred_valid = True
+                        pred_label = realsign_pred.letter
+                        unified_mode_branch = "letter"
+                    else:
+                        res_probs = {}
+                        raw_conf = 0.0
+                        raw_top_class = "no_hand" if not hand_detected else ("signing..." if is_actively_signing else "awaiting_sign")
+                        raw_top_conf = 0.0
+                        raw_top_3 = []
+                        buffer_fill = round(len(gesture_sequence_buffer) / 15.0, 2) if is_actively_signing else 0.0
+                        is_pred_valid = False
+                        pred_label = ""
+                        unified_mode_branch = "none"
                 elif active_model == "include_stream":
                     res_probs = {c.label: round(c.confidence, 4) for c in include_pred.top5_candidates} if (include_pred and include_pred.top5_candidates) else {}
                     raw_conf = round(include_pred.confidence, 4) if include_pred else 0.0
@@ -959,7 +1121,7 @@ async def websocket_recognize(
                 # Kinetic Gating for Static Alphabet/Digits/Vowels Recognition (PROB-09):
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
-                alphabet_in_motion = bool(active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") and kinetic_energy > client_motion_threshold)
+                alphabet_in_motion = bool((active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch != "phrase")) and kinetic_energy > client_motion_threshold)
 
                 # Prioritize user's personal few-shot custom sign prototypes if recorded
                 if hand_detected and not alphabet_in_motion and len(feat_176) >= 158:
@@ -970,7 +1132,24 @@ async def websocket_recognize(
                         is_pred_valid = True
                         raw_conf = max(raw_conf, c_score)
 
-                if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
+                if active_model == "unified" and unified_mode_branch == "phrase":
+                    last_word_label = pred_label
+                    last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
+                    last_word_conf = raw_conf
+                    last_word_is_known = True
+                    last_word_pred_time = now
+                    res_label = last_word_label
+                    res_display = last_word_display
+                    res_conf = last_word_conf
+                    res_is_known = True
+                    is_stable = True
+                    accumulator.add_token(last_word_display, token_type="phrase", timestamp=now)
+                    last_committed_sign = res_label
+                    last_committed_time = now
+                    had_idle_baseline = False
+                    alphabet_streak_count = 0
+                    alphabet_streak_candidate = "Awaiting Sign Input"
+                elif active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch == "letter"):
                     if not hand_detected or not has_realsign_feat or alphabet_in_motion:
                         current_prediction = "Awaiting Sign Input"
                         alphabet_streak_count = 0
@@ -1276,8 +1455,11 @@ async def websocket_recognize(
                     "kinetic_energy": round(float(kinetic_energy), 4),
                     "motion_threshold": round(float(client_motion_threshold), 4),
                     "rest_y_threshold": round(float(client_rest_y), 4),
+                    "auto_calibrating": bool(auto_calibrating),
+                    "auto_calib_progress": min(100, int((auto_calib_frame_count / 25.0) * 100)) if auto_calibrating else 100,
+                    "auto_calib_message": auto_calib_message,
                     "is_actively_signing": bool(is_actively_signing),
-                    "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model == "realsign" and is_stable)) else "idle"),
+                    "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model in ("realsign", "unified") and is_stable)) else "idle"),
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
                     "translated_indic": accumulator.translated_indic,
@@ -1312,8 +1494,8 @@ async def websocket_recognize(
                     "landmarks": {
                         "left_hand": left_hand,
                         "right_hand": right_hand,
-                        "pose": pose if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels") else [],
-                        "face": face if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels") else [],
+                        "pose": pose if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else [],
+                        "face": face if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else [],
                     },
                     "non_manual_markers": {
                         "is_question": nmm_marker.is_question,
