@@ -664,6 +664,87 @@ html, body {
 }
 
 /* Connection Pill - Clean Single-Indicator Minimalist Badge */
+.connection-pill-minimal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  user-select: none;
+}
+
+.connection-pill-minimal.connected {
+  border-color: rgba(52, 211, 153, 0.25);
+  color: var(--color-text-main);
+}
+
+.connection-pill-minimal.connected .connection-status-dot {
+  background-color: #34D399;
+  animation: pulseGlow 2.4s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+}
+
+.connection-pill-minimal.disconnected {
+  border-color: rgba(248, 113, 113, 0.25);
+  color: #F87171;
+}
+
+.connection-pill-minimal.disconnected .connection-status-dot {
+  background-color: #F87171;
+}
+
+.status-label-minimal {
+  letter-spacing: 0.02em;
+}
+
+/* Compact Icon Buttons in TopNavbar (Theme & Settings) */
+.nav-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-icon-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--border-strong);
+}
+
+.nav-icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* Dropdown Section Header within Resources Menu */
+.dropdown-section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding: 8px 10px 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 2px;
+}
+
+.dropdown-section-title:not(:first-child) {
+  margin-top: 6px;
+}
+
 .connection-pill {
   display: inline-flex;
   align-items: center;
@@ -1848,43 +1929,64 @@ html, body {
   color: var(--color-text-secondary);
 }
 
-.unified-title {
+/* Compact Live Detection Status Bar */
+.compact-detection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 38px;
+}
+
+.detection-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detection-bar-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detection-active-sign {
   font-family: var(--font-display);
   font-size: var(--font-size-sm);
   font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0;
+  color: var(--color-cyan, #06b6d4);
+  letter-spacing: 0.02em;
 }
 
-.unified-header-right {
+.detection-idle-sign {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.detection-bar-right {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.unified-conf-pill {
+.detection-conf-badge {
   font-size: var(--font-size-2xs);
   font-weight: 700;
   font-family: var(--font-display);
-  background: var(--color-emerald-dim);
-  color: var(--color-emerald);
-  border: 1px solid var(--color-emerald-border);
+  background: var(--color-emerald-dim, rgba(16, 185, 129, 0.12));
+  color: var(--color-emerald, #10b981);
+  border: 1px solid var(--color-emerald-border, rgba(16, 185, 129, 0.3));
   padding: 2px 7px;
   border-radius: var(--radius-sm);
 }
 
-.unified-uncertain-pill {
-  font-size: var(--font-size-2xs);
-  font-weight: 700;
-  font-family: var(--font-display);
-  background: var(--color-amber-dim);
-  color: var(--color-amber);
-  border: 1px solid var(--color-amber-border);
-  padding: 2px 7px;
-  border-radius: var(--radius-sm);
-}
-
-.unified-model-badge {
+.detection-model-tag {
   font-size: var(--font-size-2xs);
   font-weight: 600;
   font-family: var(--font-display);
@@ -1895,91 +1997,8 @@ html, body {
   border-radius: var(--radius-sm);
 }
 
-/* 1. Live Output Box (Locked Height) */
-.live-output-box {
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  min-height: 76px;
-  max-height: 76px;
-  contain: layout size;
-}
-
-.live-sign-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.live-sign-text {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--color-text-main);
-  line-height: 1.1;
-  letter-spacing: 0.02em;
-}
-
-.live-sign-meta {
-  font-size: var(--font-size-2xs);
-  font-weight: 600;
-  color: var(--color-emerald);
-  margin-top: 2px;
-}
-
-.live-sign-uncertain {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.uncertain-sign-text {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--color-amber);
-}
-
-.uncertain-sign-hint {
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
-}
-
-.live-sign-waiting {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.waiting-dots-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-text-muted);
-  animation: pulseDot 1.6s infinite ease-in-out;
-}
-
-@keyframes pulseDot {
-  0%, 100% { opacity: 0.3; transform: scale(0.85); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
-
-.waiting-sign-text {
-  font-family: var(--font-display);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-.waiting-sign-hint {
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
+.detection-pulse-icon {
+  animation: pulseDot 2s infinite ease-in-out;
 }
 
 /* 2. Candidate Scores: Horizontal Inline Pill Row */
