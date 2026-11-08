@@ -207,6 +207,8 @@ async def websocket_recognize(
     alphabet_streak_candidate: str = ""
     alphabet_streak_count: int = 0
     alphabet_last_committed: str = ""
+    last_settled_candidate: str = ""
+    last_settled_time: float = 0.0
     alphabet_last_committed_time: float = 0.0
     alphabet_had_baseline: bool = True
     alphabet_repeat_lock: bool = False
@@ -536,35 +538,24 @@ async def websocket_recognize(
                     h_raw = None
                     hl_res = None
 
-                    if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
-                        # Fast-path for alphabet, numerals, and Hindi vowels fingerspelling:
-                        # HandLandmarker detects up to 2 hands with high precision and low latency (~20ms).
-                        if pipeline.hand_landmarker is not None:
-                            try:
-                                hld_res = pipeline.hand_landmarker.detect(img)
-                                if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
-                                    h_raw = hld_res
-                            except Exception as e:
-                                logger.debug("HandLandmarker error: %s", e)
-
-                        # High-speed alphabet mode: HandLandmarker alone handles hand detection.
-                        # Do not invoke heavyweight Holistic (saves 25-35ms per frame).
-                        hl_res = HolisticLandmarkerResult()
-                    else:
-                        # Sequence / Word models: need pose and face for 164-D vectors
-                        if pipeline.landmarker is not None:
+                    # Holistic Landmarker provides face and pose landmarks for Non-Manual Markers (Head Nod & Shake)
+                    if pipeline.landmarker is not None:
+                        try:
                             hl_res = pipeline.landmarker.detect(img)
-                        else:
+                        except Exception as e:
+                            logger.debug("Holistic detection error: %s", e)
                             hl_res = HolisticLandmarkerResult()
+                    else:
+                        hl_res = HolisticLandmarkerResult()
 
-                        # Only fallback to HandLandmarker if Holistic detected neither left nor right hand
-                        if not (hl_res.left_hand_landmarks or hl_res.right_hand_landmarks) and pipeline.hand_landmarker is not None:
-                            try:
-                                hld_res = pipeline.hand_landmarker.detect(img)
-                                if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
-                                    h_raw = hld_res
-                            except Exception as e:
-                                logger.debug("HandLandmarker secondary error: %s", e)
+                    # Dedicated HandLandmarker provides ultra-high fidelity 21-point fingerspelling
+                    if pipeline.hand_landmarker is not None:
+                        try:
+                            hld_res = pipeline.hand_landmarker.detect(img)
+                            if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
+                                h_raw = hld_res
+                        except Exception as e:
+                            logger.debug("HandLandmarker error: %s", e)
 
                     return h_raw, hl_res
 
@@ -1000,35 +991,45 @@ async def websocket_recognize(
                         alphabet_streak_candidate = current_prediction
                         alphabet_streak_count = 1
 
+                    if alphabet_streak_count >= required_streak and alphabet_streak_candidate != "Awaiting Sign Input":
+                        last_settled_candidate = alphabet_streak_candidate
+                        last_settled_time = now
+
                     # Hands-Free Intent Confirmation via Head Nod & Head Shake
-                    if hand_detected and nmm_marker.head_gesture == "nod":
-                        if alphabet_streak_candidate != "Awaiting Sign Input" and raw_conf >= active_threshold:
+                    if nmm_marker.head_gesture == "nod":
+                        target_sign = alphabet_streak_candidate if (alphabet_streak_candidate != "Awaiting Sign Input") else (last_settled_candidate if (now - last_settled_time < 2.5) else "")
+                        if target_sign:
                             emitted = accumulator.add_continuous_token(
-                                alphabet_streak_candidate,
-                                confidence=raw_conf,
+                                target_sign,
+                                confidence=max(raw_conf, 0.85),
                                 token_type="letter",
                                 timestamp=now,
                                 bypass_debounce=True,
                             )
                             if emitted:
-                                alphabet_last_committed = alphabet_streak_candidate
+                                alphabet_last_committed = target_sign
                                 alphabet_last_committed_time = now
                                 alphabet_repeat_lock = True
                                 had_idle_baseline = False
-                                res_label = alphabet_streak_candidate
-                                res_display = f"✓ {alphabet_streak_candidate} (Confirmed)"
-                                res_conf = raw_conf
+                                res_label = target_sign
+                                res_display = f"✓ {target_sign} (Confirmed)"
+                                res_conf = raw_conf if raw_conf > 0 else 0.85
                                 res_is_known = True
                                 is_stable = True
-                    elif hand_detected and nmm_marker.head_gesture == "shake":
-                        accumulator.reject_last()
+                                awaiting_nod = False
+                                logger.info("COMMITTED SIGN VIA HEAD NOD: %s", target_sign)
+                    elif nmm_marker.head_gesture == "shake":
+                        had_undone = accumulator.reject_last()
                         alphabet_streak_candidate = "Awaiting Sign Input"
                         alphabet_streak_count = 0
+                        last_settled_candidate = ""
                         res_label = "Awaiting Sign Input"
                         res_display = "✕ Undone (Shake)"
                         res_conf = 0.0
                         res_is_known = False
                         is_stable = False
+                        awaiting_nod = False
+                        logger.info("UNDID LAST SIGN VIA HEAD SHAKE (undone=%s)", had_undone)
                     elif alphabet_streak_count >= required_streak:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
                             res_label = alphabet_streak_candidate
@@ -1147,18 +1148,20 @@ async def websocket_recognize(
                         # Debounce gate for committing to backend accumulator (gated by disambiguation)
                         clean_phrase_text = DISPLAY_NAMES.get(res_label, res_label.upper().replace("_", " "))
 
-                        if hand_detected and nmm_marker.head_gesture == "nod" and candidate_streak >= required_streak and not disambiguation_active:
+                        if nmm_marker.head_gesture == "nod" and (candidate_streak >= required_streak or last_word_is_known) and not disambiguation_active:
                             accumulator.add_token(clean_phrase_text, token_type="phrase", timestamp=now)
                             last_committed_sign = res_label
                             last_committed_time = now
                             had_idle_baseline = False
                             res_display = f"✓ {clean_phrase_text} (Confirmed)"
                             awaiting_nod = False
-                        elif hand_detected and nmm_marker.head_gesture == "shake":
-                            accumulator.reject_last()
+                            logger.info("COMMITTED PHRASE VIA HEAD NOD: %s", clean_phrase_text)
+                        elif nmm_marker.head_gesture == "shake":
+                            had_undone = accumulator.reject_last()
                             candidate_streak = 0
                             res_display = "✕ Undone (Shake)"
                             awaiting_nod = False
+                            logger.info("UNDID LAST PHRASE VIA HEAD SHAKE (undone=%s)", had_undone)
                         elif candidate_streak >= required_streak and not disambiguation_active:
                             if require_head_nod_confirm:
                                 if (now - last_committed_time < 1.0) and (res_label == last_committed_sign):
