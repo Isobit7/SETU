@@ -65,7 +65,7 @@ export const App: React.FC = () => {
   const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(false);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
   const [isCalibrationModalOpen, setIsCalibrationModalOpen] = useState<boolean>(false);
-  const [showDiagnosticHUD, setShowDiagnosticHUD] = useState<boolean>(true);
+  const [showDiagnosticHUD, setShowDiagnosticHUD] = useState<boolean>(false);
 
   // Subtitle & Overlay Preferences
   const [subtitleVisible, setSubtitleVisible] = useState<boolean>(true);

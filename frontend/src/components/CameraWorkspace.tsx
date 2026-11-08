@@ -64,7 +64,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   onOpenVocabulary,
   onResolveDisambiguation,
   onAcceptPrediction: _onAcceptPrediction,
-  showDiagnosticHUD = true,
+  showDiagnosticHUD = false,
   confidenceThreshold = 0.35,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -492,12 +492,14 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* Live Computer Vision & Model Diagnostic HUD */}
-        <DiagnosticHUD
-          currentResult={currentResult}
-          activeThreshold={confidenceThreshold}
-          visible={showDiagnosticHUD && cameraStatus === 'detecting'}
-        />
+        {/* Live Computer Vision & Model Diagnostic HUD (Off by default for zero-lag rendering) */}
+        {showDiagnosticHUD && (
+          <DiagnosticHUD
+            currentResult={currentResult}
+            activeThreshold={confidenceThreshold}
+            visible={showDiagnosticHUD && cameraStatus === 'detecting'}
+          />
+        )}
 
         {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
         {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (handDetected && currentResult?.display_name && (currentResult.display_name.startsWith('HOLDING') || currentResult.display_name.startsWith('Tracking')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (

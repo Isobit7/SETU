@@ -196,7 +196,7 @@ async def websocket_recognize(
             client_threshold = max(0.10, min(0.95, float(threshold)))
         except (ValueError, TypeError):
             client_threshold = None
-    client_rest_y: float = 0.75
+    client_rest_y: float = 0.94
     frame_count = 0
     total_stream_frames = 0
     last_fps_calc = time.time()
@@ -237,13 +237,13 @@ async def websocket_recognize(
     client_motion_threshold: float = 0.045
     post_phrase_cooldown_until: float = 0.0
 
-    # 2-Second Hands-Up Auto-Calibration State
-    auto_calibrating: bool = True
+    # 2-Second Hands-Up Auto-Calibration State (Off by default: zero-freeze immediate recognition)
+    auto_calibrating: bool = False
     auto_calib_frame_count: int = 0
     calib_scales: List[float] = []
     calib_tremors: List[float] = []
     calib_rest_ys: List[float] = []
-    auto_calib_message: str = "Hold hands up in view to auto-calibrate..."
+    auto_calib_message: str = "Ready"
 
     # Multimodal Object Detection & Show-and-Sign State (Disabled by default for 30 FPS smooth performance)
     enable_object_detection: bool = False
@@ -1132,10 +1132,10 @@ async def websocket_recognize(
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
                 # Use client_motion_threshold (calibrated to webcam jitter, ~0.045) to avoid false resets from hand tremor.
-                motion_cutoff = max(0.045, client_motion_threshold)
+                motion_cutoff = max(0.040, client_motion_threshold)
                 alphabet_in_motion = bool(
                     (active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch != "phrase"))
-                    and (raw_kinetic >= motion_cutoff)
+                    and (raw_kinetic >= motion_cutoff or kinetic_energy > (motion_cutoff * 0.5))
                 )
 
                 # Prioritize user's personal few-shot custom sign prototypes if recorded
