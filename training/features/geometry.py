@@ -670,7 +670,7 @@ def apply_anatomical_alphabet_constraints(
             boost_letter("C", 2.0)
         elif d_thumb_idx <= 0.16:
             boost_letter("O", 2.0)
-        elif thumb_ext or arr[4][0] < arr[5][0]:
+        elif thumb_ext and (arr[4][1] < arr[6][1]) and (arr[4][0] < arr[5][0]):
             boost_letter("A", 1.8)
 
     return adjusted_logits
@@ -1063,7 +1063,7 @@ def extract_body_anchored_features(
 
 
 
-def is_resting_or_neutral_pose(landmarks: Any, y_threshold: float = 0.82) -> bool:
+def is_resting_or_neutral_pose(landmarks: Any, y_threshold: float = 0.75) -> bool:
     """
     Detects whether a hand is resting in the lap, desk, or neutral non-signing zone (PROB-08).
     Returns True if wrist coordinate y >= y_threshold or landmarks are empty/degenerate.
@@ -1075,14 +1075,25 @@ def is_resting_or_neutral_pose(landmarks: Any, y_threshold: float = 0.82) -> boo
     if len(landmarks) < 21:
         return True
 
-    lm0 = landmarks[0]
-    if hasattr(lm0, "y"):
-        wy = float(lm0.y)
-    elif isinstance(lm0, dict):
-        wy = float(lm0.get("y", 0.0))
-    elif isinstance(lm0, (list, tuple, np.ndarray)) and len(lm0) >= 2:
-        wy = float(lm0[1])
-    else:
+    def _get_xy(lm):
+        if hasattr(lm, "x") and hasattr(lm, "y"):
+            return float(lm.x), float(lm.y)
+        if isinstance(lm, dict):
+            return float(lm.get("x", 0.0)), float(lm.get("y", 0.0))
+        if isinstance(lm, (list, tuple, np.ndarray)) and len(lm) >= 2:
+            return float(lm[0]), float(lm[1])
+        return 0.0, 0.0
+
+    wx, wy = _get_xy(landmarks[0])
+    # Desk / lap threshold
+    if wy >= y_threshold:
         return True
 
-    return wy >= y_threshold
+    # Scale check: palm span (wrist lm0 to middle_mcp lm9)
+    mx, my = _get_xy(landmarks[9])
+    palm_span = float(np.sqrt((mx - wx) ** 2 + (my - wy) ** 2))
+    if palm_span < 0.05:
+        # Distant background artifact, not an active foreground signing hand
+        return True
+
+    return False

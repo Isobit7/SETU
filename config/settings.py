@@ -83,12 +83,12 @@ class SequenceSettings:
     debounce_stable_frames: int = 5
     repeat_hold_frames: int = 25
     confidence_threshold_alphabet: float = field(
-        default_factory=lambda: get_env_float("CONFIDENCE_THRESHOLD_ALPHABET", 0.30)
+        default_factory=lambda: get_env_float("CONFIDENCE_THRESHOLD_ALPHABET", 0.55)
     )
     confidence_threshold_sequence: float = field(
-        default_factory=lambda: get_env_float("CONFIDENCE_THRESHOLD_SEQUENCE", 0.35)
+        default_factory=lambda: get_env_float("CONFIDENCE_THRESHOLD_SEQUENCE", 0.45)
     )
-    streak_alphabet: int = field(default_factory=lambda: get_env_int("STREAK_ALPHABET", 2))
+    streak_alphabet: int = field(default_factory=lambda: get_env_int("STREAK_ALPHABET", 3))
     streak_sequence: int = field(default_factory=lambda: get_env_int("STREAK_SEQUENCE", 2))
     cooldown_ms: int = field(default_factory=lambda: get_env_int("COOLDOWN_MS", 350))
 

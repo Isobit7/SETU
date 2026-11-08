@@ -159,9 +159,11 @@ async def websocket_recognize(
             await websocket.close()
             return
 
-    # Per-connection state (defaults to Unified Autonomous Mode)
-    active_model = (model or "unified").lower()
-    if active_model in ("unified", "auto", "hybrid", "master", "all"):
+    # Per-connection state (defaults to RealSign Alphabet Mode)
+    active_model = (model or "realsign").lower()
+    if active_model in ("realsign", "alphabet", "letters"):
+        active_model = "realsign"
+    elif active_model in ("unified", "auto", "hybrid", "master", "all"):
         active_model = "unified"
     elif active_model in ("include", "include_stream"):
         active_model = "include_stream"
@@ -181,7 +183,7 @@ async def websocket_recognize(
         "isl_sequence_lstm",
         "include_stream",
     ):
-        active_model = "unified"
+        active_model = "realsign"
 
     streaming_include: Optional[StreamingIncludeAdapter] = None
     if pipeline.include_service is not None:
@@ -194,7 +196,7 @@ async def websocket_recognize(
             client_threshold = max(0.10, min(0.95, float(threshold)))
         except (ValueError, TypeError):
             client_threshold = None
-    client_rest_y: float = 0.82
+    client_rest_y: float = 0.75
     frame_count = 0
     total_stream_frames = 0
     last_fps_calc = time.time()
@@ -405,7 +407,7 @@ async def websocket_recognize(
                 auto_calib_message = "Hold hands up in view to auto-calibrate..."
                 await websocket.send_json({"type": "info", "message": "Hands-up auto calibration started"})
             elif action == "set_model":
-                req_model = str(payload.get("model", "unified")).lower()
+                req_model = str(payload.get("model", "realsign")).lower()
                 if req_model in ("unified", "auto", "hybrid", "master", "all"):
                     req_model = "unified"
                 elif req_model in ("include", "include_stream"):
@@ -1034,7 +1036,12 @@ async def websocket_recognize(
                     raw_top_conf = float(realsign_pred.top_3[0][1]) if (realsign_pred and realsign_pred.top_3) else 0.0
                     raw_top_3 = realsign_pred.top_3 if realsign_pred else []
                     buffer_fill = 1.0 if (hand_detected and has_realsign_feat) else 0.0
-                    is_pred_valid = bool(realsign_pred and realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign)
+                    is_pred_valid = bool(
+                        realsign_pred
+                        and realsign_pred.confidence >= active_threshold
+                        and realsign_pred.is_known_sign
+                        and realsign_pred.letter not in ("", "no_sign", "unknown", "Awaiting Sign Input")
+                    )
                     pred_label = realsign_pred.letter if realsign_pred else ""
                 elif active_model == "unified":
                     dynamic_valid = bool(
@@ -1162,11 +1169,9 @@ async def websocket_recognize(
                             alphabet_streak_candidate = current_prediction
                             alphabet_streak_count = 1
                     else:
-                        # Hand is present and stationary, but current frame is slightly below threshold.
-                        # Graceful decay: Do not instantly zero the streak on 1 noisy frame
-                        if alphabet_streak_count > 0:
-                            alphabet_streak_count = max(0, alphabet_streak_count - 1)
-                        current_prediction = alphabet_streak_candidate if alphabet_streak_count > 0 else "Awaiting Sign Input"
+                        current_prediction = "Awaiting Sign Input"
+                        alphabet_streak_count = 0
+                        alphabet_streak_candidate = "Awaiting Sign Input"
 
                     if alphabet_streak_count >= required_streak:
                         if alphabet_streak_candidate != "Awaiting Sign Input":
@@ -1218,7 +1223,7 @@ async def websocket_recognize(
                             res_conf = 0.0
                             res_is_known = False
                             is_stable = False
-                        elif alphabet_last_committed and hand_detected and has_realsign_feat:
+                        elif alphabet_last_committed and (now - alphabet_last_committed_time < 0.6) and hand_detected and has_realsign_feat:
                             res_label = alphabet_last_committed
                             res_display = f"LETTER {alphabet_last_committed}"
                             res_conf = raw_conf

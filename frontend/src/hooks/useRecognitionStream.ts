@@ -19,7 +19,7 @@ export function useRecognitionStream({
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
-  const [activeModel, setActiveModel] = useState<ActiveModelType>('unified');
+  const [activeModel, setActiveModel] = useState<ActiveModelType>('realsign');
   const [currentResult, setCurrentResult] = useState<RecognitionPayload | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');

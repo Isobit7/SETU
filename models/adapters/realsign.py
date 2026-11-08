@@ -92,7 +92,7 @@ class RealSignClassifier:
     normalization, and classifies into letters A to Z using the PyTorch MLP.
     """
 
-    DEFAULT_CONFIDENCE_THRESHOLD = 0.40
+    DEFAULT_CONFIDENCE_THRESHOLD = 0.50
 
     def __init__(self, weights_path: Path | str = DEFAULT_REALSIGN_MODEL_PATH) -> None:
         self.weights_path = Path(weights_path)
@@ -389,8 +389,8 @@ class RealSignClassifier:
             final_conf = p_top1
         else:
             is_known = False
-            final_letter = best_letter if p_top1 >= 0.20 else "Awaiting Sign Input"
-            final_conf = p_top1 if p_top1 >= 0.20 else 0.0
+            final_letter = "Awaiting Sign Input"
+            final_conf = 0.0
 
         top_3 = [(self.class_names[int(i)], float(probs[int(i)])) for i in sorted_indices[:3]]
         probs_dict = {name: float(probs[i]) for i, name in enumerate(self.class_names)}

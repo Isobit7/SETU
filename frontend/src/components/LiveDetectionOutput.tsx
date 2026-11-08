@@ -36,10 +36,10 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
   }
 
   const modelBadge =
-    currentResult?.active_model === 'unified'
-      ? 'Unified Autonomous'
-      : currentResult?.active_model === 'realsign'
+    currentResult?.active_model === 'realsign'
       ? 'Alphabet (A–Z)'
+      : currentResult?.active_model === 'unified'
+      ? 'Unified Engine'
       : currentResult?.active_model === 'isl_sequence_lstm'
       ? 'Dynamic Sequences'
       : currentResult?.active_model === 'include_stream'

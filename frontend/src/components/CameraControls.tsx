@@ -125,10 +125,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
   const getModeShortLabel = (model: ActiveModelType): string => {
     switch (model) {
-      case 'unified':
-        return 'Unified (All Signs)';
       case 'realsign':
         return 'Alphabet (A–Z)';
+      case 'unified':
+        return 'Unified (Experimental)';
       case 'isl_numerals':
         return 'Numbers & Currency';
       case 'isl_hindi_vowels':
@@ -142,7 +142,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       case 'include_stream':
         return 'Dictionary (263)';
       default:
-        return 'Unified (All Signs)';
+        return 'Alphabet (A–Z)';
     }
   };
 
@@ -230,28 +230,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
             {isModeDropdownOpen && (
               <div className="mode-subdropdown-menu unified-mode-menu" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={`subdropdown-item highlight-item ${activeModel === 'unified' ? 'selected' : ''}`}
-                  onClick={() => {
-                    onSwitchModel('unified');
-                    setIsModeDropdownOpen(false);
-                  }}
-                >
-                  <Sparkles size={14} className="subdropdown-item-icon text-primary" />
-                  <div className="subdropdown-text">
-                    <div className="flex items-center gap-1.5">
-                      <span className="subdropdown-title font-semibold">Unified Autonomous (All Signs)</span>
-                      <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Auto</span>
-                    </div>
-                    <span className="subdropdown-desc">Seamlessly recognizes dynamic phrases (Namaste, Hello, etc.) and fingerspelling (A–Z)</span>
-                  </div>
-                  {activeModel === 'unified' && <Check size={14} className="text-primary check-icon" />}
-                </button>
-
-                <div className="dropdown-divider" />
-                <div className="dropdown-section-title">Letters & Numbers</div>
+                <div className="dropdown-section-title">Letters & Numbers (Default)</div>
 
                 <button
                   type="button"
@@ -373,6 +352,26 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                     <span className="subdropdown-desc">Comprehensive AI4Bharat Indian Sign Language library</span>
                   </div>
                   {activeModel === 'include_stream' && <Check size={14} className="text-primary check-icon" />}
+                </button>
+
+                <div className="dropdown-divider" />
+                <div className="dropdown-section-title">Experimental Labs</div>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`subdropdown-item ${activeModel === 'unified' ? 'selected' : ''}`}
+                  onClick={() => {
+                    onSwitchModel('unified');
+                    setIsModeDropdownOpen(false);
+                  }}
+                >
+                  <Sparkles size={14} className="subdropdown-item-icon text-primary" />
+                  <div className="subdropdown-text">
+                    <span className="subdropdown-title">Unified Autonomous (Experimental)</span>
+                    <span className="subdropdown-desc">Kinetic hybrid routing between dynamic phrases & static letters</span>
+                  </div>
+                  {activeModel === 'unified' && <Check size={14} className="text-primary check-icon" />}
                 </button>
               </div>
             )}

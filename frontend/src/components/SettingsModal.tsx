@@ -83,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   setSubtitleVisible,
   subtitleSize,
   setSubtitleSize,
-  activeModel = 'unified',
+  activeModel = 'realsign',
   onSwitchModel,
   confidenceThreshold,
   setConfidenceThreshold,
@@ -280,13 +280,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="studio-card-grid">
                     {[
                       {
-                        id: 'unified',
-                        name: 'Unified Autonomous Engine',
-                        type: 'Multi-Modal Hybrid',
-                        desc: 'Intelligently routes between dynamic phrases (Namaste, Hello, etc.) and fingerspelling (A–Z)',
-                        badge: 'Autonomous',
-                      },
-                      {
                         id: 'realsign',
                         name: 'RealSign Alphabet (A–Z)',
                         type: 'Dual-Hand MLP',
@@ -327,6 +320,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         type: 'Deep Sequence LSTM',
                         desc: '263 Indian Sign Language concepts across 15 semantic domains',
                         badge: 'Comprehensive',
+                      },
+                      {
+                        id: 'unified',
+                        name: 'Unified Engine (Experimental)',
+                        type: 'Multi-Modal Hybrid',
+                        desc: 'Experimental routing between dynamic phrases and fingerspelling',
+                        badge: 'Experimental',
                       },
                     ].map((m) => {
                       const isSelected = activeModel === m.id;
