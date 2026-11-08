@@ -185,55 +185,43 @@ export function useRecognitionStream({
             const label = data.label ?? '';
 
             // Check for idle baseline (hand dropout, no_sign label, or P(no_sign) > 0.70)
-            if (!isHand || label === 'no_sign' || label === 'unknown' || label === 'Awaiting Sign Input' || noSignProb > 0.70) {
+            if (!isHand || label === 'no_sign' || label === 'unknown' || label === 'Awaiting Sign Input' || label === 'Transitioning' || noSignProb > 0.70) {
               hadIdleBaselineRef.current = true;
               candidateStreakRef.current = { sign: '', count: 0 };
             } else if (isKnown && label) {
-              const requiredStreak = data.required_streak ?? (data.active_model === 'realsign' ? 2 : 2);
               const activeMinThreshold = confidenceThresholdRef.current;
 
               if ((data.confidence || 0) >= activeMinThreshold) {
-                if (candidateStreakRef.current.sign === label) {
-                  candidateStreakRef.current.count += 1;
-                } else {
-                  candidateStreakRef.current = { sign: label, count: 1 };
-                }
+                const now = Date.now();
+                const timeSinceLast = now - lastCommittedTimeRef.current;
+                const isSameSign = label === lastCommittedSignRef.current;
 
-                if (candidateStreakRef.current.count >= requiredStreak) {
-                  const now = Date.now();
-                  const timeSinceLast = now - lastCommittedTimeRef.current;
-                  const isSameSign = label === lastCommittedSignRef.current;
-
-                  // Cooldown Lockout:
-                  // 1. Lock out duplicate commits of the same character for 350 ms
-                  // 2. Require transition through idle baseline before allowing identical sign again
-                  // 3. Allow distinct new signs to commit immediately once consecutive streak is met
-                  let canCommit = false;
-                  if (isSameSign) {
-                    if (timeSinceLast >= 350 && hadIdleBaselineRef.current) {
-                      canCommit = true;
-                    }
-                  } else {
+                // Cooldown Lockout:
+                // 1. Lock out duplicate commits of the same character for 400 ms unless idle baseline passed
+                // 2. Allow distinct new signs to commit after 250 ms
+                let canCommit = false;
+                if (isSameSign) {
+                  if (timeSinceLast >= 400 && hadIdleBaselineRef.current) {
                     canCommit = true;
                   }
-
-                  if (canCommit && !isFramingGatedRef.current) {
-                    lastCommittedSignRef.current = label;
-                    lastCommittedTimeRef.current = now;
-                    hadIdleBaselineRef.current = false;
-
-                    const newItem: HistoryItem = {
-                      id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                      timestamp: new Date(),
-                      signKey: label,
-                      text: data.display_name || label.toUpperCase(),
-                      confidence: data.confidence || 0,
-                    };
-                    setHistory((prev) => [newItem, ...prev.slice(0, 49)]);
-                  }
+                } else {
+                  canCommit = (timeSinceLast >= 250);
                 }
-              } else {
-                candidateStreakRef.current = { sign: '', count: 0 };
+
+                if (canCommit && !isFramingGatedRef.current) {
+                  lastCommittedSignRef.current = label;
+                  lastCommittedTimeRef.current = now;
+                  hadIdleBaselineRef.current = false;
+
+                  const newItem: HistoryItem = {
+                    id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                    timestamp: new Date(),
+                    signKey: label,
+                    text: data.display_name || label.toUpperCase(),
+                    confidence: data.confidence || 0,
+                  };
+                  setHistory((prev) => [newItem, ...prev.slice(0, 49)]);
+                }
               }
             }
           } else if (data.type === 'error') {

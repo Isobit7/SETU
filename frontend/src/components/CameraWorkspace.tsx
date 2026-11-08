@@ -214,7 +214,13 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         subtitleText = label.replace('_', ' ').toUpperCase();
       }
     } else if (handDetected) {
-      subtitleText = 'Holding sign...';
+      if (currentResult?.display_name && currentResult.display_name !== 'Awaiting Sign Input' && currentResult.display_name !== 'no_sign') {
+        subtitleText = currentResult.display_name;
+      } else if (label && label !== 'no_sign' && label !== 'unknown' && label !== 'Awaiting Sign Input') {
+        subtitleText = `Tracking: ${label.toUpperCase()}`;
+      } else {
+        subtitleText = 'Holding sign...';
+      }
     } else {
       subtitleText = 'Show hands to translate';
     }
@@ -494,9 +500,9 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         />
 
         {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
-        {subtitleVisible && cameraStatus === 'detecting' && isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
+        {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (handDetected && currentResult?.display_name && (currentResult.display_name.startsWith('HOLDING') || currentResult.display_name.startsWith('Tracking')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
           <div className="center-camera-prediction" aria-live="polite">
-            <div className="center-prediction-badge active-sign">
+            <div className={`center-prediction-badge ${isKnown ? 'active-sign' : 'holding-sign'}`}>
               <div className="center-sign-text">
                 {subtitleText}
               </div>

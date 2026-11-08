@@ -849,10 +849,10 @@ async def websocket_recognize(
                         if curr_clf is None:
                             curr_clf = pipeline.realsign_classifier
 
-                        # PROB-08: If hand is resting low down in lap/desk, suppress alphabet emission
+                        # PROB-08: Only suppress if hand is dropped to the extreme bottom margin (desk/lap rest >= 0.94)
                         is_resting = False
-                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=client_rest_y):
-                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=client_rest_y):
+                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=0.94):
+                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=0.94):
                                 is_resting = True
 
                         if is_resting:
@@ -950,10 +950,10 @@ async def websocket_recognize(
                                     confidence_threshold,
                                 )
 
-                        # 2. Static alphabet check if hand is stationary and not resting
+                        # 2. Static alphabet check if hand is stationary and not resting (lap rest >= 0.94)
                         is_resting = False
-                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=client_rest_y):
-                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=client_rest_y):
+                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=0.94):
+                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=0.94):
                                 is_resting = True
 
                         if not is_resting and not is_actively_signing and pipeline.realsign_classifier is not None:
@@ -1132,10 +1132,10 @@ async def websocket_recognize(
                 # When hand velocity exceeds threshold, user is in active transit between signs.
                 # In-flight frames must not accumulate streaks or emit false intermediate letters.
                 # Use client_motion_threshold (calibrated to webcam jitter, ~0.045) to avoid false resets from hand tremor.
-                motion_cutoff = max(0.040, client_motion_threshold)
+                motion_cutoff = max(0.045, client_motion_threshold)
                 alphabet_in_motion = bool(
                     (active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch != "phrase"))
-                    and (raw_kinetic >= motion_cutoff or kinetic_energy > (motion_cutoff * 0.5))
+                    and (raw_kinetic >= motion_cutoff)
                 )
 
                 # Prioritize user's personal few-shot custom sign prototypes if recorded
