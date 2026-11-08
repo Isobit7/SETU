@@ -196,7 +196,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span>Conversation</span>
         </button>
 
-        {/* 4. Resources Dropdown: 26 Letters, ISL Vocabulary, 263 Signs, Help */}
+        {/* 4. Tools & Resources Dropdown: 26 Letters, ISL Vocabulary, 263 Signs, Custom Recorder, Help */}
         <div className="nav-dropdown-wrapper" ref={resourcesRef}>
           <button
             className={`nav-link-btn dropdown-trigger ${resourcesOpen ? 'dropdown-active' : ''}`}
@@ -208,7 +208,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             aria-haspopup="true"
           >
             <BookOpen size={14} className="nav-icon" />
-            <span>Resources</span>
+            <span>Tools & Resources</span>
             <ChevronDown size={12} className={`chevron-icon ${resourcesOpen ? 'open' : ''}`} />
           </button>
 
@@ -223,7 +223,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                     setResourcesOpen(false);
                   }}
                 >
-                  <Type size={14} className="dropdown-item-icon" />
+                  <Type size={14} className="dropdown-item-icon text-cyan" />
                   <div className="dropdown-item-text">
                     <span className="item-title">26 Letters (RealSign)</span>
                     <span className="item-desc">A–Z Alphabet classifier</span>
@@ -239,7 +239,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   setResourcesOpen(false);
                 }}
               >
-                <BookOpen size={14} className="dropdown-item-icon" />
+                <BookOpen size={14} className="dropdown-item-icon text-indigo" />
                 <div className="dropdown-item-text">
                   <span className="item-title">ISL Vocabulary</span>
                   <span className="item-desc">5 Core conversational phrases</span>
@@ -255,10 +255,27 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                     setResourcesOpen(false);
                   }}
                 >
-                  <Film size={14} className="dropdown-item-icon" />
+                  <Film size={14} className="dropdown-item-icon text-rose" />
                   <div className="dropdown-item-text">
                     <span className="item-title">263 Signs (INCLUDE)</span>
                     <span className="item-desc">Video file recognition</span>
+                  </div>
+                </button>
+              )}
+
+              {onOpenRecordModal && (
+                <button
+                  className="dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    onOpenRecordModal();
+                    setResourcesOpen(false);
+                  }}
+                >
+                  <Video size={14} className="dropdown-item-icon text-danger" />
+                  <div className="dropdown-item-text">
+                    <span className="item-title">Record Custom Sign</span>
+                    <span className="item-desc">Capture custom gestures & poses</span>
                   </div>
                 </button>
               )}
@@ -271,7 +288,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   setResourcesOpen(false);
                 }}
               >
-                <HelpCircle size={14} className="dropdown-item-icon" />
+                <HelpCircle size={14} className="dropdown-item-icon text-muted" />
                 <div className="dropdown-item-text">
                   <span className="item-title">Help & Guide</span>
                   <span className="item-desc">Framing and hand tips</span>
@@ -517,6 +534,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             >
               <Film size={16} />
               <span>263 Signs (INCLUDE)</span>
+            </button>
+          )}
+          {onOpenRecordModal && (
+            <button
+              className="mobile-nav-item"
+              onClick={() => {
+                onOpenRecordModal();
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Video size={16} className="text-danger" />
+              <span>Record Custom Sign</span>
             </button>
           )}
           {onOpenHistory && (

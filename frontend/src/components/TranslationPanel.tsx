@@ -374,134 +374,140 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
           </div>
         </div>
 
-        {/* 3. Action Toolbar: Speak, Copy, Backspace, Multi-Format Export, Clear */}
+        {/* 3. Action Toolbar: Grouped into Output Actions (Left) and Buffer Editing (Right) */}
         <div className="unified-actions-row" role="toolbar" aria-label="Translation Actions">
-          {/* Button 1: Speak (Regional Sync) */}
-          <button
-            className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
-            disabled={!hasSentenceContent}
-            onClick={handleSpeak}
-            title={speaking ? 'Stop audio playback [S]' : `Speak ${currentTab.label} audio (TTS) [S]`}
-            aria-label={speaking ? 'Stop speech' : `Speak ${currentTab.label} audio`}
-          >
-            {speaking ? (
-              <>
-                <div className="soundwave-bars" aria-hidden="true">
-                  <span className="soundwave-bar" />
-                  <span className="soundwave-bar" />
-                  <span className="soundwave-bar" />
-                  <span className="soundwave-bar" />
-                </div>
-                <VolumeX size={14} />
-                <span>Stop</span>
-              </>
-            ) : (
-              <>
-                <Volume2 size={14} />
-                <span>Speak</span>
-              </>
-            )}
-            <kbd className="action-kbd-badge">S</kbd>
-          </button>
-
-          {/* Button 2: Copy */}
-          <button
-            className={`action-btn copy-action-btn ${copied ? 'copy-success' : ''}`}
-            disabled={!hasTextToOperate}
-            onClick={handleCopy}
-            title="Copy translation to clipboard [C]"
-            aria-label="Copy text"
-          >
-            {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
-            <kbd className="action-kbd-badge">C</kbd>
-          </button>
-
-          {/* Button 3: Backspace */}
-          <button
-            className="action-btn backspace-action-btn"
-            disabled={!activeSentence}
-            onClick={onBackspaceSentence}
-            title="Delete last letter or word [Backspace]"
-            aria-label="Backspace last character"
-          >
-            <Delete size={14} />
-            <span>Backspace</span>
-            <kbd className="action-kbd-badge">⌫</kbd>
-          </button>
-
-          {/* Button 4: Multi-Format Export Dropdown */}
-          <div className="export-dropdown-container" ref={exportMenuRef}>
+          {/* Subgroup 1: Audio & Export Operations */}
+          <div className="actions-subgroup-output">
+            {/* Speak (Regional Sync) */}
             <button
-              className="action-btn export-action-btn"
-              disabled={!hasTextToOperate}
-              onClick={() => setIsExportMenuOpen((prev) => !prev)}
-              title="Export transcript in multiple formats [E]"
-              aria-label="Export transcript"
-              aria-haspopup="true"
-              aria-expanded={isExportMenuOpen}
+              className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
+              disabled={!hasSentenceContent}
+              onClick={handleSpeak}
+              title={speaking ? 'Stop audio playback [S]' : `Speak ${currentTab.label} audio (TTS) [S]`}
+              aria-label={speaking ? 'Stop speech' : `Speak ${currentTab.label} audio`}
             >
-              <Download size={14} />
-              <span>Export</span>
-              <ChevronDown size={12} className={`export-chevron ${isExportMenuOpen ? 'open' : ''}`} />
+              {speaking ? (
+                <>
+                  <div className="soundwave-bars" aria-hidden="true">
+                    <span className="soundwave-bar" />
+                    <span className="soundwave-bar" />
+                    <span className="soundwave-bar" />
+                    <span className="soundwave-bar" />
+                  </div>
+                  <VolumeX size={14} />
+                  <span>Stop</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 size={14} />
+                  <span>Speak</span>
+                </>
+              )}
+              <kbd className="action-kbd-badge">S</kbd>
             </button>
 
-            {isExportMenuOpen && (
-              <div className="export-subdropdown-menu" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="export-dropdown-item"
-                  onClick={handleExportMarkdown}
-                >
-                  <FileCode size={14} className="export-item-icon" />
-                  <div className="export-item-text">
-                    <span className="export-item-title">Markdown Document (.md)</span>
-                    <span className="export-item-desc">Structured report with all Indic translations</span>
-                  </div>
-                </button>
+            {/* Copy */}
+            <button
+              className={`action-btn copy-action-btn ${copied ? 'copy-success' : ''}`}
+              disabled={!hasTextToOperate}
+              onClick={handleCopy}
+              title="Copy translation to clipboard [C]"
+              aria-label="Copy text"
+            >
+              {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
+              <kbd className="action-kbd-badge">C</kbd>
+            </button>
 
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="export-dropdown-item"
-                  onClick={handleExportPlainText}
-                >
-                  <FileText size={14} className="export-item-icon" />
-                  <div className="export-item-text">
-                    <span className="export-item-title">Plain Text (.txt)</span>
-                    <span className="export-item-desc">Clean transcript for easy sharing</span>
-                  </div>
-                </button>
+            {/* Multi-Format Export Dropdown */}
+            <div className="export-dropdown-container" ref={exportMenuRef}>
+              <button
+                className="action-btn export-action-btn"
+                disabled={!hasTextToOperate}
+                onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                title="Export transcript in multiple formats [E]"
+                aria-label="Export transcript"
+                aria-haspopup="true"
+                aria-expanded={isExportMenuOpen}
+              >
+                <Download size={14} />
+                <span>Export</span>
+                <ChevronDown size={12} className={`export-chevron ${isExportMenuOpen ? 'open' : ''}`} />
+              </button>
 
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="export-dropdown-item"
-                  onClick={handlePrint}
-                >
-                  <Printer size={14} className="export-item-icon" />
-                  <div className="export-item-text">
-                    <span className="export-item-title">Print / Save as PDF</span>
-                    <span className="export-item-desc">Formatted printable transcript</span>
-                  </div>
-                </button>
-              </div>
-            )}
+              {isExportMenuOpen && (
+                <div className="export-subdropdown-menu" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="export-dropdown-item"
+                    onClick={handleExportMarkdown}
+                  >
+                    <FileCode size={14} className="export-item-icon" />
+                    <div className="export-item-text">
+                      <span className="export-item-title">Markdown Document (.md)</span>
+                      <span className="export-item-desc">Structured report with all Indic translations</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="export-dropdown-item"
+                    onClick={handleExportPlainText}
+                  >
+                    <FileText size={14} className="export-item-icon" />
+                    <div className="export-item-text">
+                      <span className="export-item-title">Plain Text (.txt)</span>
+                      <span className="export-item-desc">Clean transcript for easy sharing</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="export-dropdown-item"
+                    onClick={handlePrint}
+                  >
+                    <Printer size={14} className="export-item-icon" />
+                    <div className="export-item-text">
+                      <span className="export-item-title">Print / Save as PDF</span>
+                      <span className="export-item-desc">Formatted printable transcript</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Button 5: Clear */}
-          <button
-            className="action-btn clear-action-btn"
-            disabled={!hasTextToOperate}
-            onClick={handleClear}
-            title="Clear all text from buffer"
-            aria-label="Clear all text"
-          >
-            <Trash2 size={14} />
-            <span>Clear</span>
-            <kbd className="action-kbd-badge">Del</kbd>
-          </button>
+          {/* Subgroup 2: Buffer Editing Actions */}
+          <div className="actions-subgroup-edit">
+            {/* Backspace */}
+            <button
+              className="action-btn backspace-action-btn"
+              disabled={!activeSentence}
+              onClick={onBackspaceSentence}
+              title="Delete last letter or word [Backspace]"
+              aria-label="Backspace last character"
+            >
+              <Delete size={14} />
+              <span>Backspace</span>
+              <kbd className="action-kbd-badge">⌫</kbd>
+            </button>
+
+            {/* Clear */}
+            <button
+              className="action-btn clear-action-btn"
+              disabled={!hasTextToOperate}
+              onClick={handleClear}
+              title="Clear all text from buffer"
+              aria-label="Clear all text"
+            >
+              <Trash2 size={14} />
+              <span>Clear</span>
+              <kbd className="action-kbd-badge">Del</kbd>
+            </button>
+          </div>
         </div>
       </div>
     </div>
