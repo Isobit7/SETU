@@ -113,6 +113,7 @@ class NonManualMarkerDetector:
         self.nose_y_history.append(rel_y)
         if len(self.nose_x_history) > self.history_len:
             self.nose_x_history.pop(0)
+        if len(self.nose_y_history) > self.history_len:
             self.nose_y_history.pop(0)
 
         # 1. Eyebrow Elevation (negative Y is upward in normalized screen coordinates)
@@ -130,7 +131,7 @@ class NonManualMarkerDetector:
         is_affirmation = False
         is_negation = False
 
-        if len(self.nose_y_history) >= 6:
+        if len(self.nose_y_history) >= 6 and len(self.nose_x_history) >= 6:
             ptp_y = float(np.ptp(self.nose_y_history))
             ptp_x = float(np.ptp(self.nose_x_history))
 
@@ -141,8 +142,8 @@ class NonManualMarkerDetector:
             sign_changes_x = int(np.sum(diffs_x[:-1] * diffs_x[1:] < 0))
 
             # Calibrated thresholds: scaled face coords vs unscaled fallback
-            min_ptp_y = 0.038 if face_h >= 0.05 else 0.018
-            min_ptp_x = 0.042 if face_w >= 0.05 else 0.018
+            min_ptp_y = 0.032 if face_h >= 0.05 else 0.015
+            min_ptp_x = 0.035 if face_w >= 0.05 else 0.015
 
             # 2. Head Pitch Oscillation (vertical nod up-down -> Affirmation / Commit)
             if ptp_y >= min_ptp_y and ptp_y > (ptp_x * 1.05):
@@ -158,16 +159,18 @@ class NonManualMarkerDetector:
 
         now = time.time()
         head_gesture = "none"
-        if now - self.last_gesture_time >= 0.55:
+        if now - self.last_gesture_time >= 0.50:
             if is_affirmation and pitch_oscillation >= (yaw_oscillation * 1.05):
                 head_gesture = "nod"
                 self.last_gesture_time = now
                 self.nose_y_history.clear()
+                self.nose_x_history.clear()
                 logger.info("HEAD GESTURE: NOD DETECTED (pitch=%.4f, yaw=%.4f)", pitch_oscillation, yaw_oscillation)
             elif is_negation and yaw_oscillation >= (pitch_oscillation * 1.05):
                 head_gesture = "shake"
                 self.last_gesture_time = now
                 self.nose_x_history.clear()
+                self.nose_y_history.clear()
                 logger.info("HEAD GESTURE: SHAKE DETECTED (pitch=%.4f, yaw=%.4f)", pitch_oscillation, yaw_oscillation)
 
         return NonManualGrammar(

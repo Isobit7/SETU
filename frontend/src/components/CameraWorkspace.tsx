@@ -481,8 +481,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
-        {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (currentResult?.display_name && (currentResult.display_name.includes('✓') || currentResult.display_name.includes('✕') || currentResult.display_name.includes('Nod')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
+        {/* Sleek Bottom Subtitle Prediction (Movie-Style, Non-Intrusive) */}
+        {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (currentResult?.display_name && (currentResult.display_name.includes('✓') || currentResult.display_name.includes('✕')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
           <div className="center-camera-prediction" aria-live="polite">
             <div className={`center-prediction-badge ${currentResult?.display_name?.includes('✓') ? 'confirmed-sign' : currentResult?.display_name?.includes('✕') ? 'undone-sign' : 'active-sign'}`}>
               <div className="center-sign-text">

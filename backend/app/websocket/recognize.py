@@ -1012,11 +1012,12 @@ async def websocket_recognize(
                                 alphabet_repeat_lock = True
                                 had_idle_baseline = False
                                 res_label = target_sign
-                                res_display = f"✓ {target_sign} (Confirmed)"
+                                res_display = f"✓ {target_sign}"
                                 res_conf = raw_conf if raw_conf > 0 else 0.85
                                 res_is_known = True
                                 is_stable = True
                                 awaiting_nod = False
+                                last_settled_candidate = ""
                                 logger.info("COMMITTED SIGN VIA HEAD NOD: %s", target_sign)
                     elif nmm_marker.head_gesture == "shake":
                         had_undone = accumulator.reject_last()
@@ -1024,7 +1025,7 @@ async def websocket_recognize(
                         alphabet_streak_count = 0
                         last_settled_candidate = ""
                         res_label = "Awaiting Sign Input"
-                        res_display = "✕ Undone (Shake)"
+                        res_display = "✕ Undone"
                         res_conf = 0.0
                         res_is_known = False
                         is_stable = False
@@ -1039,13 +1040,13 @@ async def websocket_recognize(
 
                             if require_head_nod_confirm:
                                 if (now - alphabet_last_committed_time < 1.0) and (alphabet_streak_candidate == alphabet_last_committed):
-                                    res_display = f"✓ {alphabet_last_committed} (Confirmed)"
+                                    res_display = f"✓ {alphabet_last_committed}"
                                     awaiting_nod = False
                                 else:
                                     awaiting_nod = True
-                                    res_display = f"LETTER {alphabet_streak_candidate} (Nod to Insert)"
+                                    res_display = f"Letter {alphabet_streak_candidate}"
                             else:
-                                res_display = f"LETTER {alphabet_streak_candidate}"
+                                res_display = f"Letter {alphabet_streak_candidate}"
                                 # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
                                 time_since_commit = now - alphabet_last_committed_time
                                 is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
@@ -1153,23 +1154,23 @@ async def websocket_recognize(
                             last_committed_sign = res_label
                             last_committed_time = now
                             had_idle_baseline = False
-                            res_display = f"✓ {clean_phrase_text} (Confirmed)"
+                            res_display = f"✓ {clean_phrase_text}"
                             awaiting_nod = False
                             logger.info("COMMITTED PHRASE VIA HEAD NOD: %s", clean_phrase_text)
                         elif nmm_marker.head_gesture == "shake":
                             had_undone = accumulator.reject_last()
                             candidate_streak = 0
-                            res_display = "✕ Undone (Shake)"
+                            res_display = "✕ Undone"
                             awaiting_nod = False
                             logger.info("UNDID LAST PHRASE VIA HEAD SHAKE (undone=%s)", had_undone)
                         elif candidate_streak >= required_streak and not disambiguation_active:
                             if require_head_nod_confirm:
                                 if (now - last_committed_time < 1.0) and (res_label == last_committed_sign):
-                                    res_display = f"✓ {clean_phrase_text} (Confirmed)"
+                                    res_display = f"✓ {clean_phrase_text}"
                                     awaiting_nod = False
                                 else:
                                     awaiting_nod = True
-                                    res_display = f"{clean_phrase_text} (Nod to Insert)"
+                                    res_display = clean_phrase_text
                             else:
                                 time_since_last = now - last_committed_time
                                 is_same_sign = (res_label == last_committed_sign)
