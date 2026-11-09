@@ -253,6 +253,10 @@ async def websocket_recognize(
     # Intentional Head-Gesture Gated Sentence Buffer State (True by default: signs ONLY enter buffer upon head nod)
     require_head_nod_confirm: bool = True
 
+    # Smooth Confidence EMA & Inter-Sign Transition State
+    smoothed_confidence_ema: float = 0.0
+    transition_grace_frames: int = 0
+
     # Real-Time Sentence Accumulator & ISL Gloss Parser
     accumulator = SentenceAccumulator()
 
@@ -1007,14 +1011,24 @@ async def websocket_recognize(
                         last_settled_candidate = alphabet_streak_candidate
                         last_settled_time = now
 
-                    # Always display real neural handshape prediction even while in natural motion
+                    # Always display real neural handshape prediction with smooth EMA transition
                     if is_candidate_valid:
+                        transition_grace_frames = 2
+                        smoothed_confidence_ema = 0.70 * raw_conf + 0.30 * (smoothed_confidence_ema if smoothed_confidence_ema > 0 else raw_conf)
                         res_label = pred_label
                         res_display = f"LETTER {pred_label}" if len(pred_label) == 1 else pred_label.upper()
-                        res_conf = raw_conf
+                        res_conf = round(float(smoothed_confidence_ema), 2)
                         res_is_known = True
                         is_stable = bool(alphabet_streak_count >= required_streak)
+                    elif transition_grace_frames > 0 and hand_detected and res_label not in ("", "no_sign", "Awaiting Sign Input"):
+                        # 2-frame smooth transition grace: prevent strobe flickering during hand transit
+                        transition_grace_frames -= 1
+                        smoothed_confidence_ema *= 0.85
+                        res_conf = round(float(smoothed_confidence_ema), 2)
+                        res_display = f"Letter {res_label}"
+                        is_stable = False
                     else:
+                        smoothed_confidence_ema = 0.0
                         res_label = "Awaiting Sign Input"
                         res_display = "Signing in progress..." if is_actively_signing else ("Waiting for a hand..." if not hand_detected else "Awaiting Sign Input")
                         res_conf = 0.0

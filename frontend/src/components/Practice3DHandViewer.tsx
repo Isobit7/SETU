@@ -419,11 +419,91 @@ function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
   return { isTwoHanded, rightHand, leftHand, contactPoints, instructionBadge };
 }
 
+// Organic 3D Biomechanical Skeleton Morphing Functions for Smooth Sign Transitions
+function lerpPoint(p1: Point3D, p2: Point3D, t: number): Point3D {
+  return {
+    x: p1.x + (p2.x - p1.x) * t,
+    y: p1.y + (p2.y - p1.y) * t,
+    z: p1.z + (p2.z - p1.z) * t,
+  };
+}
+
+function lerpFinger(
+  f1: [Point3D, Point3D, Point3D, Point3D],
+  f2: [Point3D, Point3D, Point3D, Point3D],
+  t: number
+): [Point3D, Point3D, Point3D, Point3D] {
+  return [
+    lerpPoint(f1[0], f2[0], t),
+    lerpPoint(f1[1], f2[1], t),
+    lerpPoint(f1[2], f2[2], t),
+    lerpPoint(f1[3], f2[3], t),
+  ];
+}
+
+function lerpHand(h1: HandSkeleton3D, h2: HandSkeleton3D, t: number): HandSkeleton3D {
+  return {
+    wrist: lerpPoint(h1.wrist, h2.wrist, t),
+    thumb: lerpFinger(h1.thumb, h2.thumb, t),
+    index: lerpFinger(h1.index, h2.index, t),
+    middle: lerpFinger(h1.middle, h2.middle, t),
+    ring: lerpFinger(h1.ring, h2.ring, t),
+    pinky: lerpFinger(h1.pinky, h2.pinky, t),
+  };
+}
+
+function lerpDualSkeleton(prev: DualHandSkeleton3D, target: DualHandSkeleton3D, t: number): DualHandSkeleton3D {
+  const rightHand = lerpHand(prev.rightHand, target.rightHand, t);
+  let leftHand: HandSkeleton3D | undefined = undefined;
+
+  if (prev.leftHand && target.leftHand) {
+    leftHand = lerpHand(prev.leftHand, target.leftHand, t);
+  } else if (!prev.leftHand && target.leftHand) {
+    const restingLeft: HandSkeleton3D = {
+      wrist: { x: target.leftHand.wrist.x, y: target.leftHand.wrist.y - 0.22, z: target.leftHand.wrist.z },
+      thumb: target.leftHand.thumb.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      index: target.leftHand.index.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      middle: target.leftHand.middle.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      ring: target.leftHand.ring.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      pinky: target.leftHand.pinky.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+    };
+    leftHand = lerpHand(restingLeft, target.leftHand, t);
+  } else if (prev.leftHand && !target.leftHand) {
+    const restingLeft: HandSkeleton3D = {
+      wrist: { x: prev.leftHand.wrist.x, y: prev.leftHand.wrist.y - 0.22, z: prev.leftHand.wrist.z },
+      thumb: prev.leftHand.thumb.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      index: prev.leftHand.index.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      middle: prev.leftHand.middle.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      ring: prev.leftHand.ring.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+      pinky: prev.leftHand.pinky.map((p) => ({ ...p, y: p.y - 0.22 })) as any,
+    };
+    if (t < 0.95) {
+      leftHand = lerpHand(prev.leftHand, restingLeft, t);
+    }
+  }
+
+  return {
+    isTwoHanded: t > 0.5 ? target.isTwoHanded : prev.isTwoHanded,
+    rightHand,
+    leftHand,
+    contactPoints: target.contactPoints,
+    instructionBadge: target.instructionBadge,
+  };
+}
+
 export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
   sign,
   className = '',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Biomechanical smooth morph transition refs
+  const initialSkeleton = useRef<DualHandSkeleton3D>(generateHand3DCoordinates(sign));
+  const fromSkeletonRef = useRef<DualHandSkeleton3D>(initialSkeleton.current);
+  const toSkeletonRef = useRef<DualHandSkeleton3D>(initialSkeleton.current);
+  const currentRenderedSkeletonRef = useRef<DualHandSkeleton3D>(initialSkeleton.current);
+  const transitionStartRef = useRef<number>(performance.now());
+  const isTransitioningRef = useRef<boolean>(false);
 
   // Orbit camera rotation & zoom state
   const [rotX, setRotX] = useState<number>(sign.toUpperCase() === 'C' ? 8 : 12);
@@ -432,8 +512,13 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Update default angle when target sign switches
+  // Update default angle and trigger smooth skeleton morph when target sign switches
   useEffect(() => {
+    fromSkeletonRef.current = currentRenderedSkeletonRef.current;
+    toSkeletonRef.current = generateHand3DCoordinates(sign);
+    transitionStartRef.current = performance.now();
+    isTransitioningRef.current = true;
+
     if (sign.toUpperCase() === 'C') {
       setRotX(8);
       setRotY(-55);
@@ -496,232 +581,259 @@ export const Practice3DHandViewer: React.FC<Practice3DHandViewerProps> = ({
   };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    let animId: number;
 
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    const width = rect.width || 360;
-    const height = rect.height || 250;
+    const render = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    const pixelW = Math.round(width * dpr);
-    const pixelH = Math.round(height * dpr);
-    if (canvas.width !== pixelW || canvas.height !== pixelH) {
-      canvas.width = pixelW;
-      canvas.height = pixelH;
-    }
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width || 360;
+      const height = rect.height || 250;
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, height);
+      const pixelW = Math.round(width * dpr);
+      const pixelH = Math.round(height * dpr);
+      if (canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+      }
 
-    const skeleton = generateHand3DCoordinates(sign);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, width, height);
 
-    // 3D rotation matrix calculation
-    const radX = (rotX * Math.PI) / 180;
-    const radY = (rotY * Math.PI) / 180;
-    const cosX = Math.cos(radX);
-    const sinX = Math.sin(radX);
-    const cosY = Math.cos(radY);
-    const sinY = Math.sin(radY);
+      // Smooth Hermite cubic interpolation between hand shapes for fluid sign transitions
+      const now = performance.now();
+      const elapsed = (now - transitionStartRef.current) / 240; // 240ms transition duration
+      const progress = Math.min(1.0, Math.max(0, elapsed));
+      const easeT = progress * progress * (3 - 2 * progress);
 
-    // Gather all 3D points from active hand(s) to compute bounding bounds after rotation
-    const allHands: HandSkeleton3D[] = [skeleton.rightHand];
-    if (skeleton.isTwoHanded && skeleton.leftHand) {
-      allHands.push(skeleton.leftHand);
-    }
+      const skeleton = isTransitioningRef.current
+        ? lerpDualSkeleton(fromSkeletonRef.current, toSkeletonRef.current, easeT)
+        : toSkeletonRef.current;
 
-    let minX2 = Infinity;
-    let maxX2 = -Infinity;
-    let minY2 = Infinity;
-    let maxY2 = -Infinity;
+      currentRenderedSkeletonRef.current = skeleton;
+      if (progress >= 1.0) {
+        isTransitioningRef.current = false;
+      }
 
-    allHands.forEach((hand) => {
-      const pts: Point3D[] = [hand.wrist, ...hand.thumb, ...hand.index, ...hand.middle, ...hand.ring, ...hand.pinky];
-      pts.forEach((pt) => {
-        // Rotate Y (Yaw)
+      // 3D rotation matrix calculation
+      const radX = (rotX * Math.PI) / 180;
+      const radY = (rotY * Math.PI) / 180;
+      const cosX = Math.cos(radX);
+      const sinX = Math.sin(radX);
+      const cosY = Math.cos(radY);
+      const sinY = Math.sin(radY);
+
+      // Gather all 3D points from active hand(s) to compute bounding bounds after rotation
+      const allHands: HandSkeleton3D[] = [skeleton.rightHand];
+      if (skeleton.isTwoHanded && skeleton.leftHand) {
+        allHands.push(skeleton.leftHand);
+      }
+
+      let minX2 = Infinity;
+      let maxX2 = -Infinity;
+      let minY2 = Infinity;
+      let maxY2 = -Infinity;
+
+      allHands.forEach((hand) => {
+        const pts: Point3D[] = [hand.wrist, ...hand.thumb, ...hand.index, ...hand.middle, ...hand.ring, ...hand.pinky];
+        pts.forEach((pt) => {
+          // Rotate Y (Yaw)
+          const x1 = pt.x * cosY + pt.z * sinY;
+          const y1 = pt.y;
+          const z1 = -pt.x * sinY + pt.z * cosY;
+
+          // Rotate X (Pitch)
+          const x2 = x1;
+          const y2 = y1 * cosX - z1 * sinX;
+
+          if (x2 < minX2) minX2 = x2;
+          if (x2 > maxX2) maxX2 = x2;
+          if (y2 < minY2) minY2 = y2;
+          if (y2 > maxY2) maxY2 = y2;
+        });
+      });
+
+      const midX2 = (minX2 + maxX2) / 2;
+      const midY2 = (minY2 + maxY2) / 2;
+      const spanX2 = Math.max(0.28, maxX2 - minX2);
+      const spanY2 = Math.max(0.35, maxY2 - minY2);
+
+      // Auto-fit scale to ensure all 5 fingertips and joints fit comfortably with breathing room
+      // Header overlay takes ~30px, preset bar takes ~24px
+      const safeHeight = Math.max(120, height - 76);
+      const safeWidth = Math.max(140, width - 80);
+      const fitScale = Math.min(safeHeight / spanY2, safeWidth / spanX2, 260) * zoom;
+
+      const transform3D = (pt: Point3D) => {
+        // 1. Rotate Y (Yaw)
         const x1 = pt.x * cosY + pt.z * sinY;
         const y1 = pt.y;
         const z1 = -pt.x * sinY + pt.z * cosY;
 
-        // Rotate X (Pitch)
+        // 2. Rotate X (Pitch)
         const x2 = x1;
         const y2 = y1 * cosX - z1 * sinX;
+        const z2 = y1 * sinX + z1 * cosX;
 
-        if (x2 < minX2) minX2 = x2;
-        if (x2 > maxX2) maxX2 = x2;
-        if (y2 < minY2) minY2 = y2;
-        if (y2 > maxY2) maxY2 = y2;
-      });
-    });
+        // 3. Perspective Projection
+        const cameraDistance = 1.65;
+        const zEff = z2 + cameraDistance;
+        const perspFactor = cameraDistance / Math.max(0.35, zEff);
+        const scale = fitScale * perspFactor;
 
-    const midX2 = (minX2 + maxX2) / 2;
-    const midY2 = (minY2 + maxY2) / 2;
-    const spanX2 = Math.max(0.28, maxX2 - minX2);
-    const spanY2 = Math.max(0.35, maxY2 - minY2);
-
-    // Auto-fit scale to ensure all 5 fingertips and joints fit comfortably with breathing room
-    // Header overlay takes ~30px, preset bar takes ~24px
-    const safeHeight = Math.max(120, height - 76);
-    const safeWidth = Math.max(140, width - 80);
-    const fitScale = Math.min(safeHeight / spanY2, safeWidth / spanX2, 260) * zoom;
-
-    const transform3D = (pt: Point3D) => {
-      // 1. Rotate Y (Yaw)
-      const x1 = pt.x * cosY + pt.z * sinY;
-      const y1 = pt.y;
-      const z1 = -pt.x * sinY + pt.z * cosY;
-
-      // 2. Rotate X (Pitch)
-      const x2 = x1;
-      const y2 = y1 * cosX - z1 * sinX;
-      const z2 = y1 * sinX + z1 * cosX;
-
-      // 3. Perspective Projection
-      const cameraDistance = 1.65;
-      const zEff = z2 + cameraDistance;
-      const perspFactor = cameraDistance / Math.max(0.35, zEff);
-      const scale = fitScale * perspFactor;
-
-      return {
-        x: width / 2 + (x2 - midX2) * scale,
-        y: height * 0.52 - (y2 - midY2) * scale,
-        z: z2,
-        scale,
+        return {
+          x: width / 2 + (x2 - midX2) * scale,
+          y: height * 0.52 - (y2 - midY2) * scale,
+          z: z2,
+          scale,
+        };
       };
-    };
 
-    // Subtle holographic ground grid under the wrist base
-    const groundCenter = transform3D({ x: midX2, y: minY2 - 0.04, z: 0 });
-    ctx.beginPath();
-    ctx.ellipse(
-      groundCenter.x,
-      groundCenter.y,
-      Math.min(75, 55 * (groundCenter.scale / 220)),
-      Math.min(22, 16 * (groundCenter.scale / 220)),
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([4, 4]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Render single hand with joints and bones
-    const renderHand = (hand: HandSkeleton3D, primaryColor: string, secondaryColor: string) => {
-      const fingers = [hand.thumb, hand.index, hand.middle, hand.ring, hand.pinky];
-
-      // Step 1: Draw Palm Metacarpal Webbing Fill (Glass translucent mesh)
-      const wProj = transform3D(hand.wrist);
-      const tMcpProj = transform3D(hand.thumb[0]);
-      const iMcpProj = transform3D(hand.index[0]);
-      const pMcpProj = transform3D(hand.pinky[0]);
-
+      // Subtle holographic ground grid under the wrist base
+      const groundCenter = transform3D({ x: midX2, y: minY2 - 0.04, z: 0 });
       ctx.beginPath();
-      ctx.moveTo(wProj.x, wProj.y);
-      ctx.lineTo(tMcpProj.x, tMcpProj.y);
-      ctx.lineTo(iMcpProj.x, iMcpProj.y);
-      ctx.lineTo(pMcpProj.x, pMcpProj.y);
-      ctx.closePath();
-      ctx.fillStyle = primaryColor === '#06B6D4' ? 'rgba(6, 182, 212, 0.08)' : 'rgba(129, 140, 248, 0.08)';
-      ctx.fill();
+      ctx.ellipse(
+        groundCenter.x,
+        groundCenter.y,
+        Math.min(75, 55 * (groundCenter.scale / 220)),
+        Math.min(22, 16 * (groundCenter.scale / 220)),
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-      // Step 2: Draw Palm Carpal Bones (Wrist to MCP joints)
-      [hand.thumb[0], hand.index[0], hand.middle[0], hand.ring[0], hand.pinky[0]].forEach((mcp) => {
-        const pMcp = transform3D(mcp);
+      // Render single hand with joints and bones
+      const renderHand = (hand: HandSkeleton3D, primaryColor: string, secondaryColor: string) => {
+        const fingers = [hand.thumb, hand.index, hand.middle, hand.ring, hand.pinky];
+
+        // Step 1: Draw Palm Metacarpal Webbing Fill (Glass translucent mesh)
+        const wProj = transform3D(hand.wrist);
+        const tMcpProj = transform3D(hand.thumb[0]);
+        const iMcpProj = transform3D(hand.index[0]);
+        const pMcpProj = transform3D(hand.pinky[0]);
+
         ctx.beginPath();
         ctx.moveTo(wProj.x, wProj.y);
-        ctx.lineTo(pMcp.x, pMcp.y);
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-        ctx.lineWidth = 2.2 * (wProj.scale / 220);
-        ctx.stroke();
-      });
+        ctx.lineTo(tMcpProj.x, tMcpProj.y);
+        ctx.lineTo(iMcpProj.x, iMcpProj.y);
+        ctx.lineTo(pMcpProj.x, pMcpProj.y);
+        ctx.closePath();
+        ctx.fillStyle = primaryColor === '#06B6D4' ? 'rgba(6, 182, 212, 0.08)' : 'rgba(129, 140, 248, 0.08)';
+        ctx.fill();
 
-      // Step 3: Draw Phalange Bones
-      fingers.forEach((fingerChain) => {
-        for (let i = 0; i < fingerChain.length - 1; i++) {
-          const p1 = transform3D(fingerChain[i]);
-          const p2 = transform3D(fingerChain[i + 1]);
+        // Step 2: Draw Palm Carpal Bones (Wrist to MCP joints)
+        [hand.thumb[0], hand.index[0], hand.middle[0], hand.ring[0], hand.pinky[0]].forEach((mcp) => {
+          const pMcp = transform3D(mcp);
+          ctx.beginPath();
+          ctx.moveTo(wProj.x, wProj.y);
+          ctx.lineTo(pMcp.x, pMcp.y);
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+          ctx.lineWidth = 2.2 * (wProj.scale / 220);
+          ctx.stroke();
+        });
 
-          const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-          grad.addColorStop(0, primaryColor);
-          grad.addColorStop(1, secondaryColor);
+        // Step 3: Draw Phalange Bones
+        fingers.forEach((fingerChain) => {
+          for (let i = 0; i < fingerChain.length - 1; i++) {
+            const p1 = transform3D(fingerChain[i]);
+            const p2 = transform3D(fingerChain[i + 1]);
+
+            const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+            grad.addColorStop(0, primaryColor);
+            grad.addColorStop(1, secondaryColor);
+
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = Math.max(2, 4.0 * (p1.scale / 220));
+            ctx.lineCap = 'round';
+            ctx.stroke();
+          }
+        });
+
+        // Step 4: Draw Joint Spheres (Depth-sorted)
+        const allJoints: { pt: Point3D; isTip: boolean }[] = [{ pt: hand.wrist, isTip: false }];
+        fingers.forEach((chain) => {
+          chain.forEach((joint, idx) => {
+            allJoints.push({ pt: joint, isTip: idx === chain.length - 1 });
+          });
+        });
+
+        allJoints.sort((a, b) => a.pt.z - b.pt.z);
+
+        allJoints.forEach(({ pt, isTip }) => {
+          const proj = transform3D(pt);
+          const radius = isTip ? Math.max(3.5, 5.5 * (proj.scale / 220)) : Math.max(2.5, 4.0 * (proj.scale / 220));
+
+          // Glow ring for all five ends
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, radius * 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = isTip
+            ? (primaryColor === '#06B6D4' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(192, 132, 252, 0.35)')
+            : 'rgba(148, 163, 184, 0.15)';
+          ctx.fill();
+
+          // Solid joint sphere
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = isTip ? (primaryColor === '#06B6D4' ? '#22D3EE' : '#C084FC') : '#F8FAFC';
+          ctx.fill();
+          ctx.strokeStyle = '#0F172A';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        });
+      };
+
+      // Render Left Hand if dual-handed
+      if (skeleton.isTwoHanded && skeleton.leftHand) {
+        renderHand(skeleton.leftHand, '#818CF8', '#C084FC');
+      }
+
+      // Render Dominant Right Hand
+      renderHand(skeleton.rightHand, '#06B6D4', '#10B981');
+
+      // Draw Golden Contact Rings for two-handed touch points
+      if (skeleton.contactPoints && skeleton.contactPoints.length > 0) {
+        skeleton.contactPoints.forEach((cp) => {
+          const cpProj = transform3D(cp);
+          ctx.beginPath();
+          ctx.arc(cpProj.x, cpProj.y, 14 * (cpProj.scale / 400), 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.85)';
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
 
           ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = Math.max(2, 4.0 * (p1.scale / 220));
-          ctx.lineCap = 'round';
-          ctx.stroke();
-        }
-      });
-
-      // Step 4: Draw Joint Spheres (Depth-sorted)
-      const allJoints: { pt: Point3D; isTip: boolean }[] = [{ pt: hand.wrist, isTip: false }];
-      fingers.forEach((chain) => {
-        chain.forEach((joint, idx) => {
-          allJoints.push({ pt: joint, isTip: idx === chain.length - 1 });
+          ctx.arc(cpProj.x, cpProj.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#F59E0B';
+          ctx.fill();
         });
-      });
+      }
 
-      allJoints.sort((a, b) => a.pt.z - b.pt.z);
+      ctx.restore();
 
-      allJoints.forEach(({ pt, isTip }) => {
-        const proj = transform3D(pt);
-        const radius = isTip ? Math.max(3.5, 5.5 * (proj.scale / 220)) : Math.max(2.5, 4.0 * (proj.scale / 220));
-
-        // Glow ring for all five ends
-        ctx.beginPath();
-        ctx.arc(proj.x, proj.y, radius * 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = isTip
-          ? (primaryColor === '#06B6D4' ? 'rgba(34, 211, 238, 0.35)' : 'rgba(192, 132, 252, 0.35)')
-          : 'rgba(148, 163, 184, 0.15)';
-        ctx.fill();
-
-        // Solid joint sphere
-        ctx.beginPath();
-        ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = isTip ? (primaryColor === '#06B6D4' ? '#22D3EE' : '#C084FC') : '#F8FAFC';
-        ctx.fill();
-        ctx.strokeStyle = '#0F172A';
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-      });
+      if (isTransitioningRef.current) {
+        animId = requestAnimationFrame(render);
+      }
     };
 
-    // Render Left Hand if dual-handed
-    if (skeleton.isTwoHanded && skeleton.leftHand) {
-      renderHand(skeleton.leftHand, '#818CF8', '#C084FC');
-    }
+    render();
 
-    // Render Dominant Right Hand
-    renderHand(skeleton.rightHand, '#06B6D4', '#10B981');
-
-    // Draw Golden Contact Rings for two-handed touch points
-    if (skeleton.contactPoints && skeleton.contactPoints.length > 0) {
-      skeleton.contactPoints.forEach((cp) => {
-        const cpProj = transform3D(cp);
-        ctx.beginPath();
-        ctx.arc(cpProj.x, cpProj.y, 14 * (cpProj.scale / 400), 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.85)';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.beginPath();
-        ctx.arc(cpProj.x, cpProj.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#F59E0B';
-        ctx.fill();
-      });
-    }
-
-    ctx.restore();
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
   }, [sign, rotX, rotY, zoom]);
 
   const skeletonInfo = generateHand3DCoordinates(sign);
