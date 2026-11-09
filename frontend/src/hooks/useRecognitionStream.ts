@@ -458,17 +458,17 @@ export function useRecognitionStream({
         ws &&
         ws.readyState === WebSocket.OPEN
       ) {
-        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >40ms)
-        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 40);
+        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >33ms)
+        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 33);
         if (now - lastFrameSentTimeRef.current >= intervalMs && (!waitingForResponseRef.current || isStaleLock)) {
           lastFrameSentTimeRef.current = now;
           waitingForResponseRef.current = true;
 
-          // Preserve camera aspect ratio dynamically to prevent squishing 16:9 frames into 4:3
+          // Preserve camera aspect ratio dynamically with optimized 400px bound for fast compression
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            const maxDim = 480;
-            let targetW = 480;
-            let targetH = 360;
+            const maxDim = 400;
+            let targetW = 400;
+            let targetH = 300;
             if (video.videoWidth >= video.videoHeight) {
               targetW = maxDim;
               targetH = Math.round((video.videoHeight / video.videoWidth) * maxDim);
@@ -488,24 +488,14 @@ export function useRecognitionStream({
             canvas.toBlob(
               (blob) => {
                 if (blob && ws.readyState === WebSocket.OPEN) {
-                  blob
-                    .arrayBuffer()
-                    .then((buf) => {
-                      if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(buf);
-                      } else {
-                        waitingForResponseRef.current = false;
-                      }
-                    })
-                    .catch(() => {
-                      waitingForResponseRef.current = false;
-                    });
+                  // Direct binary Blob send eliminates unnecessary ArrayBuffer microtask Promise delays
+                  ws.send(blob);
                 } else {
                   waitingForResponseRef.current = false;
                 }
               },
               'image/jpeg',
-              0.60
+              0.55
             );
           }
         }

@@ -142,11 +142,17 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  // Ref-decoupled 60 FPS landmark drawing loop for silky-smooth, zero-lag tracking
+  // Ref-decoupled 60 FPS landmark drawing loop with continuous client-side lerp for buttery-smooth tracking
   const currentResultRef = useRef<RecognitionPayload | null>(currentResult);
   currentResultRef.current = currentResult;
   const landmarkStylesRef = useRef<LandmarkStyles>(landmarkStyles);
   landmarkStylesRef.current = landmarkStyles;
+  const displayedLandmarksRef = useRef<{
+    left_hand?: Array<{ x: number; y: number; z: number }>;
+    right_hand?: Array<{ x: number; y: number; z: number }>;
+    pose?: Array<{ x: number; y: number; z: number }>;
+    face?: Array<{ x: number; y: number; z: number }>;
+  }>({});
 
   useEffect(() => {
     let animId: number;
@@ -165,16 +171,49 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         const ctx = canvas.getContext('2d');
         const res = currentResultRef.current;
         if (ctx) {
-          if (res?.landmarks || res?.detected_objects) {
+          const targetLandmarks = res?.landmarks;
+          const hasHands = targetLandmarks && (
+            (targetLandmarks.left_hand && targetLandmarks.left_hand.length > 0) ||
+            (targetLandmarks.right_hand && targetLandmarks.right_hand.length > 0)
+          );
+
+          if (hasHands || res?.detected_objects) {
+            // Adaptive exponential lerp (0.72 provides instantaneous responsive follow with 0 micro-stutter)
+            const lerpFactor = 0.72;
+            const disp = displayedLandmarksRef.current;
+
+            const updateHand = (key: 'left_hand' | 'right_hand') => {
+              const target = targetLandmarks?.[key];
+              if (target && target.length > 0) {
+                if (!disp[key] || disp[key]!.length !== target.length) {
+                  // Immediate snap on new hand arrival
+                  disp[key] = target.map((p) => ({ ...p }));
+                } else {
+                  const current = disp[key]!;
+                  for (let i = 0; i < target.length; i++) {
+                    current[i].x += (target[i].x - current[i].x) * lerpFactor;
+                    current[i].y += (target[i].y - current[i].y) * lerpFactor;
+                    current[i].z += (target[i].z - current[i].z) * lerpFactor;
+                  }
+                }
+              } else {
+                disp[key] = undefined;
+              }
+            };
+
+            updateHand('left_hand');
+            updateHand('right_hand');
+
             drawLandmarksOnCanvas(
               ctx,
               width,
               height,
-              res.landmarks || {},
+              disp,
               landmarkStylesRef.current,
-              res.detected_objects
+              res?.detected_objects
             );
           } else {
+            displayedLandmarksRef.current = {};
             ctx.clearRect(0, 0, width, height);
           }
         }

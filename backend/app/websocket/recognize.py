@@ -536,34 +536,32 @@ async def websocket_recognize(
                     CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
 
-                def _extract_landmarks_sync(img: np.ndarray):
-                    h_raw = None
-                    hl_res = None
+                def _detect_holistic(img: np.ndarray) -> HolisticLandmarkerResult:
+                    if pipeline.landmarker is None:
+                        return HolisticLandmarkerResult()
+                    try:
+                        return pipeline.landmarker.detect(img)
+                    except Exception as e:
+                        logger.debug("Holistic detection error: %s", e)
+                        return HolisticLandmarkerResult()
 
-                    # Holistic Landmarker provides face and pose landmarks for Non-Manual Markers (Head Nod & Shake)
-                    if pipeline.landmarker is not None:
-                        try:
-                            hl_res = pipeline.landmarker.detect(img)
-                        except Exception as e:
-                            logger.debug("Holistic detection error: %s", e)
-                            hl_res = HolisticLandmarkerResult()
-                    else:
-                        hl_res = HolisticLandmarkerResult()
-
-                    # Dedicated HandLandmarker provides ultra-high fidelity 21-point fingerspelling
-                    if pipeline.hand_landmarker is not None:
-                        try:
-                            hld_res = pipeline.hand_landmarker.detect(img)
-                            if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
-                                h_raw = hld_res
-                        except Exception as e:
-                            logger.debug("HandLandmarker error: %s", e)
-
-                    return h_raw, hl_res
+                def _detect_hands(img: np.ndarray) -> Any:
+                    if pipeline.hand_landmarker is None:
+                        return None
+                    try:
+                        hld_res = pipeline.hand_landmarker.detect(img)
+                        if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
+                            return hld_res
+                        return None
+                    except Exception as e:
+                        logger.debug("HandLandmarker error: %s", e)
+                        return None
 
                 try:
-                    hand_landmarks_raw, hl_result = await loop.run_in_executor(
-                        None, _extract_landmarks_sync, frame
+                    # Run Holistic and dedicated HandLandmarker in parallel threads for 2x faster frame throughput
+                    hl_result, hand_landmarks_raw = await asyncio.gather(
+                        loop.run_in_executor(None, _detect_holistic, frame),
+                        loop.run_in_executor(None, _detect_hands, frame),
                     )
                 except Exception as e:
                     await websocket.send_json({

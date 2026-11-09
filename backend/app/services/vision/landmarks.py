@@ -95,10 +95,10 @@ class HolisticLandmarkerWrapper:
             "right_hand": None,
         }
         self._filters: dict[str, OneEuroFilter] = {
-            "pose": OneEuroFilter(min_cutoff=0.8, beta=0.01),
-            "face": OneEuroFilter(min_cutoff=0.8, beta=0.01),
-            "left_hand": OneEuroFilter(min_cutoff=0.8, beta=0.01),
-            "right_hand": OneEuroFilter(min_cutoff=0.8, beta=0.01),
+            "pose": OneEuroFilter(min_cutoff=1.5, beta=4.0),
+            "face": OneEuroFilter(min_cutoff=1.5, beta=4.0),
+            "left_hand": OneEuroFilter(min_cutoff=1.5, beta=4.0),
+            "right_hand": OneEuroFilter(min_cutoff=1.5, beta=4.0),
         }
 
     def initialize(self) -> None:
@@ -248,7 +248,7 @@ class HandLandmarkerWrapper:
         self._landmarker: Optional[Any] = None
         self._prev_hands: list[Optional[list[tuple[float, float, float]]]] = []
         self._hand_filters: list[OneEuroFilter] = [
-            OneEuroFilter(min_cutoff=0.8, beta=0.01) for _ in range(self.num_hands)
+            OneEuroFilter(min_cutoff=1.5, beta=4.0) for _ in range(self.num_hands)
         ]
 
     def initialize(self) -> None:
@@ -308,7 +308,7 @@ class HandLandmarkerWrapper:
             if self.smooth_landmarks and result is not None and getattr(result, "hand_landmarks", None):
                 hands = result.hand_landmarks
                 while len(self._hand_filters) < len(hands):
-                    self._hand_filters.append(OneEuroFilter(min_cutoff=0.8, beta=0.01))
+                    self._hand_filters.append(OneEuroFilter(min_cutoff=1.5, beta=4.0))
                 for h_idx, hand in enumerate(hands):
                     coords = np.array([[lm.x, lm.y, lm.z] for lm in hand], dtype=np.float32)
                     filtered = self._hand_filters[h_idx].filter(coords)
