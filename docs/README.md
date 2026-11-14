@@ -4,7 +4,7 @@
   <img src="logo-transparent.png" alt="SETU Documentation Hub" width="320" />
   <br />
   <h3>Complete Architectural, Academic & Operational Reference Portal</h3>
-  <p><b>Everything you need to understand, evaluate, reproduce, and defend the SETU Indian Sign Language translation workstation.</b></p>
+  <p><b>Comprehensive reference portal for the SETU assistive communication platform, supporting accessible education, healthcare, and public services.</b></p>
 </div>
 
 ---

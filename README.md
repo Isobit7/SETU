@@ -3,8 +3,8 @@
 <div align="center">
   <img src="docs/logo-transparent.png" alt="SETU — Indian Sign Language Translation Workstation" width="420" />
   <br /><br />
-  <h3>सेतु (SETU) — Bridging Silence and Sound Through Authentic, Real-Time Multimodal Edge AI</h3>
-  <p><b>An open-source, local-first Indian Sign Language (ISL) communication workstation powered by PyTorch, MediaPipe, FastAPI, and React. Translates dual-handed signs, numbers, and continuous phrases into natural spoken Indic languages on standard laptop webcams at 30 FPS.</b></p>
+  <h3>सेतु (SETU) — Bridging Silence and Sound Through Accessible Multimodal AI</h3>
+  <p><b>An AI-powered assistive communication platform that breaks language barriers for the Deaf and hard-of-hearing community. SETU translates authentic Indian Sign Language (ISL) into natural spoken regional languages—and converts voice back into sign language—enabling seamless, two-way conversations in healthcare, education, banking, and everyday life.</b></p>
 
   [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
   [![PyTorch](https://img.shields.io/badge/PyTorch-2.5%20CUDA%2012.4-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)

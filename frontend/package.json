@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "description": "SETU Frontend Workstation — Real-Time Indian Sign Language Translation & 3D Avatar",
+  "description": "SETU Assistive Platform for Real-Time Indian Sign Language Translation and Inclusive Communication",
   "private": true,
   "version": "0.0.0",
   "type": "module",
