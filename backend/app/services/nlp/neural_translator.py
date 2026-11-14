@@ -114,21 +114,38 @@ class NeuralGlossTranslator:
         try:
             import torch
 
+            system_prompt = (
+                "You are an expert Indian Sign Language (ISL) to fluent English translator.\n"
+                "ISL uses Subject-Object-Verb (SOV) grammar with clause-final question words (WHERE, WHAT, HOW, WHY, WHEN) "
+                "and clause-final modal verbs (NEED, WANT).\n"
+                "Rules:\n"
+                "1. Clause-final question words must be fronted into standard English questions: 'DOCTOR WHERE' -> 'Where is the doctor?', 'NAME WHAT' -> 'What is your name?'.\n"
+                "2. Clause-final NEED/WANT expresses the signer's desire: 'I HELP NEED' -> 'I need help.', 'WATER WANT' -> 'I want water.'.\n"
+                "3. Clause-final NOT/NO expresses negation: 'TEA LIKE NOT' -> 'I do not like tea.'.\n"
+                "4. Single words/signs express polite requests or greetings: 'WATER' -> 'I would like water.', 'EAT' -> 'I want to eat.', 'HELLO' -> 'Hello!'.\n"
+                "5. Output ONLY the translated English sentence, without extra commentary or quotes."
+            )
+
             messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an Indian Sign Language (ISL) to fluent English translator. "
-                        "Convert raw sign words into one natural, fluent, grammatically correct English sentence. "
-                        "Output ONLY the English sentence without extra text or quotation marks."
-                    ),
-                },
-                {"role": "user", "content": "ISL: ME WATER DRINK"},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "ISL: HELLO"},
+                {"role": "assistant", "content": "Hello!"},
+                {"role": "user", "content": "ISL: ME WATER DRINK WANT"},
                 {"role": "assistant", "content": "I want to drink water."},
+                {"role": "user", "content": "ISL: I HELP NEED"},
+                {"role": "assistant", "content": "I need help."},
+                {"role": "user", "content": "ISL: DOCTOR WHERE"},
+                {"role": "assistant", "content": "Where is the doctor?"},
+                {"role": "user", "content": "ISL: YOU NAME WHAT"},
+                {"role": "assistant", "content": "What is your name?"},
+                {"role": "user", "content": "ISL: HOW YOU"},
+                {"role": "assistant", "content": "How are you?"},
                 {"role": "user", "content": "ISL: MOTHER MEDICINE BUY NEED"},
-                {"role": "assistant", "content": "My mother needs to buy medicine."},
+                {"role": "assistant", "content": "I need medicine for my mother."},
                 {"role": "user", "content": "ISL: MY NAME S A T H W I K"},
                 {"role": "assistant", "content": "My name is Sathwik."},
+                {"role": "user", "content": "ISL: I TEA LIKE NOT"},
+                {"role": "assistant", "content": "I do not like tea."},
                 {"role": "user", "content": f"ISL: {gloss_input}"},
             ]
 
@@ -142,6 +159,7 @@ class NeuralGlossTranslator:
                     **inputs,
                     max_new_tokens=36,
                     do_sample=False,
+                    repetition_penalty=1.1,
                     temperature=None,
                     top_p=None,
                     top_k=None,

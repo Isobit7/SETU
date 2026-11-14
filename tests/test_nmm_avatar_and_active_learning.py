@@ -85,14 +85,14 @@ def test_nmm_head_shake_triggers_negation():
     detector = NonManualMarkerDetector(history_len=10)
     # Simulate alternating head shake across X
     xs = [0.50, 0.54, 0.46, 0.55, 0.45, 0.54, 0.46]
-    res = None
+    res_list = []
     for x in xs:
         face = create_dummy_face(nose_x=x)
-        res = detector.detect(face)
+        res_list.append(detector.detect(face))
 
-    assert res is not None
-    assert res.is_negation
-    assert res.head_yaw_oscillation > 0.035
+    assert any(r.is_negation for r in res_list)
+    shake_res = next(r for r in res_list if r.is_negation)
+    assert shake_res.head_yaw_oscillation > 0.035
 
 
 # =============================================================================

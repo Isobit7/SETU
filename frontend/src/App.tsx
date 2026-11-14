@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { TopNavbar } from './components/TopNavbar';
 import { CameraWorkspace } from './components/CameraWorkspace';
 import { CameraControls } from './components/CameraControls';
@@ -23,21 +23,47 @@ import './index.css';
 export const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  // URL query parameter helper for deep-linking
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialTab = urlParams?.get('tab') || 'translator';
+  const initialModal = urlParams?.get('modal') || '';
+  const initialDir = urlParams?.get('dir') === 'en-to-isl' ? 'en-to-isl' : 'isl-to-en';
+
   // 2-Way Translation Direction ('isl-to-en' or 'en-to-isl')
-  const [translationDirection, setTranslationDirection] = useState<'isl-to-en' | 'en-to-isl'>('isl-to-en');
+  const [translationDirection, setTranslationDirection] = useState<'isl-to-en' | 'en-to-isl'>(initialDir);
 
   // Active top navigation section
-  const [activeTab, setActiveTab] = useState<string>('translator');
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
 
   // Modals
-  const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(false);
-  const [isAlphabetModalOpen, setIsAlphabetModalOpen] = useState<boolean>(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
-  const [isSavedModalOpen, setIsSavedModalOpen] = useState<boolean>(false);
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
-  const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(false);
-  const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
+  const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(initialModal === 'vocab');
+  const [isAlphabetModalOpen, setIsAlphabetModalOpen] = useState<boolean>(initialModal === 'alphabet');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(initialModal === 'settings');
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(initialModal === 'history');
+  const [isSavedModalOpen, setIsSavedModalOpen] = useState<boolean>(initialModal === 'saved');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(initialModal === 'help');
+  const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(initialModal === 'include');
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(initialModal === 'record');
+
+  // Backend Health Poll
+  const [backendReady, setBackendReady] = useState<boolean>(false);
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const res = await fetch(`http://${window.location.hostname}:8000/health`);
+        if (isMounted) setBackendReady(res.ok);
+      } catch {
+        if (isMounted) setBackendReady(false);
+      }
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Subtitle & Overlay Preferences
   const [subtitleVisible, setSubtitleVisible] = useState<boolean>(true);
@@ -102,6 +128,7 @@ export const App: React.FC = () => {
   const [landmarkStyles, setLandmarkStyles] = useState<LandmarkStyles>({
     showLeftHand: true,
     showRightHand: true,
+    showFace: false,
     mirrored: true,
   });
 
@@ -154,6 +181,7 @@ export const App: React.FC = () => {
       ...prev,
       showLeftHand: !anyActive,
       showRightHand: !anyActive,
+      showFace: false,
     }));
   };
 
@@ -262,6 +290,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={handleNavSelect}
         isBackendConnected={isBackendConnected}
+        backendReady={backendReady}
         fps={currentResult?.fps || 0}
         latencyMs={currentResult?.latency_ms || 0}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
@@ -370,6 +399,8 @@ export const App: React.FC = () => {
                   isSpeaking={isSpeaking}
                   onSpeak={speak}
                   onStopSpeak={stop}
+                  bufferInsertionMode={bufferInsertionMode}
+                  onSetBufferInsertionMode={handleSetBufferInsertionMode}
                 />
               )}
             </aside>

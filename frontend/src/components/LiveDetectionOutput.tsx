@@ -28,6 +28,30 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
     }
   }
 
+  const getModelBadge = (model?: string) => {
+    switch (model) {
+      case 'realsign':
+        return 'Alphabet (A–Z)';
+      case 'isl_numerals':
+        return 'Numbers (0–9)';
+      case 'isl_hindi_vowels':
+        return 'Hindi Vowels';
+      case 'dynamic_unified':
+      case 'amrita_phrase':
+      case 'amrita_isl_phrase_bilstm':
+      case 'isl_dynamic_master_bilstm':
+      case 'include_stream':
+        return 'Dynamic Signs & Phrases (287)';
+      default:
+        return 'Sign Detection';
+    }
+  };
+
+  const nmm = currentResult?.non_manual_markers;
+  const isQuestion = Boolean(nmm?.is_question);
+  const isNegation = Boolean(nmm?.is_negation || nmm?.head_gesture === 'shake');
+  const isAffirmation = Boolean(nmm?.is_affirmation || nmm?.head_gesture === 'nod');
+
   return (
     <div className={`compact-detection-bar ${className}`}>
       <div className="detection-bar-left">
@@ -41,17 +65,26 @@ export const LiveDetectionOutput: React.FC<LiveDetectionOutputProps> = ({
       </div>
 
       <div className="detection-bar-right">
+        {isQuestion && (
+          <span className="nmm-badge nmm-question" title="Eyebrows elevated - question marker (?)">
+            ❓ Question
+          </span>
+        )}
+        {isNegation && (
+          <span className="nmm-badge nmm-negation" title="Head shake - grammatical negation (NOT)">
+            🚫 Negation
+          </span>
+        )}
+        {isAffirmation && (
+          <span className="nmm-badge nmm-affirmation" title="Head nod - affirmative confirmation">
+            ✓ Confirmed
+          </span>
+        )}
         {displayText && confidencePct > 0 && (
           <span className="detection-conf-badge font-semibold">{confidencePct}% Match</span>
         )}
         <span className="detection-model-tag">
-          {currentResult?.active_model === 'realsign'
-            ? 'Alphabet'
-            : currentResult?.active_model === 'isl_sequence_lstm'
-            ? 'Sequence'
-            : currentResult?.active_model === 'include_stream'
-            ? 'INCLUDE'
-            : 'Phrases'}
+          {getModelBadge(currentResult?.active_model)}
         </span>
       </div>
     </div>

@@ -12,7 +12,6 @@ import {
   Volume2,
   VolumeX,
   Focus,
-  Video,
   ChevronDown,
   Check,
   Hash,
@@ -114,21 +113,18 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   const getActiveModelDisplay = (model: ActiveModelType) => {
     switch (model) {
       case 'realsign':
-        return { label: 'Letters (A–Z)', icon: Type, sub: 'RealSign Fingerspelling' };
+        return { label: 'Alphabet (A–Z)', icon: Type, sub: 'English Fingerspelling' };
       case 'isl_numerals':
-        return { label: 'Numbers (0–9 & ₹)', icon: Hash, sub: 'ISL Counting & Currency' };
+        return { label: 'Numbers (0–9 & ₹)', icon: Hash, sub: 'Counting & Currency' };
       case 'isl_hindi_vowels':
         return { label: 'Hindi Vowels (अ–ऐ)', icon: Languages, sub: 'Devanagari Swar' };
-      case 'isl_mvp':
-        return { label: 'Conversational (5 Signs)', icon: BookOpen, sub: 'Everyday Phrases' };
+      case 'dynamic_unified':
       case 'amrita_phrase':
-        return { label: 'Amrita 49 Phrases', icon: BookOpen, sub: 'BiLSTM Temporal Network' };
-      case 'isl_sequence_lstm':
-        return { label: 'Dynamic Sequences', icon: BookOpen, sub: '7 Gestures LSTM' };
       case 'include_stream':
-        return { label: 'INCLUDE (263 Signs)', icon: Video, sub: 'AI4Bharat Full Vocabulary' };
+      case 'isl_dynamic_master_bilstm':
+        return { label: 'Dynamic Signs (287 Signs)', icon: BookOpen, sub: 'Unified ISL Dynamic Vocabulary' };
       default:
-        return { label: 'Letters (A–Z)', icon: Type, sub: 'Alphabet Classifier' };
+        return { label: 'Alphabet (A–Z)', icon: Type, sub: 'English Fingerspelling' };
     }
   };
 
@@ -210,8 +206,8 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                 >
                   <Type size={14} className="menu-item-icon text-cyan" />
                   <div className="menu-item-text">
-                    <span className="menu-item-title">Letters (A–Z)</span>
-                    <span className="menu-item-desc">RealSign static & continuous fingerspelling</span>
+                    <span className="menu-item-title">English Alphabet (A–Z)</span>
+                    <span className="menu-item-desc">Real-time fingerspelling for names and words</span>
                   </div>
                   {activeModel === 'realsign' && <Check size={14} className="text-cyan menu-item-check" />}
                 </button>
@@ -227,8 +223,8 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                 >
                   <Hash size={14} className="menu-item-icon text-emerald" />
                   <div className="menu-item-text">
-                    <span className="menu-item-title">Numbers (0–9 & ₹)</span>
-                    <span className="menu-item-desc">ISL counting and currency signs</span>
+                    <span className="menu-item-title">Numbers & Currency (0–9, ₹)</span>
+                    <span className="menu-item-desc">Standard ISL counting digits and rupee currency</span>
                   </div>
                   {activeModel === 'isl_numerals' && <Check size={14} className="text-cyan menu-item-check" />}
                 </button>
@@ -245,7 +241,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                   <Languages size={14} className="menu-item-icon text-amber" />
                   <div className="menu-item-text">
                     <span className="menu-item-title">Hindi Vowels (अ–ऐ)</span>
-                    <span className="menu-item-desc">Devanagari ISL swar phonemes</span>
+                    <span className="menu-item-desc">Devanagari phonemes for Indic fingerspelling</span>
                   </div>
                   {activeModel === 'isl_hindi_vowels' && <Check size={14} className="text-cyan menu-item-check" />}
                 </button>
@@ -256,69 +252,18 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
                 <button
                   type="button"
                   role="menuitem"
-                  className={`model-menu-item ${activeModel === 'isl_mvp' ? 'selected' : ''}`}
+                  className={`model-menu-item ${activeModel === 'dynamic_unified' || activeModel === 'amrita_phrase' || activeModel === 'include_stream' ? 'selected' : ''}`}
                   onClick={() => {
-                    onSwitchModel('isl_mvp');
-                    setIsModelDropdownOpen(false);
-                  }}
-                >
-                  <BookOpen size={14} className="menu-item-icon text-indigo" />
-                  <div className="menu-item-text">
-                    <span className="menu-item-title">Everyday Phrases (5 Signs)</span>
-                    <span className="menu-item-desc">Hello, Thank You, Good Morning, I, You</span>
-                  </div>
-                  {activeModel === 'isl_mvp' && <Check size={14} className="text-cyan menu-item-check" />}
-                </button>
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={`model-menu-item ${activeModel === 'amrita_phrase' ? 'selected' : ''}`}
-                  onClick={() => {
-                    onSwitchModel('amrita_phrase');
+                    onSwitchModel('dynamic_unified');
                     setIsModelDropdownOpen(false);
                   }}
                 >
                   <BookOpen size={14} className="menu-item-icon text-violet" />
                   <div className="menu-item-text">
-                    <span className="menu-item-title">Amrita 49 Phrases (BiLSTM)</span>
-                    <span className="menu-item-desc">Verified 49-phrase temporal deep neural network</span>
+                    <span className="menu-item-title">Unified Dynamic Vocabulary & Phrases (287 Signs)</span>
+                    <span className="menu-item-desc">All phrases, greetings & vocabulary merged with duplicates removed</span>
                   </div>
-                  {activeModel === 'amrita_phrase' && <Check size={14} className="text-cyan menu-item-check" />}
-                </button>
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={`model-menu-item ${activeModel === 'isl_sequence_lstm' ? 'selected' : ''}`}
-                  onClick={() => {
-                    onSwitchModel('isl_sequence_lstm');
-                    setIsModelDropdownOpen(false);
-                  }}
-                >
-                  <BookOpen size={14} className="menu-item-icon text-pink" />
-                  <div className="menu-item-text">
-                    <span className="menu-item-title">Dynamic Sequences (7 Gestures)</span>
-                    <span className="menu-item-desc">Continuous temporal gestures</span>
-                  </div>
-                  {activeModel === 'isl_sequence_lstm' && <Check size={14} className="text-cyan menu-item-check" />}
-                </button>
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={`model-menu-item ${activeModel === 'include_stream' ? 'selected' : ''}`}
-                  onClick={() => {
-                    onSwitchModel('include_stream');
-                    setIsModelDropdownOpen(false);
-                  }}
-                >
-                  <Video size={14} className="menu-item-icon text-rose" />
-                  <div className="menu-item-text">
-                    <span className="menu-item-title">AI4Bharat INCLUDE Full Vocabulary</span>
-                    <span className="menu-item-desc">263 comprehensive ISL gestures</span>
-                  </div>
-                  {activeModel === 'include_stream' && <Check size={14} className="text-cyan menu-item-check" />}
+                  {(activeModel === 'dynamic_unified' || activeModel === 'amrita_phrase' || activeModel === 'include_stream') && <Check size={14} className="text-cyan menu-item-check" />}
                 </button>
               </div>
             )}

@@ -13,6 +13,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
   { code: 'ta-IN', label: 'Tamil', nativeName: 'தமிழ்' },
   { code: 'te-IN', label: 'Telugu', nativeName: 'తెలుగు' },
   { code: 'kn-IN', label: 'Kannada', nativeName: 'ಕನ್ನಡ' },
+  { code: 'ml-IN', label: 'Malayalam', nativeName: 'മലയാളം' },
 ];
 
 /**

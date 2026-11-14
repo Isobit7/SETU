@@ -1,0 +1,393 @@
+{
+  "dataset_name": "SETU Unified Master Dynamic Dataset",
+  "total_samples": 1026,
+  "num_classes": 53,
+  "class_names": [
+    "bird",
+    "you_are_perfect",
+    "monsoon",
+    "afternoon",
+    "angry",
+    "bad",
+    "boy",
+    "eat",
+    "friend",
+    "drinking",
+    "girl",
+    "black",
+    "brother",
+    "good",
+    "father",
+    "evening",
+    "help",
+    "mother",
+    "name",
+    "night",
+    "music",
+    "nose",
+    "cat",
+    "sleep",
+    "sit",
+    "sorry",
+    "stand",
+    "stop",
+    "student",
+    "study",
+    "teacher",
+    "thank_you",
+    "today",
+    "cow",
+    "tomorrow",
+    "welcome",
+    "work",
+    "yesterday",
+    "teeth",
+    "hand",
+    "write",
+    "umbrella",
+    "ring",
+    "dog",
+    "power",
+    "fish",
+    "good_morning",
+    "grey",
+    "hello",
+    "namaste",
+    "i",
+    "you",
+    "no_sign"
+  ],
+  "splits": {
+    "train": 818,
+    "validation": 104,
+    "test": 104
+  },
+  "test_metrics": {
+    "overall_accuracy": 0.8173,
+    "overall_accuracy_pct": 81.73,
+    "top3_accuracy_pct": 96.15,
+    "top5_accuracy_pct": 96.15,
+    "macro_f1": 0.8039
+  },
+  "per_class": {
+    "bird": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "you_are_perfect": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "monsoon": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "afternoon": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "angry": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "bad": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "boy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "eat": {
+      "precision": 0.25,
+      "recall": 0.5,
+      "f1_score": 0.3333,
+      "support": 2
+    },
+    "friend": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "drinking": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "girl": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "black": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "brother": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "good": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "father": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "evening": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "help": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "mother": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "name": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "night": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "music": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "nose": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "cat": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "sleep": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "sit": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "sorry": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "stand": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "stop": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "student": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "study": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "teacher": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "thank_you": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "today": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "cow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "tomorrow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "welcome": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "work": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "yesterday": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "teeth": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "hand": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "write": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "umbrella": {
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1_score": 0.8,
+      "support": 2
+    },
+    "ring": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "dog": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "power": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1_score": 0.6667,
+      "support": 2
+    },
+    "fish": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1_score": 0.5,
+      "support": 2
+    },
+    "good_morning": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 2
+    },
+    "grey": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    },
+    "hello": {
+      "precision": 0.5,
+      "recall": 0.6667,
+      "f1_score": 0.5714,
+      "support": 3
+    },
+    "namaste": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 1
+    },
+    "i": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 1
+    },
+    "you": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 1
+    },
+    "no_sign": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 2
+    }
+  },
+  "trained_at": "2026-11-13T09:45:59.914459+00:00"
+}

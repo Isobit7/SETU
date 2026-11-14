@@ -283,8 +283,4 @@ export function drawLandmarksOnCanvas(
       ctx.restore();
     }
   }
-
-  // NOTE: Face landmarks, body/pose landmarks, head circles, torso lines, and pose bounding boxes
-  // are explicitly excluded from visualization per requirements to ensure a clean, distraction-free
-  // hand-landmarks-only overlay.
 }

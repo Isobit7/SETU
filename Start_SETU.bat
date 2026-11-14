@@ -1,67 +1,91 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
-REM One-click launcher for the SETU backend and frontend.
-REM Update ROOT if your project folder is somewhere else.
+REM ===============================================================================
+REM   SETU — Master One-Click Workstation Launcher
+REM   Launches both Backend (FastAPI, Port 8000) and Frontend (Vite, Port 5173)
+REM ===============================================================================
+
+title SETU Workstation Launcher
+color 0F
+
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
+cls
+echo ===============================================================================
+echo                SETU ISL WORKSTATION -- ONE-CLICK LAUNCHER
+echo          Bridging Silence and Sound Through Authentic Multimodal AI
+echo ===============================================================================
+echo.
+echo  Root Directory: %ROOT%
+echo.
+
+REM --- 1. Validate Python Virtual Environment ---
 if not exist "%ROOT%\.venv\Scripts\python.exe" (
-    echo ERROR: Python virtual environment not found:
-    echo   %ROOT%\.venv\Scripts\python.exe
-    echo Edit ROOT in this file to match your SETU project folder.
+    echo [ERROR] Python virtual environment was not found:
+    echo         %ROOT%\.venv\Scripts\python.exe
+    echo.
+    echo Please verify that Python virtual environment is set up.
     pause
     exit /b 1
 )
 
-if not exist "%ROOT%\backend\app\main.py" (
-    echo ERROR: SETU backend file was not found:
-    echo   %ROOT%\backend\app\main.py
-    echo Check that ROOT points to your SETU project folder.
-    pause
-    exit /b 1
-)
-
-if not exist "%ROOT%\frontend\package.json" (
-    echo ERROR: Frontend package.json was not found:
-    echo   %ROOT%\frontend\package.json
-    echo Check that ROOT points to your SETU project folder.
-    pause
-    exit /b 1
-)
-
+REM --- 2. Validate Node.js and npm ---
 where npm >nul 2>nul
 if errorlevel 1 (
-    echo ERROR: npm was not found. Install Node.js, then reopen this file.
+    echo [ERROR] npm was not found. Please install Node.js from https://nodejs.org
     pause
     exit /b 1
 )
 
-if not exist "%ROOT%\frontend\node_modules" (
-    echo Frontend dependencies are missing. Installing them first...
-    pushd "%ROOT%\frontend"
-    call npm install
-    if errorlevel 1 (
-        popd
-        echo ERROR: npm install failed. Read the output above and fix the dependency issue.
-        pause
-        exit /b 1
-    )
-    popd
+REM --- 3. Clean Port Conflicts (8000 & 5173) ---
+echo [1/3] Checking for previous running instances on ports 8000 and 5173...
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :8000 ^| findstr LISTENING') do (
+    echo       Releasing occupied port 8000 (PID: %%a)...
+    taskkill /F /PID %%a >nul 2>&1
+)
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :5173 ^| findstr LISTENING') do (
+    echo       Releasing occupied port 5173 (PID: %%a)...
+    taskkill /F /PID %%a >nul 2>&1
 )
 
-echo Starting SETU backend and frontend in separate terminal windows...
-start "SETU Backend - FastAPI" /D "%ROOT%" cmd /k ""%ROOT%\.venv\Scripts\python.exe" -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload"
-start "SETU Frontend - Vite" /D "%ROOT%\frontend" cmd /k "npm run dev -- --host 127.0.0.1"
+REM --- 4. Launch Backend and Frontend ---
+echo.
+echo [2/3] Launching SETU Backend (FastAPI + PyTorch CUDA)...
+start "SETU Backend - FastAPI Engine" "%ROOT%\scripts\run_backend.bat"
 
 echo.
-echo Waiting 3 seconds for services to initialize...
-timeout /t 3 /nobreak >nul
+echo [3/3] Launching SETU Frontend (React 18 + Vite Workstation)...
+start "SETU Frontend - Vite Workstation" "%ROOT%\scripts\run_frontend.bat"
+
+echo.
+echo ===============================================================================
+echo                         SETU ENGINES INITIALIZING
+echo ===============================================================================
+echo.
+echo  Please keep both server terminal windows open while using SETU.
+echo.
+echo  -----------------------------------------------------------------------------
+echo  * Frontend Workstation : http://localhost:5173
+echo  * Interactive 3D Studio: http://localhost:5173 (Click "Practice Studio")
+echo  * Backend REST API Docs: http://localhost:8000/docs
+echo  * System Health Check  : http://localhost:8000/health
+echo  * Live WebSocket Stream: ws://localhost:8000/api/v1/ws/recognize
+echo  * GitHub Repository    : https://github.com/Isobit7/SETU
+echo  * Online README Guide  : https://github.com/Isobit7/SETU#readme
+echo  -----------------------------------------------------------------------------
+echo.
+
+echo Waiting 5 seconds for services to initialize...
+timeout /t 5 /nobreak >nul
+
+echo Opening SETU in your default browser...
 start http://localhost:5173
 
 echo.
-echo ================================================================
-echo  SETU is live! Opening browser: http://localhost:5173
-echo ================================================================
-echo Keep both terminal windows open while using SETU. Close them to stop.
+echo ===============================================================================
+echo   SETU is now active! To stop all services anytime, run: Stop_SETU.bat
+echo ===============================================================================
+echo.
 endlocal

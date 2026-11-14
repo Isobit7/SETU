@@ -30,6 +30,7 @@ from models.adapters.realsign import RealSignPrediction
 from models.adapters.sequence_lstm import SequencePrediction as ISLSequencePrediction
 from models.adapters.mvp import MVPClassifierPrediction as ISLPrediction
 from models.adapters.include import StreamingIncludeAdapter, INCLUDEResult
+from models.adapters.dynamic_unified import UnifiedDynamicAdapter
 from models.registry import ModelRegistry
 from backend.app.services.nlp import SentenceAccumulator
 from backend.app.services.nlp.domain_packs import domain_packs_manager
@@ -129,13 +130,13 @@ def get_positioning_guidance(
     if shoulder_width < 0.16:
         return "Move closer"
 
-    if nose["y"] < 0.05:
-        return "Tilt camera up"
-    if nose["y"] > 0.45:
-        return "Tilt camera down"
-
-    if not has_hands:
+    if has_hands:
         return "Ready to sign"
+
+    if nose["y"] < 0.03:
+        return "Tilt camera up"
+    if nose["y"] > 0.70:
+        return "Tilt camera down"
 
     return "Ready to sign"
 
@@ -162,26 +163,41 @@ async def websocket_recognize(
     active_model = (model or "realsign").lower()
     if active_model in ("include", "include_stream"):
         active_model = "include_stream"
+    elif active_model in ("isl_mvp", "mvp"):
+        active_model = "isl_mvp"
+    elif active_model in ("isl_sequence_lstm", "sequence_lstm"):
+        active_model = "isl_sequence_lstm"
     elif active_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
         active_model = "amrita_isl_phrase_bilstm"
     elif active_model in ("numerals", "isl_numerals", "digits"):
         active_model = "isl_numerals"
     elif active_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
         active_model = "isl_hindi_vowels"
+    elif active_model in (
+        "dynamic_unified",
+        "isl_dynamic_unified_287",
+        "unified_dynamic",
+        "isl_dynamic_master_bilstm",
+        "dynamic_master",
+    ):
+        active_model = "dynamic_unified"
     elif active_model not in (
         "realsign",
         "isl_numerals",
         "isl_hindi_vowels",
-        "amrita_isl_phrase_bilstm",
+        "dynamic_unified",
         "isl_mvp",
         "isl_sequence_lstm",
         "include_stream",
+        "amrita_isl_phrase_bilstm",
     ):
         active_model = "realsign"
 
     streaming_include: Optional[StreamingIncludeAdapter] = None
     if pipeline.include_service is not None:
         streaming_include = StreamingIncludeAdapter(service=pipeline.include_service)
+
+    unified_dynamic_clf = UnifiedDynamicAdapter.get_instance()
 
     rolling_features: deque = deque(maxlen=15)
     client_threshold: Optional[float] = None
@@ -224,6 +240,8 @@ async def websocket_recognize(
     last_word_probs: Dict[str, float] = {}
     last_word_top3: List[Tuple[str, float]] = []
     last_word_pred_time: float = 0.0
+    last_settled_phrase: str = ""
+    last_settled_phrase_time: float = 0.0
 
     # Motion-Based Kinetic Energy & Active Gesture Segmentation State
     prev_hand_pts: Optional[np.ndarray] = None
@@ -272,7 +290,7 @@ async def websocket_recognize(
         nonlocal last_committed_time, had_idle_baseline
         nonlocal alphabet_streak_candidate, alphabet_streak_count, alphabet_last_committed
         nonlocal last_word_label, last_word_display, last_word_conf, last_word_is_known
-        nonlocal last_word_probs, last_word_top3, last_word_pred_time
+        nonlocal last_word_probs, last_word_top3, last_word_pred_time, last_settled_phrase, last_settled_phrase_time
         nonlocal disambiguation_active, disambiguation_top1, disambiguation_top2, disambiguation_options
         nonlocal enable_object_detection, current_detected_objects, require_head_nod_confirm
         try:
@@ -305,6 +323,8 @@ async def websocket_recognize(
                 last_word_probs.clear()
                 last_word_top3.clear()
                 last_word_pred_time = 0.0
+                last_settled_phrase = ""
+                last_settled_phrase_time = 0.0
                 if pipeline.landmarker is not None:
                     pipeline.landmarker.reset_smoothing()
                 if pipeline.hand_landmarker is not None:
@@ -386,23 +406,54 @@ async def websocket_recognize(
                 })
             elif action == "set_model":
                 req_model = str(payload.get("model", "realsign")).lower()
-                if req_model in ("include", "include_stream"):
-                    req_model = "include_stream"
-                elif req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
+                if req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
                     req_model = "realsign"
                 elif req_model in ("numerals", "isl_numerals", "digits"):
                     req_model = "isl_numerals"
                 elif req_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
                     req_model = "isl_hindi_vowels"
+                elif req_model in ("include", "include_stream"):
+                    req_model = "include_stream"
+                elif req_model in ("isl_mvp", "mvp"):
+                    req_model = "isl_mvp"
+                elif req_model in ("isl_sequence_lstm", "sequence_lstm"):
+                    req_model = "isl_sequence_lstm"
                 elif req_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
                     req_model = "amrita_isl_phrase_bilstm"
-                if req_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "amrita_isl_phrase_bilstm", "isl_mvp", "isl_sequence_lstm", "include_stream"):
+                elif req_model in (
+                    "dynamic_unified",
+                    "isl_dynamic_unified_287",
+                    "unified_dynamic",
+                    "isl_dynamic_master_bilstm",
+                    "dynamic_master",
+                ):
+                    req_model = "dynamic_unified"
+                if req_model in (
+                    "realsign",
+                    "isl_numerals",
+                    "isl_hindi_vowels",
+                    "dynamic_unified",
+                    "isl_mvp",
+                    "isl_sequence_lstm",
+                    "include_stream",
+                    "amrita_isl_phrase_bilstm",
+                ):
                     active_model = req_model
                     rolling_features.clear()
                     gesture_sequence_buffer.clear()
                     if streaming_include is not None:
                         streaming_include.reset()
-                    accumulator.reset()
+                    # Commit any pending fingerspelled letters as a finished word before switching models
+                    if accumulator.current_word:
+                        committed_word = (
+                            accumulator.spell_corrector.correct(accumulator.current_word)
+                            if accumulator.spell_corrector is not None
+                            else accumulator.current_word
+                        )
+                        accumulator.sentence_tokens.append(committed_word)
+                        accumulator.current_word = ""
+                        accumulator._tokens_changed = True
+                    # Preserve sentence buffer across model switches until user explicitly clears or deletes!
                     is_actively_signing = False
                     settled_frames_count = 0
                     prev_hand_pts = None
@@ -421,6 +472,8 @@ async def websocket_recognize(
                     last_word_probs.clear()
                     last_word_top3.clear()
                     last_word_pred_time = 0.0
+                    last_settled_phrase = ""
+                    last_settled_phrase_time = 0.0
                     if pipeline.landmarker is not None:
                         pipeline.landmarker.reset_smoothing()
                     if pipeline.hand_landmarker is not None:
@@ -431,6 +484,9 @@ async def websocket_recognize(
                         "type": "info",
                         "message": f"Active classifier model switched to {active_model}",
                         "active_model": active_model,
+                        "sentence_buffer": accumulator.sentence_buffer,
+                        "translated_text": accumulator.translated_text,
+                        "translated_indic": accumulator.translated_indic,
                     })
             elif action == "set_threshold":
                 val = float(payload.get("threshold", CONFIDENCE_THRESHOLD_ALPHABET))
@@ -662,12 +718,11 @@ async def websocket_recognize(
                 face_lms = getattr(hl_result, "face_landmarks", None)
                 pose_lms = getattr(hl_result, "pose_landmarks", None)
                 nmm_marker = non_manual_detector.detect(face_lms)
-                if nmm_marker.is_question or nmm_marker.is_negation or nmm_marker.is_affirmation:
-                    accumulator.update_non_manual_grammar(
-                        is_question=nmm_marker.is_question,
-                        is_negation=nmm_marker.is_negation,
-                        is_affirmation=nmm_marker.is_affirmation,
-                    )
+                accumulator.update_non_manual_grammar(
+                    is_question=nmm_marker.is_question,
+                    is_negation=bool(nmm_marker.is_negation and nmm_marker.head_gesture != "shake"),
+                    is_affirmation=nmm_marker.is_affirmation,
+                )
                 facial_ratios = extract_facial_expression_features(face_lms)
                 body_anchors = extract_body_anchored_features(
                     pose_lms,
@@ -687,7 +742,7 @@ async def websocket_recognize(
                 feat_176 = np.concatenate([feat_164, body_anchors]).astype(np.float32)
                 rolling_features.append(feat_176)
 
-                if active_model == "include_stream" and streaming_include is not None:
+                if active_model in ("include_stream", "dynamic_unified") and streaming_include is not None:
                     streaming_include.append_frame(pose, left_hand, right_hand)
 
                 hands_in_subtitle_zone = check_subtitle_collision(left_hand, right_hand)
@@ -762,7 +817,7 @@ async def websocket_recognize(
                 elif active_model == "isl_mvp":
                     # ISL MVP model is ultra-lightweight (numpy/scikit ~50us). Run every frame hands are present
                     should_run_inference = bool(hand_detected and len(rolling_features) >= 5)
-                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
+                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm", "dynamic_unified"):
                     if kinetic_energy >= KINETIC_ENERGY_THRESHOLD:
                         is_actively_signing = True
                         settled_frames_count = 0
@@ -846,38 +901,45 @@ async def websocket_recognize(
                         else:
                             seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
 
-                    elif active_model == "amrita_isl_phrase_bilstm":
-                        amrita_clf = ModelRegistry.get("amrita_isl_phrase_bilstm")
-                        if amrita_clf is not None and len(segment_to_classify) >= 5:
+                    elif active_model in ("dynamic_unified", "amrita_isl_phrase_bilstm"):
+                        if len(segment_to_classify) >= 5:
                             arr_amrita = feat_array
                             if arr_amrita.shape[1] < 316:
                                 pad_width = 316 - arr_amrita.shape[1]
                                 arr_amrita = np.pad(arr_amrita, ((0, 0), (0, pad_width)), mode='constant')
                             else:
                                 arr_amrita = arr_amrita[:, :316]
-                            amrita_res = await loop.run_in_executor(
+
+                            inc_arr = None
+                            if streaming_include is not None and len(streaming_include.frame_buffer) >= 12:
+                                inc_arr = np.array(streaming_include.frame_buffer, dtype=np.float32)
+
+                            unified_res = await loop.run_in_executor(
                                 None,
-                                amrita_clf.predict,
+                                unified_dynamic_clf.predict,
                                 arr_amrita,
+                                inc_arr,
                                 confidence_threshold,
                             )
                             seq_pred = ISLSequencePrediction(
-                                label=amrita_res.phrase,
-                                confidence=amrita_res.confidence,
-                                is_known_sign=amrita_res.is_known_sign,
-                                probabilities=amrita_res.probabilities,
-                                top_3=amrita_res.top_3,
-                                raw_class_idx=amrita_res.raw_class_idx,
+                                label=unified_res.label,
+                                confidence=unified_res.confidence,
+                                is_known_sign=unified_res.is_known_sign,
+                                probabilities=unified_res.probabilities,
+                                top_3=unified_res.top_3,
+                                raw_class_idx=unified_res.raw_class_idx,
                             )
-                        elif amrita_clf is not None:
-                            empty_amrita = amrita_clf._empty_prediction()
+                            if unified_res.label in unified_dynamic_clf.display_names:
+                                DISPLAY_NAMES[unified_res.label] = unified_dynamic_clf.display_names[unified_res.label]
+                        else:
+                            empty_res = unified_dynamic_clf._empty_prediction()
                             seq_pred = ISLSequencePrediction(
-                                label=empty_amrita.phrase,
+                                label=empty_res.label,
                                 confidence=0.0,
                                 is_known_sign=False,
                                 probabilities={},
                                 top_3=[],
-                                raw_class_idx=-1,
+                                raw_class_idx=empty_res.raw_class_idx,
                             )
 
                     elif pipeline.classifier is not None:
@@ -954,7 +1016,7 @@ async def websocket_recognize(
                     buffer_fill = round(len(streaming_include.frame_buffer) / 30.0, 2) if streaming_include else 0.0
                     is_pred_valid = bool(include_pred and include_pred.is_known_sign and include_pred.confidence >= active_threshold and include_pred.label != "awaiting_sign")
                     pred_label = include_pred.label if include_pred else ""
-                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
+                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm", "dynamic_unified"):
                     res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()} if seq_pred else {}
                     raw_conf = round(seq_pred.confidence, 4) if seq_pred else 0.0
                     raw_top_class = seq_pred.top_3[0][0] if (seq_pred and seq_pred.top_3) else ("no_hand" if not hand_detected else "no_sign")
@@ -1036,10 +1098,15 @@ async def websocket_recognize(
                         is_stable = False
 
                     # Hands-Free Intent Confirmation via Head Nod & Head Shake
+                    if alphabet_nod_committed and (nmm_marker.head_gesture != "nod"):
+                        alphabet_nod_committed = False
+
                     if nmm_marker.head_gesture == "nod":
-                        target_sign = alphabet_streak_candidate if (alphabet_streak_candidate != "Awaiting Sign Input") else (last_settled_candidate if (now - last_settled_time < 2.5) else "")
-                        # Guard: One nod commits exactly ONE instance of the sign!
-                        if target_sign and not alphabet_nod_committed:
+                        target_sign = alphabet_streak_candidate if (alphabet_streak_candidate != "Awaiting Sign Input") else (last_settled_candidate if (now - last_settled_time < 3.5) else "")
+                        # Guard: One nod commits exactly ONE instance; require baseline release before repeating identical letter
+                        is_same_as_last = (target_sign == alphabet_last_committed)
+                        allow_nod_commit = bool(target_sign and not alphabet_nod_committed and ((not is_same_as_last) or had_idle_baseline or (now - alphabet_last_committed_time >= 2.0)))
+                        if allow_nod_commit:
                             emitted = accumulator.add_continuous_token(
                                 target_sign,
                                 confidence=max(raw_conf, 0.85),
@@ -1089,10 +1156,11 @@ async def websocket_recognize(
                                 res_display = f"Letter {alphabet_streak_candidate}"
                         else:
                             res_display = f"Letter {alphabet_streak_candidate}"
-                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
+                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout:
+                            # Require idle baseline return or distinct character to prevent duplicate letters
                             time_since_commit = now - alphabet_last_committed_time
                             is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
-                            can_emit = (not is_same_letter) or (not alphabet_repeat_lock) or (time_since_commit >= 1.2)
+                            can_emit = (not is_same_letter) or (had_idle_baseline and time_since_commit >= 1.2)
 
                             if can_emit:
                                 emitted = accumulator.add_continuous_token(
@@ -1115,7 +1183,7 @@ async def websocket_recognize(
                         last_word_label = pred_label
                         if active_model == "include_stream" and include_pred is not None:
                             last_word_display = include_pred.display_name
-                        elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
+                        elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm", "dynamic_unified"):
                             last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
                         else:
                             last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper())
@@ -1124,18 +1192,22 @@ async def websocket_recognize(
                         last_word_probs = res_probs
                         last_word_top3 = raw_top_3
                         last_word_pred_time = now
+                        last_settled_phrase = last_word_display
+                        last_settled_phrase_time = now
 
-                    # Latch check: If hands are still visible and we have a valid word within 0.8s
-                    word_latch_active = bool(
-                        hand_detected
-                        and last_word_is_known
-                        and (now - last_word_pred_time < 0.8)
-                    )
+                    # Target phrase latch: active if recent prediction within 3.0s or settled phrase within 3.5s
+                    has_recent_pred = bool(last_word_is_known and (now - last_word_pred_time < 3.0))
+                    has_settled_phrase = bool(last_settled_phrase and (now - last_settled_phrase_time < 3.5))
 
-                    if word_latch_active:
-                        res_label = last_word_label
-                        res_display = last_word_display
-                        res_conf = last_word_conf
+                    target_phrase = ""
+                    if has_recent_pred and last_word_display:
+                        target_phrase = last_word_display
+                    elif has_settled_phrase:
+                        target_phrase = last_settled_phrase
+
+                    if target_phrase:
+                        res_label = last_word_label or target_phrase
+                        res_conf = last_word_conf if last_word_conf > 0 else 0.85
                         res_is_known = True
                         is_stable = True
                         if not res_probs and last_word_probs:
@@ -1143,12 +1215,22 @@ async def websocket_recognize(
                         if not raw_top_3 and last_word_top3:
                             raw_top_3 = last_word_top3
 
-                        if candidate_label == res_label:
+                        if candidate_label == target_phrase:
                             candidate_streak += 1
                         else:
-                            candidate_label = res_label
+                            candidate_label = target_phrase
                             candidate_streak = 1
                             phrase_nod_committed = False
+
+                        if (now - last_committed_time < 1.0) and (target_phrase == last_committed_sign):
+                            res_display = f"✓ {target_phrase}"
+                            awaiting_nod = False
+                        elif require_head_nod_confirm:
+                            awaiting_nod = True
+                            res_display = target_phrase
+                        else:
+                            awaiting_nod = False
+                            res_display = target_phrase
 
                         # Disambiguation Check (when margin < 0.20 or is_ambiguous)
                         if seq_pred and getattr(seq_pred, "is_ambiguous", False) and len(seq_pred.top_3) >= 2 and not disambiguation_active:
@@ -1163,56 +1245,14 @@ async def websocket_recognize(
                                     {"label": t2_lbl, "display": DISPLAY_NAMES.get(t2_lbl, t2_lbl.upper().replace("_", " ")), "hand": "right"},
                                 ]
                                 disambiguation_start_time = now
-
-                        # Debounce gate for committing to backend accumulator (gated by disambiguation)
-                        clean_phrase_text = DISPLAY_NAMES.get(res_label, res_label.upper().replace("_", " "))
-
-                        if nmm_marker.head_gesture == "nod" and not phrase_nod_committed and (candidate_streak >= required_streak or last_word_is_known) and not disambiguation_active:
-                            accumulator.add_token(clean_phrase_text, token_type="phrase", timestamp=now)
-                            last_committed_sign = res_label
-                            last_committed_time = now
-                            phrase_nod_committed = True
-                            had_idle_baseline = False
-                            res_display = f"✓ {clean_phrase_text}"
-                            awaiting_nod = False
-                            logger.info("COMMITTED PHRASE VIA HEAD NOD: %s", clean_phrase_text)
-                        elif nmm_marker.head_gesture == "shake":
-                            had_undone = accumulator.reject_last()
-                            candidate_streak = 0
-                            phrase_nod_committed = False
-                            res_display = "✕ Undone"
-                            awaiting_nod = False
-                            logger.info("UNDID LAST PHRASE VIA HEAD SHAKE (undone=%s)", had_undone)
-                        elif candidate_streak >= required_streak and not disambiguation_active:
-                            if require_head_nod_confirm:
-                                if (now - last_committed_time < 1.0) and (res_label == last_committed_sign):
-                                    res_display = f"✓ {clean_phrase_text}"
-                                    awaiting_nod = False
-                                else:
-                                    awaiting_nod = True
-                                    res_display = clean_phrase_text
-                            else:
-                                time_since_last = now - last_committed_time
-                                is_same_sign = (res_label == last_committed_sign)
-                                can_commit = False
-                                if is_same_sign:
-                                    if hand_absent_duration >= 0.5 and had_idle_baseline:
-                                        can_commit = True
-                                else:
-                                    can_commit = True
-
-                                if can_commit:
-                                    accumulator.add_token(clean_phrase_text, token_type="phrase", timestamp=now)
-                                    last_committed_sign = res_label
-                                    last_committed_time = now
-                                    had_idle_baseline = False
                     else:
                         # Idle or Awaiting Sign
-                        if not hand_detected:
+                        if not hand_detected and (now - last_settled_phrase_time >= 3.5):
                             last_word_label = ""
                             last_word_display = ""
                             last_word_conf = 0.0
                             last_word_is_known = False
+                            last_settled_phrase = ""
                             phrase_nod_committed = False
                             alphabet_nod_committed = False
                             last_word_probs = {}
@@ -1226,6 +1266,58 @@ async def websocket_recognize(
                         is_stable = False
                         candidate_streak = 0
                         candidate_label = ""
+                        awaiting_nod = False
+
+                    # Universal Head Gesture Confirmation / Undo for Dynamic Sequences
+                    if phrase_nod_committed and (now - last_committed_time >= 0.80):
+                        phrase_nod_committed = False
+
+                    if nmm_marker.head_gesture == "nod":
+                        if target_phrase and not phrase_nod_committed and not disambiguation_active:
+                            accumulator.add_token(target_phrase, token_type="phrase", timestamp=now)
+                            last_committed_sign = target_phrase
+                            last_committed_time = now
+                            phrase_nod_committed = True
+                            last_settled_phrase = ""
+                            last_word_label = ""
+                            last_word_is_known = False
+                            res_label = target_phrase
+                            res_display = f"✓ {target_phrase}"
+                            res_conf = max(last_word_conf, 0.85)
+                            res_is_known = True
+                            is_stable = True
+                            awaiting_nod = False
+                            logger.info("COMMITTED PHRASE VIA HEAD NOD: %s", target_phrase)
+                    elif nmm_marker.head_gesture == "shake":
+                        had_undone = accumulator.reject_last(remove_whole_token=True)
+                        accumulator.detected_negation = False
+                        candidate_streak = 0
+                        phrase_nod_committed = False
+                        last_settled_phrase = ""
+                        last_word_label = ""
+                        last_word_is_known = False
+                        res_label = "Awaiting Sign Input"
+                        res_display = "✕ Undone"
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
+                        awaiting_nod = False
+                        logger.info("UNDID LAST PHRASE VIA HEAD SHAKE (undone=%s)", had_undone)
+                    elif not require_head_nod_confirm and target_phrase and candidate_streak >= required_streak and not disambiguation_active:
+                        time_since_last = now - last_committed_time
+                        is_same_sign = (target_phrase == last_committed_sign)
+                        can_commit = False
+                        if is_same_sign:
+                            if hand_absent_duration >= 0.5 and had_idle_baseline:
+                                can_commit = True
+                        else:
+                            can_commit = True
+
+                        if can_commit:
+                            accumulator.add_token(target_phrase, token_type="phrase", timestamp=now)
+                            last_committed_sign = target_phrase
+                            last_committed_time = now
+                            had_idle_baseline = False
 
                 # Universal Disambiguation Hand-Lift Elevation Arbiter
                 if disambiguation_active:

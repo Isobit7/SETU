@@ -104,3 +104,45 @@ def test_head_nod_confirmed_gating_logic():
         acc.reject_last()
 
     assert acc.sentence_buffer == ""
+
+
+def test_dynamic_phrase_nod_commit_and_shake_undo():
+    """Verify dynamic sequence model head gesture gating:
+    1. Dynamic phrase commits cleanly upon head nod.
+    2. Dynamic phrase with spaces (e.g. 'GOOD MORNING') or when remove_whole_token=True is completely undone upon head shake, not sliced into 'GOOD MORN'.
+    3. Head shake clears detected_negation so it doesn't turn the translation into 'NOT ...'.
+    """
+    acc = SentenceAccumulator()
+    now = time.time()
+
+    # Dynamic phrase recognized
+    phrase = "GOOD MORNING"
+    require_head_nod_confirm = True
+
+    # User nods head -> commits phrase
+    head_gesture = "nod"
+    if head_gesture == "nod":
+        acc.add_token(phrase, token_type="phrase", timestamp=now)
+
+    assert acc.sentence_buffer == "GOOD MORNING"
+
+    # User signs another phrase 'EAT'
+    phrase2 = "EAT"
+    acc.add_token(phrase2, token_type="phrase", timestamp=now + 1.0)
+    assert acc.sentence_buffer == "GOOD MORNING EAT"
+
+    # Suppose user shakes head (which non_manual_markers flags as negation during oscillation)
+    # The undo action must pop the last dynamic token cleanly and clear negation
+    acc.detected_negation = True  # simulate transient shake negation
+    undone = acc.reject_last(remove_whole_token=True)
+
+    assert undone is True
+    assert acc.sentence_buffer == "GOOD MORNING"
+    assert acc.detected_negation is False  # Negation must be cleared!
+
+    # Simulate passing cooldown and shaking head on multi-word phrase
+    acc._last_reject_time = 0.0
+    undone = acc.reject_last()  # Even without remove_whole_token=True, space in 'GOOD MORNING' causes clean pop
+    assert undone is True
+    assert acc.sentence_buffer == ""
+

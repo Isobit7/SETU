@@ -66,9 +66,10 @@ class HealthResponse(BaseModel):
     active_classifiers: List[str] = [
         "realsign_multisigner_mlp",
         "realsign_26class_alphabet",
-        "isl_mvp_5sign",
+        "isl_numerals",
+        "isl_hindi_vowels",
         "isl_sequence_lstm",
-        "ai4bharat_include_263sign",
+        "isl_dynamic_unified_287",
     ]
 
 
@@ -234,9 +235,10 @@ async def health_check():
         sequence_lstm_classes_count=sequence_lstm_count,
         active_classifiers=[
             "realsign_26class_alphabet",
-            "isl_mvp_5sign",
+            "isl_numerals",
+            "isl_hindi_vowels",
             "isl_sequence_lstm",
-            "ai4bharat_include_263sign",
+            "isl_dynamic_unified_287",
         ],
     )
 

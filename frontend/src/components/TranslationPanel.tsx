@@ -12,7 +12,7 @@ import {
   FileCode,
   ChevronDown,
 } from 'lucide-react';
-import type { RecognitionPayload } from '../types';
+import type { BufferInsertionMode, RecognitionPayload } from '../types';
 import { LiveDetectionOutput } from './LiveDetectionOutput';
 
 interface IndicLangTab {
@@ -28,6 +28,7 @@ const INDIC_TABS: IndicLangTab[] = [
   { key: 'ta', label: 'Tamil', native: 'தமிழ்', code: 'ta-IN' },
   { key: 'te', label: 'Telugu', native: 'తెలుగు', code: 'te-IN' },
   { key: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ', code: 'kn-IN' },
+  { key: 'ml', label: 'Malayalam', native: 'മലയാളം', code: 'ml-IN' },
 ];
 
 interface TranslationPanelProps {
@@ -44,6 +45,8 @@ interface TranslationPanelProps {
   isSpeaking?: boolean;
   onSpeak?: (text: string, lang?: string) => void;
   onStopSpeak?: () => void;
+  bufferInsertionMode?: BufferInsertionMode;
+  onSetBufferInsertionMode?: (mode: BufferInsertionMode) => void;
 }
 
 export const TranslationPanel: React.FC<TranslationPanelProps> = ({
@@ -58,13 +61,17 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   isSpeaking: propIsSpeaking,
   onSpeak,
   onStopSpeak,
+  bufferInsertionMode = 'head_nod',
+  onSetBufferInsertionMode,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
   const [selectedLang, setSelectedLang] = useState<string>('en');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState<boolean>(false);
+  const [apiTranslations, setApiTranslations] = useState<Record<string, string>>({});
 
   const exportMenuRef = useRef<HTMLDivElement | null>(null);
+  const lastFetchedSentenceRef = useRef<string>('');
 
   const speaking = propIsSpeaking !== undefined ? propIsSpeaking : localIsSpeaking;
 
@@ -86,13 +93,55 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   // Get translation text for any specified language tab
   const getTranslationForLang = (langKey: string): string => {
     if (langKey === 'en') {
-      return activeTranslation || currentResult?.translations?.en || '';
+      return activeTranslation || currentResult?.translations?.en || apiTranslations.en || '';
     }
-    return currentResult?.translations?.[langKey] || currentResult?.translated_indic?.[langKey] || '';
+    return (
+      currentResult?.translations?.[langKey] ||
+      currentResult?.translated_indic?.[langKey] ||
+      apiTranslations[langKey] ||
+      ''
+    );
   };
 
   const currentTranslationText = getTranslationForLang(selectedLang);
   const currentTab = INDIC_TABS.find((t) => t.key === selectedLang) || INDIC_TABS[0];
+
+  // Active HTTP translation fallback when sentence changes and WebSocket indic translations are pending
+  useEffect(() => {
+    const raw = activeSentence.trim();
+    if (!raw) {
+      setApiTranslations({});
+      lastFetchedSentenceRef.current = '';
+      return;
+    }
+    // If websocket stream already provided full Indic translations, use them directly
+    if (currentResult?.translations && Object.keys(currentResult.translations).length > 1) {
+      return;
+    }
+    if (raw === lastFetchedSentenceRef.current) return;
+    lastFetchedSentenceRef.current = raw;
+
+    const controller = new AbortController();
+    fetch('/api/v1/nlp/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: raw }),
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.translations) {
+          setApiTranslations(data.translations);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.warn('Translation fetch notice:', err);
+        }
+      });
+
+    return () => controller.abort();
+  }, [activeSentence, currentResult?.translations]);
 
   // Close export menu on click outside or Escape
   useEffect(() => {
@@ -287,7 +336,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                   title={`Switch to ${tab.label} (${tab.native})`}
                 >
                   <span className="indic-tab-native">{tab.native}</span>
-                  <span className="indic-tab-label">{tab.label}</span>
+                  {tab.label !== tab.native && <span className="indic-tab-label">{tab.label}</span>}
                   {hasContent && <span className="indic-tab-indicator" />}
                 </button>
               );
@@ -299,7 +348,9 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
             <div className="translation-section-header">
               <div className="translation-header-left">
                 <span className="translation-section-badge">
-                  {currentTab.native} ({currentTab.label})
+                  {currentTab.native === currentTab.label
+                    ? currentTab.label
+                    : `${currentTab.native} (${currentTab.label})`}
                 </span>
                 <span className="translation-rule-tag">
                   {selectedLang === 'en' ? 'SOV → SVO Syntax' : 'Indic Neural Transfer'}
@@ -340,7 +391,19 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
         {/* 2. Sentence Builder Text Area */}
         <div className="sentence-integrated-section">
           <div className="sentence-section-header">
-            <span className="sentence-section-label">Sentence Buffer</span>
+            <div className="sentence-header-left">
+              <span className="sentence-section-label">Sentence Buffer</span>
+              {onSetBufferInsertionMode && (
+                <button
+                  type="button"
+                  className={`buffer-mode-pill ${bufferInsertionMode === 'head_nod' ? 'mode-nod' : 'mode-auto'}`}
+                  onClick={() => onSetBufferInsertionMode(bufferInsertionMode === 'head_nod' ? 'auto' : 'head_nod')}
+                  title="Click to toggle between Head-Nod Commit and Auto-Stream insertion"
+                >
+                  {bufferInsertionMode === 'head_nod' ? '✓ Head-Nod' : '⚡ Auto-Stream'}
+                </button>
+              )}
+            </div>
             <div className="sentence-stats-mini">
               <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
               <span className="stats-dot">·</span>
@@ -491,7 +554,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
               aria-label="Backspace last character"
             >
               <Delete size={14} />
-              <span>Backspace</span>
+              <span>Back</span>
               <kbd className="action-kbd-badge">⌫</kbd>
             </button>
 

@@ -212,32 +212,68 @@ def prepare_amrita_dataset(
 # ==============================================================================
 
 class SequenceAugmenter:
-    """Applies realistic jitter and speed perturbations to (30, 316) sequences."""
+    """Applies realistic jitter, spatial scaling, temporal warping and consistent velocity updates to (T, 316) sequences."""
 
     @staticmethod
-    def augment(seq: np.ndarray, jitter_std: float = 0.005) -> np.ndarray:
+    def augment(seq: np.ndarray, jitter_std: float = 0.004) -> np.ndarray:
         out = seq.copy()
-        # Add small Gaussian noise to positions [0..157]
-        pos_mask = (out[:, :158] != 0.0).astype(np.float32)
-        noise = np.random.normal(0.0, jitter_std, size=out[:, :158].shape).astype(np.float32)
-        out[:, :158] += noise * pos_mask
-        return out
+        T = out.shape[0]
+        pos = out[:, :158].copy()
+
+        # 1. Spatial scale jitter (0.94 to 1.06)
+        scale = np.random.uniform(0.94, 1.06)
+        pos_mask = (pos != 0.0).astype(np.float32)
+        pos = pos * scale
+
+        # 2. Add small Gaussian noise to positions
+        noise = np.random.normal(0.0, jitter_std, size=pos.shape).astype(np.float32)
+        pos += noise * pos_mask
+
+        # 3. Temporal speed warping / resampling
+        speed = np.random.uniform(0.88, 1.12)
+        warped_len = max(6, int(round(T * speed)))
+        orig_t = np.linspace(0.0, 1.0, T)
+        warped_t = np.linspace(0.0, 1.0, warped_len)
+        
+        # Resample positions to warped_len then back to T
+        warped_pos = np.zeros((warped_len, 158), dtype=np.float32)
+        for d in range(158):
+            warped_pos[:, d] = np.interp(warped_t, orig_t, pos[:, d])
+            
+        resampled_pos = np.zeros((T, 158), dtype=np.float32)
+        for d in range(158):
+            resampled_pos[:, d] = np.interp(orig_t, warped_t, warped_pos[:, d])
+
+        # 4. Consistent velocity recomputation
+        dt = 1.0 / 30.0
+        vel = np.zeros_like(resampled_pos)
+        if T > 1:
+            vel[1:] = (resampled_pos[1:] - resampled_pos[:-1]) / dt
+            vel[0] = vel[1]
+        vel[:, 146:148] = 0.0  # Zero out binary presence flags velocity
+
+        out[:, :158] = resampled_pos
+        out[:, 158:] = vel
+        return out.astype(np.float32)
 
 
 class AmritaSequenceDataset(Dataset):
-    def __init__(self, X: np.ndarray, y: np.ndarray, is_train: bool = True) -> None:
+    def __init__(self, X: np.ndarray, y: np.ndarray, is_train: bool = True, augment_multiplier: int = 3) -> None:
         self.X = torch.tensor(X, dtype=torch.float32)
         self.y = torch.tensor(y, dtype=torch.long)
         self.is_train = is_train
+        self.augment_multiplier = augment_multiplier if is_train else 1
+        self.base_len = len(self.y)
 
     def __len__(self) -> int:
-        return len(self.y)
+        return self.base_len * self.augment_multiplier
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        feat = self.X[idx].clone().numpy()
-        if self.is_train and np.random.rand() > 0.4:
+        base_idx = idx % self.base_len
+        feat = self.X[base_idx].clone().numpy()
+        if self.is_train and (idx >= self.base_len or np.random.rand() > 0.3):
             feat = SequenceAugmenter.augment(feat)
-        return torch.tensor(feat, dtype=torch.float32), self.y[idx]
+        return torch.tensor(feat, dtype=torch.float32), self.y[base_idx]
 
 
 # ==============================================================================
@@ -304,9 +340,9 @@ class AmritaPhraseBiLSTM(nn.Module):
 # ==============================================================================
 
 def train_and_evaluate(
-    epochs: int = 55,
+    epochs: int = 70,
     batch_size: int = 32,
-    lr: float = 1.2e-3,
+    lr: float = 1.0e-3,
     weight_decay: float = 1e-4,
     device_name: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -329,7 +365,7 @@ def train_and_evaluate(
 
     logger.info("Dataset Splitting: Train=%d (80%%) | Val=%d (10%%) | Test=%d (10%%)", len(X_train), len(X_val), len(X_test))
 
-    train_loader = DataLoader(AmritaSequenceDataset(X_train, y_train, is_train=True), batch_size=batch_size, shuffle=True, drop_last=True)
+    train_loader = DataLoader(AmritaSequenceDataset(X_train, y_train, is_train=True, augment_multiplier=4), batch_size=batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(AmritaSequenceDataset(X_val, y_val, is_train=False), batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(AmritaSequenceDataset(X_test, y_test, is_train=False), batch_size=batch_size, shuffle=False)
 

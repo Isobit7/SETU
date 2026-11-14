@@ -47,6 +47,7 @@ class AmritaPhraseBiLSTM(nn.Module):
         num_layers: int = 2,
         num_classes: int = 49,
         dropout: float = 0.30,
+        use_deep_head: bool = False,
     ) -> None:
         super().__init__()
         self.input_norm = nn.LayerNorm(input_size)
@@ -66,13 +67,26 @@ class AmritaPhraseBiLSTM(nn.Module):
             nn.Linear(64, 1, bias=False),
         )
 
-        self.classifier = nn.Sequential(
-            nn.Linear(lstm_out_dim, 128),
-            nn.LayerNorm(128),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(128, num_classes),
-        )
+        if use_deep_head:
+            self.classifier = nn.Sequential(
+                nn.Linear(lstm_out_dim, 128),
+                nn.LayerNorm(128),
+                nn.SiLU(),
+                nn.Dropout(dropout),
+                nn.Linear(128, 64),
+                nn.LayerNorm(64),
+                nn.SiLU(),
+                nn.Dropout(dropout * 0.5),
+                nn.Linear(64, num_classes),
+            )
+        else:
+            self.classifier = nn.Sequential(
+                nn.Linear(lstm_out_dim, 128),
+                nn.LayerNorm(128),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+                nn.Linear(128, num_classes),
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.dim() == 2:
@@ -98,15 +112,18 @@ class AmritaPhraseClassifier:
         self.class_names: List[str] = ckpt.get("class_names", [])
         self.num_classes: int = len(self.class_names)
         arch = ckpt.get("architecture", {})
+        state_dict = ckpt["model_state_dict"]
+        use_deep_head = any("classifier.4.weight" in k for k in state_dict.keys())
 
         self.model = AmritaPhraseBiLSTM(
-            input_size=arch.get("input_dim", 316),
-            hidden_size=arch.get("hidden_dim", 128),
+            input_size=arch.get("input_size", arch.get("input_dim", 316)),
+            hidden_size=arch.get("hidden_size", arch.get("hidden_dim", 128)),
             num_layers=arch.get("num_layers", 2),
             num_classes=self.num_classes,
             dropout=arch.get("dropout", 0.3),
+            use_deep_head=use_deep_head,
         )
-        self.model.load_state_dict(ckpt["model_state_dict"])
+        self.model.load_state_dict(state_dict)
         self.model.eval()
 
         self.test_accuracy = ckpt.get("test_accuracy", None)
@@ -130,9 +147,16 @@ class AmritaPhraseClassifier:
         feat = np.asarray(features_sequence, dtype=np.float32)
         if feat.ndim == 2:
             feat = np.expand_dims(feat, axis=0)
+
+        # Ensure feature dimension matches model input_dim (316)
+        if feat.shape[-1] < 316:
+            pad_width = ((0, 0), (0, 0), (0, 316 - feat.shape[-1]))
+            feat = np.pad(feat, pad_width, mode="constant")
+        elif feat.shape[-1] > 316:
+            feat = feat[:, :, :316]
         
-        inp = torch.from_numpy(feat)
-        logits = self.model(inp).numpy()[0]
+        inp = torch.from_numpy(feat).to(next(self.model.parameters()).device)
+        logits = self.model(inp).detach().cpu().numpy()[0]
 
         # Calibrated Softmax
         exp_l = np.exp(logits - np.max(logits))

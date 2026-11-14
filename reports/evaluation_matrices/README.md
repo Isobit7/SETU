@@ -1,8 +1,8 @@
 # SETU — Model Evaluation Matrices & Parameter Catalog
 
 > **Canonical Path:** `reports/evaluation_matrices/`  
-> **Total Models Listed:** 13  
-> **Last Synchronized:** 2026-11-06T18:22:38.752107+00:00  
+> **Total Models Listed:** 14  
+> **Last Synchronized:** 2026-11-14T07:29:20.416388+00:00  
 > **Auto-Update Guarantee:** Automatically scans `models/weights/` whenever models are trained, updated, or removed.
 
 ---
@@ -11,8 +11,9 @@
 
 | Model Name | Task / Domain | Architecture | Total Params | Weights / Biases | Learning Rate | Accuracy / F1 | Latency | Detail Link |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **amrita_isl_phrase_bilstm.pth** | General Sign / Multimodal Processing | .PTH Model | `908,585` | `903,804` / `4,781` | `N/A` | **78.57%** | `N/A` | [View Matrix](amrita_isl_phrase_bilstm_matrix.md) |
+| **amrita_isl_phrase_bilstm.pth** | General Sign / Multimodal Processing | .PTH Model | `914,093` | `909,180` / `4,913` | `N/A` | **81.73%** | `N/A` | [View Matrix](amrita_isl_phrase_bilstm_matrix.md) |
 | **HuggingFace ISL 26-Class Benchmark MLP** | Benchmark Alphabet Recognition (A–Z) | 3-Layer BatchNorm MLP | `26,972` | `26,176` / `410` | `0.001` | **94.39%** | `0.16 ms` | [View Matrix](hf_isl_26class_mlp_matrix.md) |
+| **isl_dynamic_master_bilstm.pth** | General Sign / Multimodal Processing | .PTH Model | `914,093` | `909,180` / `4,913` | `N/A` | **81.73%** | `N/A` | [View Matrix](isl_dynamic_master_bilstm_matrix.md) |
 | **isl_hindi_vowels.onnx** | General Sign / Multimodal Processing | .ONNX Model | `26,972` | `26,900` / `72` | `N/A` | **N/A** | `N/A` | [View Matrix](isl_hindi_vowels_matrix.md) |
 | **isl_hindi_vowels_mlp.pth** | General Sign / Multimodal Processing | .PTH Model | `25,802` | `25,024` / `392` | `N/A` | **94.71%** | `N/A` | [View Matrix](isl_hindi_vowels_mlp_matrix.md) |
 | **SETU ISL Conversational MVP Matrix** | Core Phrase Recognition (Sub-Millisecond Baseline) | L2-Regularized Ridge Classifier Matrix | `10,119` | `10,113` / `6` | `N/A (Analytic Matrix Solver)` | **80.00%** | `0.2 ms` | [View Matrix](isl_mvp_model_matrix.md) |
@@ -53,6 +54,7 @@ POST /api/v1/models/matrices/refresh
 
 - 📄 [**amrita_isl_phrase_bilstm.pth Matrix**](amrita_isl_phrase_bilstm_matrix.md) (`amrita_isl_phrase_bilstm_matrix.json`)
 - 📄 [**HuggingFace ISL 26-Class Benchmark MLP Matrix**](hf_isl_26class_mlp_matrix.md) (`hf_isl_26class_mlp_matrix.json`)
+- 📄 [**isl_dynamic_master_bilstm.pth Matrix**](isl_dynamic_master_bilstm_matrix.md) (`isl_dynamic_master_bilstm_matrix.json`)
 - 📄 [**isl_hindi_vowels.onnx Matrix**](isl_hindi_vowels_matrix.md) (`isl_hindi_vowels_matrix.json`)
 - 📄 [**isl_hindi_vowels_mlp.pth Matrix**](isl_hindi_vowels_mlp_matrix.md) (`isl_hindi_vowels_mlp_matrix.json`)
 - 📄 [**SETU ISL Conversational MVP Matrix Matrix**](isl_mvp_model_matrix.md) (`isl_mvp_model_matrix.json`)

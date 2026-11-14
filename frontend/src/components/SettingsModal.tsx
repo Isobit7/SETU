@@ -310,10 +310,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       value={activeModel}
                       onChange={(e) => onSwitchModel(e.target.value as ActiveModelType)}
                     >
-                      <option value="realsign">Fingerspelling Alphabet (A–Z)</option>
-                      <option value="isl_mvp">Common Phrases (5 Signs)</option>
-                      <option value="isl_sequence_lstm">Dynamic Gestures (7 Sequences)</option>
+                      <option value="realsign">English Alphabet (A–Z)</option>
                       <option value="isl_numerals">Numbers & Currency (0–9, ₹)</option>
+                      <option value="isl_hindi_vowels">Hindi Vowels (अ–ऐ)</option>
+                      <option value="dynamic_unified">Unified Dynamic Vocabulary & Phrases (287 Signs)</option>
                     </select>
                   </div>
                 </div>

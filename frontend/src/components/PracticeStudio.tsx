@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { RecognitionPayload } from '../types';
 import { Practice3DHandViewer } from './Practice3DHandViewer';
+import { Avatar3DViewer } from './Avatar3DViewer';
 
 export interface PracticeStudioProps {
   currentResult: RecognitionPayload | null;
@@ -193,6 +194,7 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
   onClose,
 }) => {
   const [mode, setMode] = useState<'alphabet' | 'phrases'>('alphabet');
+  const [viewerMode, setViewerMode] = useState<'hand' | 'avatar'>('hand');
   const [selectedTarget, setSelectedTarget] = useState<string>('A');
   const [streak, setStreak] = useState<number>(0);
   const [holdProgress, setHoldProgress] = useState<number>(0);
@@ -447,8 +449,34 @@ export const PracticeStudio: React.FC<PracticeStudioProps> = ({
           {mode === 'alphabet' ? `Letter ${selectedTarget}` : selectedTarget}
         </div>
 
-        {/* 3D Skeletal Perspective Rigged Hand Model Demonstration */}
-        <Practice3DHandViewer sign={selectedTarget} />
+        {/* 3D Skeletal Perspective Rigged Hand / Avatar Model Demonstration */}
+        <div className="practice-model-switcher">
+          <span className="practice-model-label">Model:</span>
+          <div className="practice-model-toggle-group">
+            <button
+              type="button"
+              className={`practice-model-btn ${viewerMode === 'hand' ? 'active' : ''}`}
+              onClick={() => setViewerMode('hand')}
+            >
+              3D Hand Rig
+            </button>
+            <button
+              type="button"
+              className={`practice-model-btn ${viewerMode === 'avatar' ? 'active' : ''}`}
+              onClick={() => setViewerMode('avatar')}
+            >
+              Humanoid Avatar
+            </button>
+          </div>
+        </div>
+
+        {viewerMode === 'hand' ? (
+          <Practice3DHandViewer sign={selectedTarget} />
+        ) : (
+          <div className="practice-avatar-container">
+            <Avatar3DViewer currentSign={selectedTarget} isTwoHanded={isDualHandedAlphabet} />
+          </div>
+        )}
 
         <p className="challenge-instruction">
           {mode === 'alphabet'

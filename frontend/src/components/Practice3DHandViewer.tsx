@@ -376,6 +376,11 @@ function generateHand3DCoordinates(rawSign: string): DualHandSkeleton3D {
       rightHand = createHand({ x: 0, y: -0.2, z: 0 }, [1.0, 0, 0, 0, 1.0], [0, 0, 0, 0, 0], [-0.6, 0, 0, 0, 0.6]);
       break;
 
+    case 'Z':
+      // Index extended tracing Z, thumb holding down middle, ring, pinky
+      rightHand = createHand({ x: 0, y: -0.2, z: 0 }, [0.2, 1.0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]);
+      break;
+
     case 'NAMASTE':
       // Both flat hands pressed together at chest
       isTwoHanded = true;

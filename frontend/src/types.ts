@@ -15,9 +15,9 @@ export type ActiveModelType =
   | 'realsign'
   | 'isl_numerals'
   | 'isl_hindi_vowels'
+  | 'dynamic_unified'
   | 'amrita_phrase'
-  | 'isl_mvp'
-  | 'isl_sequence_lstm'
+  | 'isl_dynamic_master_bilstm'
   | 'include_stream';
 
 export interface Candidate {
@@ -75,6 +75,7 @@ export interface RecognitionPayload {
     eyebrow_elevation: number;
     head_yaw_oscillation: number;
     confidence: number;
+    head_gesture?: string;
   };
   sentence_tokens?: string[];
   message?: string;
@@ -134,6 +135,7 @@ export type SubtitleSize = 'small' | 'medium' | 'large';
 export interface LandmarkStyles {
   showLeftHand: boolean;
   showRightHand: boolean;
+  showFace?: boolean;
   mirrored: boolean;
 }
 

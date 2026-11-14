@@ -64,12 +64,9 @@ class SentenceAccumulator:
         is_affirmation: bool = False,
     ) -> None:
         """Updates grammatical flags inferred from facial expression and head movement (PROB-20)."""
-        if is_question:
-            self.detected_question = True
-        if is_negation:
-            self.detected_negation = True
-        if is_affirmation:
-            self.detected_affirmation = True
+        self.detected_question = bool(is_question)
+        self.detected_negation = bool(is_negation)
+        self.detected_affirmation = bool(is_affirmation)
 
     @property
     def sentence_buffer(self) -> str:
@@ -154,58 +151,70 @@ class SentenceAccumulator:
 
     def translate_sentence(self, async_neural: bool = False) -> str:
         """Parses the current sentence tokens through the ISL Gloss Parser and Neural Translator."""
-        if not self.sentence_tokens:
+        active_tokens = list(self.sentence_tokens)
+        if self.current_word:
+            active_tokens.append(self.current_word)
+
+        if not active_tokens:
             self.translated_indic.clear()
             self.translated_text = ""
             return ""
 
         # Compute Indic multilingual translations (PROB-17)
-        self.translated_indic = indic_transformer.translate_all(self.sentence_tokens)
+        self.translated_indic = indic_transformer.translate_all(active_tokens)
 
         # 1. Fast exact canonical idiom match (zero-latency for common baseline phrases)
-        rule_match = self.parser.match_rule(self.sentence_tokens)
+        rule_match = self.parser.match_rule(active_tokens)
         if rule_match is not None:
             self.translated_text = rule_match
+        else:
+            # 2. Immediate clean gloss heuristic fallback for 0ms latency UI update
+            immediate_gloss = self.parser.parse_gloss(active_tokens)
+            self.translated_text = immediate_gloss
 
-        # 2. Immediate clean gloss heuristic fallback for 0ms latency UI update
-        immediate_gloss = self.parser.parse_gloss(self.sentence_tokens)
-        self.translated_text = immediate_gloss
-
-        # 3. High-fidelity on-device Neural Sequence-to-Sequence translation (Qwen2.5-0.5B)
-        if self.neural_translator is not None and getattr(self.neural_translator, "is_loaded", False):
-            if async_neural:
-                import threading
-                tokens_copy = list(self.sentence_tokens)
-                def _bg_translate():
+            # 3. High-fidelity on-device Neural Sequence-to-Sequence translation (Qwen2.5-0.5B)
+            if self.neural_translator is not None and getattr(self.neural_translator, "is_loaded", False):
+                if async_neural:
+                    import threading
+                    tokens_copy = list(active_tokens)
+                    def _bg_translate():
+                        try:
+                            res = self.neural_translator.translate(tokens_copy)
+                            if res:
+                                self.translated_text = res
+                        except Exception:
+                            pass
+                    threading.Thread(target=_bg_translate, daemon=True).start()
+                else:
                     try:
-                        res = self.neural_translator.translate(tokens_copy)
+                        res = self.neural_translator.translate(active_tokens)
                         if res:
                             self.translated_text = res
                     except Exception:
                         pass
-                threading.Thread(target=_bg_translate, daemon=True).start()
-            else:
-                try:
-                    res = self.neural_translator.translate(self.sentence_tokens)
-                    if res:
-                        self.translated_text = res
-                except Exception:
-                    pass
 
         # Apply Non-Manual Markers (NMMs) grammatical modifiers (PROB-20)
         if self.detected_negation:
             if "not" not in self.translated_text.lower() and "no" not in self.translated_text.lower():
                 self.translated_text = f"NOT {self.translated_text}".strip()
-            for lang, neg_suffix in [("hi", " नहीं"), ("ta", " இல்லை"), ("te", " లేదు"), ("kn", " ಇಲ್ಲ")]:
+            for lang, neg_suffix in [("hi", " नहीं"), ("ta", " இல்லை"), ("te", " లేదు"), ("kn", " ಇಲ್ಲ"), ("ml", " ഇല്ല")]:
                 if lang in self.translated_indic and neg_suffix.strip() not in self.translated_indic[lang]:
                     self.translated_indic[lang] = self.translated_indic[lang].rstrip("।.").strip() + neg_suffix
 
-        if self.detected_question:
+        has_wh_word = any(
+            t.upper() in ("WHAT", "WHERE", "WHEN", "WHY", "HOW", "WHO", "WHICH")
+            for t in active_tokens
+        )
+        if (self.detected_question or has_wh_word):
             if not self.translated_text.endswith("?"):
                 self.translated_text = self.translated_text.rstrip(".").strip() + "?"
             for lang in self.translated_indic:
                 if not self.translated_indic[lang].endswith("?"):
                     self.translated_indic[lang] = self.translated_indic[lang].rstrip("।.").strip() + "?"
+
+        # Sentence casing: ensure initial letter is capitalized
+        if self.translated_text and len(self.translated_text) > 0:
+            self.translated_text = self.translated_text[0].upper() + self.translated_text[1:]
 
         return self.translated_text
 
@@ -250,32 +259,57 @@ class SentenceAccumulator:
         self.reset()
 
     def backspace(self) -> bool:
-        """Removes exactly one letter from current_word, or the last character from the last sentence token."""
+        """Removes exactly one letter from current_word, or the last token from sentence_tokens."""
+        res = False
         if self.current_word:
             self.current_word = self.current_word[:-1]
             self.last_token_time = time.time()
             self._tokens_changed = True
-            return True
+            res = True
         elif self.sentence_tokens:
-            last_tok = self.sentence_tokens.pop()
-            if len(last_tok) > 1:
-                # Remove only the last character from the token, preserving the rest
-                self.sentence_tokens.append(last_tok[:-1])
+            self.sentence_tokens.pop()
             self.last_token_time = time.time()
             self._tokens_changed = True
-            return True
-        return False
+            res = True
 
-    def reject_last(self) -> bool:
+        if res:
+            try:
+                self.translate_sentence(async_neural=False)
+            except Exception:
+                pass
+        return res
+
+    def reject_last(self, remove_whole_token: bool = False) -> bool:
         """Undo last committed token/letter (triggered by Head Shake). Returns True if something was removed."""
         now = time.time()
         # Cooldown guard: prevent a single continuous head shake from deleting multiple letters
-        if hasattr(self, "_last_reject_time") and (now - self._last_reject_time < 0.9):
+        if hasattr(self, "_last_reject_time") and (now - self._last_reject_time < 1.5):
             return False
 
         self._last_reject_time = now
-        had_content = self.backspace()
+        had_content = False
+        if self.current_word:
+            if remove_whole_token:
+                self.current_word = ""
+            else:
+                self.current_word = self.current_word[:-1]
+            self.last_token_time = now
+            self._tokens_changed = True
+            had_content = True
+        elif self.sentence_tokens:
+            if remove_whole_token:
+                self.sentence_tokens.pop()
+            else:
+                last_tok = self.sentence_tokens.pop()
+                if len(last_tok) > 1 and " " not in last_tok:
+                    self.sentence_tokens.append(last_tok[:-1])
+            self.last_token_time = now
+            self._tokens_changed = True
+            had_content = True
+
         if had_content:
+            # Head shake as undo/reject must not contaminate the remaining sentence with grammatical negation
+            self.detected_negation = False
             try:
                 self.translate_sentence(async_neural=False)
             except Exception:

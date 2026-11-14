@@ -133,11 +133,16 @@ class ISLSyntaxTransformer:
             corrected = spell_corrector.correct(spelled_word)
             return corrected.capitalize()
 
-        # 1. Check for Question Patterns (final Wh-words: WHAT, WHERE, WHY, HOW, WHEN)
+        # 1. Check for Question Patterns (clause-final or clause-initial Wh-words: WHAT, WHERE, WHY, HOW, WHEN)
         last_tok = cleaned[-1]
         if last_tok in WH_WORDS:
             wh_word = WH_WORDS[last_tok]
             remainder = cleaned[:-1]
+            return self._transform_wh_question(wh_word, remainder)
+
+        if cleaned[0] in WH_WORDS:
+            wh_word = WH_WORDS[cleaned[0]]
+            remainder = cleaned[1:]
             return self._transform_wh_question(wh_word, remainder)
 
         # 2. Check for Negation Patterns (final NOT / NO)
@@ -249,11 +254,53 @@ class ISLSyntaxTransformer:
                 return "I would like some water, please."
             if t == "FOOD":
                 return "I would like some food, please."
+            if t == "EAT":
+                return "I want to eat."
+            if t == "DRINK":
+                return "I want to drink."
             if t == "HELP":
                 return "Please help me."
-            if t == "THANK_YOU" or t == "THANK":
+            if t in ("THANK_YOU", "THANK"):
                 return "Thank you very much."
+            if t == "YES":
+                return "Yes."
+            if t == "NO":
+                return "No."
+            if t == "PLEASE":
+                return "Please."
+            if t == "SORRY":
+                return "I am sorry."
+            if t == "WELCOME":
+                return "You are welcome."
+            if t == "DOCTOR":
+                return "I need a doctor."
+            if t == "MEDICINE":
+                return "I need medicine."
             return t.capitalize() + "."
+
+        # Check for clause-final modal verbs (NEED, WANT): [Subject, Object/Action, NEED/WANT]
+        if len(tokens) >= 2 and tokens[-1] in ("NEED", "WANT"):
+            modal_tok = tokens[-1]
+            modal_verb = VERBS[modal_tok]
+            rem_tokens = tokens[:-1]
+            m_subj = None
+            m_objects: List[str] = []
+            for t in rem_tokens:
+                if t in PRONOUNS_SUBJECT and m_subj is None and not m_objects:
+                    m_subj = PRONOUNS_SUBJECT[t]
+                else:
+                    m_objects.append(t.lower())
+            if m_subj is None:
+                m_subj = "I"
+            m_v_form = modal_verb["present_3s"] if m_subj in ("he", "she") else modal_verb["base"]
+            m_obj_str = " ".join(m_objects)
+            if m_obj_str in ("water", "tea", "coffee", "food"):
+                m_obj_str = f"some {m_obj_str}"
+            elif m_obj_str in ("doctor", "hospital", "book", "train", "bus") and modal_tok == "NEED":
+                m_obj_str = f"a {m_obj_str}"
+            if m_obj_str:
+                return f"{m_subj.capitalize()} {m_v_form} {m_obj_str}."
+            return f"{m_subj.capitalize()} {m_v_form}."
 
         subj = None
         verb = None

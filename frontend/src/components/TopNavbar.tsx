@@ -21,6 +21,7 @@ interface TopNavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isBackendConnected: boolean;
+  backendReady?: boolean;
   fps?: number;
   latencyMs?: number;
   onOpenSettings: () => void;
@@ -43,6 +44,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   activeTab,
   setActiveTab,
   isBackendConnected,
+  backendReady = false,
   fps = 0,
   latencyMs = 0,
   onOpenSettings,
@@ -287,13 +289,21 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
         {/* Minimal Live Status Indicator (Clean Dot with Tooltip) */}
         <div
-          className={`connection-pill-minimal ${isBackendConnected ? 'connected' : 'disconnected'}`}
-          title={`SETU Engine WebSocket: ${
-            isBackendConnected ? 'Connected (CUDA Ready)' : 'Disconnected'
+          className={`connection-pill-minimal ${
+            isBackendConnected ? 'connected' : backendReady ? 'ready' : 'disconnected'
+          }`}
+          title={`SETU AI Engine: ${
+            isBackendConnected
+              ? 'Active Recognition Stream (CUDA Ready)'
+              : backendReady
+              ? 'Backend Online & Model Loaded (CUDA Ready)'
+              : 'Backend Offline'
           }${fps > 0 ? ` · ${fps} FPS` : ''}${latencyMs > 0 ? ` · ${latencyMs}ms` : ''}`}
         >
           <span className="connection-status-dot" aria-hidden="true" />
-          <span className="status-label-minimal">{isBackendConnected ? (fps > 0 ? `${fps} FPS` : 'Live') : 'Offline'}</span>
+          <span className="status-label-minimal">
+            {isBackendConnected ? (fps > 0 ? `${fps} FPS` : 'Live') : backendReady ? 'Ready' : 'Offline'}
+          </span>
         </div>
 
         {/* Settings Icon Button */}

@@ -102,6 +102,10 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     }
     const raw = currentResult?.guidance || framingFeedback.message;
     if (!raw) return 'Optimal Framing (50–70cm)';
+    const hasHands = Boolean(currentResult?.hand_detected || framingFeedback.handsDetected);
+    if (hasHands && (raw.includes('Tilt Camera Down') || raw.includes('Tilt camera down'))) {
+      return 'Optimal Framing (50–70cm)';
+    }
     if (raw.includes('Too close') || raw.includes('step back')) return 'Move Back (Sit 50–70cm away)';
     if (raw.includes('Too far') || raw.includes('closer')) return 'Move Closer (Sit 50–70cm away)';
     if (raw.includes('Camera too low')) return 'Tilt Camera Up';
@@ -172,21 +176,21 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         const res = currentResultRef.current;
         if (ctx) {
           const targetLandmarks = res?.landmarks;
-          const hasHands = targetLandmarks && (
+          const hasLandmarks = targetLandmarks && (
             (targetLandmarks.left_hand && targetLandmarks.left_hand.length > 0) ||
             (targetLandmarks.right_hand && targetLandmarks.right_hand.length > 0)
           );
 
-          if (hasHands || res?.detected_objects) {
+          if (hasLandmarks || res?.detected_objects) {
             // Adaptive exponential lerp (0.72 provides instantaneous responsive follow with 0 micro-stutter)
             const lerpFactor = 0.72;
             const disp = displayedLandmarksRef.current;
 
-            const updateHand = (key: 'left_hand' | 'right_hand') => {
+            const updateGroup = (key: 'left_hand' | 'right_hand') => {
               const target = targetLandmarks?.[key];
               if (target && target.length > 0) {
                 if (!disp[key] || disp[key]!.length !== target.length) {
-                  // Immediate snap on new hand arrival
+                  // Immediate snap on new landmark arrival
                   disp[key] = target.map((p) => ({ ...p }));
                 } else {
                   const current = disp[key]!;
@@ -201,8 +205,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
               }
             };
 
-            updateHand('left_hand');
-            updateHand('right_hand');
+            updateGroup('left_hand');
+            updateGroup('right_hand');
 
             drawLandmarksOnCanvas(
               ctx,

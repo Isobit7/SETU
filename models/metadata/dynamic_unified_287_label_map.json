@@ -1,0 +1,3491 @@
+{
+  "model_name": "SETU-Unified-Dynamic-287-ISL",
+  "total_classes": 287,
+  "classes": [
+    "no_sign",
+    "actor",
+    "adult",
+    "afternoon",
+    "alive",
+    "alright",
+    "angry",
+    "animal",
+    "artist",
+    "attack",
+    "author",
+    "baby",
+    "bad",
+    "bag",
+    "ball",
+    "bank",
+    "bathroom",
+    "beautiful",
+    "bed",
+    "bedroom",
+    "bicycle",
+    "biglarge",
+    "bill",
+    "bird",
+    "black",
+    "blind",
+    "blue",
+    "boat",
+    "book",
+    "box",
+    "boy",
+    "brother",
+    "brown",
+    "bus",
+    "camera",
+    "car",
+    "card",
+    "cat",
+    "cellphone",
+    "chair",
+    "cheap",
+    "child",
+    "city",
+    "clean",
+    "clock",
+    "clothing",
+    "cold",
+    "colour",
+    "computer",
+    "cool",
+    "court",
+    "cow",
+    "crowd",
+    "curved",
+    "daughter",
+    "dead",
+    "deaf",
+    "death",
+    "deep",
+    "dirty",
+    "doctor",
+    "dog",
+    "door",
+    "dream",
+    "dress",
+    "drinking",
+    "dry",
+    "eat",
+    "election",
+    "energy",
+    "evening",
+    "exercise",
+    "exmonsoon",
+    "expensive",
+    "fall",
+    "family",
+    "famous",
+    "fan",
+    "fast",
+    "father",
+    "female",
+    "fish",
+    "flat",
+    "friday",
+    "friend",
+    "gift",
+    "girl",
+    "god",
+    "good",
+    "goodafternoon",
+    "goodevening",
+    "good_morning",
+    "goodnight",
+    "grandfather",
+    "grandmother",
+    "green",
+    "grey",
+    "ground",
+    "gun",
+    "hand",
+    "happy",
+    "hard",
+    "hat",
+    "he",
+    "healthy",
+    "heavy",
+    "hello",
+    "help",
+    "high",
+    "horse",
+    "hospital",
+    "hot",
+    "hour",
+    "house",
+    "howareyou",
+    "husband",
+    "i",
+    "india",
+    "it",
+    "job",
+    "key",
+    "king",
+    "kitchen",
+    "lamp",
+    "laptop",
+    "lawyer",
+    "letter",
+    "library",
+    "light",
+    "location",
+    "lock",
+    "long",
+    "loose",
+    "loud",
+    "low",
+    "male",
+    "man",
+    "manager",
+    "market",
+    "marriage",
+    "mean",
+    "medicine",
+    "minute",
+    "monday",
+    "money",
+    "monsoon",
+    "month",
+    "morning",
+    "mother",
+    "mouse",
+    "music",
+    "namaste",
+    "name",
+    "narrow",
+    "neighbour",
+    "new",
+    "newspaper",
+    "nice",
+    "night",
+    "nose",
+    "office",
+    "old",
+    "orange",
+    "page",
+    "paint",
+    "pant",
+    "paper",
+    "parent",
+    "park",
+    "patient",
+    "peace",
+    "pen",
+    "pencil",
+    "photograph",
+    "pink",
+    "plane",
+    "player",
+    "pleased",
+    "pocket",
+    "police",
+    "poor",
+    "power",
+    "president",
+    "price",
+    "priest",
+    "queen",
+    "quiet",
+    "raceethnicity",
+    "radio",
+    "red",
+    "religion",
+    "reporter",
+    "restaurant",
+    "rich",
+    "ring",
+    "sad",
+    "saturday",
+    "school",
+    "science",
+    "screen",
+    "season",
+    "second",
+    "secondnumber",
+    "secretary",
+    "shallow",
+    "she",
+    "shirt",
+    "shoes",
+    "short",
+    "sick",
+    "sign",
+    "sister",
+    "sit",
+    "skirt",
+    "sleep",
+    "slow",
+    "smalllittle",
+    "soap",
+    "soft",
+    "soldier",
+    "son",
+    "sorry",
+    "sport",
+    "spring",
+    "stand",
+    "stop",
+    "storeorshop",
+    "streetorroad",
+    "strong",
+    "student",
+    "study",
+    "suit",
+    "summer",
+    "sunday",
+    "table",
+    "tall",
+    "teacher",
+    "team",
+    "technology",
+    "teeth",
+    "telephone",
+    "television",
+    "temple",
+    "thank_you",
+    "they",
+    "thick",
+    "thin",
+    "thursday",
+    "tight",
+    "time",
+    "today",
+    "tomorrow",
+    "tool",
+    "train",
+    "trainstation",
+    "trainticket",
+    "transportation",
+    "truck",
+    "tshirt",
+    "tuesday",
+    "ugly",
+    "umbrella",
+    "university",
+    "waiter",
+    "war",
+    "warm",
+    "we",
+    "weak",
+    "wednesday",
+    "week",
+    "welcome",
+    "wet",
+    "white",
+    "wide",
+    "wife",
+    "window",
+    "winter",
+    "woman",
+    "work",
+    "write",
+    "year",
+    "yellow",
+    "yesterday",
+    "you",
+    "you_are_perfect",
+    "young",
+    "youplural"
+  ],
+  "label_to_index": {
+    "no_sign": 0,
+    "actor": 1,
+    "adult": 2,
+    "afternoon": 3,
+    "alive": 4,
+    "alright": 5,
+    "angry": 6,
+    "animal": 7,
+    "artist": 8,
+    "attack": 9,
+    "author": 10,
+    "baby": 11,
+    "bad": 12,
+    "bag": 13,
+    "ball": 14,
+    "bank": 15,
+    "bathroom": 16,
+    "beautiful": 17,
+    "bed": 18,
+    "bedroom": 19,
+    "bicycle": 20,
+    "biglarge": 21,
+    "bill": 22,
+    "bird": 23,
+    "black": 24,
+    "blind": 25,
+    "blue": 26,
+    "boat": 27,
+    "book": 28,
+    "box": 29,
+    "boy": 30,
+    "brother": 31,
+    "brown": 32,
+    "bus": 33,
+    "camera": 34,
+    "car": 35,
+    "card": 36,
+    "cat": 37,
+    "cellphone": 38,
+    "chair": 39,
+    "cheap": 40,
+    "child": 41,
+    "city": 42,
+    "clean": 43,
+    "clock": 44,
+    "clothing": 45,
+    "cold": 46,
+    "colour": 47,
+    "computer": 48,
+    "cool": 49,
+    "court": 50,
+    "cow": 51,
+    "crowd": 52,
+    "curved": 53,
+    "daughter": 54,
+    "dead": 55,
+    "deaf": 56,
+    "death": 57,
+    "deep": 58,
+    "dirty": 59,
+    "doctor": 60,
+    "dog": 61,
+    "door": 62,
+    "dream": 63,
+    "dress": 64,
+    "drinking": 65,
+    "dry": 66,
+    "eat": 67,
+    "election": 68,
+    "energy": 69,
+    "evening": 70,
+    "exercise": 71,
+    "exmonsoon": 72,
+    "expensive": 73,
+    "fall": 74,
+    "family": 75,
+    "famous": 76,
+    "fan": 77,
+    "fast": 78,
+    "father": 79,
+    "female": 80,
+    "fish": 81,
+    "flat": 82,
+    "friday": 83,
+    "friend": 84,
+    "gift": 85,
+    "girl": 86,
+    "god": 87,
+    "good": 88,
+    "goodafternoon": 89,
+    "goodevening": 90,
+    "good_morning": 91,
+    "goodnight": 92,
+    "grandfather": 93,
+    "grandmother": 94,
+    "green": 95,
+    "grey": 96,
+    "ground": 97,
+    "gun": 98,
+    "hand": 99,
+    "happy": 100,
+    "hard": 101,
+    "hat": 102,
+    "he": 103,
+    "healthy": 104,
+    "heavy": 105,
+    "hello": 106,
+    "help": 107,
+    "high": 108,
+    "horse": 109,
+    "hospital": 110,
+    "hot": 111,
+    "hour": 112,
+    "house": 113,
+    "howareyou": 114,
+    "husband": 115,
+    "i": 116,
+    "india": 117,
+    "it": 118,
+    "job": 119,
+    "key": 120,
+    "king": 121,
+    "kitchen": 122,
+    "lamp": 123,
+    "laptop": 124,
+    "lawyer": 125,
+    "letter": 126,
+    "library": 127,
+    "light": 128,
+    "location": 129,
+    "lock": 130,
+    "long": 131,
+    "loose": 132,
+    "loud": 133,
+    "low": 134,
+    "male": 135,
+    "man": 136,
+    "manager": 137,
+    "market": 138,
+    "marriage": 139,
+    "mean": 140,
+    "medicine": 141,
+    "minute": 142,
+    "monday": 143,
+    "money": 144,
+    "monsoon": 145,
+    "month": 146,
+    "morning": 147,
+    "mother": 148,
+    "mouse": 149,
+    "music": 150,
+    "namaste": 151,
+    "name": 152,
+    "narrow": 153,
+    "neighbour": 154,
+    "new": 155,
+    "newspaper": 156,
+    "nice": 157,
+    "night": 158,
+    "nose": 159,
+    "office": 160,
+    "old": 161,
+    "orange": 162,
+    "page": 163,
+    "paint": 164,
+    "pant": 165,
+    "paper": 166,
+    "parent": 167,
+    "park": 168,
+    "patient": 169,
+    "peace": 170,
+    "pen": 171,
+    "pencil": 172,
+    "photograph": 173,
+    "pink": 174,
+    "plane": 175,
+    "player": 176,
+    "pleased": 177,
+    "pocket": 178,
+    "police": 179,
+    "poor": 180,
+    "power": 181,
+    "president": 182,
+    "price": 183,
+    "priest": 184,
+    "queen": 185,
+    "quiet": 186,
+    "raceethnicity": 187,
+    "radio": 188,
+    "red": 189,
+    "religion": 190,
+    "reporter": 191,
+    "restaurant": 192,
+    "rich": 193,
+    "ring": 194,
+    "sad": 195,
+    "saturday": 196,
+    "school": 197,
+    "science": 198,
+    "screen": 199,
+    "season": 200,
+    "second": 201,
+    "secondnumber": 202,
+    "secretary": 203,
+    "shallow": 204,
+    "she": 205,
+    "shirt": 206,
+    "shoes": 207,
+    "short": 208,
+    "sick": 209,
+    "sign": 210,
+    "sister": 211,
+    "sit": 212,
+    "skirt": 213,
+    "sleep": 214,
+    "slow": 215,
+    "smalllittle": 216,
+    "soap": 217,
+    "soft": 218,
+    "soldier": 219,
+    "son": 220,
+    "sorry": 221,
+    "sport": 222,
+    "spring": 223,
+    "stand": 224,
+    "stop": 225,
+    "storeorshop": 226,
+    "streetorroad": 227,
+    "strong": 228,
+    "student": 229,
+    "study": 230,
+    "suit": 231,
+    "summer": 232,
+    "sunday": 233,
+    "table": 234,
+    "tall": 235,
+    "teacher": 236,
+    "team": 237,
+    "technology": 238,
+    "teeth": 239,
+    "telephone": 240,
+    "television": 241,
+    "temple": 242,
+    "thank_you": 243,
+    "they": 244,
+    "thick": 245,
+    "thin": 246,
+    "thursday": 247,
+    "tight": 248,
+    "time": 249,
+    "today": 250,
+    "tomorrow": 251,
+    "tool": 252,
+    "train": 253,
+    "trainstation": 254,
+    "trainticket": 255,
+    "transportation": 256,
+    "truck": 257,
+    "tshirt": 258,
+    "tuesday": 259,
+    "ugly": 260,
+    "umbrella": 261,
+    "university": 262,
+    "waiter": 263,
+    "war": 264,
+    "warm": 265,
+    "we": 266,
+    "weak": 267,
+    "wednesday": 268,
+    "week": 269,
+    "welcome": 270,
+    "wet": 271,
+    "white": 272,
+    "wide": 273,
+    "wife": 274,
+    "window": 275,
+    "winter": 276,
+    "woman": 277,
+    "work": 278,
+    "write": 279,
+    "year": 280,
+    "yellow": 281,
+    "yesterday": 282,
+    "you": 283,
+    "you_are_perfect": 284,
+    "young": 285,
+    "youplural": 286
+  },
+  "display_names": {
+    "no_sign": "Waiting for a sign...",
+    "actor": "ACTOR",
+    "adult": "ADULT",
+    "afternoon": "AFTERNOON",
+    "alive": "ALIVE",
+    "alright": "ALRIGHT",
+    "angry": "ANGRY",
+    "animal": "ANIMAL",
+    "artist": "ARTIST",
+    "attack": "ATTACK",
+    "author": "AUTHOR",
+    "baby": "BABY",
+    "bad": "BAD",
+    "bag": "BAG",
+    "ball": "BALL",
+    "bank": "BANK",
+    "bathroom": "BATHROOM",
+    "beautiful": "BEAUTIFUL",
+    "bed": "BED",
+    "bedroom": "BEDROOM",
+    "bicycle": "BICYCLE",
+    "biglarge": "BIG / LARGE",
+    "bill": "BILL",
+    "bird": "BIRD",
+    "black": "BLACK",
+    "blind": "BLIND",
+    "blue": "BLUE",
+    "boat": "BOAT",
+    "book": "BOOK",
+    "box": "BOX",
+    "boy": "BOY",
+    "brother": "BROTHER",
+    "brown": "BROWN",
+    "bus": "BUS",
+    "camera": "CAMERA",
+    "car": "CAR",
+    "card": "CARD",
+    "cat": "CAT",
+    "cellphone": "CELLPHONE",
+    "chair": "CHAIR",
+    "cheap": "CHEAP",
+    "child": "CHILD",
+    "city": "CITY",
+    "clean": "CLEAN",
+    "clock": "CLOCK",
+    "clothing": "CLOTHING",
+    "cold": "COLD",
+    "colour": "COLOUR",
+    "computer": "COMPUTER",
+    "cool": "COOL",
+    "court": "COURT",
+    "cow": "COW",
+    "crowd": "CROWD",
+    "curved": "CURVED",
+    "daughter": "DAUGHTER",
+    "dead": "DEAD",
+    "deaf": "DEAF",
+    "death": "DEATH",
+    "deep": "DEEP",
+    "dirty": "DIRTY",
+    "doctor": "DOCTOR",
+    "dog": "DOG",
+    "door": "DOOR",
+    "dream": "DREAM",
+    "dress": "DRESS",
+    "drinking": "DRINKING",
+    "dry": "DRY",
+    "eat": "EAT",
+    "election": "ELECTION",
+    "energy": "ENERGY",
+    "evening": "EVENING",
+    "exercise": "EXERCISE",
+    "exmonsoon": "EXMONSOON",
+    "expensive": "EXPENSIVE",
+    "fall": "FALL",
+    "family": "FAMILY",
+    "famous": "FAMOUS",
+    "fan": "FAN",
+    "fast": "FAST",
+    "father": "FATHER",
+    "female": "FEMALE",
+    "fish": "FISH",
+    "flat": "FLAT",
+    "friday": "FRIDAY",
+    "friend": "FRIEND",
+    "gift": "GIFT",
+    "girl": "GIRL",
+    "god": "GOD",
+    "good": "GOOD",
+    "goodafternoon": "GOOD AFTERNOON",
+    "goodevening": "GOOD EVENING",
+    "good_morning": "GOOD MORNING",
+    "goodnight": "GOOD NIGHT",
+    "grandfather": "GRANDFATHER",
+    "grandmother": "GRANDMOTHER",
+    "green": "GREEN",
+    "grey": "GREY",
+    "ground": "GROUND",
+    "gun": "GUN",
+    "hand": "HAND",
+    "happy": "HAPPY",
+    "hard": "HARD",
+    "hat": "HAT",
+    "he": "HE",
+    "healthy": "HEALTHY",
+    "heavy": "HEAVY",
+    "hello": "HELLO",
+    "help": "HELP",
+    "high": "HIGH",
+    "horse": "HORSE",
+    "hospital": "HOSPITAL",
+    "hot": "HOT",
+    "hour": "HOUR",
+    "house": "HOUSE",
+    "howareyou": "HOW ARE YOU?",
+    "husband": "HUSBAND",
+    "i": "I (ME)",
+    "india": "INDIA",
+    "it": "IT",
+    "job": "JOB",
+    "key": "KEY",
+    "king": "KING",
+    "kitchen": "KITCHEN",
+    "lamp": "LAMP",
+    "laptop": "LAPTOP",
+    "lawyer": "LAWYER",
+    "letter": "LETTER",
+    "library": "LIBRARY",
+    "light": "LIGHT",
+    "location": "LOCATION",
+    "lock": "LOCK",
+    "long": "LONG",
+    "loose": "LOOSE",
+    "loud": "LOUD",
+    "low": "LOW",
+    "male": "MALE",
+    "man": "MAN",
+    "manager": "MANAGER",
+    "market": "MARKET",
+    "marriage": "MARRIAGE",
+    "mean": "MEAN",
+    "medicine": "MEDICINE",
+    "minute": "MINUTE",
+    "monday": "MONDAY",
+    "money": "MONEY",
+    "monsoon": "MONSOON",
+    "month": "MONTH",
+    "morning": "MORNING",
+    "mother": "MOTHER",
+    "mouse": "MOUSE",
+    "music": "MUSIC",
+    "namaste": "NAMASTE",
+    "name": "NAME",
+    "narrow": "NARROW",
+    "neighbour": "NEIGHBOUR",
+    "new": "NEW",
+    "newspaper": "NEWSPAPER",
+    "nice": "NICE",
+    "night": "NIGHT",
+    "nose": "NOSE",
+    "office": "OFFICE",
+    "old": "OLD",
+    "orange": "ORANGE",
+    "page": "PAGE",
+    "paint": "PAINT",
+    "pant": "PANT",
+    "paper": "PAPER",
+    "parent": "PARENT",
+    "park": "PARK",
+    "patient": "PATIENT",
+    "peace": "PEACE",
+    "pen": "PEN",
+    "pencil": "PENCIL",
+    "photograph": "PHOTOGRAPH",
+    "pink": "PINK",
+    "plane": "PLANE",
+    "player": "PLAYER",
+    "pleased": "PLEASED",
+    "pocket": "POCKET",
+    "police": "POLICE",
+    "poor": "POOR",
+    "power": "POWER",
+    "president": "PRESIDENT",
+    "price": "PRICE",
+    "priest": "PRIEST",
+    "queen": "QUEEN",
+    "quiet": "QUIET",
+    "raceethnicity": "RACE / ETHNICITY",
+    "radio": "RADIO",
+    "red": "RED",
+    "religion": "RELIGION",
+    "reporter": "REPORTER",
+    "restaurant": "RESTAURANT",
+    "rich": "RICH",
+    "ring": "RING",
+    "sad": "SAD",
+    "saturday": "SATURDAY",
+    "school": "SCHOOL",
+    "science": "SCIENCE",
+    "screen": "SCREEN",
+    "season": "SEASON",
+    "second": "SECOND",
+    "secondnumber": "SECOND (NUMBER)",
+    "secretary": "SECRETARY",
+    "shallow": "SHALLOW",
+    "she": "SHE",
+    "shirt": "SHIRT",
+    "shoes": "SHOES",
+    "short": "SHORT",
+    "sick": "SICK",
+    "sign": "SIGN",
+    "sister": "SISTER",
+    "sit": "SIT",
+    "skirt": "SKIRT",
+    "sleep": "SLEEP",
+    "slow": "SLOW",
+    "smalllittle": "SMALL / LITTLE",
+    "soap": "SOAP",
+    "soft": "SOFT",
+    "soldier": "SOLDIER",
+    "son": "SON",
+    "sorry": "SORRY",
+    "sport": "SPORT",
+    "spring": "SPRING",
+    "stand": "STAND",
+    "stop": "STOP",
+    "storeorshop": "STORE / SHOP",
+    "streetorroad": "STREET / ROAD",
+    "strong": "STRONG",
+    "student": "STUDENT",
+    "study": "STUDY",
+    "suit": "SUIT",
+    "summer": "SUMMER",
+    "sunday": "SUNDAY",
+    "table": "TABLE",
+    "tall": "TALL",
+    "teacher": "TEACHER",
+    "team": "TEAM",
+    "technology": "TECHNOLOGY",
+    "teeth": "TEETH",
+    "telephone": "TELEPHONE",
+    "television": "TELEVISION",
+    "temple": "TEMPLE",
+    "thank_you": "THANK YOU",
+    "they": "THEY",
+    "thick": "THICK",
+    "thin": "THIN",
+    "thursday": "THURSDAY",
+    "tight": "TIGHT",
+    "time": "TIME",
+    "today": "TODAY",
+    "tomorrow": "TOMORROW",
+    "tool": "TOOL",
+    "train": "TRAIN",
+    "trainstation": "TRAIN STATION",
+    "trainticket": "TRAIN TICKET",
+    "transportation": "TRANSPORTATION",
+    "truck": "TRUCK",
+    "tshirt": "T-SHIRT",
+    "tuesday": "TUESDAY",
+    "ugly": "UGLY",
+    "umbrella": "UMBRELLA",
+    "university": "UNIVERSITY",
+    "waiter": "WAITER",
+    "war": "WAR",
+    "warm": "WARM",
+    "we": "WE",
+    "weak": "WEAK",
+    "wednesday": "WEDNESDAY",
+    "week": "WEEK",
+    "welcome": "WELCOME",
+    "wet": "WET",
+    "white": "WHITE",
+    "wide": "WIDE",
+    "wife": "WIFE",
+    "window": "WINDOW",
+    "winter": "WINTER",
+    "woman": "WOMAN",
+    "work": "WORK",
+    "write": "WRITE",
+    "year": "YEAR",
+    "yellow": "YELLOW",
+    "yesterday": "YESTERDAY",
+    "you": "YOU",
+    "you_are_perfect": "YOU ARE PERFECT",
+    "young": "YOUNG",
+    "youplural": "YOU (PLURAL)"
+  },
+  "class_details": {
+    "no_sign": {
+      "index": 0,
+      "display_name": "Waiting for a sign...",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "no_sign",
+      "include_class": null
+    },
+    "actor": {
+      "index": 1,
+      "display_name": "ACTOR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "actor"
+    },
+    "adult": {
+      "index": 2,
+      "display_name": "ADULT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "adult"
+    },
+    "afternoon": {
+      "index": 3,
+      "display_name": "AFTERNOON",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "afternoon",
+      "include_class": "afternoon"
+    },
+    "alive": {
+      "index": 4,
+      "display_name": "ALIVE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "alive"
+    },
+    "alright": {
+      "index": 5,
+      "display_name": "ALRIGHT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "alright"
+    },
+    "angry": {
+      "index": 6,
+      "display_name": "ANGRY",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "angry",
+      "include_class": null
+    },
+    "animal": {
+      "index": 7,
+      "display_name": "ANIMAL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "animal"
+    },
+    "artist": {
+      "index": 8,
+      "display_name": "ARTIST",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "artist"
+    },
+    "attack": {
+      "index": 9,
+      "display_name": "ATTACK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "attack"
+    },
+    "author": {
+      "index": 10,
+      "display_name": "AUTHOR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "author"
+    },
+    "baby": {
+      "index": 11,
+      "display_name": "BABY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "baby"
+    },
+    "bad": {
+      "index": 12,
+      "display_name": "BAD",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "bad",
+      "include_class": "bad"
+    },
+    "bag": {
+      "index": 13,
+      "display_name": "BAG",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bag"
+    },
+    "ball": {
+      "index": 14,
+      "display_name": "BALL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "ball"
+    },
+    "bank": {
+      "index": 15,
+      "display_name": "BANK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bank"
+    },
+    "bathroom": {
+      "index": 16,
+      "display_name": "BATHROOM",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bathroom"
+    },
+    "beautiful": {
+      "index": 17,
+      "display_name": "BEAUTIFUL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "beautiful"
+    },
+    "bed": {
+      "index": 18,
+      "display_name": "BED",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bed"
+    },
+    "bedroom": {
+      "index": 19,
+      "display_name": "BEDROOM",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bedroom"
+    },
+    "bicycle": {
+      "index": 20,
+      "display_name": "BICYCLE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bicycle"
+    },
+    "biglarge": {
+      "index": 21,
+      "display_name": "BIG / LARGE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "biglarge"
+    },
+    "bill": {
+      "index": 22,
+      "display_name": "BILL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bill"
+    },
+    "bird": {
+      "index": 23,
+      "display_name": "BIRD",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "bird",
+      "include_class": "bird"
+    },
+    "black": {
+      "index": 24,
+      "display_name": "BLACK",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "black",
+      "include_class": "black"
+    },
+    "blind": {
+      "index": 25,
+      "display_name": "BLIND",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "blind"
+    },
+    "blue": {
+      "index": 26,
+      "display_name": "BLUE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "blue"
+    },
+    "boat": {
+      "index": 27,
+      "display_name": "BOAT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "boat"
+    },
+    "book": {
+      "index": 28,
+      "display_name": "BOOK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "book"
+    },
+    "box": {
+      "index": 29,
+      "display_name": "BOX",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "box"
+    },
+    "boy": {
+      "index": 30,
+      "display_name": "BOY",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "boy",
+      "include_class": "boy"
+    },
+    "brother": {
+      "index": 31,
+      "display_name": "BROTHER",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "brother",
+      "include_class": "brother"
+    },
+    "brown": {
+      "index": 32,
+      "display_name": "BROWN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "brown"
+    },
+    "bus": {
+      "index": 33,
+      "display_name": "BUS",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "bus"
+    },
+    "camera": {
+      "index": 34,
+      "display_name": "CAMERA",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "camera"
+    },
+    "car": {
+      "index": 35,
+      "display_name": "CAR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "car"
+    },
+    "card": {
+      "index": 36,
+      "display_name": "CARD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "card"
+    },
+    "cat": {
+      "index": 37,
+      "display_name": "CAT",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "cat",
+      "include_class": "cat"
+    },
+    "cellphone": {
+      "index": 38,
+      "display_name": "CELLPHONE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "cellphone"
+    },
+    "chair": {
+      "index": 39,
+      "display_name": "CHAIR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "chair"
+    },
+    "cheap": {
+      "index": 40,
+      "display_name": "CHEAP",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "cheap"
+    },
+    "child": {
+      "index": 41,
+      "display_name": "CHILD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "child"
+    },
+    "city": {
+      "index": 42,
+      "display_name": "CITY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "city"
+    },
+    "clean": {
+      "index": 43,
+      "display_name": "CLEAN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "clean"
+    },
+    "clock": {
+      "index": 44,
+      "display_name": "CLOCK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "clock"
+    },
+    "clothing": {
+      "index": 45,
+      "display_name": "CLOTHING",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "clothing"
+    },
+    "cold": {
+      "index": 46,
+      "display_name": "COLD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "cold"
+    },
+    "colour": {
+      "index": 47,
+      "display_name": "COLOUR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "colour"
+    },
+    "computer": {
+      "index": 48,
+      "display_name": "COMPUTER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "computer"
+    },
+    "cool": {
+      "index": 49,
+      "display_name": "COOL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "cool"
+    },
+    "court": {
+      "index": 50,
+      "display_name": "COURT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "court"
+    },
+    "cow": {
+      "index": 51,
+      "display_name": "COW",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "cow",
+      "include_class": "cow"
+    },
+    "crowd": {
+      "index": 52,
+      "display_name": "CROWD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "crowd"
+    },
+    "curved": {
+      "index": 53,
+      "display_name": "CURVED",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "curved"
+    },
+    "daughter": {
+      "index": 54,
+      "display_name": "DAUGHTER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "daughter"
+    },
+    "dead": {
+      "index": 55,
+      "display_name": "DEAD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "dead"
+    },
+    "deaf": {
+      "index": 56,
+      "display_name": "DEAF",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "deaf"
+    },
+    "death": {
+      "index": 57,
+      "display_name": "DEATH",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "death"
+    },
+    "deep": {
+      "index": 58,
+      "display_name": "DEEP",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "deep"
+    },
+    "dirty": {
+      "index": 59,
+      "display_name": "DIRTY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "dirty"
+    },
+    "doctor": {
+      "index": 60,
+      "display_name": "DOCTOR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "doctor"
+    },
+    "dog": {
+      "index": 61,
+      "display_name": "DOG",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "dog",
+      "include_class": "dog"
+    },
+    "door": {
+      "index": 62,
+      "display_name": "DOOR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "door"
+    },
+    "dream": {
+      "index": 63,
+      "display_name": "DREAM",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "dream"
+    },
+    "dress": {
+      "index": 64,
+      "display_name": "DRESS",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "dress"
+    },
+    "drinking": {
+      "index": 65,
+      "display_name": "DRINKING",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "drinking",
+      "include_class": null
+    },
+    "dry": {
+      "index": 66,
+      "display_name": "DRY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "dry"
+    },
+    "eat": {
+      "index": 67,
+      "display_name": "EAT",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "eat",
+      "include_class": null
+    },
+    "election": {
+      "index": 68,
+      "display_name": "ELECTION",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "election"
+    },
+    "energy": {
+      "index": 69,
+      "display_name": "ENERGY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "energy"
+    },
+    "evening": {
+      "index": 70,
+      "display_name": "EVENING",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "evening",
+      "include_class": "evening"
+    },
+    "exercise": {
+      "index": 71,
+      "display_name": "EXERCISE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "exercise"
+    },
+    "exmonsoon": {
+      "index": 72,
+      "display_name": "EXMONSOON",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "exmonsoon"
+    },
+    "expensive": {
+      "index": 73,
+      "display_name": "EXPENSIVE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "expensive"
+    },
+    "fall": {
+      "index": 74,
+      "display_name": "FALL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "fall"
+    },
+    "family": {
+      "index": 75,
+      "display_name": "FAMILY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "family"
+    },
+    "famous": {
+      "index": 76,
+      "display_name": "FAMOUS",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "famous"
+    },
+    "fan": {
+      "index": 77,
+      "display_name": "FAN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "fan"
+    },
+    "fast": {
+      "index": 78,
+      "display_name": "FAST",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "fast"
+    },
+    "father": {
+      "index": 79,
+      "display_name": "FATHER",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "father",
+      "include_class": "father"
+    },
+    "female": {
+      "index": 80,
+      "display_name": "FEMALE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "female"
+    },
+    "fish": {
+      "index": 81,
+      "display_name": "FISH",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "fish",
+      "include_class": "fish"
+    },
+    "flat": {
+      "index": 82,
+      "display_name": "FLAT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "flat"
+    },
+    "friday": {
+      "index": 83,
+      "display_name": "FRIDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "friday"
+    },
+    "friend": {
+      "index": 84,
+      "display_name": "FRIEND",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "friend",
+      "include_class": "friend"
+    },
+    "gift": {
+      "index": 85,
+      "display_name": "GIFT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "gift"
+    },
+    "girl": {
+      "index": 86,
+      "display_name": "GIRL",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "girl",
+      "include_class": "girl"
+    },
+    "god": {
+      "index": 87,
+      "display_name": "GOD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "god"
+    },
+    "good": {
+      "index": 88,
+      "display_name": "GOOD",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "good",
+      "include_class": "good"
+    },
+    "goodafternoon": {
+      "index": 89,
+      "display_name": "GOOD AFTERNOON",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "goodafternoon"
+    },
+    "goodevening": {
+      "index": 90,
+      "display_name": "GOOD EVENING",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "goodevening"
+    },
+    "good_morning": {
+      "index": 91,
+      "display_name": "GOOD MORNING",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "good_morning",
+      "include_class": "goodmorning"
+    },
+    "goodnight": {
+      "index": 92,
+      "display_name": "GOOD NIGHT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "goodnight"
+    },
+    "grandfather": {
+      "index": 93,
+      "display_name": "GRANDFATHER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "grandfather"
+    },
+    "grandmother": {
+      "index": 94,
+      "display_name": "GRANDMOTHER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "grandmother"
+    },
+    "green": {
+      "index": 95,
+      "display_name": "GREEN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "green"
+    },
+    "grey": {
+      "index": 96,
+      "display_name": "GREY",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "grey",
+      "include_class": "grey"
+    },
+    "ground": {
+      "index": 97,
+      "display_name": "GROUND",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "ground"
+    },
+    "gun": {
+      "index": 98,
+      "display_name": "GUN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "gun"
+    },
+    "hand": {
+      "index": 99,
+      "display_name": "HAND",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "hand",
+      "include_class": null
+    },
+    "happy": {
+      "index": 100,
+      "display_name": "HAPPY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "happy"
+    },
+    "hard": {
+      "index": 101,
+      "display_name": "HARD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "hard"
+    },
+    "hat": {
+      "index": 102,
+      "display_name": "HAT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "hat"
+    },
+    "he": {
+      "index": 103,
+      "display_name": "HE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "he"
+    },
+    "healthy": {
+      "index": 104,
+      "display_name": "HEALTHY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "healthy"
+    },
+    "heavy": {
+      "index": 105,
+      "display_name": "HEAVY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "heavy"
+    },
+    "hello": {
+      "index": 106,
+      "display_name": "HELLO",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "hello",
+      "include_class": "hello"
+    },
+    "help": {
+      "index": 107,
+      "display_name": "HELP",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "help",
+      "include_class": null
+    },
+    "high": {
+      "index": 108,
+      "display_name": "HIGH",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "high"
+    },
+    "horse": {
+      "index": 109,
+      "display_name": "HORSE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "horse"
+    },
+    "hospital": {
+      "index": 110,
+      "display_name": "HOSPITAL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "hospital"
+    },
+    "hot": {
+      "index": 111,
+      "display_name": "HOT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "hot"
+    },
+    "hour": {
+      "index": 112,
+      "display_name": "HOUR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "hour"
+    },
+    "house": {
+      "index": 113,
+      "display_name": "HOUSE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "house"
+    },
+    "howareyou": {
+      "index": 114,
+      "display_name": "HOW ARE YOU?",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "howareyou"
+    },
+    "husband": {
+      "index": 115,
+      "display_name": "HUSBAND",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "husband"
+    },
+    "i": {
+      "index": 116,
+      "display_name": "I (ME)",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "i",
+      "include_class": "i"
+    },
+    "india": {
+      "index": 117,
+      "display_name": "INDIA",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "india"
+    },
+    "it": {
+      "index": 118,
+      "display_name": "IT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "it"
+    },
+    "job": {
+      "index": 119,
+      "display_name": "JOB",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "job"
+    },
+    "key": {
+      "index": 120,
+      "display_name": "KEY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "key"
+    },
+    "king": {
+      "index": 121,
+      "display_name": "KING",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "king"
+    },
+    "kitchen": {
+      "index": 122,
+      "display_name": "KITCHEN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "kitchen"
+    },
+    "lamp": {
+      "index": 123,
+      "display_name": "LAMP",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "lamp"
+    },
+    "laptop": {
+      "index": 124,
+      "display_name": "LAPTOP",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "laptop"
+    },
+    "lawyer": {
+      "index": 125,
+      "display_name": "LAWYER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "lawyer"
+    },
+    "letter": {
+      "index": 126,
+      "display_name": "LETTER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "letter"
+    },
+    "library": {
+      "index": 127,
+      "display_name": "LIBRARY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "library"
+    },
+    "light": {
+      "index": 128,
+      "display_name": "LIGHT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "light"
+    },
+    "location": {
+      "index": 129,
+      "display_name": "LOCATION",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "location"
+    },
+    "lock": {
+      "index": 130,
+      "display_name": "LOCK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "lock"
+    },
+    "long": {
+      "index": 131,
+      "display_name": "LONG",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "long"
+    },
+    "loose": {
+      "index": 132,
+      "display_name": "LOOSE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "loose"
+    },
+    "loud": {
+      "index": 133,
+      "display_name": "LOUD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "loud"
+    },
+    "low": {
+      "index": 134,
+      "display_name": "LOW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "low"
+    },
+    "male": {
+      "index": 135,
+      "display_name": "MALE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "male"
+    },
+    "man": {
+      "index": 136,
+      "display_name": "MAN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "man"
+    },
+    "manager": {
+      "index": 137,
+      "display_name": "MANAGER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "manager"
+    },
+    "market": {
+      "index": 138,
+      "display_name": "MARKET",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "market"
+    },
+    "marriage": {
+      "index": 139,
+      "display_name": "MARRIAGE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "marriage"
+    },
+    "mean": {
+      "index": 140,
+      "display_name": "MEAN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "mean"
+    },
+    "medicine": {
+      "index": 141,
+      "display_name": "MEDICINE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "medicine"
+    },
+    "minute": {
+      "index": 142,
+      "display_name": "MINUTE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "minute"
+    },
+    "monday": {
+      "index": 143,
+      "display_name": "MONDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "monday"
+    },
+    "money": {
+      "index": 144,
+      "display_name": "MONEY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "money"
+    },
+    "monsoon": {
+      "index": 145,
+      "display_name": "MONSOON",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "monsoon",
+      "include_class": null
+    },
+    "month": {
+      "index": 146,
+      "display_name": "MONTH",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "month"
+    },
+    "morning": {
+      "index": 147,
+      "display_name": "MORNING",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "morning"
+    },
+    "mother": {
+      "index": 148,
+      "display_name": "MOTHER",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "mother",
+      "include_class": "mother"
+    },
+    "mouse": {
+      "index": 149,
+      "display_name": "MOUSE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "mouse"
+    },
+    "music": {
+      "index": 150,
+      "display_name": "MUSIC",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "music",
+      "include_class": null
+    },
+    "namaste": {
+      "index": 151,
+      "display_name": "NAMASTE",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "namaste",
+      "include_class": null
+    },
+    "name": {
+      "index": 152,
+      "display_name": "NAME",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "name",
+      "include_class": null
+    },
+    "narrow": {
+      "index": 153,
+      "display_name": "NARROW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "narrow"
+    },
+    "neighbour": {
+      "index": 154,
+      "display_name": "NEIGHBOUR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "neighbour"
+    },
+    "new": {
+      "index": 155,
+      "display_name": "NEW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "new"
+    },
+    "newspaper": {
+      "index": 156,
+      "display_name": "NEWSPAPER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "newspaper"
+    },
+    "nice": {
+      "index": 157,
+      "display_name": "NICE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "nice"
+    },
+    "night": {
+      "index": 158,
+      "display_name": "NIGHT",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "night",
+      "include_class": "night"
+    },
+    "nose": {
+      "index": 159,
+      "display_name": "NOSE",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "nose",
+      "include_class": null
+    },
+    "office": {
+      "index": 160,
+      "display_name": "OFFICE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "office"
+    },
+    "old": {
+      "index": 161,
+      "display_name": "OLD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "old"
+    },
+    "orange": {
+      "index": 162,
+      "display_name": "ORANGE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "orange"
+    },
+    "page": {
+      "index": 163,
+      "display_name": "PAGE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "page"
+    },
+    "paint": {
+      "index": 164,
+      "display_name": "PAINT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "paint"
+    },
+    "pant": {
+      "index": 165,
+      "display_name": "PANT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "pant"
+    },
+    "paper": {
+      "index": 166,
+      "display_name": "PAPER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "paper"
+    },
+    "parent": {
+      "index": 167,
+      "display_name": "PARENT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "parent"
+    },
+    "park": {
+      "index": 168,
+      "display_name": "PARK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "park"
+    },
+    "patient": {
+      "index": 169,
+      "display_name": "PATIENT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "patient"
+    },
+    "peace": {
+      "index": 170,
+      "display_name": "PEACE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "peace"
+    },
+    "pen": {
+      "index": 171,
+      "display_name": "PEN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "pen"
+    },
+    "pencil": {
+      "index": 172,
+      "display_name": "PENCIL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "pencil"
+    },
+    "photograph": {
+      "index": 173,
+      "display_name": "PHOTOGRAPH",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "photograph"
+    },
+    "pink": {
+      "index": 174,
+      "display_name": "PINK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "pink"
+    },
+    "plane": {
+      "index": 175,
+      "display_name": "PLANE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "plane"
+    },
+    "player": {
+      "index": 176,
+      "display_name": "PLAYER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "player"
+    },
+    "pleased": {
+      "index": 177,
+      "display_name": "PLEASED",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "pleased"
+    },
+    "pocket": {
+      "index": 178,
+      "display_name": "POCKET",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "pocket"
+    },
+    "police": {
+      "index": 179,
+      "display_name": "POLICE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "police"
+    },
+    "poor": {
+      "index": 180,
+      "display_name": "POOR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "poor"
+    },
+    "power": {
+      "index": 181,
+      "display_name": "POWER",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "power",
+      "include_class": null
+    },
+    "president": {
+      "index": 182,
+      "display_name": "PRESIDENT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "president"
+    },
+    "price": {
+      "index": 183,
+      "display_name": "PRICE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "price"
+    },
+    "priest": {
+      "index": 184,
+      "display_name": "PRIEST",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "priest"
+    },
+    "queen": {
+      "index": 185,
+      "display_name": "QUEEN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "queen"
+    },
+    "quiet": {
+      "index": 186,
+      "display_name": "QUIET",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "quiet"
+    },
+    "raceethnicity": {
+      "index": 187,
+      "display_name": "RACE / ETHNICITY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "raceethnicity"
+    },
+    "radio": {
+      "index": 188,
+      "display_name": "RADIO",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "radio"
+    },
+    "red": {
+      "index": 189,
+      "display_name": "RED",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "red"
+    },
+    "religion": {
+      "index": 190,
+      "display_name": "RELIGION",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "religion"
+    },
+    "reporter": {
+      "index": 191,
+      "display_name": "REPORTER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "reporter"
+    },
+    "restaurant": {
+      "index": 192,
+      "display_name": "RESTAURANT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "restaurant"
+    },
+    "rich": {
+      "index": 193,
+      "display_name": "RICH",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "rich"
+    },
+    "ring": {
+      "index": 194,
+      "display_name": "RING",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "ring",
+      "include_class": "ring"
+    },
+    "sad": {
+      "index": 195,
+      "display_name": "SAD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "sad"
+    },
+    "saturday": {
+      "index": 196,
+      "display_name": "SATURDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "saturday"
+    },
+    "school": {
+      "index": 197,
+      "display_name": "SCHOOL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "school"
+    },
+    "science": {
+      "index": 198,
+      "display_name": "SCIENCE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "science"
+    },
+    "screen": {
+      "index": 199,
+      "display_name": "SCREEN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "screen"
+    },
+    "season": {
+      "index": 200,
+      "display_name": "SEASON",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "season"
+    },
+    "second": {
+      "index": 201,
+      "display_name": "SECOND",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "second"
+    },
+    "secondnumber": {
+      "index": 202,
+      "display_name": "SECOND (NUMBER)",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "secondnumber"
+    },
+    "secretary": {
+      "index": 203,
+      "display_name": "SECRETARY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "secretary"
+    },
+    "shallow": {
+      "index": 204,
+      "display_name": "SHALLOW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "shallow"
+    },
+    "she": {
+      "index": 205,
+      "display_name": "SHE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "she"
+    },
+    "shirt": {
+      "index": 206,
+      "display_name": "SHIRT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "shirt"
+    },
+    "shoes": {
+      "index": 207,
+      "display_name": "SHOES",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "shoes"
+    },
+    "short": {
+      "index": 208,
+      "display_name": "SHORT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "short"
+    },
+    "sick": {
+      "index": 209,
+      "display_name": "SICK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "sick"
+    },
+    "sign": {
+      "index": 210,
+      "display_name": "SIGN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "sign"
+    },
+    "sister": {
+      "index": 211,
+      "display_name": "SISTER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "sister"
+    },
+    "sit": {
+      "index": 212,
+      "display_name": "SIT",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "sit",
+      "include_class": null
+    },
+    "skirt": {
+      "index": 213,
+      "display_name": "SKIRT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "skirt"
+    },
+    "sleep": {
+      "index": 214,
+      "display_name": "SLEEP",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "sleep",
+      "include_class": null
+    },
+    "slow": {
+      "index": 215,
+      "display_name": "SLOW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "slow"
+    },
+    "smalllittle": {
+      "index": 216,
+      "display_name": "SMALL / LITTLE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "smalllittle"
+    },
+    "soap": {
+      "index": 217,
+      "display_name": "SOAP",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "soap"
+    },
+    "soft": {
+      "index": 218,
+      "display_name": "SOFT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "soft"
+    },
+    "soldier": {
+      "index": 219,
+      "display_name": "SOLDIER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "soldier"
+    },
+    "son": {
+      "index": 220,
+      "display_name": "SON",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "son"
+    },
+    "sorry": {
+      "index": 221,
+      "display_name": "SORRY",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "sorry",
+      "include_class": null
+    },
+    "sport": {
+      "index": 222,
+      "display_name": "SPORT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "sport"
+    },
+    "spring": {
+      "index": 223,
+      "display_name": "SPRING",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "spring"
+    },
+    "stand": {
+      "index": 224,
+      "display_name": "STAND",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "stand",
+      "include_class": null
+    },
+    "stop": {
+      "index": 225,
+      "display_name": "STOP",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "stop",
+      "include_class": null
+    },
+    "storeorshop": {
+      "index": 226,
+      "display_name": "STORE / SHOP",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "storeorshop"
+    },
+    "streetorroad": {
+      "index": 227,
+      "display_name": "STREET / ROAD",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "streetorroad"
+    },
+    "strong": {
+      "index": 228,
+      "display_name": "STRONG",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "strong"
+    },
+    "student": {
+      "index": 229,
+      "display_name": "STUDENT",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "student",
+      "include_class": "student"
+    },
+    "study": {
+      "index": 230,
+      "display_name": "STUDY",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "study",
+      "include_class": null
+    },
+    "suit": {
+      "index": 231,
+      "display_name": "SUIT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "suit"
+    },
+    "summer": {
+      "index": 232,
+      "display_name": "SUMMER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "summer"
+    },
+    "sunday": {
+      "index": 233,
+      "display_name": "SUNDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "sunday"
+    },
+    "table": {
+      "index": 234,
+      "display_name": "TABLE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "table"
+    },
+    "tall": {
+      "index": 235,
+      "display_name": "TALL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "tall"
+    },
+    "teacher": {
+      "index": 236,
+      "display_name": "TEACHER",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "teacher",
+      "include_class": "teacher"
+    },
+    "team": {
+      "index": 237,
+      "display_name": "TEAM",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "team"
+    },
+    "technology": {
+      "index": 238,
+      "display_name": "TECHNOLOGY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "technology"
+    },
+    "teeth": {
+      "index": 239,
+      "display_name": "TEETH",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "teeth",
+      "include_class": null
+    },
+    "telephone": {
+      "index": 240,
+      "display_name": "TELEPHONE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "telephone"
+    },
+    "television": {
+      "index": 241,
+      "display_name": "TELEVISION",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "television"
+    },
+    "temple": {
+      "index": 242,
+      "display_name": "TEMPLE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "temple"
+    },
+    "thank_you": {
+      "index": 243,
+      "display_name": "THANK YOU",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "thank_you",
+      "include_class": "thankyou"
+    },
+    "they": {
+      "index": 244,
+      "display_name": "THEY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "they"
+    },
+    "thick": {
+      "index": 245,
+      "display_name": "THICK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "thick"
+    },
+    "thin": {
+      "index": 246,
+      "display_name": "THIN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "thin"
+    },
+    "thursday": {
+      "index": 247,
+      "display_name": "THURSDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "thursday"
+    },
+    "tight": {
+      "index": 248,
+      "display_name": "TIGHT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "tight"
+    },
+    "time": {
+      "index": 249,
+      "display_name": "TIME",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "time"
+    },
+    "today": {
+      "index": 250,
+      "display_name": "TODAY",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "today",
+      "include_class": "today"
+    },
+    "tomorrow": {
+      "index": 251,
+      "display_name": "TOMORROW",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "tomorrow",
+      "include_class": "tomorrow"
+    },
+    "tool": {
+      "index": 252,
+      "display_name": "TOOL",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "tool"
+    },
+    "train": {
+      "index": 253,
+      "display_name": "TRAIN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "train"
+    },
+    "trainstation": {
+      "index": 254,
+      "display_name": "TRAIN STATION",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "trainstation"
+    },
+    "trainticket": {
+      "index": 255,
+      "display_name": "TRAIN TICKET",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "trainticket"
+    },
+    "transportation": {
+      "index": 256,
+      "display_name": "TRANSPORTATION",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "transportation"
+    },
+    "truck": {
+      "index": 257,
+      "display_name": "TRUCK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "truck"
+    },
+    "tshirt": {
+      "index": 258,
+      "display_name": "T-SHIRT",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "tshirt"
+    },
+    "tuesday": {
+      "index": 259,
+      "display_name": "TUESDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "tuesday"
+    },
+    "ugly": {
+      "index": 260,
+      "display_name": "UGLY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "ugly"
+    },
+    "umbrella": {
+      "index": 261,
+      "display_name": "UMBRELLA",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "umbrella",
+      "include_class": null
+    },
+    "university": {
+      "index": 262,
+      "display_name": "UNIVERSITY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "university"
+    },
+    "waiter": {
+      "index": 263,
+      "display_name": "WAITER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "waiter"
+    },
+    "war": {
+      "index": 264,
+      "display_name": "WAR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "war"
+    },
+    "warm": {
+      "index": 265,
+      "display_name": "WARM",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "warm"
+    },
+    "we": {
+      "index": 266,
+      "display_name": "WE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "we"
+    },
+    "weak": {
+      "index": 267,
+      "display_name": "WEAK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "weak"
+    },
+    "wednesday": {
+      "index": 268,
+      "display_name": "WEDNESDAY",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "wednesday"
+    },
+    "week": {
+      "index": 269,
+      "display_name": "WEEK",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "week"
+    },
+    "welcome": {
+      "index": 270,
+      "display_name": "WELCOME",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "welcome",
+      "include_class": null
+    },
+    "wet": {
+      "index": 271,
+      "display_name": "WET",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "wet"
+    },
+    "white": {
+      "index": 272,
+      "display_name": "WHITE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "white"
+    },
+    "wide": {
+      "index": 273,
+      "display_name": "WIDE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "wide"
+    },
+    "wife": {
+      "index": 274,
+      "display_name": "WIFE",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "wife"
+    },
+    "window": {
+      "index": 275,
+      "display_name": "WINDOW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "window"
+    },
+    "winter": {
+      "index": 276,
+      "display_name": "WINTER",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "winter"
+    },
+    "woman": {
+      "index": 277,
+      "display_name": "WOMAN",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "woman"
+    },
+    "work": {
+      "index": 278,
+      "display_name": "WORK",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "work",
+      "include_class": null
+    },
+    "write": {
+      "index": 279,
+      "display_name": "WRITE",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "write",
+      "include_class": null
+    },
+    "year": {
+      "index": 280,
+      "display_name": "YEAR",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "year"
+    },
+    "yellow": {
+      "index": 281,
+      "display_name": "YELLOW",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "yellow"
+    },
+    "yesterday": {
+      "index": 282,
+      "display_name": "YESTERDAY",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "yesterday",
+      "include_class": "yesterday"
+    },
+    "you": {
+      "index": 283,
+      "display_name": "YOU",
+      "sources": [
+        "amrita_dynamic",
+        "include_263"
+      ],
+      "master_class": "you",
+      "include_class": "you"
+    },
+    "you_are_perfect": {
+      "index": 284,
+      "display_name": "YOU ARE PERFECT",
+      "sources": [
+        "amrita_dynamic"
+      ],
+      "master_class": "you_are_perfect",
+      "include_class": null
+    },
+    "young": {
+      "index": 285,
+      "display_name": "YOUNG",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "young"
+    },
+    "youplural": {
+      "index": 286,
+      "display_name": "YOU (PLURAL)",
+      "sources": [
+        "include_263"
+      ],
+      "master_class": null,
+      "include_class": "youplural"
+    }
+  },
+  "duplicate_signs_count": 29,
+  "sources": {
+    "master_dynamic_count": 53,
+    "include_vocabulary_count": 263,
+    "overlapping_deduplicated_count": 29
+  }
+}

@@ -141,46 +141,52 @@ class NonManualMarkerDetector:
             diffs_x = np.diff(self.nose_x_history)
             sign_changes_x = int(np.sum(diffs_x[:-1] * diffs_x[1:] < 0))
 
-            # Calibrated thresholds: requires deliberate, larger intentional head movements
-            min_ptp_y = 0.065 if face_h >= 0.05 else 0.035
-            min_ptp_x = 0.070 if face_w >= 0.05 else 0.035
+            # Calibrated thresholds: natural, responsive nod vs intentional oscillating shake
+            min_ptp_y = 0.040 if face_h >= 0.05 else 0.025
+            min_ptp_x = 0.100 if face_w >= 0.05 else 0.035
 
             # 2. Head Pitch Oscillation (vertical nod up-down -> Affirmation / Commit)
-            if ptp_y >= min_ptp_y and ptp_y > (ptp_x * 1.25):
+            # Requires vertical dominance and at least 1 reversal (down and up)
+            if ptp_y >= min_ptp_y and ptp_y >= (ptp_x * 1.05):
                 if sign_changes_y >= 1:
                     pitch_oscillation = ptp_y
                     is_affirmation = True
 
-            # 3. Head Yaw Oscillation (horizontal head shake -> Negation / Undo)
-            if ptp_x >= min_ptp_x and ptp_x > (ptp_y * 1.25):
-                if sign_changes_x >= 1:
+            # 3. Head Yaw Oscillation (deliberate horizontal head shake -> Negation / Undo)
+            # Requires at least 2 sign changes (left-right-left oscillation) to avoid false triggers on head turns
+            if ptp_x >= min_ptp_x and ptp_x >= (ptp_y * 1.35):
+                if sign_changes_x >= 2:
                     yaw_oscillation = ptp_x
                     is_negation = True
 
         now = time.time()
         head_gesture = "none"
-        if now - self.last_gesture_time >= 0.90:
-            if is_affirmation and pitch_oscillation >= (yaw_oscillation * 1.15):
+        if now - self.last_gesture_time >= 0.85:
+            if is_affirmation and pitch_oscillation >= (yaw_oscillation * 1.05):
                 head_gesture = "nod"
                 self.last_gesture_time = now
                 self.nose_y_history.clear()
                 self.nose_x_history.clear()
                 logger.info("HEAD GESTURE: DELIBERATE NOD DETECTED (pitch=%.4f, yaw=%.4f)", pitch_oscillation, yaw_oscillation)
-            elif is_negation and yaw_oscillation >= (pitch_oscillation * 1.15):
+            elif is_negation and yaw_oscillation >= (pitch_oscillation * 1.35) and (now - self.last_gesture_time >= 1.50):
                 head_gesture = "shake"
                 self.last_gesture_time = now
                 self.nose_x_history.clear()
                 self.nose_y_history.clear()
                 logger.info("HEAD GESTURE: DELIBERATE SHAKE DETECTED (pitch=%.4f, yaw=%.4f)", pitch_oscillation, yaw_oscillation)
 
+        # Non-manual grammar flags are active only on deliberate, confirmed head gestures
+        active_negation = bool(head_gesture == "shake")
+        active_affirmation = bool(head_gesture == "nod")
+
         return NonManualGrammar(
             is_question=is_question,
-            is_negation=is_negation,
-            is_affirmation=is_affirmation,
+            is_negation=active_negation,
+            is_affirmation=active_affirmation,
             eyebrow_elevation=round(float(avg_brow_elevation), 4),
             head_yaw_oscillation=round(float(yaw_oscillation), 4),
             head_pitch_oscillation=round(float(pitch_oscillation), 4),
-            confidence=0.90 if (is_question or is_negation or is_affirmation) else 0.50,
+            confidence=0.90 if (is_question or active_negation or active_affirmation) else 0.50,
             head_gesture=head_gesture,
         )
 

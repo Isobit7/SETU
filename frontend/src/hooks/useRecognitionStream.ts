@@ -200,12 +200,12 @@ export function useRecognitionStream({
                   const isSameSign = label === lastCommittedSignRef.current;
 
                   // Cooldown Lockout:
-                  // 1. Lock out duplicate commits of the same character for 350 ms
+                  // 1. Lock out duplicate commits of the same character for 900 ms
                   // 2. Require transition through idle baseline before allowing identical sign again
                   // 3. Allow distinct new signs to commit immediately once consecutive streak is met
                   let canCommit = false;
                   if (isSameSign) {
-                    if (timeSinceLast >= 350 && hadIdleBaselineRef.current) {
+                    if (timeSinceLast >= 900 && hadIdleBaselineRef.current) {
                       canCommit = true;
                     }
                   } else {
