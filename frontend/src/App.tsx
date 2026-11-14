@@ -14,6 +14,7 @@ import { RecordSignModal } from './components/RecordSignModal';
 import { TextToSignWorkspace } from './components/TextToSignWorkspace';
 import { PracticeStudio } from './components/PracticeStudio';
 import { ConversationStudio } from './components/ConversationStudio';
+import { EvaluationDashboard } from './components/EvaluationDashboard';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
 import { useSentenceBuilder } from './hooks/useSentenceBuilder';
@@ -109,6 +110,7 @@ export const App: React.FC = () => {
     autoSpeakEnabled,
     speak,
     stop,
+    targetLanguage,
     onClearBackend: () => clearSentence(),
     onBackspaceBackend: () => {
       backspaceSentence();
@@ -312,8 +314,13 @@ export const App: React.FC = () => {
       />
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
-      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''} ${activeTab === 'practice' ? 'practice-mode-active' : ''}`} role="main">
-        {activeTab === 'conversation' ? (
+      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''} ${activeTab === 'practice' || activeTab === 'evaluation' ? 'practice-mode-active' : ''}`} role="main">
+        {activeTab === 'evaluation' ? (
+          <EvaluationDashboard
+            currentResult={currentResult}
+            onOpenFactsheet={() => window.open('docs/showcase/index.html', '_blank')}
+          />
+        ) : activeTab === 'conversation' ? (
           <ConversationStudio
             currentResult={currentResult}
             onSpeak={speak}

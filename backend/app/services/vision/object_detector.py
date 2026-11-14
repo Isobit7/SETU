@@ -104,29 +104,31 @@ class COCOObjectDetector:
         self._model_name = "None"
         self.categories: List[str] = []
 
-        # 1. Attempt loading lightweight Open-Vocabulary YOLO-World (13M params, 24MB)
-        # Directly resolves MS-COCO vocabulary void (accurately separates wristwatch vs cell phone)
-        try:
-            from ultralytics import YOLOWorld
-            model_candidates = [
-                Path("models/weights/yolov8s-worldv2.pt"),
-                Path(__file__).resolve().parents[4] / "models" / "weights" / "yolov8s-worldv2.pt",
-                Path("yolov8s-worldv2.pt"),
-                Path(__file__).resolve().parents[4] / "yolov8s-worldv2.pt",
-            ]
-            yolo_path = next((p for p in model_candidates if p.is_file()), None)
-            if yolo_path is not None or Path("yolov8s-worldv2.pt").exists():
-                chosen_path = str(yolo_path) if yolo_path else "yolov8s-worldv2.pt"
-                yolo = YOLOWorld(chosen_path)
-                yolo.set_classes(YOLO_WORLD_CLASSES)
-                self._yolo_model = yolo
-                self._model_name = "YOLO-World-v2-Small"
-                self.categories = list(YOLO_WORLD_CLASSES)
-                logger.info("Loaded open-vocabulary YOLO-World (%d classes) from %s", len(self.categories), chosen_path)
-        except Exception as e:
-            logger.warning("YOLO-World not loaded, falling back to torchvision: %s", e)
+        # 1. Attempt loading lightweight Open-Vocabulary YOLO-World only if explicitly enabled
+        # (Default is fast, zero-network torchvision FasterRCNN to ensure <5s instant cold-start)
+        enable_yolo = os.environ.get("SETU_ENABLE_YOLOWORLD", "0").lower() in ("1", "true")
+        if enable_yolo:
+            try:
+                from ultralytics import YOLOWorld
+                model_candidates = [
+                    Path("models/weights/yolov8s-worldv2.pt"),
+                    Path(__file__).resolve().parents[4] / "models" / "weights" / "yolov8s-worldv2.pt",
+                    Path("yolov8s-worldv2.pt"),
+                    Path(__file__).resolve().parents[4] / "yolov8s-worldv2.pt",
+                ]
+                yolo_path = next((p for p in model_candidates if p.is_file()), None)
+                if yolo_path is not None or Path("yolov8s-worldv2.pt").exists():
+                    chosen_path = str(yolo_path) if yolo_path else "yolov8s-worldv2.pt"
+                    yolo = YOLOWorld(chosen_path)
+                    yolo.set_classes(YOLO_WORLD_CLASSES)
+                    self._yolo_model = yolo
+                    self._model_name = "YOLO-World-v2-Small"
+                    self.categories = list(YOLO_WORLD_CLASSES)
+                    logger.info("Loaded open-vocabulary YOLO-World (%d classes) from %s", len(self.categories), chosen_path)
+            except Exception as e:
+                logger.warning("YOLO-World not loaded, falling back to torchvision: %s", e)
 
-        # 2. Fallback to torchvision FasterRCNN / SSDLite if YOLO-World is unavailable
+        # 2. Fast zero-network torchvision FasterRCNN / SSDLite default
         if self._yolo_model is None:
             from torchvision.models.detection import (
                 FasterRCNN_MobileNet_V3_Large_320_FPN_Weights,

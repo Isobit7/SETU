@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   Contrast,
+  BarChart3,
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -172,6 +173,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         >
           <Users size={14} className="nav-icon" />
           <span>Conversation</span>
+        </button>
+
+        <button
+          className={`nav-link-btn ${activeTab === 'evaluation' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('evaluation');
+            setMobileMenuOpen(false);
+          }}
+          aria-current={activeTab === 'evaluation' ? 'page' : undefined}
+          title="Model Accuracy & System Evaluation Metrics"
+        >
+          <BarChart3 size={14} className="nav-icon" />
+          <span>Evaluation</span>
         </button>
       </nav>
 
@@ -371,6 +385,16 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           >
             <Users size={16} />
             <span>Conversation</span>
+          </button>
+          <button
+            className={`mobile-nav-item ${activeTab === 'evaluation' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('evaluation');
+              setMobileMenuOpen(false);
+            }}
+          >
+            <BarChart3 size={16} />
+            <span>Evaluation</span>
           </button>
           {onOpenHistory && (
             <button

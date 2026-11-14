@@ -9,8 +9,9 @@ import { useRef, useState, useCallback } from 'react';
 interface UseSentenceBuilderOptions {
   confidenceThreshold: number;
   autoSpeakEnabled: boolean;
-  speak: (text: string) => void;
+  speak: (text: string, language?: string) => void;
   stop: () => void;
+  targetLanguage?: string;
   onClearBackend?: () => void;
   onBackspaceBackend?: () => void;
 }
@@ -20,6 +21,7 @@ export function useSentenceBuilder({
   autoSpeakEnabled,
   speak,
   stop,
+  targetLanguage = 'en-IN',
   onClearBackend,
   onBackspaceBackend,
 }: UseSentenceBuilderOptions) {
@@ -40,13 +42,17 @@ export function useSentenceBuilder({
       setSentence(data.sentence_buffer);
 
       // Auto-Speak trigger on sentence completion:
-      // When translated_text updates and differs from lastSpokenSentenceRef.current
+      // Speaks regional Indic translation if a non-English language is active
       if (data.translated_text && typeof data.translated_text === 'string') {
-        const translated = data.translated_text.trim();
-        if (translated && translated !== lastSpokenSentenceRef.current) {
-          lastSpokenSentenceRef.current = translated;
+        const langCode = targetLanguage || 'en-IN';
+        const langKey = langCode.split('-')[0].toLowerCase();
+        const regionalText = data.translations?.[langKey] || data.translated_indic?.[langKey];
+        const textToSpeak = (langKey !== 'en' && regionalText) ? regionalText.trim() : data.translated_text.trim();
+
+        if (textToSpeak && textToSpeak !== lastSpokenSentenceRef.current) {
+          lastSpokenSentenceRef.current = textToSpeak;
           if (autoSpeakEnabled) {
-            speak(translated);
+            speak(textToSpeak, langCode);
           }
         }
       } else if (!data.sentence_buffer && !data.translated_text) {

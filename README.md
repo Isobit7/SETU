@@ -35,7 +35,13 @@ Double-click or run from PowerShell:
 ```powershell
 .\SETU.bat
 ```
-This launches the **SETU Master Control Center**, allowing you to start services, run diagnostics, open the presentation showcase, or explore documentation in 1 click.
+This launches the **SETU Master Control Center**, allowing you to start services, run diagnostics, inspect model accuracy metrics, open the presentation showcase, or explore documentation in 1 click.
+
+For first-time environment installation on a new machine:
+```powershell
+.\setup.bat
+```
+*(Automatically verifies Python 3.10+, Node 18+, creates `.venv`, installs all packages, and runs a fast system smoke test).*
 
 Individual launcher scripts are organized in [`scripts/launchers/`](scripts/launchers/):
 - **`scripts\launchers\Start_SETU.bat`**: Launches both FastAPI backend (Port 8000) and Vite frontend (Port 5173).
@@ -234,6 +240,7 @@ To run pre-flight diagnostics and verify all GPU dependencies and test endpoints
 ```text
 SETU/
 ├── SETU.bat                        # Unified interactive launcher & control center
+├── setup.bat                       # Automated machine installer & smoke tester
 ├── README.md                       # Architectural showcase and quickstart guide
 ├── pyproject.toml                  # Python package configuration
 │
@@ -245,8 +252,8 @@ SETU/
 │
 ├── frontend/                       # React 18 + Vite + TypeScript Workstation
 │   ├── src/
-│   │   ├── components/             # LiveDetectionOutput, PracticeStudio, Avatar3DViewer
-│   │   ├── hooks/                  # useRecognitionStream, useTTS audio hook
+│   │   ├── components/             # EvaluationDashboard, PracticeStudio, LiveDetectionOutput
+│   │   ├── hooks/                  # useRecognitionStream, useTTS, useSentenceBuilder
 │   │   └── types/                  # TypeScript interfaces and WebSocket schemas
 │   └── package.json
 │
@@ -260,6 +267,7 @@ SETU/
 │   └── train_isl_phrase_bilstm.py  # Temporal BiLSTM sequence training
 │
 ├── docs/                           # Unified Documentation & Showcase Hub
+│   ├── SETU_PROJECT_FACTSHEET.md   # Executive project factsheet for examiners & vivas
 │   ├── showcase/                   # Interactive offline HTML presentation portal
 │   ├── viva_prep/                  # Comprehensive viva guide, Q&A & syllabus
 │   ├── vocabulary/                 # Official ISL sign guides & lexicon
