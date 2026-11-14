@@ -1,6 +1,6 @@
 @echo off
 setlocal
-cd /d "%~dp0"
+cd /d "%~dp0..\.."
 title SETU - RealSign 26-Class Alphabet Recognizer
 echo ===========================================================================
 echo SETU - RealSign 26-Class ISL Alphabet Real-Time Webcam Demo

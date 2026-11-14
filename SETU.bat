@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
@@ -21,43 +21,62 @@ echo.
 echo  [1] START SETU      - Launch Backend (8000) ^& Frontend (5173) Together
 echo  [2] STOP SETU       - Safely Terminate All Background Services
 echo  [3] VERIFY SETU     - Run Hardware Diagnostics, Models ^& Regression Tests
-echo  [4] GITHUB REPO     - Open GitHub Repository ^& Online README
-echo  [5] BROWSER OPEN    - Open Live Frontend (http://localhost:5173)
-echo  [6] API DOCS        - Open Backend Swagger Docs (http://localhost:8000/docs)
-echo  [7] EXIT
+echo  [4] SHOWCASE PORTAL - Open Interactive Project Showcase (HTML Presentation)
+echo  [5] VIVA ^& EXAM     - Open Comprehensive Viva ^& System Architecture Guide
+echo  [6] SIGN LEXICON    - Open Visual ISL Vocabulary Guide (Alphabet, Phrases)
+echo  [7] API DOCS (REST) - Open Swagger UI Documentation (http://localhost:8000/docs)
+echo  [8] GITHUB REPO     - Open GitHub Repository ^& Online README
+echo  [9] EXIT
 echo.
 echo ===============================================================================
-set /p "CHOICE=Enter your choice [1-7]: "
+set /p "CHOICE=Enter your choice [1-9]: "
 
 if "%CHOICE%"=="1" (
-    call "%ROOT%\Start_SETU.bat"
+    call "%ROOT%\scripts\launchers\Start_SETU.bat"
     goto menu
 )
 if "%CHOICE%"=="2" (
-    call "%ROOT%\Stop_SETU.bat"
+    call "%ROOT%\scripts\launchers\Stop_SETU.bat"
+    pause
     goto menu
 )
 if "%CHOICE%"=="3" (
-    call "%ROOT%\Verify_SETU.bat"
+    call "%ROOT%\scripts\launchers\Verify_SETU.bat"
+    pause
     goto menu
 )
 if "%CHOICE%"=="4" (
-    start https://github.com/Isobit7/SETU#readme
+    if exist "%ROOT%\docs\showcase\index.html" (
+        start "" "%ROOT%\docs\showcase\index.html"
+    ) else (
+        echo [INFO] Showcase portal path: docs/showcase/index.html
+    )
     goto menu
 )
 if "%CHOICE%"=="5" (
-    start http://localhost:5173
+    if exist "%ROOT%\docs\viva_prep\SETU_EXAM_AND_VIVA_PREPARATION_GUIDE.md" (
+        start "" "%ROOT%\docs\viva_prep\SETU_EXAM_AND_VIVA_PREPARATION_GUIDE.md"
+    )
     goto menu
 )
 if "%CHOICE%"=="6" (
-    start http://localhost:8000/docs
+    if exist "%ROOT%\docs\vocabulary\README.md" (
+        start "" "%ROOT%\docs\vocabulary\README.md"
+    )
     goto menu
 )
 if "%CHOICE%"=="7" (
+    start http://localhost:8000/docs
+    goto menu
+)
+if "%CHOICE%"=="8" (
+    start https://github.com/Isobit7/SETU#readme
+    goto menu
+)
+if "%CHOICE%"=="9" (
     exit /b 0
 )
 
-echo Invalid choice. Please enter a number from 1 to 7.
+echo Invalid choice. Please select 1 through 9.
 timeout /t 2 >nul
 goto menu
-

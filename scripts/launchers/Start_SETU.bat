@@ -9,8 +9,8 @@ REM ============================================================================
 title SETU Workstation Launcher
 color 0F
 
-set "ROOT=%~dp0"
-if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
+set "ROOT=%~dp0..\.."
+for %%i in ("%ROOT%") do set "ROOT=%%~fi"
 
 cls
 echo ===============================================================================
@@ -53,11 +53,11 @@ for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :5173 ^| findstr LISTE
 REM --- 4. Launch Backend and Frontend ---
 echo.
 echo [2/3] Launching SETU Backend (FastAPI + PyTorch CUDA)...
-start "SETU Backend - FastAPI Engine" "%ROOT%\scripts\run_backend.bat"
+start "SETU Backend - FastAPI Engine" "%ROOT%\scripts\launchers\run_backend.bat"
 
 echo.
 echo [3/3] Launching SETU Frontend (React 18 + Vite Workstation)...
-start "SETU Frontend - Vite Workstation" "%ROOT%\scripts\run_frontend.bat"
+start "SETU Frontend - Vite Workstation" "%ROOT%\scripts\launchers\run_frontend.bat"
 
 echo.
 echo ===============================================================================

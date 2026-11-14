@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set "ROOT=%~dp0.."
+set "ROOT=%~dp0..\.."
 pushd "%ROOT%\frontend"
 
 title SETU Frontend - Vite Workstation (Port 5173)

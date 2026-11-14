@@ -8,8 +8,8 @@ REM ============================================================================
 title SETU Pre-Flight Diagnostics and Verification
 color 0E
 
-set "ROOT=%~dp0"
-if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
+set "ROOT=%~dp0..\.."
+for %%i in ("%ROOT%") do set "ROOT=%%~fi"
 
 cls
 echo ===============================================================================

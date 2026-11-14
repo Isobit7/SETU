@@ -33,13 +33,26 @@
 ### 1. Windows One-Click (Recommended)
 Double-click or run from PowerShell:
 ```powershell
-.\Start_SETU.bat
+.\SETU.bat
 ```
-This automatically verifies ports, starts the FastAPI backend (Port 8000), starts the Vite frontend (Port 5173), and opens your browser.
+This launches the **SETU Master Control Center**, allowing you to start services, run diagnostics, open the presentation showcase, or explore documentation in 1 click.
 
-To safely shut down all running services:
-```powershell
-.\Stop_SETU.bat
+Individual launcher scripts are organized in [`scripts/launchers/`](scripts/launchers/):
+- **`scripts\launchers\Start_SETU.bat`**: Launches both FastAPI backend (Port 8000) and Vite frontend (Port 5173).
+- **`scripts\launchers\Stop_SETU.bat`**: Safely frees occupied ports and shuts down processes.
+- **`scripts\launchers\Verify_SETU.bat`**: Runs hardware checks, CUDA detection, and regression test suites.
+
+---
+
+## 🏛️ System Architecture & Dataflow
+
+```mermaid
+flowchart LR
+    A["Webcam Video<br/>(640x480 RGB)"] --> B["MediaPipe Vision<br/>(21 Hand + 468 Face Joints)"]
+    B --> C["Feature Extraction<br/>(63-D RealSign / 176-D Body)"]
+    C --> D["Neural Classifiers<br/>(RealSign MLP + Sequence LSTM)"]
+    D --> E["NLP & Translation<br/>(Indic SOV Transformer)"]
+    E --> F["UI & Speech<br/>(Text + Multi-lingual TTS)"]
 ```
 
 ---
@@ -176,16 +189,16 @@ A built-in learning module with:
 
 ---
 
-## 📖 Official Sign Lexicon (`SIGNS/`)
+## 📖 Official Sign Lexicon (`docs/vocabulary/`)
 
 SETU includes verified sign references with joint angles, palm orientations, and bimanual contact points:
 
-* [📘 **01. Dual-Hand Alphabet (A–Z)**](SIGNS/01_ALPHABET_A_TO_Z.md) — Single vs. dual-handed letters, finger tucks, and joint angle tie-breakers.
-* [📗 **02. ISL Numerals (0–9)**](SIGNS/02_NUMERALS_0_TO_9.md) — Numerical digit postures, currency signs, and palm directions.
-* [📙 **03. Indic Hindi Vowels (अ–ऐ)**](SIGNS/03_HINDI_VOWELS.md) — 8 authentic Indic vowels with bimanual touch targets.
-* [📕 **04. Conversational Phrases (49 Signs)**](SIGNS/04_CONVERSATIONAL_PHRASES.md) — Greetings, emergency words, family, and daily needs.
-* [📓 **05. Large-Vocabulary Signs (263 Concepts)**](SIGNS/05_LARGE_VOCABULARY_INCLUDE_263.md) — AI4Bharat INCLUDE concepts across 15 semantic domains.
-* [💡 **06. Signing Guidelines for Peak Accuracy**](SIGNS/06_SIGNING_GUIDELINES_FOR_MAX_ACCURACY.md) — Proper distance, lighting, and hold duration recommendations.
+* [📘 **01. Dual-Hand Alphabet (A–Z)**](docs/vocabulary/01_ALPHABET_A_TO_Z.md) — Single vs. dual-handed letters, finger tucks, and joint angle tie-breakers.
+* [📗 **02. ISL Numerals (0–9)**](docs/vocabulary/02_NUMERALS_0_TO_9.md) — Numerical digit postures, currency signs, and palm directions.
+* [📙 **03. Indic Hindi Vowels (अ–ऐ)**](docs/vocabulary/03_HINDI_VOWELS.md) — 8 authentic Indic vowels with bimanual touch targets.
+* [📕 **04. Conversational Phrases (49 Signs)**](docs/vocabulary/04_CONVERSATIONAL_PHRASES.md) — Greetings, emergency words, family, and daily needs.
+* [📓 **05. Large-Vocabulary Signs (263 Concepts)**](docs/vocabulary/05_LARGE_VOCABULARY_INCLUDE_263.md) — AI4Bharat INCLUDE concepts across 15 semantic domains.
+* [💡 **06. Signing Guidelines for Peak Accuracy**](docs/vocabulary/06_SIGNING_GUIDELINES_FOR_MAX_ACCURACY.md) — Proper distance, lighting, and hold duration recommendations.
 
 ---
 
@@ -210,7 +223,8 @@ pytest tests/ -q
 
 To run pre-flight diagnostics and verify all GPU dependencies and test endpoints in 1 click:
 ```powershell
-.\Verify_SETU.bat
+.\scripts\launchers\Verify_SETU.bat
+# Or select Option 3 in .\SETU.bat
 ```
 
 ---
@@ -219,15 +233,13 @@ To run pre-flight diagnostics and verify all GPU dependencies and test endpoints
 
 ```text
 SETU/
-├── Start_SETU.bat                  # 1-Click launcher (starts Backend + Frontend)
-├── Stop_SETU.bat                   # 1-Click port and process shutdown script
-├── Verify_SETU.bat                 # 1-Click diagnostic and test runner
+├── SETU.bat                        # Unified interactive launcher & control center
+├── README.md                       # Architectural showcase and quickstart guide
 ├── pyproject.toml                  # Python package configuration
 │
-├── backend/                        # FastAPI Backend Engine
+├── backend/                        # FastAPI Backend Engine (REST + WebSockets)
 │   └── app/
 │       ├── api/endpoints/          # REST routes (models, nlp, video, vocabulary)
-│       ├── core/                   # Configuration, feature schemas, and settings
 │       ├── services/               # Pipeline manager, classifier models, Indic NLP
 │       └── websocket/              # Real-time WebSocket streaming (/ws/recognize)
 │
@@ -243,9 +255,24 @@ SETU/
 │   ├── registry.py                 # Centralized model registry
 │   └── weights/                    # PyTorch .pth and .npz production weight files
 │
-├── docs/                           # Documentation, guides & logo assets
+├── training/                       # Dataset Preparation & Model Training Pipelines
+│   ├── extract_features.py         # 158-D & 126-D landmark feature extraction
+│   └── train_isl_phrase_bilstm.py  # Temporal BiLSTM sequence training
+│
+├── docs/                           # Unified Documentation & Showcase Hub
+│   ├── showcase/                   # Interactive offline HTML presentation portal
+│   ├── viva_prep/                  # Comprehensive viva guide, Q&A & syllabus
+│   ├── vocabulary/                 # Official ISL sign guides & lexicon
+│   ├── architecture/               # System design diagrams and specs
+│   └── internals/                  # Developer checkpoints, ADRs & problem logs
+│
+├── scripts/                        # Organized Utilities & Operational Tools
+│   ├── launchers/                  # Start_SETU, Stop_SETU, Verify_SETU, dev servers
+│   ├── demos/                      # Standalone OpenCV webcam demo pilots
+│   ├── audits/                     # Accuracy testing, diagnostics & leak checks
+│   └── tools/                      # Dataset ingestion & SSL cert generators
+│
 ├── reports/                        # Model evaluation matrices & confusion benchmarks
-├── SIGNS/                          # Comprehensive visual ISL guides (Alphabet, Numerals, Phrases)
 └── tests/                          # 255 automated unit, integration, and regression tests
 ```
 

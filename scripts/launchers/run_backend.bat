@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set "ROOT=%~dp0.."
+set "ROOT=%~dp0..\.."
 pushd "%ROOT%"
 
 title SETU Backend - FastAPI Engine (Port 8000)
