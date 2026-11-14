@@ -12,7 +12,7 @@ import numpy as np
 from training.feature_extractor import FEATURE_DIM, validate_schema_vector
 from training.feature_extractor import FeatureExtractor158
 from backend.app.services.vision import HolisticLandmarkerWrapper
-from training.isl_dataset_manifest_schema import SampleRecord, compute_file_sha256
+from training.dataset_manifest import SampleRecord, compute_file_sha256
 
 class FeatureExtractionPipeline:
     """
