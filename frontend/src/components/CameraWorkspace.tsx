@@ -101,17 +101,17 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       return 'Low Light — Turn on front light';
     }
     const raw = currentResult?.guidance || framingFeedback.message;
-    if (!raw) return 'Optimal Framing (50–70cm)';
+    if (!raw) return 'Optimal Framing (50–70 cm)';
     const hasHands = Boolean(currentResult?.hand_detected || framingFeedback.handsDetected);
     if (hasHands && (raw.includes('Tilt Camera Down') || raw.includes('Tilt camera down'))) {
-      return 'Optimal Framing (50–70cm)';
+      return 'Optimal Framing (50–70 cm)';
     }
-    if (raw.includes('Too close') || raw.includes('step back')) return 'Move Back (Sit 50–70cm away)';
-    if (raw.includes('Too far') || raw.includes('closer')) return 'Move Closer (Sit 50–70cm away)';
+    if (raw.includes('Too close') || raw.includes('step back')) return 'Move Back (50–70 cm)';
+    if (raw.includes('Too far') || raw.includes('closer')) return 'Move Closer (50–70 cm)';
     if (raw.includes('Camera too low')) return 'Tilt Camera Up';
     if (raw.includes('Camera too high')) return 'Tilt Camera Down';
     if (raw.includes('Raise your hands')) return 'Raise Hands into View';
-    if (raw.includes('Position good')) return 'Optimal Framing (50–70cm)';
+    if (raw.includes('Position good')) return 'Optimal Framing (50–70 cm)';
     return raw;
   }, [currentResult?.lighting?.score, currentResult?.guidance, framingFeedback.message]);
 
@@ -132,8 +132,12 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       }
     } else {
       if (document.exitFullscreen) {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
+        try {
+          await document.exitFullscreen();
+          setIsFullscreen(false);
+        } catch (err) {
+          console.warn('Exit fullscreen error:', err);
+        }
       }
     }
   };
@@ -164,8 +168,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       const canvas = canvasRef.current;
       const video = videoRef.current;
       if (canvas && video && video.readyState >= 2) {
-        const width = video.videoWidth || 640;
-        const height = video.videoHeight || 480;
+        const width = video.videoWidth > 0 ? video.videoWidth : 640;
+        const height = video.videoHeight > 0 ? video.videoHeight : 480;
 
         if (canvas.width !== width || canvas.height !== height) {
           canvas.width = width;
@@ -194,10 +198,15 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
                   disp[key] = target.map((p) => ({ ...p }));
                 } else {
                   const current = disp[key]!;
-                  for (let i = 0; i < target.length; i++) {
-                    current[i].x += (target[i].x - current[i].x) * lerpFactor;
-                    current[i].y += (target[i].y - current[i].y) * lerpFactor;
-                    current[i].z += (target[i].z - current[i].z) * lerpFactor;
+                  const len = Math.min(current.length, target.length);
+                  for (let i = 0; i < len; i++) {
+                    const t = target[i];
+                    const c = current[i];
+                    if (t && c) {
+                      c.x += (t.x - c.x) * lerpFactor;
+                      c.y += (t.y - c.y) * lerpFactor;
+                      c.z += (t.z - c.z) * lerpFactor;
+                    }
                   }
                 }
               } else {
@@ -268,24 +277,23 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       <div className="camera-header-overlay">
         <div className="camera-header-left">
           {cameraStatus === 'requesting' && (
-            <div className="camera-readiness-pill status-starting">
+            <div className="camera-readiness-pill status-starting" role="status">
               <span className="readiness-dot starting" aria-hidden="true" />
               <span>Starting Camera...</span>
             </div>
           )}
           {cameraStatus === 'detecting' && (
-            <div className="camera-readiness-pill status-live">
+            <div className="camera-readiness-pill status-live" role="status">
               <span className="readiness-dot live" aria-hidden="true" />
-              <span>Live Recognition</span>
+              <span>Live ISL Recognition</span>
             </div>
           )}
           {cameraStatus === 'paused' && (
-            <div className="camera-readiness-pill status-paused">
+            <div className="camera-readiness-pill status-paused" role="status">
               <span className="readiness-dot paused" aria-hidden="true" />
-              <span>Detection Paused</span>
+              <span>Recognition Paused</span>
             </div>
           )}
-
         </div>
 
         <div className="right-tools">
@@ -526,7 +534,7 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
 
         {/* Sleek Bottom Subtitle Prediction (Movie-Style, Non-Intrusive) */}
         {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (currentResult?.display_name && (currentResult.display_name.includes('✓') || currentResult.display_name.includes('✕')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
-          <div className="center-camera-prediction" aria-live="polite">
+          <div className="center-camera-prediction" aria-live="polite" aria-atomic="true">
             <div className={`center-prediction-badge ${currentResult?.display_name?.includes('✓') ? 'confirmed-sign' : currentResult?.display_name?.includes('✕') ? 'undone-sign' : 'active-sign'}`}>
               <div className="center-sign-text">
                 {subtitleText}
@@ -551,8 +559,10 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
                 : 'adjust'
             }`}
             title="Real-time distance and lighting calibration"
+            role="status"
+            aria-live="polite"
           >
-            <span className="guidance-dot" />
+            <span className="guidance-dot" aria-hidden="true" />
             <span className="guidance-text">{guidanceMessage}</span>
           </div>
         )}

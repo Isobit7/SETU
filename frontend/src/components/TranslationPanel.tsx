@@ -367,7 +367,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
               )}
             </div>
 
-            <div className="english-translation-box">
+            <div className="english-translation-box" aria-live="polite" aria-atomic="true">
               {currentTranslationText ? (
                 <p className="english-translation-text">"{currentTranslationText}"</p>
               ) : activeTranslation ? (
@@ -381,7 +381,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                 </div>
               ) : (
                 <p className="english-translation-placeholder">
-                  Sign in front of camera or assemble a sentence to generate translations.
+                  Position your hands in camera view to begin signing. Words will automatically assemble with real-time Indic grammar translation.
                 </p>
               )}
             </div>
@@ -398,9 +398,10 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
                   type="button"
                   className={`buffer-mode-pill ${bufferInsertionMode === 'head_nod' ? 'mode-nod' : 'mode-auto'}`}
                   onClick={() => onSetBufferInsertionMode(bufferInsertionMode === 'head_nod' ? 'auto' : 'head_nod')}
-                  title="Click to toggle between Head-Nod Commit and Auto-Stream insertion"
+                  title="Toggle mode: Head-Nod locks signs on downward nod; Auto-Stream continuously appends stable signs"
+                  aria-label={`Buffer mode: ${bufferInsertionMode === 'head_nod' ? 'Head-Nod Lock' : 'Auto-Stream'}`}
                 >
-                  {bufferInsertionMode === 'head_nod' ? '✓ Head-Nod' : '⚡ Auto-Stream'}
+                  {bufferInsertionMode === 'head_nod' ? '✓ Head-Nod Lock' : '⚡ Auto-Stream'}
                 </button>
               )}
             </div>
