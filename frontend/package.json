@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "description": "SETU Frontend Workstation — Real-Time Indian Sign Language Translation & 3D Avatar",
   "private": true,
   "version": "0.0.0",
   "type": "module",
