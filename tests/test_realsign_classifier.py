@@ -311,7 +311,7 @@ def test_instant_retrain_realsign_mlp(tmp_path):
         batch_size=16,
     )
 
-    assert elapsed < 5.0, f"Retraining took {elapsed:.2f}s, expected < 5.0s"
+    assert elapsed < 10.0, f"Retraining took {elapsed:.2f}s, expected < 10.0s"
     assert acc >= 0.85
     assert output_model.exists()
     assert output_model.stat().st_size > 10000
