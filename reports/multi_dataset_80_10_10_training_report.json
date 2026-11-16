@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-11-16T21:25:47.392155",
+  "device": "cuda",
+  "total_training_time_seconds": 63.08907723426819,
+  "results": [
+    {
+      "task": "ISL Alphabet (A\u2013Z)",
+      "num_classes": 26,
+      "test_accuracy": 0.9173333333333333,
+      "macro_precision": 0.9211955866172572,
+      "macro_recall": 0.9168540253188352,
+      "macro_f1": 0.9170467677399827
+    },
+    {
+      "task": "ISL Numerals (0\u20139)",
+      "num_classes": 10,
+      "test_accuracy": 0.9442508710801394,
+      "macro_precision": 0.944513083320091,
+      "macro_recall": 0.9442318919905128,
+      "macro_f1": 0.9430588688205855
+    },
+    {
+      "task": "ISL Hindi Vowels (\u0905\u2013\u0910)",
+      "num_classes": 8,
+      "test_accuracy": 0.9567307692307693,
+      "macro_precision": 0.9555810369387956,
+      "macro_recall": 0.9603951735139166,
+      "macro_f1": 0.9563799907576621
+    },
+    {
+      "task": "Dynamic ISL Sequence BiLSTM (53 Classes)",
+      "num_classes": 53,
+      "test_accuracy": 0.8173076923076923,
+      "macro_precision": 0.8427672955974842,
+      "macro_recall": 0.8113207547169812,
+      "macro_f1": 0.8069182389937106
+    }
+  ]
+}

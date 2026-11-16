@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { TopNavbar } from './components/TopNavbar';
 import { CameraWorkspace } from './components/CameraWorkspace';
 import { CameraControls } from './components/CameraControls';
@@ -11,61 +11,60 @@ import { SavedModal } from './components/SavedModal';
 import { HelpModal } from './components/HelpModal';
 import { IncludeVideoModal } from './components/IncludeVideoModal';
 import { RecordSignModal } from './components/RecordSignModal';
-import { CalibrationWizardModal } from './components/CalibrationWizardModal';
 import { TextToSignWorkspace } from './components/TextToSignWorkspace';
 import { PracticeStudio } from './components/PracticeStudio';
 import { ConversationStudio } from './components/ConversationStudio';
+import { EvaluationDashboard } from './components/EvaluationDashboard';
 import { useRecognitionStream } from './hooks/useRecognitionStream';
 import { useTTS } from './hooks/useTTS';
 import { useSentenceBuilder } from './hooks/useSentenceBuilder';
-import type { FramingFeedback, LandmarkStyles, SubtitleSize } from './types';
+import type { BufferInsertionMode, FramingFeedback, LandmarkStyles, SubtitleSize } from './types';
 import './index.css';
 
 export const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  // URL query parameter helper for deep-linking
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialTab = urlParams?.get('tab') || 'translator';
+  const initialModal = urlParams?.get('modal') || '';
+  const initialDir = urlParams?.get('dir') === 'en-to-isl' ? 'en-to-isl' : 'isl-to-en';
+
   // 2-Way Translation Direction ('isl-to-en' or 'en-to-isl')
-  const [translationDirection, setTranslationDirection] = useState<'isl-to-en' | 'en-to-isl'>('isl-to-en');
+  const [translationDirection, setTranslationDirection] = useState<'isl-to-en' | 'en-to-isl'>(initialDir);
 
   // Active top navigation section
-  const [activeTab, setActiveTab] = useState<string>('translator');
-
-  // Theme & High-Contrast A11y State (Synchronized across App & Settings)
-  const [theme, setTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
-    if (typeof window === 'undefined') return 'dark';
-    try {
-      return (localStorage.getItem('setu_theme') as 'dark' | 'light' | 'high-contrast') || 'dark';
-    } catch {
-      return 'dark';
-    }
-  });
-
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('setu_theme', theme);
-    } catch {}
-  }, [theme]);
-
-  const cycleTheme = () => {
-    setTheme((prev) => {
-      if (prev === 'dark') return 'light';
-      if (prev === 'light') return 'high-contrast';
-      return 'dark';
-    });
-  };
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
 
   // Modals
-  const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(false);
-  const [isAlphabetModalOpen, setIsAlphabetModalOpen] = useState<boolean>(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
-  const [isSavedModalOpen, setIsSavedModalOpen] = useState<boolean>(false);
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
-  const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(false);
-  const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
-  const [isCalibrationModalOpen, setIsCalibrationModalOpen] = useState<boolean>(false);
-  const [showDiagnosticHUD, setShowDiagnosticHUD] = useState<boolean>(false);
+  const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(initialModal === 'vocab');
+  const [isAlphabetModalOpen, setIsAlphabetModalOpen] = useState<boolean>(initialModal === 'alphabet');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(initialModal === 'settings');
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(initialModal === 'history');
+  const [isSavedModalOpen, setIsSavedModalOpen] = useState<boolean>(initialModal === 'saved');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(initialModal === 'help');
+  const [isIncludeModalOpen, setIsIncludeModalOpen] = useState<boolean>(initialModal === 'include');
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(initialModal === 'record');
+
+  // Backend Health Poll
+  const [backendReady, setBackendReady] = useState<boolean>(false);
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const res = await fetch(`http://${window.location.hostname}:8000/health`);
+        if (isMounted) setBackendReady(res.ok);
+      } catch {
+        if (isMounted) setBackendReady(false);
+      }
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Subtitle & Overlay Preferences
   const [subtitleVisible, setSubtitleVisible] = useState<boolean>(true);
@@ -111,8 +110,12 @@ export const App: React.FC = () => {
     autoSpeakEnabled,
     speak,
     stop,
+    targetLanguage,
     onClearBackend: () => clearSentence(),
-    onBackspaceBackend: () => backspaceSentence(),
+    onBackspaceBackend: () => {
+      backspaceSentence();
+      undoLastToken();
+    },
   });
 
   // Filtered prediction callback: passes clean predictions to sentence builder
@@ -127,6 +130,7 @@ export const App: React.FC = () => {
   const [landmarkStyles, setLandmarkStyles] = useState<LandmarkStyles>({
     showLeftHand: true,
     showRightHand: true,
+    showFace: false,
     mirrored: true,
   });
 
@@ -152,13 +156,25 @@ export const App: React.FC = () => {
     clearHistory,
     resolveDisambiguation,
     acceptPrediction,
-    sendCalibration,
+    setBufferMode,
+    undoLastToken,
   } = useRecognitionStream({
     videoRef,
     confidenceThreshold,
     onPredictionChange: handleFilteredPredictionChange,
     isFramingGated,
   });
+
+  // Sentence Buffer Insertion Mode ('auto' stream vs 'head_nod' confirmed)
+  const [bufferInsertionMode, setBufferInsertionMode] = useState<BufferInsertionMode>('head_nod');
+
+  const handleSetBufferInsertionMode = useCallback(
+    (mode: BufferInsertionMode) => {
+      setBufferInsertionMode(mode);
+      setBufferMode(mode);
+    },
+    [setBufferMode]
+  );
 
   // Toggle hand landmarks on/off together
   const handleToggleLandmarks = () => {
@@ -167,6 +183,7 @@ export const App: React.FC = () => {
       ...prev,
       showLeftHand: !anyActive,
       showRightHand: !anyActive,
+      showFace: false,
     }));
   };
 
@@ -275,6 +292,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={handleNavSelect}
         isBackendConnected={isBackendConnected}
+        backendReady={backendReady}
         fps={currentResult?.fps || 0}
         latencyMs={currentResult?.latency_ms || 0}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
@@ -293,13 +311,16 @@ export const App: React.FC = () => {
         onToggleDirection={() =>
           setTranslationDirection((prev) => (prev === 'isl-to-en' ? 'en-to-isl' : 'isl-to-en'))
         }
-        theme={theme}
-        onCycleTheme={cycleTheme}
       />
 
       {/* Main Workspace Layout (Zero-Scroll 100vh Locked Grid) */}
-      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''}`} role="main">
-        {activeTab === 'conversation' ? (
+      <main className={`workspace-grid ${translationDirection === 'en-to-isl' ? 'bidirectional-active' : ''} ${activeTab === 'practice' || activeTab === 'evaluation' ? 'practice-mode-active' : ''}`} role="main">
+        {activeTab === 'evaluation' ? (
+          <EvaluationDashboard
+            currentResult={currentResult}
+            onOpenFactsheet={() => window.open('docs/showcase/index.html', '_blank')}
+          />
+        ) : activeTab === 'conversation' ? (
           <ConversationStudio
             currentResult={currentResult}
             onSpeak={speak}
@@ -330,8 +351,6 @@ export const App: React.FC = () => {
                 onOpenVocabulary={() => setIsVocabModalOpen(true)}
                 onResolveDisambiguation={resolveDisambiguation}
                 onAcceptPrediction={acceptPrediction}
-                showDiagnosticHUD={showDiagnosticHUD}
-                confidenceThreshold={confidenceThreshold}
               />
 
               {/* Under-Camera Controls */}
@@ -351,9 +370,6 @@ export const App: React.FC = () => {
                 onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
                 enforceFraming={enforceFraming}
                 onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
-                showDiagnosticHUD={showDiagnosticHUD}
-                onToggleDiagnosticHUD={() => setShowDiagnosticHUD((prev) => !prev)}
-                onOpenCalibrationModal={() => setIsCalibrationModalOpen(true)}
                 onStart={startCamera}
                 onPause={pauseDetection}
                 onResume={resumeDetection}
@@ -387,12 +403,11 @@ export const App: React.FC = () => {
                   onClearSentence={handleClearSentence}
                   onBackspaceSentence={handleBackspaceSentence}
                   onAddSpaceSentence={handleAddSpaceSentence}
-                  onAcceptPrediction={acceptPrediction}
-                  onResolveDisambiguation={resolveDisambiguation}
                   isSpeaking={isSpeaking}
                   onSpeak={speak}
                   onStopSpeak={stop}
-                  onSelectLanguage={setTargetLanguage}
+                  bufferInsertionMode={bufferInsertionMode}
+                  onSetBufferInsertionMode={handleSetBufferInsertionMode}
                 />
               )}
             </aside>
@@ -416,25 +431,19 @@ export const App: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        theme={theme}
-        setTheme={setTheme}
-        subtitleVisible={subtitleVisible}
-        setSubtitleVisible={setSubtitleVisible}
-        subtitleSize={subtitleSize}
-        setSubtitleSize={setSubtitleSize}
         activeModel={activeModel}
         onSwitchModel={switchModel}
         confidenceThreshold={confidenceThreshold}
         setConfidenceThreshold={setConfidenceThreshold}
+        bufferInsertionMode={bufferInsertionMode}
+        onSetBufferInsertionMode={handleSetBufferInsertionMode}
         availableCameras={availableCameras}
         selectedCameraId={selectedCameraId}
-        onSelectCamera={(id) => setSelectedCameraId(id)}
+        onSelectCamera={setSelectedCameraId}
         landmarkStyles={landmarkStyles}
         setLandmarkStyles={setLandmarkStyles}
-        showFramingGuide={showFramingGuide}
-        onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
-        enforceFraming={enforceFraming}
-        onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
+        subtitleSize={subtitleSize}
+        setSubtitleSize={setSubtitleSize}
         autoSpeakEnabled={autoSpeakEnabled}
         onToggleAutoSpeak={toggleAutoSpeak}
         targetLanguage={targetLanguage}
@@ -442,13 +451,12 @@ export const App: React.FC = () => {
         availableVoices={availableVoices}
         selectedVoice={selectedVoice}
         onSelectVoice={setSelectedVoice}
-        onTestSpeak={(text, lang) => speak(text, lang)}
+        onTestSpeak={speak}
         isSpeaking={isSpeaking}
-        isBackendConnected={isBackendConnected}
-        fps={currentResult?.fps || 0}
-        latencyMs={currentResult?.latency_ms || 0}
-        onResetSession={handleResetSession}
-        onClearSentence={handleClearSentence}
+        enforceFraming={enforceFraming}
+        onToggleEnforceFraming={() => setEnforceFraming((prev) => !prev)}
+        showFramingGuide={showFramingGuide}
+        onToggleFramingGuide={() => setShowFramingGuide((prev) => !prev)}
       />
 
       <HistoryModal
@@ -479,13 +487,6 @@ export const App: React.FC = () => {
         onClose={() => setIsRecordModalOpen(false)}
         currentLandmarks={currentResult?.landmarks}
         isCameraActive={cameraStatus === 'detecting'}
-      />
-
-      <CalibrationWizardModal
-        isOpen={isCalibrationModalOpen}
-        onClose={() => setIsCalibrationModalOpen(false)}
-        currentResult={currentResult}
-        onApplyCalibration={sendCalibration}
       />
     </div>
   );

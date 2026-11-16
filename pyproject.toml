@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "setu"
 version = "0.1.0"
-description = "SETU: AI-Powered Indian Sign Language Translation System"
+description = "SETU: Assistive Indian Sign Language Platform for Real-Time Multilingual Communication"
 authors = [{ name = "SETU Project Team" }]
 readme = "README.md"
 requires-python = ">=3.10"

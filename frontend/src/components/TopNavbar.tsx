@@ -3,33 +3,30 @@ import {
   Video,
   History,
   Bookmark,
-  BookOpen,
   Settings,
   HelpCircle,
   Menu,
   X,
-  Film,
-  Type,
   ChevronDown,
   ArrowRight,
   ArrowLeftRight,
-  Volume2,
-  VolumeX,
   Target,
   Users,
   Sun,
   Moon,
   Contrast,
+  BarChart3,
 } from 'lucide-react';
 
 interface TopNavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isBackendConnected: boolean;
+  backendReady?: boolean;
   fps?: number;
   latencyMs?: number;
   onOpenSettings: () => void;
-  onOpenVocabulary: () => void;
+  onOpenVocabulary?: () => void;
   onOpenAlphabetModal?: () => void;
   onOpenHistory?: () => void;
   onOpenSaved?: () => void;
@@ -42,40 +39,31 @@ interface TopNavbarProps {
   isSpeaking?: boolean;
   translationDirection?: 'isl-to-en' | 'en-to-isl';
   onToggleDirection?: () => void;
-  theme?: 'dark' | 'light' | 'high-contrast';
-  onCycleTheme?: () => void;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
   activeTab,
   setActiveTab,
   isBackendConnected,
+  backendReady = false,
   fps = 0,
   latencyMs = 0,
   onOpenSettings,
-  onOpenVocabulary,
-  onOpenAlphabetModal,
   onOpenHistory,
   onOpenSaved,
   onOpenHelp,
-  onOpenIncludeModal,
   onOpenRecordModal,
   historyCount = 0,
-  autoSpeakEnabled = true,
-  onToggleAutoSpeak,
-  isSpeaking = false,
   translationDirection = 'isl-to-en',
   onToggleDirection,
-  theme: propTheme,
-  onCycleTheme,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
 
-  const libraryRef = useRef<HTMLDivElement | null>(null);
+  const resourcesRef = useRef<HTMLDivElement | null>(null);
 
-  // Theme & High-Contrast A11y State (Prefers lifted prop, falls back to local)
-  const [localTheme, setLocalTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
+  // Theme & High-Contrast A11y State
+  const [theme, setTheme] = useState<'dark' | 'light' | 'high-contrast'>(() => {
     if (typeof window === 'undefined') return 'dark';
     try {
       return (localStorage.getItem('setu_theme') as 'dark' | 'light' | 'high-contrast') || 'dark';
@@ -84,32 +72,26 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     }
   });
 
-  const activeTheme = propTheme || localTheme;
-
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', activeTheme);
+    document.documentElement.setAttribute('data-theme', theme);
     try {
-      localStorage.setItem('setu_theme', activeTheme);
+      localStorage.setItem('setu_theme', theme);
     } catch {}
-  }, [activeTheme]);
+  }, [theme]);
 
   const cycleTheme = () => {
-    if (onCycleTheme) {
-      onCycleTheme();
-      return;
-    }
-    setLocalTheme((prev) => {
+    setTheme((prev) => {
       if (prev === 'dark') return 'light';
       if (prev === 'light') return 'high-contrast';
       return 'dark';
     });
   };
 
-  // Close dropdowns when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (libraryRef.current && !libraryRef.current.contains(e.target as Node)) {
-        setLibraryOpen(false);
+      if (resourcesRef.current && !resourcesRef.current.contains(e.target as Node)) {
+        setResourcesOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -118,28 +100,24 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
   return (
     <header className="top-navbar" role="banner">
-      {/* 1. Brand Logo & Mark */}
+      {/* 1. Left: Brand & Compact 2-Way Translation Switcher */}
       <div className="navbar-brand">
-        <div className="brand-logo-wrap" title="SETU: Indian Sign Language Translator">
+        <div className="brand-logo-wrap" title="SETU: Indian Sign Language Platform">
           <div className="brand-symbol" aria-hidden="true">
-            <img
-              src="/logo-square.png"
-              alt="SETU Logo"
-              className="brand-logo-img"
-            />
+            <img src="/logo-square.png" alt="SETU Logo" className="brand-logo-img" />
           </div>
           <div className="brand-text">
             <span className="brand-name">SETU</span>
-            <span className="brand-tag">ISL Translator</span>
+            <span className="brand-tag">ISL</span>
           </div>
         </div>
 
-        {/* 2. Interactive 2-Way Communication Toggle */}
+        {/* 2-Way Direction Pill */}
         <button
           type="button"
-          className="navbar-direction-toggle"
+          className="navbar-direction-toggle compact"
           onClick={onToggleDirection}
-          title={`Click to switch mode: ${
+          title={`Click to switch: ${
             translationDirection === 'isl-to-en'
               ? 'ISL → English (Sign Recognition)'
               : 'English → ISL (Sign Avatar Translation)'
@@ -147,21 +125,20 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           aria-label="Toggle translation direction"
         >
           <span className={`dir-lang ${translationDirection === 'isl-to-en' ? 'active-source' : ''}`}>
-            {translationDirection === 'isl-to-en' ? 'ISL' : 'English'}
+            {translationDirection === 'isl-to-en' ? 'ISL' : 'EN'}
           </span>
           <div className={`dir-arrow-wrap ${translationDirection === 'en-to-isl' ? 'rotated' : ''}`}>
-            <ArrowRight size={13} className={`dir-arrow-icon ${translationDirection === 'en-to-isl' ? 'rotated' : ''}`} />
+            <ArrowRight size={12} className={`dir-arrow-icon ${translationDirection === 'en-to-isl' ? 'rotated' : ''}`} />
           </div>
           <span className={`dir-lang ${translationDirection === 'en-to-isl' ? 'active-source' : ''}`}>
-            {translationDirection === 'isl-to-en' ? 'English' : 'ISL'}
+            {translationDirection === 'isl-to-en' ? 'EN' : 'ISL'}
           </span>
-          <ArrowLeftRight size={11} className="dir-swap-hint" />
+          <ArrowLeftRight size={10} className="dir-swap-hint" />
         </button>
       </div>
 
-      {/* Center Navigation Links (Streamlined) */}
+      {/* 2. Center: Core Navigation Links (Only 3 Primary Workspace Tabs) */}
       <nav className="navbar-links" aria-label="Main Navigation">
-        {/* 3. Translator Active Tab */}
         <button
           className={`nav-link-btn ${activeTab === 'translator' ? 'active' : ''}`}
           onClick={() => {
@@ -174,7 +151,6 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span>Translator</span>
         </button>
 
-        {/* Practice Studio Active Tab */}
         <button
           className={`nav-link-btn ${activeTab === 'practice' ? 'active' : ''}`}
           onClick={() => {
@@ -184,10 +160,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           aria-current={activeTab === 'practice' ? 'page' : undefined}
         >
           <Target size={14} className="nav-icon" />
-          <span>Practice Studio</span>
+          <span>Practice</span>
         </button>
 
-        {/* Conversation Studio Tab */}
         <button
           className={`nav-link-btn ${activeTab === 'conversation' ? 'active' : ''}`}
           onClick={() => {
@@ -200,95 +175,41 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span>Conversation</span>
         </button>
 
-        {/* 4. Consolidated Library Dropdown: Sign Guides, Activity & History */}
-        <div className="nav-dropdown-wrapper" ref={libraryRef}>
+        <button
+          className={`nav-link-btn ${activeTab === 'evaluation' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('evaluation');
+            setMobileMenuOpen(false);
+          }}
+          aria-current={activeTab === 'evaluation' ? 'page' : undefined}
+          title="Model Accuracy & System Evaluation Metrics"
+        >
+          <BarChart3 size={14} className="nav-icon" />
+          <span>Evaluation</span>
+        </button>
+      </nav>
+
+      {/* 3. Right: Single Consolidated Dropdown + Theme + Status + Settings */}
+      <div className="navbar-actions">
+        {/* Consolidated "Records & Tools ▾" Dropdown */}
+        <div className="nav-dropdown-wrapper" ref={resourcesRef}>
           <button
-            className={`nav-link-btn dropdown-trigger ${libraryOpen ? 'dropdown-active' : ''}`}
-            onClick={() => setLibraryOpen(!libraryOpen)}
-            aria-expanded={libraryOpen}
+            className={`nav-link-btn dropdown-trigger ${resourcesOpen ? 'dropdown-active' : ''}`}
+            onClick={() => setResourcesOpen(!resourcesOpen)}
+            aria-expanded={resourcesOpen}
             aria-haspopup="true"
-            title="Sign References, Guides, and Activity"
+            title="Explore session history, saved signs, and tools"
           >
-            <BookOpen size={14} className="nav-icon" />
-            <span>Library</span>
-            {historyCount > 0 && (
-              <span className="navbar-item-badge">{historyCount}</span>
-            )}
-            <ChevronDown size={12} className={`chevron-icon ${libraryOpen ? 'open' : ''}`} />
+            <History size={14} className="nav-icon" />
+            <span>Records & Tools</span>
+            {historyCount > 0 && <span className="navbar-item-badge">{historyCount}</span>}
+            <ChevronDown size={11} className={`chevron-icon ${resourcesOpen ? 'open' : ''}`} />
           </button>
 
-          {libraryOpen && (
-            <div className="navbar-dropdown-menu library-dropdown-menu" role="menu">
-              <div className="dropdown-section-title">Sign Guides & References</div>
-
-              {onOpenAlphabetModal && (
-                <button
-                  className="dropdown-item"
-                  role="menuitem"
-                  onClick={() => {
-                    onOpenAlphabetModal();
-                    setLibraryOpen(false);
-                  }}
-                >
-                  <Type size={14} className="dropdown-item-icon" />
-                  <div className="dropdown-item-text">
-                    <span className="item-title">Alphabet Guide (A–Z)</span>
-                    <span className="item-desc">Fingerspelling postures & cheatsheet</span>
-                  </div>
-                </button>
-              )}
-
-              <button
-                className="dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  onOpenVocabulary();
-                  setLibraryOpen(false);
-                }}
-              >
-                <BookOpen size={14} className="dropdown-item-icon" />
-                <div className="dropdown-item-text">
-                  <span className="item-title">Common Signs (5 Phrases)</span>
-                  <span className="item-desc">Everyday conversational expressions</span>
-                </div>
-              </button>
-
-              {onOpenIncludeModal && (
-                <button
-                  className="dropdown-item"
-                  role="menuitem"
-                  onClick={() => {
-                    onOpenIncludeModal();
-                    setLibraryOpen(false);
-                  }}
-                >
-                  <Film size={14} className="dropdown-item-icon" />
-                  <div className="dropdown-item-text">
-                    <span className="item-title">Sign Dictionary (263 Signs)</span>
-                    <span className="item-desc">INCLUDE video recognition & search</span>
-                  </div>
-                </button>
-              )}
-
-              {onOpenRecordModal && (
-                <button
-                  className="dropdown-item"
-                  role="menuitem"
-                  onClick={() => {
-                    onOpenRecordModal();
-                    setLibraryOpen(false);
-                  }}
-                >
-                  <Video size={14} className="dropdown-item-icon text-danger" />
-                  <div className="dropdown-item-text">
-                    <span className="item-title">Custom Sign Studio</span>
-                    <span className="item-desc">Record & train personal gestures</span>
-                  </div>
-                </button>
-              )}
-
-              <div className="dropdown-divider" />
-              <div className="dropdown-section-title">Your Activity</div>
+          {resourcesOpen && (
+            <div className="navbar-dropdown-menu" role="menu">
+              {/* Session History & Saved */}
+              <div className="dropdown-section-title">Session & Records</div>
 
               {onOpenHistory && (
                 <button
@@ -296,19 +217,17 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   role="menuitem"
                   onClick={() => {
                     onOpenHistory();
-                    setLibraryOpen(false);
+                    setResourcesOpen(false);
                   }}
                 >
-                  <History size={14} className="dropdown-item-icon" />
+                  <History size={14} className="dropdown-item-icon text-amber" />
                   <div className="dropdown-item-text">
                     <span className="item-title">Session History</span>
                     <span className="item-desc">
-                      {historyCount > 0 ? `${historyCount} signs logged this session` : 'No signs logged yet'}
+                      {historyCount > 0 ? `${historyCount} signs logged` : 'View recorded translations'}
                     </span>
                   </div>
-                  {historyCount > 0 && (
-                    <span className="navbar-item-badge">{historyCount}</span>
-                  )}
+                  {historyCount > 0 && <span className="navbar-item-badge">{historyCount}</span>}
                 </button>
               )}
 
@@ -318,105 +237,99 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   role="menuitem"
                   onClick={() => {
                     onOpenSaved();
-                    setLibraryOpen(false);
+                    setResourcesOpen(false);
                   }}
                 >
-                  <Bookmark size={14} className="dropdown-item-icon" />
+                  <Bookmark size={14} className="dropdown-item-icon text-emerald" />
                   <div className="dropdown-item-text">
-                    <span className="item-title">Saved Bookmarks</span>
-                    <span className="item-desc">Saved signs and translations</span>
+                    <span className="item-title">Saved Signs</span>
+                    <span className="item-desc">Bookmarked translations</span>
                   </div>
                 </button>
               )}
 
-              <div className="dropdown-divider" />
-              <div className="dropdown-section-title">Support</div>
+              {/* Creator Tools & Help */}
+              <div className="dropdown-section-title">Tools & Support</div>
+
+              {onOpenRecordModal && (
+                <button
+                  className="dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    onOpenRecordModal();
+                    setResourcesOpen(false);
+                  }}
+                >
+                  <Video size={14} className="dropdown-item-icon text-danger" />
+                  <div className="dropdown-item-text">
+                    <span className="item-title">Record Custom Sign</span>
+                    <span className="item-desc">Capture custom gestures & poses</span>
+                  </div>
+                </button>
+              )}
 
               <button
                 className="dropdown-item"
                 role="menuitem"
                 onClick={() => {
                   onOpenHelp();
-                  setLibraryOpen(false);
+                  setResourcesOpen(false);
                 }}
               >
-                <HelpCircle size={14} className="dropdown-item-icon" />
+                <HelpCircle size={14} className="dropdown-item-icon text-muted" />
                 <div className="dropdown-item-text">
-                  <span className="item-title">Camera Tips & Framing</span>
-                  <span className="item-desc">Optimal lighting and hand distance</span>
+                  <span className="item-title">Help & Signer Guide</span>
+                  <span className="item-desc">Framing, lighting, and gestures</span>
                 </div>
               </button>
             </div>
           )}
         </div>
 
-      </nav>
-
-      {/* 6. Right Utilities: Clean Minimalist Icon Bar & Status */}
-      <div className="navbar-actions">
-        {/* Auto-Speak TTS Icon Toggle */}
-        {onToggleAutoSpeak && (
-          <button
-            className={`nav-icon-action-btn ${autoSpeakEnabled ? 'active' : 'muted'} ${isSpeaking ? 'speaking' : ''}`}
-            onClick={onToggleAutoSpeak}
-            title={
-              autoSpeakEnabled
-                ? 'Auto-Speak (TTS) is Active. Click to mute.'
-                : 'Auto-Speak (TTS) is Muted. Click to enable.'
-            }
-            aria-label="Toggle Auto-Speak TTS"
-            aria-pressed={autoSpeakEnabled}
-          >
-            {isSpeaking ? (
-              <div className="soundwave-bars" aria-hidden="true">
-                <span className="soundwave-bar" />
-                <span className="soundwave-bar" />
-                <span className="soundwave-bar" />
-              </div>
-            ) : autoSpeakEnabled ? (
-              <Volume2 size={15} className="tts-active-icon" />
-            ) : (
-              <VolumeX size={15} className="tts-muted-icon" />
-            )}
-          </button>
-        )}
-
-        {/* Theme Switcher Icon (Dark / Light / High-Contrast) */}
+        {/* Theme Icon Button (Compact) */}
         <button
           type="button"
-          className={`nav-icon-action-btn ${activeTheme}`}
+          className="nav-icon-btn"
           onClick={cycleTheme}
           title={`Theme: ${
-            activeTheme === 'dark' ? 'Dark Mode' : activeTheme === 'light' ? 'Light Mode' : 'High-Contrast A11y (WCAG AAA)'
+            theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'High-Contrast A11y'
           }. Click to switch.`}
-          aria-label="Switch Theme Mode"
+          aria-label="Toggle Theme"
         >
-          {activeTheme === 'dark' && <Moon size={15} className="theme-toggle-icon" />}
-          {activeTheme === 'light' && <Sun size={15} className="theme-toggle-icon" />}
-          {activeTheme === 'high-contrast' && <Contrast size={15} className="theme-toggle-icon a11y-gold" />}
+          {theme === 'dark' && <Moon size={14} />}
+          {theme === 'light' && <Sun size={14} />}
+          {theme === 'high-contrast' && <Contrast size={14} className="a11y-gold" />}
         </button>
+
+        {/* Minimal Live Status Indicator (Clean Dot with Tooltip) */}
+        <div
+          className={`connection-pill-minimal ${
+            isBackendConnected ? 'connected' : backendReady ? 'ready' : 'disconnected'
+          }`}
+          title={`SETU AI Engine: ${
+            isBackendConnected
+              ? 'Active Recognition Stream (CUDA Ready)'
+              : backendReady
+              ? 'Backend Online & Model Loaded (CUDA Ready)'
+              : 'Backend Offline'
+          }${fps > 0 ? ` · ${fps} FPS` : ''}${latencyMs > 0 ? ` · ${latencyMs}ms` : ''}`}
+        >
+          <span className="connection-status-dot" aria-hidden="true" />
+          <span className="status-label-minimal">
+            {isBackendConnected ? (fps > 0 ? `${fps} FPS` : 'Live') : backendReady ? 'Ready' : 'Offline'}
+          </span>
+        </div>
 
         {/* Settings Icon Button */}
         <button
-          className="nav-icon-action-btn"
+          type="button"
+          className="nav-icon-btn settings-trigger-btn"
           onClick={onOpenSettings}
-          title="Settings, Calibration & Developer Options"
-          aria-label="Open Settings"
+          title="Open Settings & Calibration"
+          aria-label="Settings"
         >
           <Settings size={15} />
         </button>
-
-        {/* Clean System Status Pill (Telemetry on hover tooltip) */}
-        <div
-          className={`connection-pill-clean ${isBackendConnected ? 'connected' : 'disconnected'}`}
-          title={`SETU Engine: ${
-            isBackendConnected ? 'Connected (ws://localhost:8000)' : 'Disconnected'
-          } · Local Processing · Zero Cloud Recording${fps > 0 ? ` · ${fps} FPS` : ''}${latencyMs > 0 ? ` · ${latencyMs}ms` : ''}`}
-        >
-          <span className="connection-status-dot" aria-hidden="true" />
-          <span className="status-label-clean">{isBackendConnected ? 'Live' : 'Offline'}</span>
-        </div>
-
 
         {/* Mobile Menu Toggle */}
         <button
@@ -433,28 +346,16 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         <div className="mobile-nav-drawer" role="navigation">
           <button
             type="button"
-            className={`mobile-nav-item theme-mobile-item ${activeTheme}`}
+            className={`mobile-nav-item theme-mobile-item ${theme}`}
             onClick={cycleTheme}
           >
-            {activeTheme === 'dark' && <Moon size={16} />}
-            {activeTheme === 'light' && <Sun size={16} />}
-            {activeTheme === 'high-contrast' && <Contrast size={16} className="a11y-gold" />}
+            {theme === 'dark' && <Moon size={16} />}
+            {theme === 'light' && <Sun size={16} />}
+            {theme === 'high-contrast' && <Contrast size={16} className="a11y-gold" />}
             <span>
-              Theme: {activeTheme === 'dark' ? 'Dark Mode' : activeTheme === 'light' ? 'Light Mode' : 'High-Contrast A11y'}
+              Theme: {theme === 'dark' ? 'Dark Mode' : theme === 'light' ? 'Light Mode' : 'High-Contrast A11y'}
             </span>
           </button>
-          {onToggleAutoSpeak && (
-            <button
-              className={`mobile-nav-item ${autoSpeakEnabled ? 'active' : ''}`}
-              onClick={() => {
-                onToggleAutoSpeak();
-                setMobileMenuOpen(false);
-              }}
-            >
-              {autoSpeakEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              <span>Auto-Speak: {autoSpeakEnabled ? 'Enabled' : 'Muted'}</span>
-            </button>
-          )}
           <button
             className={`mobile-nav-item ${activeTab === 'translator' ? 'active' : ''}`}
             onClick={() => {
@@ -465,52 +366,36 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             <Video size={16} />
             <span>Translator</span>
           </button>
-          {onOpenAlphabetModal && (
-            <button
-              className="mobile-nav-item"
-              onClick={() => {
-                onOpenAlphabetModal();
-                setMobileMenuOpen(false);
-              }}
-            >
-              <Type size={16} />
-              <span>Alphabet Guide (A–Z)</span>
-            </button>
-          )}
           <button
-            className="mobile-nav-item"
+            className={`mobile-nav-item ${activeTab === 'practice' ? 'active' : ''}`}
             onClick={() => {
-              onOpenVocabulary();
+              setActiveTab('practice');
               setMobileMenuOpen(false);
             }}
           >
-            <BookOpen size={16} />
-            <span>Common Signs (5 Phrases)</span>
+            <Target size={16} />
+            <span>Practice</span>
           </button>
-          {onOpenIncludeModal && (
-            <button
-              className="mobile-nav-item"
-              onClick={() => {
-                onOpenIncludeModal();
-                setMobileMenuOpen(false);
-              }}
-            >
-              <Film size={16} />
-              <span>Sign Dictionary (263 Signs)</span>
-            </button>
-          )}
-          {onOpenRecordModal && (
-            <button
-              className="mobile-nav-item"
-              onClick={() => {
-                onOpenRecordModal();
-                setMobileMenuOpen(false);
-              }}
-            >
-              <Video size={16} />
-              <span>Custom Sign Studio</span>
-            </button>
-          )}
+          <button
+            className={`mobile-nav-item ${activeTab === 'conversation' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('conversation');
+              setMobileMenuOpen(false);
+            }}
+          >
+            <Users size={16} />
+            <span>Conversation</span>
+          </button>
+          <button
+            className={`mobile-nav-item ${activeTab === 'evaluation' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('evaluation');
+              setMobileMenuOpen(false);
+            }}
+          >
+            <BarChart3 size={16} />
+            <span>Evaluation</span>
+          </button>
           {onOpenHistory && (
             <button
               className="mobile-nav-item"
@@ -520,7 +405,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }}
             >
               <History size={16} />
-              <span>Session History {historyCount > 0 ? `(${historyCount})` : ''}</span>
+              <span>History {historyCount > 0 ? `(${historyCount})` : ''}</span>
             </button>
           )}
           {onOpenSaved && (
@@ -532,7 +417,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }}
             >
               <Bookmark size={16} />
-              <span>Saved Bookmarks</span>
+              <span>Saved Signs</span>
+            </button>
+          )}
+          {onOpenRecordModal && (
+            <button
+              className="mobile-nav-item"
+              onClick={() => {
+                onOpenRecordModal();
+                setMobileMenuOpen(false);
+              }}
+            >
+              <Video size={16} className="text-danger" />
+              <span>Record Custom Sign</span>
             </button>
           )}
           <button
@@ -543,7 +440,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             }}
           >
             <HelpCircle size={16} />
-            <span>Camera Tips & Guide</span>
+            <span>Help & Guide</span>
           </button>
           <button
             className="mobile-nav-item"
@@ -560,3 +457,5 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     </header>
   );
 };
+
+export default TopNavbar;

@@ -35,6 +35,7 @@ SUPPORTED_LANGUAGES = [
     {"code": "ta", "name": "Tamil", "native": "தமிழ்", "alignment": "SOV"},
     {"code": "te", "name": "Telugu", "native": "తెలుగు", "alignment": "SOV"},
     {"code": "kn", "name": "Kannada", "native": "ಕನ್ನಡ", "alignment": "SOV"},
+    {"code": "ml", "name": "Malayalam", "native": "മലയാളം", "alignment": "SOV"},
 ]
 
 
@@ -53,7 +54,7 @@ class TranslateRequest(BaseModel):
     tokens: Optional[List[str]] = Field(None, description="Sequence of ISL gloss tokens (e.g. ['ME', 'WATER', 'DRINK'])")
     text: Optional[str] = Field(None, description="Space-separated ISL gloss string (e.g. 'ME WATER DRINK')")
     target_languages: Optional[List[str]] = Field(
-        default=["en", "hi", "ta", "te", "kn"],
+        default=["en", "hi", "ta", "te", "kn", "ml"],
         description="Target language codes to generate"
     )
     is_question: bool = Field(False, description="Whether non-manual facial marker indicates a question")
@@ -95,7 +96,7 @@ async def get_nlp_status() -> Dict[str, Any]:
         },
         "syntax_transformer": "ready",
         "indic_transformer": {
-            "supported_languages": ["hi", "ta", "te", "kn"],
+            "supported_languages": ["hi", "ta", "te", "kn", "ml"],
             "direct_sov_alignment": True,
         },
         "neural_translator": {
@@ -138,19 +139,22 @@ async def translate_gloss(request: TranslateRequest) -> TranslateResponse:
             fluent_english="",
         )
 
-    # 1. Lexical auto-correction pass on single-character runs (fingerspelling)
+    # 1. Lexical auto-correction pass on character runs (fingerspelling)
+    import re
+    collapsed_raw = [re.sub(r'(.)\1+', r'\1', t) if len(t) <= 3 else t for t in raw_tokens]
+
     clean_tokens: List[str] = []
     i = 0
-    while i < len(raw_tokens):
-        if len(raw_tokens[i]) == 1:
+    while i < len(collapsed_raw):
+        if len(collapsed_raw[i]) == 1:
             run: List[str] = []
-            while i < len(raw_tokens) and len(raw_tokens[i]) == 1:
-                run.append(raw_tokens[i])
+            while i < len(collapsed_raw) and len(collapsed_raw[i]) == 1:
+                run.append(collapsed_raw[i])
                 i += 1
             word = "".join(run)
             clean_tokens.append(spell_corrector.correct(word))
         else:
-            clean_tokens.append(raw_tokens[i])
+            clean_tokens.append(collapsed_raw[i])
             i += 1
 
     # 2. Exact Canonical Rule Match
@@ -172,7 +176,7 @@ async def translate_gloss(request: TranslateRequest) -> TranslateResponse:
     if request.is_negation:
         if "not" not in translations["en"].lower() and "no" not in translations["en"].lower():
             translations["en"] = f"Not {translations['en'].lstrip()}"
-        for lang, neg_sfx in [("hi", " नहीं"), ("ta", " இல்லை"), ("te", " లేదు"), ("kn", " ಇಲ್ಲ")]:
+        for lang, neg_sfx in [("hi", " नहीं"), ("ta", " இல்லை"), ("te", " లేదు"), ("kn", " ಇಲ್ಲ"), ("ml", " ഇല്ല")]:
             if lang in translations and neg_sfx.strip() not in translations[lang]:
                 translations[lang] = translations[lang].rstrip("।.").strip() + neg_sfx
 

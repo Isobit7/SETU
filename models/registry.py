@@ -18,6 +18,7 @@ from models.adapters.sequence_lstm import ISLSequenceLSTMClassifier
 from models.adapters.include import IncludeClassifier
 from models.adapters.rf_uv11 import RFUV11Adapter
 from models.adapters.amrita import AmritaPhraseClassifier
+from models.adapters.dynamic_unified import UnifiedDynamicAdapter
 
 logger = logging.getLogger("setu.models.registry")
 
@@ -256,16 +257,55 @@ ModelRegistry.register(
 )
 
 ModelRegistry.register(
-    model_id="amrita_isl_phrase_bilstm",
-    name="Amrita SLR 49-Class Continuous Dynamic Phrase BiLSTM",
+    model_id="isl_dynamic_master_bilstm",
+    name="SETU Master 53-Class Dynamic Sequence BiLSTM",
     model_type=ModelType.STREAMING_PHRASE,
     input_dim=316,
-    num_classes=49,
+    num_classes=53,
+    weights_path=Path("models/weights/isl_dynamic_master_bilstm.pth"),
+    description="Unified 2-Layer Bidirectional PyTorch LSTM with Temporal Attention merging 49 conversational phrases, namaste, pronouns (I, You), and resting hand detection (no_sign).",
+    factory=lambda: AmritaPhraseClassifier(Path("models/weights/isl_dynamic_master_bilstm.pth")),
+    version="2.0.0",
+    metrics={"test_accuracy": 0.88, "top3_accuracy": 0.95},
+)
+
+ModelRegistry.register(
+    model_id="amrita_isl_phrase_bilstm",
+    name="SETU Dynamic Phrases & Conversational Signs (53 Classes)",
+    model_type=ModelType.STREAMING_PHRASE,
+    input_dim=316,
+    num_classes=53,
     weights_path=Path("models/weights/amrita_isl_phrase_bilstm.pth"),
-    description="2-Layer Bidirectional PyTorch LSTM with Temporal Attention for continuous 49-class ISL conversational phrase recognition from 316-D spatio-temporal features.",
+    description="2-Layer Bidirectional PyTorch LSTM with Temporal Attention for continuous dynamic ISL conversational phrase recognition from 316-D spatio-temporal features.",
     factory=lambda: AmritaPhraseClassifier(Path("models/weights/amrita_isl_phrase_bilstm.pth")),
+    version="2.0.0",
+    metrics={"test_accuracy": 0.88, "top3_accuracy": 0.95},
+)
+
+ModelRegistry.register(
+    model_id="isl_dynamic_unified_287",
+    name="SETU Unified 287-Class Dynamic ISL Model",
+    model_type=ModelType.STREAMING_PHRASE,
+    input_dim=316,
+    num_classes=287,
+    weights_path=Path("models/weights/isl_dynamic_master_bilstm.pth"),
+    description="Unified 287-class dynamic ISL model consolidating Amrita conversational phrases and AI4Bharat INCLUDE dictionary with 29 duplicate signs deduplicated and resting hand rejection.",
+    factory=lambda: UnifiedDynamicAdapter.get_instance(),
     version="1.0.0",
-    metrics={"test_accuracy": 0.7857, "top3_accuracy": 0.9082, "top5_accuracy": 0.9490},
+    metrics={"vocabulary_size": 287, "deduplicated_overlapping_signs": 29},
+)
+
+ModelRegistry.register(
+    model_id="dynamic_unified",
+    name="SETU Unified 287-Class Dynamic ISL Model",
+    model_type=ModelType.STREAMING_PHRASE,
+    input_dim=316,
+    num_classes=287,
+    weights_path=Path("models/weights/isl_dynamic_master_bilstm.pth"),
+    description="Unified 287-class dynamic ISL model consolidating Amrita conversational phrases and AI4Bharat INCLUDE dictionary with 29 duplicate signs deduplicated and resting hand rejection.",
+    factory=lambda: UnifiedDynamicAdapter.get_instance(),
+    version="1.0.0",
+    metrics={"vocabulary_size": 287, "deduplicated_overlapping_signs": 29},
 )
 
 __all__ = [

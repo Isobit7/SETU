@@ -14,7 +14,7 @@ from scripts.record_custom_signs import (
     draw_centered_text,
     record_sign_samples,
 )
-from training.train_sequence_lstm import (
+from training.train_isl_phrase_bilstm import (
     BASE_CLASSES,
     ISLSequenceDataset,
     load_sequence_dataset,

@@ -115,13 +115,14 @@ class ISLSpellCorrector:
 
         return dp[len1][len2]
 
-    def correct(self, word: str, max_cost_threshold: float = 1.4) -> str:
+    def correct(self, word: str, max_cost_threshold: float = 0.85) -> str:
         """
         Auto-corrects a fingerspelled word against the ISL dictionary.
-        Returns the original word if already valid or if distance exceeds threshold.
+        Returns the original word if already valid, if length <= 3, or if distance exceeds threshold.
+        Prevents aggressive corruption of short intentional letters/words (e.g., 'BA', 'BAT').
         """
         clean = word.upper().strip()
-        if not clean or len(clean) <= 1:
+        if not clean or len(clean) <= 3:
             return clean
 
         # Exact match: 0 latency
@@ -142,7 +143,11 @@ class ISLSpellCorrector:
         best_cost = float("inf")
 
         for cand in candidate_pool:
-            # Fast prune: if first character differs and word length >= 4, penalize
+            # Fast prune: do not match words with completely different first characters
+            c1, c2 = clean[0], cand[0]
+            if c1 != c2 and (c1, c2) not in PHONOLOGICAL_SUBSTITUTION_COSTS:
+                continue
+
             cost = self.weighted_distance(clean, cand)
             if cost < best_cost:
                 best_cost = cost

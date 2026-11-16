@@ -45,12 +45,10 @@ export function drawLandmarksOnCanvas(
   if (styles.showLeftHand && landmarks.left_hand && landmarks.left_hand.length > 0) {
     const pts = landmarks.left_hand;
 
-    // Batched skeleton connections with glowing neon aesthetics
-    ctx.save();
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 8;
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = '#38bdf8';
+    // Fast dual-pass neon glow (0ms GPU/CPU blur stall, replaces heavy shadowBlur)
+    // Pass 1: Neon ambient glow underlay
+    ctx.lineWidth = 4.5;
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -63,7 +61,20 @@ export function drawLandmarksOnCanvas(
       }
     }
     ctx.stroke();
-    ctx.restore();
+
+    // Pass 2: High-definition laser core
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.beginPath();
+    for (const [s, e] of HAND_CONNECTIONS) {
+      if (s < pts.length && e < pts.length) {
+        const [x1, y1] = getPt(pts[s]);
+        const [x2, y2] = getPt(pts[e]);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      }
+    }
+    ctx.stroke();
 
     // Batched standard joints
     ctx.fillStyle = '#0284c7';
@@ -77,14 +88,25 @@ export function drawLandmarksOnCanvas(
     }
     ctx.fill();
 
-    // Batched fingertips
+    // Batched fingertips with luminous halo
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.beginPath();
+    for (const i of [4, 8, 12, 16, 20]) {
+      if (i < pts.length) {
+        const [px, py] = getPt(pts[i]);
+        ctx.moveTo(px + 6.0, py);
+        ctx.arc(px, py, 6.0, 0, 2 * Math.PI);
+      }
+    }
+    ctx.fill();
+
     ctx.fillStyle = '#7dd3fc';
     ctx.beginPath();
     for (const i of [4, 8, 12, 16, 20]) {
       if (i < pts.length) {
         const [px, py] = getPt(pts[i]);
-        ctx.moveTo(px + 4.5, py);
-        ctx.arc(px, py, 4.5, 0, 2 * Math.PI);
+        ctx.moveTo(px + 4.0, py);
+        ctx.arc(px, py, 4.0, 0, 2 * Math.PI);
       }
     }
     ctx.fill();
@@ -94,12 +116,10 @@ export function drawLandmarksOnCanvas(
   if (styles.showRightHand && landmarks.right_hand && landmarks.right_hand.length > 0) {
     const pts = landmarks.right_hand;
 
-    // Batched skeleton connections with glowing neon aesthetics
-    ctx.save();
-    ctx.shadowColor = '#10b981';
-    ctx.shadowBlur = 8;
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = '#34d399';
+    // Fast dual-pass neon glow (0ms GPU/CPU blur stall, replaces heavy shadowBlur)
+    // Pass 1: Neon ambient glow underlay
+    ctx.lineWidth = 4.5;
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.28)';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -112,7 +132,20 @@ export function drawLandmarksOnCanvas(
       }
     }
     ctx.stroke();
-    ctx.restore();
+
+    // Pass 2: High-definition laser core
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = '#34d399';
+    ctx.beginPath();
+    for (const [s, e] of HAND_CONNECTIONS) {
+      if (s < pts.length && e < pts.length) {
+        const [x1, y1] = getPt(pts[s]);
+        const [x2, y2] = getPt(pts[e]);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      }
+    }
+    ctx.stroke();
 
     // Batched standard joints
     ctx.fillStyle = '#059669';
@@ -126,14 +159,25 @@ export function drawLandmarksOnCanvas(
     }
     ctx.fill();
 
-    // Batched fingertips
+    // Batched fingertips with luminous halo
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+    ctx.beginPath();
+    for (const i of [4, 8, 12, 16, 20]) {
+      if (i < pts.length) {
+        const [px, py] = getPt(pts[i]);
+        ctx.moveTo(px + 6.0, py);
+        ctx.arc(px, py, 6.0, 0, 2 * Math.PI);
+      }
+    }
+    ctx.fill();
+
     ctx.fillStyle = '#a7f3d0';
     ctx.beginPath();
     for (const i of [4, 8, 12, 16, 20]) {
       if (i < pts.length) {
         const [px, py] = getPt(pts[i]);
-        ctx.moveTo(px + 4.5, py);
-        ctx.arc(px, py, 4.5, 0, 2 * Math.PI);
+        ctx.moveTo(px + 4.0, py);
+        ctx.arc(px, py, 4.0, 0, 2 * Math.PI);
       }
     }
     ctx.fill();
@@ -239,8 +283,4 @@ export function drawLandmarksOnCanvas(
       ctx.restore();
     }
   }
-
-  // NOTE: Face landmarks, body/pose landmarks, head circles, torso lines, and pose bounding boxes
-  // are explicitly excluded from visualization per requirements to ensure a clean, distraction-free
-  // hand-landmarks-only overlay.
 }

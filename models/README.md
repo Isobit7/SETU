@@ -1,68 +1,56 @@
-# SETU Machine Learning Models Architecture & Directory Map
+# Models Architecture & Use-Case Directory (`models/`)
+## Project SETU: Neural Networks, Model Adapters & Weights
 
-> **Central Architecture & Model Directory Map**  
-> Describes how neural weights, vision tasks, and inference adapters are categorized and organized.
+This directory contains all neural network definitions, weights, metadata, and runtime inference adapters. Every folder and file is categorized below by its specific use case:
 
 ---
 
-## 📁 Models Organization Directory Tree
+### Directory Layout & File Use Cases
 
 ```
 models/
-├── weights/           # PRODUCTION TRAINED NEURAL WEIGHTS
-│   ├── realsign_multisigner_mlp.pth   # [Static] RealSign 26-Class Alphabet MLP (92.00% Acc)
-│   ├── realsign_multisigner.onnx      # [Static] Optimized ONNX Alphabet Graph (<25µs)
-│   ├── isl_numerals_mlp.pth           # [Static] ISL Numerals (0–9 & ₹) (94.5% Acc)
-│   ├── isl_hindi_vowels_mlp.pth       # [Static] ISL Hindi Vowels (अ–औ) (91.8% Acc)
-│   ├── isl_sequence_lstm.pth          # [Dynamic] Continuous BiLSTM 7-Class Model (89.4% Acc)
-│   ├── amrita_isl_phrase_bilstm.pth   # [Dynamic] Amrita Phrase BiLSTM (87.1% Acc)
-│   ├── isl_mvp_model.npz              # [Dynamic] Conversational MVP Classifier (96.5% Acc)
-│   ├── yolov8s-worldv2.pt             # [Multimodal] YOLO-World Open-Vocabulary Object Detector
-│   └── qwen_0.5b/                     # [NLP] On-Device Qwen2.5-0.5B Neural Gloss Translator
-│
-├── tasks/             # MEDIAPIPE VISION TASK BUNDLES
-│   ├── hand_landmarker.task           # Dedicated 21-Joint 3D Hand Landmark Detector
-│   └── holistic_landmarker.task       # Upper-Body Pose, Face Mesh, and Hand Joints
-│
-├── pretrained/        # NATIONAL BENCHMARK PRETRAINED CHECKPOINTS
-│   ├── include_no_cnn_lstm.pth        # AI4Bharat INCLUDE 263-Class CSLR LSTM
-│   └── label_map_include.json         # 263-Class Sign Vocabulary Index
-│
-├── adapters/          # PYTHON INFERENCE RUNTIME ADAPTERS
-│   ├── realsign.py                    # RealSignAlphabetClassifier (Dual-hand 126-D)
-│   ├── sequence_lstm.py               # ISLSequenceLSTMClassifier (Temporal 328-D)
-│   ├── include.py                     # AI4Bharat Streaming & Video Adapter
-│   ├── mvp.py                         # Conversational MVP Classifier Adapter
-│   ├── amrita.py                      # Amrita Phrase BiLSTM Adapter
-│   └── digits.py                      # ISL Numerals & Vowels Adapter
-│
-└── registry.py        # SWAPPABLE MODEL REGISTRY (ModelRegistry.get("realsign"))
+├── adapters/               # Use Case: Standardized inference wrappers connecting PyTorch/ONNX to backend
+│   ├── realsign.py         # USE CASE: 26-Class Alphabet PyTorch MLP adapter (A–Z)
+│   ├── amrita.py           # USE CASE: 100-Phrase Continuous BiLSTM adapter
+│   ├── digits.py           # USE CASE: 10-Class Numerals ONNX adapter (0–9)
+│   ├── include.py          # USE CASE: AI4Bharat INCLUDE 263-sign continuous gesture adapter
+│   ├── sequence_lstm.py    # USE CASE: Temporal sequence LSTM adapter for prototype signs
+│   ├── mvp.py              # USE CASE: Lightweight Ridge/Logistic regression baseline adapter
+│   └── rf_uv11.py          # USE CASE: Random Forest / Keras legacy baseline adapter
+├── weights/                # Use Case: Trained binary weight files (See WEIGHTS_REGISTRY.md)
+│   ├── realsign_26class_mlp.pth     # ACTIVE: 26-class Alphabet MLP weights (Nov 6, 2026)
+│   ├── amrita_isl_phrase_bilstm.pth # ACTIVE: 100-phrase BiLSTM weights (Nov 6, 2026)
+│   ├── realsign_multisigner.onnx    # ACTIVE: Multi-signer invariant ONNX runtime (Nov 6, 2026)
+│   ├── isl_numerals.onnx            # ACTIVE: Numbers 0–9 ONNX runtime (Nov 6, 2026)
+│   ├── isl_hindi_vowels.onnx        # ACTIVE: Hindi Vowels ONNX runtime (Nov 6, 2026)
+│   ├── yolov8s-worldv2.pt           # ACTIVE: Auxiliary YOLO-World object detection weights
+│   ├── realsign_26class_mlp.pth.bak # ARCHIVE: Single-signer backup weights (Oct 30, 2026)
+│   ├── isl_sequence_lstm.pth        # ARCHIVE: Unidirectional LSTM baseline (Oct 28, 2026)
+│   ├── hf_isl_26class_mlp.pth       # ARCHIVE: HuggingFace baseline weights (Oct 26, 2026)
+│   └── isl_mvp_model.npz            # ARCHIVE: MVP Prototype weights (Oct 26, 2026)
+├── tasks/                  # Use Case: Pre-compiled MediaPipe task bundles
+│   ├── hand_landmarker.task      # MediaPipe 21-hand landmark detector binary
+│   └── holistic_landmarker.task  # MediaPipe 543-joint holistic landmarker binary
+├── metadata/               # Use Case: Label maps and vocabulary mapping JSONs
+│   └── sequence_lstm_label_map.json # Class index to human-readable sign strings
+├── reference/              # Use Case: Benchmark baseline models for comparative evaluations
+│   ├── BASELINES.md                 # Baseline accuracy logs
+│   ├── baseline_89d_realsign_mlp.pth # 89-dim feature ablation model
+│   └── realsign_26class_mlp_63d.pt   # 63-dim unquantized reference model
+├── registry.py             # USE CASE: Central Model Registry providing dynamic model switching
+└── WEIGHTS_REGISTRY.md     # USE CASE: Comprehensive dates, sizes, architectures & accuracy index
 ```
 
 ---
 
-## 🎯 Model Categorization Matrix
+### Adapter Pattern Explained
 
-### 1. Static Fingerspelling Models (Pose & Point)
-- **Input:** 126-D Bimanual Normalized Geometry ($21 \times 3 \times 2$).
-- **Inference Latency:** < 0.2 milliseconds (CUDA) / < 0.8 milliseconds (CPU).
-- **Execution Mode:** Isolated HandLandmarker pipeline (60 FPS smooth).
-- **Classes:**
-  - RealSign: 26 English Alphabets (`A` to `Z`).
-  - Numerals: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `₹`.
-  - Hindi Vowels: `अ`, `आ`, `इ`, `ई`, `उ`, `ऊ`, `ऋ`, `ए`, `ऐ`, `ओ`, `औ`, `अं`, `अः`.
-
-### 2. Dynamic Sequence Models (Continuous Temporal)
-- **Input:** 328-D Spatial-Temporal Vectors across 30 to 40-frame sliding windows.
-- **Inference Latency:** < 12 milliseconds (CUDA).
-- **Execution Mode:** Kinetic-Energy segmentation + CTC Greedy collapsing.
-- **Classes:**
-  - `hello`, `thank_you`, `good_morning`, `i`, `you`, `namaste`, `no_sign`.
-  - Amrita Phrases (Conversational everyday requests).
-  - AI4Bharat INCLUDE (263 national sign concepts).
-
-### 3. Natural Language & Context Models
-- **Qwen2.5-0.5B Instruct:** Transforms raw gloss (e.g. `I WATER NEED`) into fluent English (`I need water.`).
-- **Indic Transformer:** High-speed real-time transformer for native Kannada (`ನನಗೆ ನೀರು ಬೇಕು.`), Telugu (`నాకు నీళ్లు కావాలి.`), Hindi (`मुझे पानी चाहिए।`), and Tamil (`எனக்கு தண்ணீர் வேண்டும்.`).
-- **YOLO-World v2:** Open-vocabulary detector for Show-and-Sign multimodal interaction.
+Instead of having the WebSocket code directly deal with raw PyTorch tensor shapes or ONNX runtime sessions:
+1. Every model is wrapped inside an **Adapter class** (in `models/adapters/`).
+2. Each adapter exposes a standardized method: `predict(features) -> PredictionResult`.
+3. `PredictionResult` always returns:
+   - `label`: String name of the predicted sign (e.g. `"C"` or `"thank_you"`).
+   - `confidence`: Float probability between $0.0$ and $1.0$.
+   - `is_known_sign`: Boolean indicating whether the confidence meets the threshold.
+   - `probabilities`: Dictionary mapping all candidate classes to their softmax scores.
 

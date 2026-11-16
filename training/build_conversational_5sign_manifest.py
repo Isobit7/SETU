@@ -7,7 +7,7 @@ feature samples adhering strictly to the 158-D schema.
 from pathlib import Path
 import numpy as np
 
-from training.isl_dataset_manifest_schema import DatasetManifest, SampleRecord, compute_file_sha256
+from training.dataset_manifest import DatasetManifest, SampleRecord, compute_file_sha256
 from training.generate_negative_resting_samples import NoSignGenerator
 from config.settings import PROJECT_ROOT
 

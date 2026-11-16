@@ -254,14 +254,14 @@ export const Avatar3DViewer: React.FC<Avatar3DViewerProps> = ({ currentSign }) =
   }, [currentSign]);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
+    <div className="avatar-viewer-canvas-wrap">
       <canvas
         ref={canvasRef}
         width={600}
         height={500}
-        className="w-full h-full object-contain"
+        className="avatar-viewer-canvas"
       />
-      <div className="absolute bottom-3 left-3 px-3 py-1 bg-slate-900/80 backdrop-blur rounded-lg border border-indigo-500/30 text-xs font-mono text-indigo-300">
+      <div className="avatar-viewer-sign-badge">
         3D Skeletal Rig • Active Sign: <strong>{currentSign}</strong>
       </div>
     </div>

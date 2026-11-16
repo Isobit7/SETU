@@ -7,7 +7,7 @@
   "file_path": "models\\weights\\isl_sequence_lstm.pth",
   "file_size_bytes": 3865632,
   "file_size_formatted": "3.69 MB",
-  "last_modified": "2026-10-28T13:30:00.401086+00:00",
+  "last_modified": "2026-11-13T10:33:10.039439+00:00",
   "status": "active",
   "total_parameters": 964631,
   "weights_parameters": 959560,

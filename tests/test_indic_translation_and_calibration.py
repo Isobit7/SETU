@@ -84,6 +84,46 @@ def test_indic_transformer_translate_all_languages():
     assert "ta" in translations and translations["ta"] == "நன்றி."
     assert "te" in translations and translations["te"] == "ధన్యవాదాలు."
     assert "kn" in translations and translations["kn"] == "ಧನ್ಯವಾದಗಳು."
+    assert "ml" in translations and translations["ml"] == "നന്ദി."
+
+
+def test_indic_transformer_dynamic_master_vocabulary_and_fingerspelling():
+    """Validates translation of dynamic master classes and fingerspelled runs into all Indic languages."""
+    # 1. Direct vocabulary words
+    cat_trans = indic_transformer.translate_all(["CAT"])
+    assert cat_trans["kn"] == "ಬೆಕ್ಕು."
+    assert cat_trans["ta"] == "பூனை."
+    assert cat_trans["hi"] == "बिल्ली।"
+    assert cat_trans["te"] == "పిల్లి."
+    assert cat_trans["ml"] == "പൂച്ച."
+
+    dog_kn = indic_transformer.translate(["DOG"], lang="kn")
+    assert dog_kn == "ನಾಯಿ."
+
+    # 2. Fingerspelling run collapse (e.g., user signs 'C', 'A', 'T' with noise/duplicates)
+    collapsed_kn = indic_transformer.translate(["CC", "AA", "TX"], lang="kn")
+    assert collapsed_kn == "ಬೆಕ್ಕು."
+
+    individual_letters_ta = indic_transformer.translate(["C", "A", "T"], lang="ta")
+    assert individual_letters_ta == "பூனை."
+
+    # 3. Single alphabet letter translation
+    letter_c_kn = indic_transformer.translate(["C"], lang="kn")
+    assert letter_c_kn == "ಅಕ್ಷರ C."
+
+    letter_c_ta = indic_transformer.translate(["C"], lang="ta")
+    assert letter_c_ta == "எழுத்து C."
+
+
+def test_api_translate_endpoint_with_fingerspelling_and_kannada(client):
+    """POST /api/v1/nlp/translate correctly normalizes fingerspelled input and outputs Kannada."""
+    resp = client.post("/api/v1/nlp/translate", json={"text": "CC AA TX"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "translations" in data
+    assert data["translations"].get("kn") == "ಬೆಕ್ಕು."
+    assert data["translations"].get("ta") == "பூனை."
+    assert data["translations"].get("hi") == "बिल्ली।"
 
 
 # ---------------------------------------------------------------------------

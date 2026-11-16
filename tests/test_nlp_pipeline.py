@@ -138,9 +138,9 @@ def test_accumulator_word_timeout_commit():
     assert acc.current_word == ""
     assert acc.sentence_tokens == ["WATER"]
     assert acc.sentence_buffer == "WATER"
-    # Sentence timeout not reached yet, but real-time translation is live
+    # Sentence translation not triggered yet (12.1 - 10.8 = 1.3s < 2.5s)
     assert status_2["sentence_translated"] is False
-    assert acc.translated_text in ("I want water", "I want water.")
+    assert acc.translated_text == ""
 
 
 def test_accumulator_sentence_timeout_triggers_translation():
@@ -151,15 +151,16 @@ def test_accumulator_sentence_timeout_triggers_translation():
     acc.add_token("NAMASTE", "phrase", timestamp=100.0)
     assert acc.sentence_tokens == ["NAMASTE"]
 
-    # At t=102.0 (dt = 2.0s < 2.5s): sentence timeout not reached (real-time translation already active)
+    # At t=102.0 (dt = 2.0s < 2.5s): sentence timeout not reached
     s1 = acc.check_timeouts(current_time=102.0)
     assert s1["sentence_translated"] is False
-    assert acc.translated_text in ("Hello / Greetings", "Namaste.")
+    assert acc.translated_text == ""
 
     # At t=102.6 (dt = 2.6s > 2.5s): sentence timeout triggers translation!
     s2 = acc.check_timeouts(current_time=102.6)
     assert s2["sentence_translated"] is True
-    assert acc.translated_text in ("Hello / Greetings", "Namaste.")
+    assert acc.translated_text == "Hello / Greetings"
+    assert s2["translated_text"] == "Hello / Greetings"
 
 
 def test_accumulator_full_letter_to_translated_sentence_pipeline():

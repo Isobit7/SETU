@@ -30,11 +30,11 @@ from models.adapters.realsign import RealSignPrediction
 from models.adapters.sequence_lstm import SequencePrediction as ISLSequencePrediction
 from models.adapters.mvp import MVPClassifierPrediction as ISLPrediction
 from models.adapters.include import StreamingIncludeAdapter, INCLUDEResult
+from models.adapters.dynamic_unified import UnifiedDynamicAdapter
 from models.registry import ModelRegistry
 from backend.app.services.nlp import SentenceAccumulator
 from backend.app.services.nlp.domain_packs import domain_packs_manager
 from backend.app.services.vision.non_manual_markers import non_manual_detector
-from backend.app.services.vision.few_shot_custom_signs import custom_sign_service
 from config.settings import (
     CONFIDENCE_THRESHOLD_ALPHABET,
     CONFIDENCE_THRESHOLD_SEQUENCE,
@@ -130,13 +130,13 @@ def get_positioning_guidance(
     if shoulder_width < 0.16:
         return "Move closer"
 
-    if nose["y"] < 0.05:
-        return "Tilt camera up"
-    if nose["y"] > 0.45:
-        return "Tilt camera down"
-
-    if not has_hands:
+    if has_hands:
         return "Ready to sign"
+
+    if nose["y"] < 0.03:
+        return "Tilt camera up"
+    if nose["y"] > 0.70:
+        return "Tilt camera down"
 
     return "Ready to sign"
 
@@ -159,35 +159,45 @@ async def websocket_recognize(
             await websocket.close()
             return
 
-    # Per-connection state (defaults to RealSign Alphabet Mode)
+    # Per-connection state
     active_model = (model or "realsign").lower()
-    if active_model in ("realsign", "alphabet", "letters"):
-        active_model = "realsign"
-    elif active_model in ("unified", "auto", "hybrid", "master", "all"):
-        active_model = "unified"
-    elif active_model in ("include", "include_stream"):
+    if active_model in ("include", "include_stream"):
         active_model = "include_stream"
+    elif active_model in ("isl_mvp", "mvp"):
+        active_model = "isl_mvp"
+    elif active_model in ("isl_sequence_lstm", "sequence_lstm"):
+        active_model = "isl_sequence_lstm"
     elif active_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
         active_model = "amrita_isl_phrase_bilstm"
     elif active_model in ("numerals", "isl_numerals", "digits"):
         active_model = "isl_numerals"
     elif active_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
         active_model = "isl_hindi_vowels"
+    elif active_model in (
+        "dynamic_unified",
+        "isl_dynamic_unified_287",
+        "unified_dynamic",
+        "isl_dynamic_master_bilstm",
+        "dynamic_master",
+    ):
+        active_model = "dynamic_unified"
     elif active_model not in (
-        "unified",
         "realsign",
         "isl_numerals",
         "isl_hindi_vowels",
-        "amrita_isl_phrase_bilstm",
+        "dynamic_unified",
         "isl_mvp",
         "isl_sequence_lstm",
         "include_stream",
+        "amrita_isl_phrase_bilstm",
     ):
         active_model = "realsign"
 
     streaming_include: Optional[StreamingIncludeAdapter] = None
     if pipeline.include_service is not None:
         streaming_include = StreamingIncludeAdapter(service=pipeline.include_service)
+
+    unified_dynamic_clf = UnifiedDynamicAdapter.get_instance()
 
     rolling_features: deque = deque(maxlen=15)
     client_threshold: Optional[float] = None
@@ -196,7 +206,7 @@ async def websocket_recognize(
             client_threshold = max(0.10, min(0.95, float(threshold)))
         except (ValueError, TypeError):
             client_threshold = None
-    client_rest_y: float = 0.94
+    client_rest_y: float = 0.82
     frame_count = 0
     total_stream_frames = 0
     last_fps_calc = time.time()
@@ -213,12 +223,16 @@ async def websocket_recognize(
     alphabet_streak_candidate: str = ""
     alphabet_streak_count: int = 0
     alphabet_last_committed: str = ""
+    last_settled_candidate: str = ""
+    last_settled_time: float = 0.0
+    alphabet_nod_committed: bool = False
     alphabet_last_committed_time: float = 0.0
     alphabet_had_baseline: bool = True
     alphabet_repeat_lock: bool = False
     last_hand_seen_time: float = time.time()
 
     # Word / Phrase Persistence & Latching State
+    phrase_nod_committed: bool = False
     last_word_label: str = ""
     last_word_display: str = ""
     last_word_conf: float = 0.0
@@ -226,6 +240,8 @@ async def websocket_recognize(
     last_word_probs: Dict[str, float] = {}
     last_word_top3: List[Tuple[str, float]] = []
     last_word_pred_time: float = 0.0
+    last_settled_phrase: str = ""
+    last_settled_phrase_time: float = 0.0
 
     # Motion-Based Kinetic Energy & Active Gesture Segmentation State
     prev_hand_pts: Optional[np.ndarray] = None
@@ -233,17 +249,7 @@ async def websocket_recognize(
     gesture_sequence_buffer: List[np.ndarray] = []
     is_actively_signing: bool = False
     settled_frames_count: int = 0
-    KINETIC_ENERGY_THRESHOLD: float = 0.035
-    client_motion_threshold: float = 0.045
-    post_phrase_cooldown_until: float = 0.0
-
-    # 2-Second Hands-Up Auto-Calibration State (Off by default: zero-freeze immediate recognition)
-    auto_calibrating: bool = False
-    auto_calib_frame_count: int = 0
-    calib_scales: List[float] = []
-    calib_tremors: List[float] = []
-    calib_rest_ys: List[float] = []
-    auto_calib_message: str = "Ready"
+    KINETIC_ENERGY_THRESHOLD: float = 0.025
 
     # Multimodal Object Detection & Show-and-Sign State (Disabled by default for 30 FPS smooth performance)
     enable_object_detection: bool = False
@@ -262,6 +268,13 @@ async def websocket_recognize(
     disambiguation_options: List[Dict[str, Any]] = []
     disambiguation_start_time: float = 0.0
 
+    # Intentional Head-Gesture Gated Sentence Buffer State (True by default: signs ONLY enter buffer upon head nod)
+    require_head_nod_confirm: bool = True
+
+    # Smooth Confidence EMA & Inter-Sign Transition State
+    smoothed_confidence_ema: float = 0.0
+    transition_grace_frames: int = 0
+
     # Real-Time Sentence Accumulator & ISL Gloss Parser
     accumulator = SentenceAccumulator()
 
@@ -272,14 +285,14 @@ async def websocket_recognize(
     loop = asyncio.get_running_loop()
 
     async def _process_control_text(text_str: str) -> None:
-        nonlocal active_model, client_threshold, client_rest_y, client_motion_threshold, is_actively_signing, settled_frames_count
+        nonlocal active_model, client_threshold, client_rest_y, is_actively_signing, settled_frames_count
         nonlocal prev_hand_pts, candidate_label, candidate_streak, last_committed_sign
         nonlocal last_committed_time, had_idle_baseline
         nonlocal alphabet_streak_candidate, alphabet_streak_count, alphabet_last_committed
         nonlocal last_word_label, last_word_display, last_word_conf, last_word_is_known
-        nonlocal last_word_probs, last_word_top3, last_word_pred_time
+        nonlocal last_word_probs, last_word_top3, last_word_pred_time, last_settled_phrase, last_settled_phrase_time
         nonlocal disambiguation_active, disambiguation_top1, disambiguation_top2, disambiguation_options
-        nonlocal enable_object_detection, current_detected_objects, post_phrase_cooldown_until
+        nonlocal enable_object_detection, current_detected_objects, require_head_nod_confirm
         try:
             payload = json.loads(text_str)
             action = payload.get("action")
@@ -310,6 +323,8 @@ async def websocket_recognize(
                 last_word_probs.clear()
                 last_word_top3.clear()
                 last_word_pred_time = 0.0
+                last_settled_phrase = ""
+                last_settled_phrase_time = 0.0
                 if pipeline.landmarker is not None:
                     pipeline.landmarker.reset_smoothing()
                 if pipeline.hand_landmarker is not None:
@@ -372,62 +387,73 @@ async def websocket_recognize(
                         "message": f"Accepted predictive phrase: {phrase}",
                         "sentence_buffer": accumulator.sentence_buffer,
                     })
-            elif action == "calibrate":
-                new_rest_y = payload.get("rest_y")
-                if new_rest_y is not None:
-                    client_rest_y = float(max(0.50, min(0.95, float(new_rest_y))))
-                new_motion = payload.get("motion_threshold")
-                if new_motion is not None:
-                    client_motion_threshold = float(max(0.008, min(0.06, float(new_motion))))
-                new_pitch = payload.get("pitch_threshold")
-                if new_pitch is not None and non_manual_detector is not None:
-                    non_manual_detector.pitch_threshold = float(max(0.02, min(0.12, float(new_pitch))))
-                new_yaw = payload.get("yaw_threshold")
-                if new_yaw is not None and non_manual_detector is not None:
-                    non_manual_detector.yaw_threshold = float(max(0.02, min(0.12, float(new_yaw))))
+            elif action in ("set_buffer_mode", "set_insertion_mode"):
+                mode = str(payload.get("mode", "auto")).lower()
+                require_head_nod_confirm = (mode in ("head_nod", "nod", "intentional", "nod_confirm"))
                 await websocket.send_json({
                     "type": "info",
-                    "message": f"Personal calibration profile applied (rest_y={client_rest_y:.2f}, motion={client_motion_threshold:.3f})",
-                    "calibrated": True,
-                    "rest_y": client_rest_y,
-                    "motion_threshold": client_motion_threshold,
+                    "message": f"Buffer insertion mode: {'Head-Nod Confirmed' if require_head_nod_confirm else 'Auto-Stream'}",
+                    "require_head_nod_confirm": require_head_nod_confirm,
                 })
-            elif action == "reload_custom_signs":
-                num_protos = custom_sign_service.reload()
+            elif action in ("undo", "reject_last", "backspace"):
+                accumulator.reject_last()
                 await websocket.send_json({
                     "type": "info",
-                    "message": f"Personal few-shot sign prototypes reloaded ({num_protos} active)",
-                    "active_custom_signs": list(custom_sign_service.prototypes.keys()),
+                    "message": "Removed last token from sentence buffer",
+                    "sentence_buffer": accumulator.sentence_buffer,
+                    "translated_text": accumulator.translated_text,
+                    "translated_indic": accumulator.translated_indic,
                 })
-            elif action in ("trigger_auto_calibrate", "auto_calibrate"):
-                auto_calibrating = True
-                auto_calib_frame_count = 0
-                calib_scales.clear()
-                calib_tremors.clear()
-                calib_rest_ys.clear()
-                auto_calib_message = "Hold hands up in view to auto-calibrate..."
-                await websocket.send_json({"type": "info", "message": "Hands-up auto calibration started"})
             elif action == "set_model":
                 req_model = str(payload.get("model", "realsign")).lower()
-                if req_model in ("unified", "auto", "hybrid", "master", "all"):
-                    req_model = "unified"
-                elif req_model in ("include", "include_stream"):
-                    req_model = "include_stream"
-                elif req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
+                if req_model in ("realsign", "realsign_multisigner", "realsign_alphabet"):
                     req_model = "realsign"
                 elif req_model in ("numerals", "isl_numerals", "digits"):
                     req_model = "isl_numerals"
                 elif req_model in ("hindi_vowels", "isl_hindi_vowels", "indic_vowels", "vowels"):
                     req_model = "isl_hindi_vowels"
+                elif req_model in ("include", "include_stream"):
+                    req_model = "include_stream"
+                elif req_model in ("isl_mvp", "mvp"):
+                    req_model = "isl_mvp"
+                elif req_model in ("isl_sequence_lstm", "sequence_lstm"):
+                    req_model = "isl_sequence_lstm"
                 elif req_model in ("amrita", "amrita_phrase", "amrita_isl_phrase_bilstm", "phrases_49"):
                     req_model = "amrita_isl_phrase_bilstm"
-                if req_model in ("unified", "realsign", "isl_numerals", "isl_hindi_vowels", "amrita_isl_phrase_bilstm", "isl_mvp", "isl_sequence_lstm", "include_stream"):
+                elif req_model in (
+                    "dynamic_unified",
+                    "isl_dynamic_unified_287",
+                    "unified_dynamic",
+                    "isl_dynamic_master_bilstm",
+                    "dynamic_master",
+                ):
+                    req_model = "dynamic_unified"
+                if req_model in (
+                    "realsign",
+                    "isl_numerals",
+                    "isl_hindi_vowels",
+                    "dynamic_unified",
+                    "isl_mvp",
+                    "isl_sequence_lstm",
+                    "include_stream",
+                    "amrita_isl_phrase_bilstm",
+                ):
                     active_model = req_model
                     rolling_features.clear()
                     gesture_sequence_buffer.clear()
                     if streaming_include is not None:
                         streaming_include.reset()
-                    accumulator.reset()
+                    # Commit any pending fingerspelled letters as a finished word before switching models
+                    if accumulator.current_word:
+                        committed_word = (
+                            accumulator.spell_corrector.correct(accumulator.current_word)
+                            if accumulator.spell_corrector is not None
+                            else accumulator.current_word
+                        )
+                        accumulator.sentence_tokens.append(committed_word)
+                        accumulator.current_word = ""
+                        accumulator._tokens_changed = True
+                    # Preserve sentence buffer across model switches until user explicitly clears or deletes!
                     is_actively_signing = False
                     settled_frames_count = 0
                     prev_hand_pts = None
@@ -439,7 +465,6 @@ async def websocket_recognize(
                     alphabet_streak_candidate = ""
                     alphabet_streak_count = 0
                     alphabet_last_committed = ""
-                    post_phrase_cooldown_until = 0.0
                     last_word_label = ""
                     last_word_display = ""
                     last_word_conf = 0.0
@@ -447,6 +472,8 @@ async def websocket_recognize(
                     last_word_probs.clear()
                     last_word_top3.clear()
                     last_word_pred_time = 0.0
+                    last_settled_phrase = ""
+                    last_settled_phrase_time = 0.0
                     if pipeline.landmarker is not None:
                         pipeline.landmarker.reset_smoothing()
                     if pipeline.hand_landmarker is not None:
@@ -457,6 +484,9 @@ async def websocket_recognize(
                         "type": "info",
                         "message": f"Active classifier model switched to {active_model}",
                         "active_model": active_model,
+                        "sentence_buffer": accumulator.sentence_buffer,
+                        "translated_text": accumulator.translated_text,
+                        "translated_indic": accumulator.translated_indic,
                     })
             elif action == "set_threshold":
                 val = float(payload.get("threshold", CONFIDENCE_THRESHOLD_ALPHABET))
@@ -566,46 +596,32 @@ async def websocket_recognize(
                     CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
 
-                def _extract_landmarks_sync(img: np.ndarray):
-                    h_raw = None
-                    hl_res = None
+                def _detect_holistic(img: np.ndarray) -> HolisticLandmarkerResult:
+                    if pipeline.landmarker is None:
+                        return HolisticLandmarkerResult()
+                    try:
+                        return pipeline.landmarker.detect(img)
+                    except Exception as e:
+                        logger.debug("Holistic detection error: %s", e)
+                        return HolisticLandmarkerResult()
 
-                    if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
-                        # Dedicated high-speed alphabet/digits/vowels fingerspelling path:
-                        # Uses MediaPipe HandLandmarker exclusively (60 FPS, <15ms latency, sub-pixel palm normalization).
-                        if pipeline.hand_landmarker is not None:
-                            try:
-                                hld_res = pipeline.hand_landmarker.detect(img)
-                                if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
-                                    h_raw = hld_res
-                            except Exception as e:
-                                logger.debug("HandLandmarker error: %s", e)
-                        hl_res = HolisticLandmarkerResult()
-                    else:
-                        # Dynamic Sequence and Phrase models: need full pose, face, and hands
-                        if pipeline.landmarker is not None:
-                            try:
-                                hl_res = pipeline.landmarker.detect(img)
-                            except Exception as e:
-                                logger.debug("Holistic landmarker error: %s", e)
-                                hl_res = HolisticLandmarkerResult()
-                        else:
-                            hl_res = HolisticLandmarkerResult()
-
-                        # Fallback to HandLandmarker if Holistic detected neither left nor right hand
-                        if not (hl_res.left_hand_landmarks or hl_res.right_hand_landmarks) and pipeline.hand_landmarker is not None:
-                            try:
-                                hld_res = pipeline.hand_landmarker.detect(img)
-                                if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
-                                    h_raw = hld_res
-                            except Exception as e:
-                                logger.debug("HandLandmarker secondary error: %s", e)
-
-                    return h_raw, hl_res
+                def _detect_hands(img: np.ndarray) -> Any:
+                    if pipeline.hand_landmarker is None:
+                        return None
+                    try:
+                        hld_res = pipeline.hand_landmarker.detect(img)
+                        if hld_res and getattr(hld_res, "hand_landmarks", None) and len(hld_res.hand_landmarks) > 0:
+                            return hld_res
+                        return None
+                    except Exception as e:
+                        logger.debug("HandLandmarker error: %s", e)
+                        return None
 
                 try:
-                    hand_landmarks_raw, hl_result = await loop.run_in_executor(
-                        None, _extract_landmarks_sync, frame
+                    # Run Holistic and dedicated HandLandmarker in parallel threads for 2x faster frame throughput
+                    hl_result, hand_landmarks_raw = await asyncio.gather(
+                        loop.run_in_executor(None, _detect_holistic, frame),
+                        loop.run_in_executor(None, _detect_hands, frame),
                     )
                 except Exception as e:
                     await websocket.send_json({
@@ -619,34 +635,45 @@ async def websocket_recognize(
                 pose = serialize_landmarks(hl_result.pose_landmarks)
                 face = serialize_landmarks(hl_result.face_landmarks, FACE_KEYPOINT_INDICES)
 
-                if hand_landmarks_raw is not None and hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
-                    detected_hands = hand_landmarks_raw.hand_landmarks
-                    if len(detected_hands) == 1:
-                        # Single-handed signing: Canonical active slot is right_hand (slots 63:126)
-                        right_hand = serialize_landmarks(detected_hands[0])
-                        left_hand = []
-                    elif len(detected_hands) >= 2:
-                        # Bimanual signing: Sort strictly by screen horizontal X coordinate
-                        # Viewer's left (smaller X) -> left_hand (slots 0:63)
-                        # Viewer's right (larger X) -> right_hand (slots 63:126)
-                        # Matches ISL 42K training set ingest_isl_42k_dataset.py 100%
-                        h1 = detected_hands[0]
-                        h2 = detected_hands[1]
-                        x1 = np.mean([getattr(p, "x", 0.0) for p in h1])
-                        x2 = np.mean([getattr(p, "x", 0.0) for p in h2])
-                        if x1 < x2:
-                            left_hand = serialize_landmarks(h1)
-                            right_hand = serialize_landmarks(h2)
-                        else:
-                            left_hand = serialize_landmarks(h2)
-                            right_hand = serialize_landmarks(h1)
-                elif hand_landmarks_raw is not None:
-                    hand_pts_serialized = serialize_landmarks(hand_landmarks_raw)
-                    if len(right_hand) == 0:
-                        right_hand = hand_pts_serialized
+                if hand_landmarks_raw is not None:
+                    if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
+                        for i, h_lm in enumerate(hand_landmarks_raw.hand_landmarks):
+                            h_lbl = "right"
+                            if hasattr(hand_landmarks_raw, "handedness") and i < len(hand_landmarks_raw.handedness) and hand_landmarks_raw.handedness[i]:
+                                h_lbl = getattr(hand_landmarks_raw.handedness[i][0], "category_name", "right").lower()
+                            s_lm = serialize_landmarks(h_lm)
+                            if h_lbl == "left":
+                                if len(left_hand) == 0:
+                                    left_hand = s_lm
+                            else:
+                                if len(right_hand) == 0:
+                                    right_hand = s_lm
+                    else:
+                        hand_pts_serialized = serialize_landmarks(hand_landmarks_raw)
+                        if len(right_hand) == 0:
+                            right_hand = hand_pts_serialized
 
+                # Stabilize single-hand handedness against single-frame MediaPipe label flapping (PROB-05)
                 has_left = len(left_hand) > 0
                 has_right = len(right_hand) > 0
+                if has_left ^ has_right:  # Exactly one hand detected
+                    raw_label = "left" if has_left else "right"
+                    active_pts = left_hand if has_left else right_hand
+                    stable_label = handedness_tracker.stabilize_single_hand(raw_label, active_pts, timestamp=time.time())
+                    if stable_label != raw_label:
+                        if stable_label == "left":
+                            left_hand = active_pts
+                            right_hand = []
+                        else:
+                            right_hand = active_pts
+                            left_hand = []
+                        has_left = len(left_hand) > 0
+                        has_right = len(right_hand) > 0
+                elif not has_left and not has_right:
+                    handedness_tracker.stabilize_single_hand("", [], timestamp=time.time())
+                else:
+                    handedness_tracker.reset()
+
                 hand_detected = has_left or has_right or (hand_landmarks_raw is not None)
 
                 now = time.time()
@@ -691,12 +718,11 @@ async def websocket_recognize(
                 face_lms = getattr(hl_result, "face_landmarks", None)
                 pose_lms = getattr(hl_result, "pose_landmarks", None)
                 nmm_marker = non_manual_detector.detect(face_lms)
-                if nmm_marker.is_question or nmm_marker.is_negation or nmm_marker.is_affirmation:
-                    accumulator.update_non_manual_grammar(
-                        is_question=nmm_marker.is_question,
-                        is_negation=nmm_marker.is_negation,
-                        is_affirmation=nmm_marker.is_affirmation,
-                    )
+                accumulator.update_non_manual_grammar(
+                    is_question=nmm_marker.is_question,
+                    is_negation=bool(nmm_marker.is_negation and nmm_marker.head_gesture != "shake"),
+                    is_affirmation=nmm_marker.is_affirmation,
+                )
                 facial_ratios = extract_facial_expression_features(face_lms)
                 body_anchors = extract_body_anchored_features(
                     pose_lms,
@@ -716,7 +742,7 @@ async def websocket_recognize(
                 feat_176 = np.concatenate([feat_164, body_anchors]).astype(np.float32)
                 rolling_features.append(feat_176)
 
-                if active_model == "include_stream" and streaming_include is not None:
+                if active_model in ("include_stream", "dynamic_unified") and streaming_include is not None:
                     streaming_include.append_frame(pose, left_hand, right_hand)
 
                 hands_in_subtitle_zone = check_subtitle_collision(left_hand, right_hand)
@@ -732,86 +758,67 @@ async def websocket_recognize(
                     return [float(getattr(lm, "x", 0.0)), float(getattr(lm, "y", 0.0)), float(getattr(lm, "z", 0.0))]
 
                 current_hand_pts_list = []
-                if len(right_hand) == 21:
-                    current_hand_pts_list = [_extract_pt(lm) for lm in right_hand]
-                elif len(left_hand) == 21:
-                    current_hand_pts_list = [_extract_pt(lm) for lm in left_hand]
+                is_left_only_hand = False
+                if hand_landmarks_raw is not None:
+                    if hasattr(hand_landmarks_raw, "hand_landmarks") and hand_landmarks_raw.hand_landmarks:
+                        for h_lm in hand_landmarks_raw.hand_landmarks[:1]:
+                            current_hand_pts_list.extend([_extract_pt(lm) for lm in h_lm])
+                    else:
+                        current_hand_pts_list.extend([_extract_pt(lm) for lm in hand_landmarks_raw])
+                elif hl_result and getattr(hl_result, "right_hand_landmarks", None):
+                    current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.right_hand_landmarks])
+                elif hl_result and getattr(hl_result, "left_hand_landmarks", None):
+                    current_hand_pts_list.extend([_extract_pt(lm) for lm in hl_result.left_hand_landmarks])
+                    is_left_only_hand = True
+
+                if is_left_only_hand and len(current_hand_pts_list) == 21:
+                    # Mirror X coordinate so geometric/heuristic checks evaluate canonical hand
+                    for pt_item in current_hand_pts_list:
+                        pt_item[0] = -pt_item[0]
 
                 kinetic_energy = 0.0
-                raw_kinetic = 0.0
                 if current_hand_pts_list:
                     curr_pts_arr = np.array(current_hand_pts_list, dtype=np.float32)
                     if prev_hand_pts is not None and prev_hand_pts.shape == curr_pts_arr.shape:
                         time_scale = (1.0 / 30.0) / dt_frame
                         diff_vecs = (curr_pts_arr - prev_hand_pts) * time_scale
-                        raw_kinetic = float(np.mean(np.linalg.norm(diff_vecs, axis=-1)))
-                        # Micro-jitter deadzone: physiological tremor & webcam pixel noise (< 0.022 is stationary hold)
-                        kinetic_energy = 0.0 if raw_kinetic < 0.022 else float((raw_kinetic - 0.022) * 1.25)
+                        kinetic_energy = float(np.sum(np.linalg.norm(diff_vecs, axis=-1)))
                     prev_hand_pts = curr_pts_arr
                 else:
                     prev_hand_pts = None
 
-                # 2-Second Hands-Up Auto-Calibration
-                if auto_calibrating and hand_detected:
-                    auto_calib_frame_count += 1
-                    if raw_kinetic > 0.005:
-                        calib_tremors.append(raw_kinetic)
-                    if current_hand_pts_list:
-                        wrist_pt = current_hand_pts_list[0]
-                        mid_mcp_pt = current_hand_pts_list[9]
-                        palm_dist = float(np.linalg.norm(np.array(mid_mcp_pt) - np.array(wrist_pt)))
-                        if palm_dist > 0.05:
-                            calib_scales.append(palm_dist)
-                        calib_rest_ys.append(wrist_pt[1])
-
-                    if auto_calib_frame_count >= 25:
-                        auto_calibrating = False
-                        measured_tremor = float(np.mean(calib_tremors)) if calib_tremors else 0.020
-                        client_motion_threshold = float(max(0.035, min(0.080, measured_tremor * 2.2)))
-                        avg_scale = float(np.mean(calib_scales)) if calib_scales else 0.20
-                        avg_y = float(np.mean(calib_rest_ys)) if calib_rest_ys else 0.70
-                        client_rest_y = min(0.92, max(0.60, avg_y + 0.15))
-                        auto_calib_message = f"✓ Ready to Sign (Palm: {avg_scale:.2f})"
+                hand_source = None
+                if hand_landmarks_raw is not None:
+                    hand_source = hand_landmarks_raw
+                elif hl_result and (getattr(hl_result, "right_hand_landmarks", None) or getattr(hl_result, "left_hand_landmarks", None)):
+                    hand_source = hl_result
+                elif len(right_hand) > 0:
+                    hand_source = right_hand
+                elif len(left_hand) > 0:
+                    hand_source = left_hand
 
                 realsign_feat_63d: Optional[np.ndarray] = None
                 realsign_feat_126d: Optional[np.ndarray] = None
+                if hand_source is not None:
+                    realsign_feat_63d = extract_realsign_hand_features(hand_source, dominant_hand="right")
+
                 if has_left or has_right:
-                    raw_lh = left_hand if has_left else None
-                    raw_rh = right_hand if has_right else None
+                    raw_lh = hl_result.left_hand_landmarks if (hl_result and getattr(hl_result, "left_hand_landmarks", None)) else (left_hand if has_left else None)
+                    raw_rh = hl_result.right_hand_landmarks if (hl_result and getattr(hl_result, "right_hand_landmarks", None)) else (right_hand if has_right else None)
                     realsign_feat_126d = extract_dual_hand_126d(raw_lh, raw_rh)
-                    # For both single-hand (LH with sagittal reflection or RH) and dual-hand primary,
-                    # the canonical 63-D feature vector resides in slot [63:126].
-                    realsign_feat_63d = realsign_feat_126d[63:126].copy()
 
                 should_run_inference = False
                 motion_settled_now = False
 
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     should_run_inference = (realsign_feat_126d is not None or realsign_feat_63d is not None)
-                elif active_model == "unified":
-                    if kinetic_energy >= client_motion_threshold:
-                        is_actively_signing = True
-                        settled_frames_count = 0
-                        gesture_sequence_buffer.append(feat_176)
-                        if len(gesture_sequence_buffer) > 60:
-                            gesture_sequence_buffer.pop(0)
-                    elif is_actively_signing:
-                        settled_frames_count += 1
-                        gesture_sequence_buffer.append(feat_176)
-                        if settled_frames_count >= 1:
-                            should_run_inference = True
-                            motion_settled_now = True
-                    else:
-                        # Stationary hand: evaluate static alphabet if hand is present and not resting
-                        if hand_detected and (realsign_feat_126d is not None or realsign_feat_63d is not None):
-                            should_run_inference = True
                 elif active_model == "include_stream":
                     should_run_inference = bool(streaming_include is not None and streaming_include.should_evaluate())
                 elif active_model == "isl_mvp":
                     # ISL MVP model is ultra-lightweight (numpy/scikit ~50us). Run every frame hands are present
                     should_run_inference = bool(hand_detected and len(rolling_features) >= 5)
-                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
-                    if kinetic_energy >= client_motion_threshold:
+                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm", "dynamic_unified"):
+                    if kinetic_energy >= KINETIC_ENERGY_THRESHOLD:
                         is_actively_signing = True
                         settled_frames_count = 0
                         gesture_sequence_buffer.append(feat_176)
@@ -849,10 +856,10 @@ async def websocket_recognize(
                         if curr_clf is None:
                             curr_clf = pipeline.realsign_classifier
 
-                        # PROB-08: Only suppress if hand is dropped to the extreme bottom margin (desk/lap rest >= 0.94)
+                        # PROB-08: If hand is resting low down in lap/desk, suppress alphabet emission
                         is_resting = False
-                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=0.94):
-                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=0.94):
+                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=client_rest_y):
+                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=client_rest_y):
                                 is_resting = True
 
                         if is_resting:
@@ -894,84 +901,46 @@ async def websocket_recognize(
                         else:
                             seq_pred = pipeline.sequence_lstm_classifier._empty_prediction()
 
-                    elif active_model == "amrita_isl_phrase_bilstm":
-                        amrita_clf = ModelRegistry.get("amrita_isl_phrase_bilstm")
-                        if amrita_clf is not None and len(segment_to_classify) >= 5:
+                    elif active_model in ("dynamic_unified", "amrita_isl_phrase_bilstm"):
+                        if len(segment_to_classify) >= 5:
                             arr_amrita = feat_array
                             if arr_amrita.shape[1] < 316:
                                 pad_width = 316 - arr_amrita.shape[1]
                                 arr_amrita = np.pad(arr_amrita, ((0, 0), (0, pad_width)), mode='constant')
                             else:
                                 arr_amrita = arr_amrita[:, :316]
-                            amrita_res = await loop.run_in_executor(
+
+                            inc_arr = None
+                            if streaming_include is not None and len(streaming_include.frame_buffer) >= 12:
+                                inc_arr = np.array(streaming_include.frame_buffer, dtype=np.float32)
+
+                            unified_res = await loop.run_in_executor(
                                 None,
-                                amrita_clf.predict,
+                                unified_dynamic_clf.predict,
                                 arr_amrita,
+                                inc_arr,
                                 confidence_threshold,
                             )
                             seq_pred = ISLSequencePrediction(
-                                label=amrita_res.phrase,
-                                confidence=amrita_res.confidence,
-                                is_known_sign=amrita_res.is_known_sign,
-                                probabilities=amrita_res.probabilities,
-                                top_3=amrita_res.top_3,
-                                raw_class_idx=amrita_res.raw_class_idx,
+                                label=unified_res.label,
+                                confidence=unified_res.confidence,
+                                is_known_sign=unified_res.is_known_sign,
+                                probabilities=unified_res.probabilities,
+                                top_3=unified_res.top_3,
+                                raw_class_idx=unified_res.raw_class_idx,
                             )
-                        elif amrita_clf is not None:
-                            empty_amrita = amrita_clf._empty_prediction()
+                            if unified_res.label in unified_dynamic_clf.display_names:
+                                DISPLAY_NAMES[unified_res.label] = unified_dynamic_clf.display_names[unified_res.label]
+                        else:
+                            empty_res = unified_dynamic_clf._empty_prediction()
                             seq_pred = ISLSequencePrediction(
-                                label=empty_amrita.phrase,
+                                label=empty_res.label,
                                 confidence=0.0,
                                 is_known_sign=False,
                                 probabilities={},
                                 top_3=[],
-                                raw_class_idx=-1,
+                                raw_class_idx=empty_res.raw_class_idx,
                             )
-
-                    elif active_model == "unified":
-                        # 1. Dynamic phrase check if motion just settled
-                        if motion_settled_now and len(segment_to_classify) >= 5:
-                            if pipeline.sequence_lstm_classifier is not None:
-                                seq_pred = await loop.run_in_executor(
-                                    None,
-                                    pipeline.sequence_lstm_classifier.predict_sequence,
-                                    feat_array,
-                                    confidence_threshold,
-                                )
-                            elif pipeline.classifier is not None:
-                                arr_mvp = feat_array
-                                if arr_mvp.shape[0] < 30:
-                                    pad = np.repeat(arr_mvp[-1:], 30 - arr_mvp.shape[0], axis=0)
-                                    arr_mvp = np.concatenate([arr_mvp, pad], axis=0)
-                                isl_pred = await loop.run_in_executor(
-                                    None,
-                                    pipeline.classifier.predict_features,
-                                    arr_mvp[:, :158],
-                                    confidence_threshold,
-                                )
-
-                        # 2. Static alphabet check if hand is stationary and not resting (lap rest >= 0.94)
-                        is_resting = False
-                        if len(right_hand) > 0 and is_resting_or_neutral_pose(right_hand, y_threshold=0.94):
-                            if len(left_hand) == 0 or is_resting_or_neutral_pose(left_hand, y_threshold=0.94):
-                                is_resting = True
-
-                        if not is_resting and not is_actively_signing and pipeline.realsign_classifier is not None:
-                            target_realsign_feat = realsign_feat_126d if (realsign_feat_126d is not None and getattr(pipeline.realsign_classifier, "input_dim", 63) == 126) else realsign_feat_63d
-                            if target_realsign_feat is None and realsign_feat_126d is not None:
-                                target_realsign_feat = realsign_feat_126d
-                            if target_realsign_feat is not None:
-                                raw_pts_arr = np.array(current_hand_pts_list, dtype=np.float32) if len(current_hand_pts_list) == 21 else None
-                                realsign_pred = await loop.run_in_executor(
-                                    None,
-                                    lambda: pipeline.realsign_classifier.predict(
-                                        target_realsign_feat,
-                                        confidence_threshold=confidence_threshold,
-                                        apply_smoothing=True,
-                                        apply_heuristic_boost=True,
-                                        raw_landmarks_21x3=raw_pts_arr,
-                                    ),
-                                )
 
                     elif pipeline.classifier is not None:
                         if len(segment_to_classify) >= 5:
@@ -1023,14 +992,11 @@ async def websocket_recognize(
                 cuda_mem_mb = round(torch.cuda.memory_allocated() / (1024 * 1024), 1) if (torch.cuda.is_available() and torch.cuda.is_initialized()) else 0.0
 
                 active_threshold = client_threshold if client_threshold is not None else (
-                    CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else CONFIDENCE_THRESHOLD_SEQUENCE
+                    CONFIDENCE_THRESHOLD_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else CONFIDENCE_THRESHOLD_SEQUENCE
                 )
-                required_streak = 2 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else (
-                    max(3, STREAK_ALPHABET) if active_model == "unified" else STREAK_SEQUENCE
-                )
+                required_streak = STREAK_ALPHABET if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") else STREAK_SEQUENCE
 
                 has_realsign_feat = (realsign_feat_126d is not None) or (realsign_feat_63d is not None)
-                unified_mode_branch = "none"
 
                 if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
                     res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
@@ -1039,66 +1005,8 @@ async def websocket_recognize(
                     raw_top_conf = float(realsign_pred.top_3[0][1]) if (realsign_pred and realsign_pred.top_3) else 0.0
                     raw_top_3 = realsign_pred.top_3 if realsign_pred else []
                     buffer_fill = 1.0 if (hand_detected and has_realsign_feat) else 0.0
-                    is_pred_valid = bool(
-                        realsign_pred
-                        and realsign_pred.confidence >= active_threshold
-                        and realsign_pred.is_known_sign
-                        and realsign_pred.letter not in ("", "no_sign", "unknown", "Awaiting Sign Input")
-                    )
+                    is_pred_valid = bool(realsign_pred and realsign_pred.confidence >= active_threshold and realsign_pred.is_known_sign)
                     pred_label = realsign_pred.letter if realsign_pred else ""
-                elif active_model == "unified":
-                    dynamic_valid = bool(
-                        seq_pred
-                        and seq_pred.is_known_sign
-                        and seq_pred.confidence >= active_threshold
-                        and seq_pred.label not in ("", "no_sign", "unknown")
-                    )
-                    if not dynamic_valid and isl_pred:
-                        dynamic_valid = bool(
-                            isl_pred.is_known_sign
-                            and isl_pred.confidence >= active_threshold
-                            and isl_pred.label not in ("", "no_sign", "unknown")
-                        )
-
-                    letter_valid = bool(
-                        realsign_pred
-                        and realsign_pred.is_known_sign
-                        and realsign_pred.confidence >= (client_threshold or CONFIDENCE_THRESHOLD_ALPHABET)
-                        and realsign_pred.letter not in ("", "no_sign", "unknown")
-                        and not is_actively_signing
-                        and kinetic_energy < client_motion_threshold
-                    )
-
-                    if dynamic_valid and motion_settled_now:
-                        res_probs = {k: round(v, 4) for k, v in (seq_pred.probabilities if seq_pred else isl_pred.probabilities).items()}
-                        raw_conf = round(seq_pred.confidence, 4) if seq_pred else round(isl_pred.confidence, 4)
-                        raw_top_class = seq_pred.label if seq_pred else isl_pred.label
-                        raw_top_conf = raw_conf
-                        raw_top_3 = seq_pred.top_3 if seq_pred else []
-                        buffer_fill = 1.0
-                        is_pred_valid = True
-                        pred_label = raw_top_class
-                        unified_mode_branch = "phrase"
-                    elif letter_valid:
-                        res_probs = {k: round(v, 4) for k, v in realsign_pred.probabilities.items()} if realsign_pred else {}
-                        raw_conf = round(realsign_pred.confidence, 4) if realsign_pred else 0.0
-                        raw_top_class = realsign_pred.top_3[0][0] if (realsign_pred and realsign_pred.top_3) else "unknown"
-                        raw_top_conf = float(realsign_pred.top_3[0][1]) if (realsign_pred and realsign_pred.top_3) else 0.0
-                        raw_top_3 = realsign_pred.top_3 if realsign_pred else []
-                        buffer_fill = 1.0
-                        is_pred_valid = True
-                        pred_label = realsign_pred.letter
-                        unified_mode_branch = "letter"
-                    else:
-                        res_probs = {}
-                        raw_conf = 0.0
-                        raw_top_class = "no_hand" if not hand_detected else ("signing..." if is_actively_signing else "awaiting_sign")
-                        raw_top_conf = 0.0
-                        raw_top_3 = []
-                        buffer_fill = round(len(gesture_sequence_buffer) / 15.0, 2) if is_actively_signing else 0.0
-                        is_pred_valid = False
-                        pred_label = ""
-                        unified_mode_branch = "none"
                 elif active_model == "include_stream":
                     res_probs = {c.label: round(c.confidence, 4) for c in include_pred.top5_candidates} if (include_pred and include_pred.top5_candidates) else {}
                     raw_conf = round(include_pred.confidence, 4) if include_pred else 0.0
@@ -1108,7 +1016,7 @@ async def websocket_recognize(
                     buffer_fill = round(len(streaming_include.frame_buffer) / 30.0, 2) if streaming_include else 0.0
                     is_pred_valid = bool(include_pred and include_pred.is_known_sign and include_pred.confidence >= active_threshold and include_pred.label != "awaiting_sign")
                     pred_label = include_pred.label if include_pred else ""
-                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
+                elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm", "dynamic_unified"):
                     res_probs = {k: round(v, 4) for k, v in seq_pred.probabilities.items()} if seq_pred else {}
                     raw_conf = round(seq_pred.confidence, 4) if seq_pred else 0.0
                     raw_top_class = seq_pred.top_3[0][0] if (seq_pred and seq_pred.top_3) else ("no_hand" if not hand_detected else "no_sign")
@@ -1128,80 +1036,131 @@ async def websocket_recognize(
                     is_pred_valid = bool(isl_pred and isl_pred.confidence >= active_threshold and isl_pred.is_known_sign and isl_pred.label != "no_sign")
                     pred_label = isl_pred.label if isl_pred else ""
 
-                # Kinetic Gating for Static Alphabet/Digits/Vowels Recognition (PROB-09):
-                # When hand velocity exceeds threshold, user is in active transit between signs.
-                # In-flight frames must not accumulate streaks or emit false intermediate letters.
-                # Use client_motion_threshold (calibrated to webcam jitter, ~0.045) to avoid false resets from hand tremor.
-                motion_cutoff = max(0.040, client_motion_threshold)
-                alphabet_in_motion = bool(
-                    (active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch != "phrase"))
-                    and (raw_kinetic >= motion_cutoff or kinetic_energy > (motion_cutoff * 0.5))
-                )
+                # Dynamic Handshape Recognition & Continuous Fluid Signing:
+                # In authentic sign language, a sign (such as letter 'A') can be performed statically OR dynamically
+                # (while the hand is in motion). Handshape (normalized 21 landmarks relative to wrist) is invariant
+                # to translational hand velocity. We only throttle sentence-commit during extreme wild transit (>0.35).
+                is_wild_transit = bool(kinetic_energy > 0.35)
+                alphabet_in_motion = bool(kinetic_energy > 0.08)
 
-                # Prioritize user's personal few-shot custom sign prototypes if recorded
-                if hand_detected and not alphabet_in_motion and len(feat_176) >= 158:
-                    custom_match = custom_sign_service.match(feat_176, threshold=0.88)
-                    if custom_match is not None:
-                        c_lbl, c_score, c_disp = custom_match
-                        pred_label = c_lbl
-                        is_pred_valid = True
-                        raw_conf = max(raw_conf, c_score)
+                awaiting_nod = False
+                if active_model in ("realsign", "isl_numerals", "isl_hindi_vowels"):
+                    # Continuous live handshape prediction is valid whenever hand is detected with sufficient confidence
+                    is_candidate_valid = bool(
+                        hand_detected
+                        and has_realsign_feat
+                        and is_pred_valid
+                        and pred_label not in ("", "no_sign", "unknown", "Awaiting Sign Input")
+                    )
 
-                if active_model == "unified" and unified_mode_branch == "phrase":
-                    last_word_label = pred_label
-                    last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
-                    last_word_conf = raw_conf
-                    last_word_is_known = True
-                    last_word_pred_time = now
-                    res_label = last_word_label
-                    res_display = last_word_display
-                    res_conf = last_word_conf
-                    res_is_known = True
-                    is_stable = True
-                    accumulator.add_token(last_word_display, token_type="phrase", timestamp=now)
-                    last_committed_sign = res_label
-                    last_committed_time = now
-                    had_idle_baseline = False
-                    alphabet_streak_count = 0
-                    alphabet_streak_candidate = "Awaiting Sign Input"
-                    post_phrase_cooldown_until = now + 0.8  # Shield against post-gesture end-pose static trigger
-                elif active_model in ("realsign", "isl_numerals", "isl_hindi_vowels") or (active_model == "unified" and unified_mode_branch == "letter"):
-                    in_post_phrase_shield = (active_model == "unified" and now < post_phrase_cooldown_until)
-                    if not hand_detected or not has_realsign_feat or alphabet_in_motion or in_post_phrase_shield:
-                        current_prediction = "Awaiting Sign Input"
-                        alphabet_streak_count = 0
-                        alphabet_streak_candidate = "Awaiting Sign Input"
-                        had_idle_baseline = True
-                        alphabet_repeat_lock = False
-                    elif is_pred_valid:
+                    if is_candidate_valid and not is_wild_transit:
                         current_prediction = pred_label
-                        if current_prediction == alphabet_streak_candidate:
-                            alphabet_streak_count += 1
-                        else:
-                            alphabet_streak_candidate = current_prediction
-                            alphabet_streak_count = 1
                     else:
                         current_prediction = "Awaiting Sign Input"
+
+                    if is_wild_transit:
                         alphabet_streak_count = 0
                         alphabet_streak_candidate = "Awaiting Sign Input"
+                        alphabet_nod_committed = False
+                    elif current_prediction == alphabet_streak_candidate and current_prediction != "Awaiting Sign Input":
+                        alphabet_streak_count += 1
+                    else:
+                        alphabet_streak_candidate = current_prediction
+                        alphabet_streak_count = 1 if current_prediction != "Awaiting Sign Input" else 0
+                        alphabet_nod_committed = False
 
-                    if alphabet_streak_count >= required_streak:
-                        if alphabet_streak_candidate != "Awaiting Sign Input":
-                            res_label = alphabet_streak_candidate
-                            res_display = f"LETTER {alphabet_streak_candidate}"
-                            res_conf = raw_conf
-                            res_is_known = True
-                            is_stable = True
+                    if alphabet_streak_count >= required_streak and alphabet_streak_candidate != "Awaiting Sign Input":
+                        last_settled_candidate = alphabet_streak_candidate
+                        last_settled_time = now
 
-                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout
+                    # Always display real neural handshape prediction with smooth EMA transition
+                    if is_candidate_valid:
+                        transition_grace_frames = 2
+                        smoothed_confidence_ema = 0.70 * raw_conf + 0.30 * (smoothed_confidence_ema if smoothed_confidence_ema > 0 else raw_conf)
+                        res_label = pred_label
+                        res_display = f"LETTER {pred_label}" if len(pred_label) == 1 else pred_label.upper()
+                        res_conf = round(float(smoothed_confidence_ema), 2)
+                        res_is_known = True
+                        is_stable = bool(alphabet_streak_count >= required_streak)
+                    elif transition_grace_frames > 0 and hand_detected and res_label not in ("", "no_sign", "Awaiting Sign Input"):
+                        # 2-frame smooth transition grace: prevent strobe flickering during hand transit
+                        transition_grace_frames -= 1
+                        smoothed_confidence_ema *= 0.85
+                        res_conf = round(float(smoothed_confidence_ema), 2)
+                        res_display = f"Letter {res_label}"
+                        is_stable = False
+                    else:
+                        smoothed_confidence_ema = 0.0
+                        res_label = "Awaiting Sign Input"
+                        res_display = "Signing in progress..." if is_actively_signing else ("Waiting for a hand..." if not hand_detected else "Awaiting Sign Input")
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
+
+                    # Hands-Free Intent Confirmation via Head Nod & Head Shake
+                    if alphabet_nod_committed and (nmm_marker.head_gesture != "nod"):
+                        alphabet_nod_committed = False
+
+                    if nmm_marker.head_gesture == "nod":
+                        target_sign = alphabet_streak_candidate if (alphabet_streak_candidate != "Awaiting Sign Input") else (last_settled_candidate if (now - last_settled_time < 3.5) else "")
+                        # Guard: One nod commits exactly ONE instance; require baseline release before repeating identical letter
+                        is_same_as_last = (target_sign == alphabet_last_committed)
+                        allow_nod_commit = bool(target_sign and not alphabet_nod_committed and ((not is_same_as_last) or had_idle_baseline or (now - alphabet_last_committed_time >= 2.0)))
+                        if allow_nod_commit:
+                            emitted = accumulator.add_continuous_token(
+                                target_sign,
+                                confidence=max(raw_conf, 0.85),
+                                token_type="letter",
+                                timestamp=now,
+                                bypass_debounce=True,
+                            )
+                            if emitted:
+                                alphabet_last_committed = target_sign
+                                alphabet_last_committed_time = now
+                                alphabet_repeat_lock = True
+                                alphabet_nod_committed = True
+                                had_idle_baseline = False
+                                res_label = target_sign
+                                res_display = f"✓ {target_sign}"
+                                res_conf = raw_conf if raw_conf > 0 else 0.85
+                                res_is_known = True
+                                is_stable = True
+                                awaiting_nod = False
+                                last_settled_candidate = ""
+                                logger.info("COMMITTED SIGN VIA HEAD NOD: %s", target_sign)
+                    elif nmm_marker.head_gesture == "shake":
+                        had_undone = accumulator.reject_last()
+                        alphabet_streak_candidate = "Awaiting Sign Input"
+                        alphabet_streak_count = 0
+                        last_settled_candidate = ""
+                        alphabet_nod_committed = False
+                        res_label = "Awaiting Sign Input"
+                        res_display = "✕ Undone"
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
+                        awaiting_nod = False
+                        logger.info("UNDID LAST SIGN VIA HEAD SHAKE (undone=%s)", had_undone)
+                    elif alphabet_streak_count >= required_streak and alphabet_streak_candidate != "Awaiting Sign Input":
+                        res_label = alphabet_streak_candidate
+                        res_conf = raw_conf
+                        res_is_known = True
+                        is_stable = True
+
+                        if require_head_nod_confirm:
+                            if (now - alphabet_last_committed_time < 1.0) and (alphabet_streak_candidate == alphabet_last_committed):
+                                res_display = f"✓ {alphabet_last_committed}"
+                                awaiting_nod = False
+                            else:
+                                awaiting_nod = True
+                                res_display = f"Letter {alphabet_streak_candidate}"
+                        else:
+                            res_display = f"Letter {alphabet_streak_candidate}"
+                            # Continuous CTC Dynamic Token Emission with anti-spam repeat lockout:
+                            # Require idle baseline return or distinct character to prevent duplicate letters
                             time_since_commit = now - alphabet_last_committed_time
                             is_same_letter = (alphabet_streak_candidate == alphabet_last_committed)
-
-                            # Only emit if:
-                            # 1) It's a new letter and inter-letter cooldown (>= 300ms) or transition rest passed, OR
-                            # 2) Hand went through an idle/rest/motion baseline, OR
-                            # 3) User held continuously for >= 1.0s to intentionally sign a double letter
-                            can_emit = (not is_same_letter and (time_since_commit >= 0.30 or had_idle_baseline)) or (is_same_letter and (not alphabet_repeat_lock or time_since_commit >= 1.0))
+                            can_emit = (not is_same_letter) or (had_idle_baseline and time_since_commit >= 1.2)
 
                             if can_emit:
                                 emitted = accumulator.add_continuous_token(
@@ -1215,73 +1174,8 @@ async def websocket_recognize(
                                     alphabet_last_committed_time = now
                                     alphabet_repeat_lock = True
                                     had_idle_baseline = False
-                        else:
-                            res_label = "Awaiting Sign Input"
-                            res_display = "Awaiting Sign Input"
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
-                    elif alphabet_streak_candidate != "Awaiting Sign Input" and alphabet_streak_count > 0:
-                        # Hand is actively stabilizing candidate
-                        res_label = alphabet_streak_candidate
-                        res_display = f"HOLDING {alphabet_streak_candidate}"
-                        res_conf = raw_conf
-                        res_is_known = False
-                        is_stable = False
-                    else:
-                        if (alphabet_in_motion or in_post_phrase_shield) and hand_detected:
-                            res_label = "Transitioning"
-                            res_display = "Moving..." if alphabet_in_motion else "Settling..."
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
-                            had_idle_baseline = True
-                            alphabet_repeat_lock = False
-                        elif alphabet_last_committed and (now - alphabet_last_committed_time < 0.6) and hand_detected and has_realsign_feat:
-                            res_label = alphabet_last_committed
-                            res_display = f"LETTER {alphabet_last_committed}"
-                            res_conf = raw_conf
-                            res_is_known = True
-                            is_stable = False
-                        else:
-                            res_label = "Awaiting Sign Input"
-                            res_display = "Awaiting Sign Input"
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
 
                     candidate_streak = alphabet_streak_count
-
-                    # Intent confirmation via Head Gestures (Gated strictly to when hands are actively detected)
-                    if hand_detected and nmm_marker.head_gesture == "nod":
-                        if alphabet_streak_candidate != "Awaiting Sign Input" and raw_conf >= active_threshold:
-                            emitted = accumulator.add_continuous_token(
-                                alphabet_streak_candidate,
-                                confidence=raw_conf,
-                                token_type="letter",
-                                timestamp=now,
-                                bypass_debounce=True,
-                            )
-                            if emitted:
-                                alphabet_last_committed = alphabet_streak_candidate
-                                alphabet_last_committed_time = now
-                                alphabet_repeat_lock = True
-                                had_idle_baseline = False
-                                res_label = alphabet_streak_candidate
-                                res_display = f"✓ {alphabet_streak_candidate} (Nod Confirmed)"
-                                res_conf = raw_conf
-                                res_is_known = True
-                                is_stable = True
-                    elif hand_detected and nmm_marker.head_gesture == "shake":
-                        if accumulator.current_word:
-                            accumulator.reject_last()
-                        alphabet_streak_candidate = "Awaiting Sign Input"
-                        alphabet_streak_count = 0
-                        res_label = "Awaiting Sign Input"
-                        res_display = "✕ Cancelled (Shake)"
-                        res_conf = 0.0
-                        res_is_known = False
-                        is_stable = False
                 else:
                     # Word / Sequence Models (isl_mvp, isl_sequence_lstm, include_stream)
                     # If this inference produced a valid known sign, update the latched state
@@ -1289,7 +1183,7 @@ async def websocket_recognize(
                         last_word_label = pred_label
                         if active_model == "include_stream" and include_pred is not None:
                             last_word_display = include_pred.display_name
-                        elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm"):
+                        elif active_model in ("isl_sequence_lstm", "amrita_isl_phrase_bilstm", "dynamic_unified"):
                             last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper().replace("_", " "))
                         else:
                             last_word_display = DISPLAY_NAMES.get(pred_label, pred_label.upper())
@@ -1298,18 +1192,22 @@ async def websocket_recognize(
                         last_word_probs = res_probs
                         last_word_top3 = raw_top_3
                         last_word_pred_time = now
+                        last_settled_phrase = last_word_display
+                        last_settled_phrase_time = now
 
-                    # Latch check: If hands are still visible and we have a valid word within 0.8s
-                    word_latch_active = bool(
-                        hand_detected
-                        and last_word_is_known
-                        and (now - last_word_pred_time < 0.8)
-                    )
+                    # Target phrase latch: active if recent prediction within 3.0s or settled phrase within 3.5s
+                    has_recent_pred = bool(last_word_is_known and (now - last_word_pred_time < 3.0))
+                    has_settled_phrase = bool(last_settled_phrase and (now - last_settled_phrase_time < 3.5))
 
-                    if word_latch_active:
-                        res_label = last_word_label
-                        res_display = last_word_display
-                        res_conf = last_word_conf
+                    target_phrase = ""
+                    if has_recent_pred and last_word_display:
+                        target_phrase = last_word_display
+                    elif has_settled_phrase:
+                        target_phrase = last_settled_phrase
+
+                    if target_phrase:
+                        res_label = last_word_label or target_phrase
+                        res_conf = last_word_conf if last_word_conf > 0 else 0.85
                         res_is_known = True
                         is_stable = True
                         if not res_probs and last_word_probs:
@@ -1317,11 +1215,22 @@ async def websocket_recognize(
                         if not raw_top_3 and last_word_top3:
                             raw_top_3 = last_word_top3
 
-                        if candidate_label == res_label:
+                        if candidate_label == target_phrase:
                             candidate_streak += 1
                         else:
-                            candidate_label = res_label
+                            candidate_label = target_phrase
                             candidate_streak = 1
+                            phrase_nod_committed = False
+
+                        if (now - last_committed_time < 1.0) and (target_phrase == last_committed_sign):
+                            res_display = f"✓ {target_phrase}"
+                            awaiting_nod = False
+                        elif require_head_nod_confirm:
+                            awaiting_nod = True
+                            res_display = target_phrase
+                        else:
+                            awaiting_nod = False
+                            res_display = target_phrase
 
                         # Disambiguation Check (when margin < 0.20 or is_ambiguous)
                         if seq_pred and getattr(seq_pred, "is_ambiguous", False) and len(seq_pred.top_3) >= 2 and not disambiguation_active:
@@ -1336,49 +1245,16 @@ async def websocket_recognize(
                                     {"label": t2_lbl, "display": DISPLAY_NAMES.get(t2_lbl, t2_lbl.upper().replace("_", " ")), "hand": "right"},
                                 ]
                                 disambiguation_start_time = now
-
-                        # Debounce gate for committing to backend accumulator (gated by disambiguation)
-                        if candidate_streak >= required_streak and not disambiguation_active:
-                            time_since_last = now - last_committed_time
-                            is_same_sign = (res_label == last_committed_sign)
-                            can_commit = False
-                            if is_same_sign:
-                                if hand_absent_duration >= 0.5 and had_idle_baseline:
-                                    can_commit = True
-                            else:
-                                can_commit = True
-
-                            if can_commit:
-                                accumulator.add_token(res_display, token_type="phrase", timestamp=now)
-                                last_committed_sign = res_label
-                                last_committed_time = now
-                                had_idle_baseline = False
-
-                        # Multimodal Intent via Head Gestures in Word/Sequence Mode (Gated strictly to active hands)
-                        if hand_detected and nmm_marker.head_gesture == "nod" and last_word_label not in ("", "no_sign", "unknown", "Awaiting Sign Input", "awaiting_sign"):
-                            accumulator.add_token(last_word_display, token_type="phrase", timestamp=now)
-                            last_committed_sign = res_label
-                            last_committed_time = now
-                            had_idle_baseline = False
-                            res_display = f"✓ {last_word_display} (Nod Confirmed)"
-                            is_stable = True
-                        elif hand_detected and nmm_marker.head_gesture == "shake":
-                            last_word_label = ""
-                            last_word_display = ""
-                            candidate_streak = 0
-                            candidate_label = ""
-                            res_label = "Awaiting Sign Input"
-                            res_display = "✕ Cancelled (Shake)"
-                            res_conf = 0.0
-                            res_is_known = False
-                            is_stable = False
                     else:
                         # Idle or Awaiting Sign
-                        if not hand_detected:
+                        if not hand_detected and (now - last_settled_phrase_time >= 3.5):
                             last_word_label = ""
                             last_word_display = ""
                             last_word_conf = 0.0
                             last_word_is_known = False
+                            last_settled_phrase = ""
+                            phrase_nod_committed = False
+                            alphabet_nod_committed = False
                             last_word_probs = {}
                             last_word_top3 = []
                             had_idle_baseline = True
@@ -1390,6 +1266,58 @@ async def websocket_recognize(
                         is_stable = False
                         candidate_streak = 0
                         candidate_label = ""
+                        awaiting_nod = False
+
+                    # Universal Head Gesture Confirmation / Undo for Dynamic Sequences
+                    if phrase_nod_committed and (now - last_committed_time >= 0.80):
+                        phrase_nod_committed = False
+
+                    if nmm_marker.head_gesture == "nod":
+                        if target_phrase and not phrase_nod_committed and not disambiguation_active:
+                            accumulator.add_token(target_phrase, token_type="phrase", timestamp=now)
+                            last_committed_sign = target_phrase
+                            last_committed_time = now
+                            phrase_nod_committed = True
+                            last_settled_phrase = ""
+                            last_word_label = ""
+                            last_word_is_known = False
+                            res_label = target_phrase
+                            res_display = f"✓ {target_phrase}"
+                            res_conf = max(last_word_conf, 0.85)
+                            res_is_known = True
+                            is_stable = True
+                            awaiting_nod = False
+                            logger.info("COMMITTED PHRASE VIA HEAD NOD: %s", target_phrase)
+                    elif nmm_marker.head_gesture == "shake":
+                        had_undone = accumulator.reject_last(remove_whole_token=True)
+                        accumulator.detected_negation = False
+                        candidate_streak = 0
+                        phrase_nod_committed = False
+                        last_settled_phrase = ""
+                        last_word_label = ""
+                        last_word_is_known = False
+                        res_label = "Awaiting Sign Input"
+                        res_display = "✕ Undone"
+                        res_conf = 0.0
+                        res_is_known = False
+                        is_stable = False
+                        awaiting_nod = False
+                        logger.info("UNDID LAST PHRASE VIA HEAD SHAKE (undone=%s)", had_undone)
+                    elif not require_head_nod_confirm and target_phrase and candidate_streak >= required_streak and not disambiguation_active:
+                        time_since_last = now - last_committed_time
+                        is_same_sign = (target_phrase == last_committed_sign)
+                        can_commit = False
+                        if is_same_sign:
+                            if hand_absent_duration >= 0.5 and had_idle_baseline:
+                                can_commit = True
+                        else:
+                            can_commit = True
+
+                        if can_commit:
+                            accumulator.add_token(target_phrase, token_type="phrase", timestamp=now)
+                            last_committed_sign = target_phrase
+                            last_committed_time = now
+                            had_idle_baseline = False
 
                 # Universal Disambiguation Hand-Lift Elevation Arbiter
                 if disambiguation_active:
@@ -1409,7 +1337,15 @@ async def websocket_recognize(
                         is_letter = (len(resolved_choice) == 1 and resolved_choice.isalpha())
                         disp = resolved_choice.upper() if is_letter else DISPLAY_NAMES.get(resolved_choice.lower(), resolved_choice.upper().replace("_", " "))
                         token_type = "letter" if is_letter else "phrase"
-                        accumulator.add_token(disp, token_type=token_type, timestamp=now)
+                        if not require_head_nod_confirm:
+                            accumulator.add_token(disp, token_type=token_type, timestamp=now)
+                        else:
+                            if is_letter:
+                                alphabet_streak_candidate = resolved_choice
+                                alphabet_streak_count = required_streak
+                            else:
+                                candidate_label = resolved_choice
+                                candidate_streak = required_streak
                         disambiguation_active = False
                         disambiguation_options = []
                         disambiguation_top1 = ""
@@ -1472,21 +1408,13 @@ async def websocket_recognize(
                         "cuda_memory_mb": cuda_mem_mb,
                     },
                     "kinetic_energy": round(float(kinetic_energy), 4),
-                    "motion_threshold": round(float(client_motion_threshold), 4),
-                    "rest_y_threshold": round(float(client_rest_y), 4),
-                    "auto_calibrating": bool(auto_calibrating),
-                    "auto_calib_progress": min(100, int((auto_calib_frame_count / 25.0) * 100)) if auto_calibrating else 100,
-                    "auto_calib_message": auto_calib_message,
                     "is_actively_signing": bool(is_actively_signing),
-                    "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model in ("realsign", "unified") and is_stable)) else "idle"),
+                    "motion_state": "moving" if (is_actively_signing or alphabet_in_motion) else ("settled" if (motion_settled_now or (active_model == "realsign" and is_stable)) else "idle"),
                     "sentence_buffer": accumulator.sentence_buffer,
                     "translated_text": accumulator.translated_text,
                     "translated_indic": accumulator.translated_indic,
                     "translations": {"en": accumulator.translated_text, **accumulator.translated_indic},
                     "sentence_tokens": list(accumulator.sentence_tokens),
-                    "current_word": accumulator.current_word,
-                    "effective_tokens": accumulator.get_effective_tokens(),
-                    "head_gesture": nmm_marker.head_gesture,
                     "detected_objects": [
                         {
                             "label": o.label,
@@ -1513,8 +1441,8 @@ async def websocket_recognize(
                     "landmarks": {
                         "left_hand": left_hand,
                         "right_hand": right_hand,
-                        "pose": pose if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else [],
-                        "face": face if active_model not in ("realsign", "isl_numerals", "isl_hindi_vowels", "unified") else [],
+                        "pose": pose,
+                        "face": face,
                     },
                     "non_manual_markers": {
                         "is_question": nmm_marker.is_question,
@@ -1523,9 +1451,12 @@ async def websocket_recognize(
                         "eyebrow_elevation": nmm_marker.eyebrow_elevation,
                         "head_yaw_oscillation": nmm_marker.head_yaw_oscillation,
                         "head_pitch_oscillation": nmm_marker.head_pitch_oscillation,
-                        "head_gesture": nmm_marker.head_gesture,
                         "confidence": nmm_marker.confidence,
+                        "head_gesture": nmm_marker.head_gesture,
                     },
+                    "head_gesture": nmm_marker.head_gesture,
+                    "awaiting_nod": bool(awaiting_nod),
+                    "require_head_nod_confirm": require_head_nod_confirm,
                     "realsign_prediction": {
                         "letter": realsign_pred.letter if realsign_pred else "no_sign",
                         "confidence": round(realsign_pred.confidence, 4) if realsign_pred else 0.0,

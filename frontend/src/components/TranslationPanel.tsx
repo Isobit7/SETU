@@ -6,13 +6,13 @@ import {
   Trash2,
   Check,
   Delete,
+  Download,
   Printer,
   FileText,
   FileCode,
   ChevronDown,
-  MoreHorizontal,
 } from 'lucide-react';
-import type { RecognitionPayload } from '../types';
+import type { BufferInsertionMode, RecognitionPayload } from '../types';
 import { LiveDetectionOutput } from './LiveDetectionOutput';
 
 interface IndicLangTab {
@@ -28,6 +28,7 @@ const INDIC_TABS: IndicLangTab[] = [
   { key: 'ta', label: 'Tamil', native: 'தமிழ்', code: 'ta-IN' },
   { key: 'te', label: 'Telugu', native: 'తెలుగు', code: 'te-IN' },
   { key: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ', code: 'kn-IN' },
+  { key: 'ml', label: 'Malayalam', native: 'മലയാളം', code: 'ml-IN' },
 ];
 
 interface TranslationPanelProps {
@@ -44,9 +45,8 @@ interface TranslationPanelProps {
   isSpeaking?: boolean;
   onSpeak?: (text: string, lang?: string) => void;
   onStopSpeak?: () => void;
-  onSelectLanguage?: (langCode: string) => void;
-  onAcceptPrediction?: (word: string) => void;
-  onResolveDisambiguation?: (choice: string) => void;
+  bufferInsertionMode?: BufferInsertionMode;
+  onSetBufferInsertionMode?: (mode: BufferInsertionMode) => void;
 }
 
 export const TranslationPanel: React.FC<TranslationPanelProps> = ({
@@ -61,16 +61,17 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   isSpeaking: propIsSpeaking,
   onSpeak,
   onStopSpeak,
-  onSelectLanguage,
-  onAcceptPrediction,
-  onResolveDisambiguation,
+  bufferInsertionMode = 'head_nod',
+  onSetBufferInsertionMode,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [localIsSpeaking, setLocalIsSpeaking] = useState<boolean>(false);
   const [selectedLang, setSelectedLang] = useState<string>('en');
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState<boolean>(false);
+  const [apiTranslations, setApiTranslations] = useState<Record<string, string>>({});
 
-  const moreMenuRef = useRef<HTMLDivElement | null>(null);
+  const exportMenuRef = useRef<HTMLDivElement | null>(null);
+  const lastFetchedSentenceRef = useRef<string>('');
 
   const speaking = propIsSpeaking !== undefined ? propIsSpeaking : localIsSpeaking;
 
@@ -92,23 +93,65 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
   // Get translation text for any specified language tab
   const getTranslationForLang = (langKey: string): string => {
     if (langKey === 'en') {
-      return activeTranslation || currentResult?.translations?.en || '';
+      return activeTranslation || currentResult?.translations?.en || apiTranslations.en || '';
     }
-    return currentResult?.translations?.[langKey] || currentResult?.translated_indic?.[langKey] || '';
+    return (
+      currentResult?.translations?.[langKey] ||
+      currentResult?.translated_indic?.[langKey] ||
+      apiTranslations[langKey] ||
+      ''
+    );
   };
 
   const currentTranslationText = getTranslationForLang(selectedLang);
   const currentTab = INDIC_TABS.find((t) => t.key === selectedLang) || INDIC_TABS[0];
 
-  // Close more menu on click outside or Escape
+  // Active HTTP translation fallback when sentence changes and WebSocket indic translations are pending
+  useEffect(() => {
+    const raw = activeSentence.trim();
+    if (!raw) {
+      setApiTranslations({});
+      lastFetchedSentenceRef.current = '';
+      return;
+    }
+    // If websocket stream already provided full Indic translations, use them directly
+    if (currentResult?.translations && Object.keys(currentResult.translations).length > 1) {
+      return;
+    }
+    if (raw === lastFetchedSentenceRef.current) return;
+    lastFetchedSentenceRef.current = raw;
+
+    const controller = new AbortController();
+    fetch('/api/v1/nlp/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: raw }),
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.translations) {
+          setApiTranslations(data.translations);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.warn('Translation fetch notice:', err);
+        }
+      });
+
+    return () => controller.abort();
+  }, [activeSentence, currentResult?.translations]);
+
+  // Close export menu on click outside or Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
-        setIsMoreMenuOpen(false);
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setIsExportMenuOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMoreMenuOpen(false);
+      if (e.key === 'Escape') setIsExportMenuOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -121,9 +164,8 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Unified Text-to-Speech (speaks regional translation or English translation or buffer)
   const handleSpeak = () => {
-    const regionalTranslation = getTranslationForLang(selectedLang).trim();
     const textToSpeak = (
-      regionalTranslation ||
+      currentTranslationText.trim() ||
       activeTranslation.trim() ||
       activeSentence.trim() ||
       displayText ||
@@ -141,22 +183,20 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
       return;
     }
 
-    const langCodeToSpeak = (Boolean(regionalTranslation) && selectedLang !== 'en') ? currentTab.code : 'en-IN';
-
     if (onSpeak) {
-      onSpeak(textToSpeak, langCodeToSpeak);
+      onSpeak(textToSpeak, currentTab.code);
       return;
     }
 
     if (onSpeakSentence) {
-      onSpeakSentence(textToSpeak, langCodeToSpeak);
+      onSpeakSentence(textToSpeak, currentTab.code);
       return;
     }
 
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = langCodeToSpeak;
+      utterance.lang = currentTab.code;
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
 
@@ -186,7 +226,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Export 1: Markdown (.md)
   const handleExportMarkdown = () => {
-    setIsMoreMenuOpen(false);
+    setIsExportMenuOpen(false);
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     let md = `# SETU — Indian Sign Language Translation Transcript\n\n`;
@@ -218,7 +258,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Export 2: Plain Text (.txt)
   const handleExportPlainText = () => {
-    setIsMoreMenuOpen(false);
+    setIsExportMenuOpen(false);
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     let txt = `SETU — INDIAN SIGN LANGUAGE TRANSLATION TRANSCRIPT\n`;
@@ -250,7 +290,7 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
 
   // Export 3: Print / Save as PDF
   const handlePrint = () => {
-    setIsMoreMenuOpen(false);
+    setIsExportMenuOpen(false);
     window.print();
   };
 
@@ -276,266 +316,264 @@ export const TranslationPanel: React.FC<TranslationPanelProps> = ({
     <div className="unified-translation-container">
       {/* SINGLE UNIFIED TRANSLATION CARD */}
       <div className="unified-card" id="unified-translation-card">
-        {/* Top: Compact Live Detection Status Strip */}
-        <LiveDetectionOutput
-          currentResult={currentResult}
-          onAcceptPrediction={onAcceptPrediction}
-          onResolveDisambiguation={onResolveDisambiguation}
-        />
+        {/* Live Detection Output & Candidate Scores Component */}
+        <LiveDetectionOutput currentResult={currentResult} />
 
-        {/* Modern Segmented Language Switcher (100% width, 5 balanced tabs, zero overflow) */}
-        <div className="modern-language-wrapper">
-          <div className="modern-language-bar" role="tablist" aria-label="Target Translation Language">
+        {/* 1. Indic Multilingual Translation Bar */}
+        <div className="indic-multilingual-section">
+          <div className="indic-lang-tabs-bar" role="tablist" aria-label="Indic Regional Language Selection">
             {INDIC_TABS.map((tab) => {
               const hasContent = Boolean(getTranslationForLang(tab.key).trim());
               const isSelected = selectedLang === tab.key;
-              const primaryLabel = tab.key === 'en' ? 'English' : tab.native;
-              const secondaryLabel = tab.key === 'en' ? 'EN' : tab.label;
-
               return (
                 <button
                   key={tab.key}
                   role="tab"
                   type="button"
                   aria-selected={isSelected}
-                  className={`modern-lang-tab ${isSelected ? 'active' : ''} ${hasContent ? 'has-translation' : ''}`}
-                  onClick={() => {
-                    setSelectedLang(tab.key);
-                    if (onSelectLanguage) {
-                      onSelectLanguage(tab.code);
-                    }
-                  }}
-                  title={`${tab.label} (${tab.native}) · Click to switch language`}
+                  className={`indic-tab-pill ${isSelected ? 'active' : ''} ${hasContent ? 'has-content' : ''}`}
+                  onClick={() => setSelectedLang(tab.key)}
+                  title={`Switch to ${tab.label} (${tab.native})`}
                 >
-                  <span className="modern-lang-primary">{primaryLabel}</span>
-                  <span className="modern-lang-secondary">{secondaryLabel}</span>
-                  {hasContent && <span className="modern-lang-dot" aria-hidden="true" />}
+                  <span className="indic-tab-native">{tab.native}</span>
+                  {tab.label !== tab.native && <span className="indic-tab-label">{tab.label}</span>}
+                  {hasContent && <span className="indic-tab-indicator" />}
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* Main: Unified Translation & Sentence Workspace */}
-        <div className="unified-canvas-section">
-          <div className="canvas-meta-strip">
-            <div className="meta-strip-left">
-              {speaking ? (
+          {/* Active Language Translation Box */}
+          <div className="english-translation-section">
+            <div className="translation-section-header">
+              <div className="translation-header-left">
+                <span className="translation-section-badge">
+                  {currentTab.native === currentTab.label
+                    ? currentTab.label
+                    : `${currentTab.native} (${currentTab.label})`}
+                </span>
+                <span className="translation-rule-tag">
+                  {selectedLang === 'en' ? 'SOV → SVO Syntax' : 'Indic Neural Transfer'}
+                </span>
+              </div>
+              {speaking && (
                 <div className="tts-live-waveform-indicator" aria-label="Audio speaking">
                   <span className="soundwave-bar bar-1" />
                   <span className="soundwave-bar bar-2" />
                   <span className="soundwave-bar bar-3" />
                   <span className="soundwave-bar bar-4" />
-                  <span className="waveform-label">{currentTab.label} Voice</span>
+                  <span className="waveform-label">{currentTab.label} TTS</span>
                 </div>
-              ) : (
-                <span className="meta-target-hint">
-                  Target: <strong>{currentTab.label}</strong> ({currentTab.native})
-                </span>
               )}
             </div>
-            <div className="meta-strip-right">
-              <span className="canvas-stats-text">
-                {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} chars
-              </span>
+
+            <div className="english-translation-box" aria-live="polite" aria-atomic="true">
+              {currentTranslationText ? (
+                <p className="english-translation-text">"{currentTranslationText}"</p>
+              ) : activeTranslation ? (
+                <div className="indic-translation-fallback">
+                  <p className="english-translation-text fallback-en">"{activeTranslation}"</p>
+                  {selectedLang !== 'en' && (
+                    <span className="indic-pending-notice">
+                      (Synthesizing {currentTab.label} translation...)
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <p className="english-translation-placeholder">
+                  Position your hands in camera view to begin signing. Words will automatically assemble with real-time Indic grammar translation.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Sentence Builder Text Area */}
+        <div className="sentence-integrated-section">
+          <div className="sentence-section-header">
+            <div className="sentence-header-left">
+              <span className="sentence-section-label">Sentence Buffer</span>
+              {onSetBufferInsertionMode && (
+                <button
+                  type="button"
+                  className={`buffer-mode-pill ${bufferInsertionMode === 'head_nod' ? 'mode-nod' : 'mode-auto'}`}
+                  onClick={() => onSetBufferInsertionMode(bufferInsertionMode === 'head_nod' ? 'auto' : 'head_nod')}
+                  title="Toggle mode: Head-Nod locks signs on downward nod; Auto-Stream continuously appends stable signs"
+                  aria-label={`Buffer mode: ${bufferInsertionMode === 'head_nod' ? 'Head-Nod Lock' : 'Auto-Stream'}`}
+                >
+                  {bufferInsertionMode === 'head_nod' ? '✓ Head-Nod Lock' : '⚡ Auto-Stream'}
+                </button>
+              )}
+            </div>
+            <div className="sentence-stats-mini">
+              <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+              <span className="stats-dot">·</span>
+              <span>{charCount} chars</span>
             </div>
           </div>
 
           <div
-            className="unified-canvas-body"
+            className="sentence-integrated-box"
             tabIndex={0}
             role="textbox"
-            aria-label="Accumulated translation output"
+            aria-label="Accumulated sentence text"
             aria-multiline="true"
           >
-            {hasSentenceContent ? (
-              <div className="canvas-content-flow">
-                {/* 1. Primary Output String */}
-                <div className="canvas-primary-translation">
-                  <span className="canvas-main-text">
-                    {currentTranslationText.trim()
-                      ? currentTranslationText
-                      : activeTranslation.trim()
-                      ? activeTranslation
-                      : activeSentence}
-                  </span>
-                  <span className="sentence-cursor" aria-hidden="true">|</span>
-                </div>
-
-                {/* 2. Secondary Gloss Tokens (Rendered ONLY if translation differs from raw tokens) */}
-                {Boolean(activeSentence.trim()) &&
-                  Boolean(
-                    (currentTranslationText.trim() && currentTranslationText.trim().toLowerCase() !== activeSentence.trim().toLowerCase()) ||
-                    (activeTranslation.trim() && activeTranslation.trim().toLowerCase() !== activeSentence.trim().toLowerCase())
-                  ) && (
-                    <div className="canvas-secondary-gloss">
-                      <span className="gloss-tag">ISL Signs:</span>
-                      <span className="gloss-text">{activeSentence.trim()}</span>
-                    </div>
-                  )}
+            {activeSentence && activeSentence.length > 0 ? (
+              <div className="sentence-content-wrap">
+                <span className="sentence-text-string">{activeSentence}</span>
+                <span className="sentence-cursor" aria-hidden="true">|</span>
               </div>
             ) : (
-              <div className="canvas-empty-state" aria-live="polite">
-                <p className="canvas-empty-title">
+              <div className="sentence-calm-empty-state" aria-live="polite">
+                <p className="sentence-calm-placeholder">
                   Signed letters and words will assemble here...
                   <span className="sentence-cursor" aria-hidden="true">|</span>
                 </p>
-                <div className="canvas-shortcut-hints">
-                  <span>Press <kbd className="hint-kbd">Space</kbd> for word break</span>
-                  <span className="stats-dot">·</span>
-                  <span><kbd className="hint-kbd">⌫</kbd> to delete</span>
-                  <span className="stats-dot">·</span>
-                  <span><kbd className="hint-kbd">S</kbd> to speak</span>
-                </div>
+                <span className="sentence-shortcut-hint">
+                  Press <kbd className="hint-kbd">Space</kbd> for word break · <kbd className="hint-kbd">⌫</kbd> to delete · <kbd className="hint-kbd">S</kbd> to speak
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Bottom: Streamlined Action Toolbar */}
+        {/* 3. Action Toolbar: Grouped into Output Actions (Left) and Buffer Editing (Right) */}
         <div className="unified-actions-row" role="toolbar" aria-label="Translation Actions">
-          {/* Button 1: Speak */}
-          <button
-            className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
-            disabled={!hasSentenceContent}
-            onClick={handleSpeak}
-            title={speaking ? 'Stop audio playback [S]' : `Speak ${currentTab.label} audio (TTS) [S]`}
-            aria-label={speaking ? 'Stop speech' : `Speak ${currentTab.label} audio`}
-          >
-            {speaking ? (
-              <>
-                <VolumeX size={14} />
-                <span>Stop</span>
-              </>
-            ) : (
-              <>
-                <Volume2 size={14} />
-                <span>Speak</span>
-              </>
-            )}
-            <kbd className="action-kbd-badge">S</kbd>
-          </button>
+          {/* Subgroup 1: Audio & Export Operations */}
+          <div className="actions-subgroup-output">
+            {/* Speak (Regional Sync) */}
+            <button
+              className={`action-btn speak-action-btn ${speaking ? 'active-speaking' : ''}`}
+              disabled={!hasSentenceContent}
+              onClick={handleSpeak}
+              title={speaking ? 'Stop audio playback [S]' : `Speak ${currentTab.label} audio (TTS) [S]`}
+              aria-label={speaking ? 'Stop speech' : `Speak ${currentTab.label} audio`}
+            >
+              {speaking ? (
+                <>
+                  <div className="soundwave-bars" aria-hidden="true">
+                    <span className="soundwave-bar" />
+                    <span className="soundwave-bar" />
+                    <span className="soundwave-bar" />
+                    <span className="soundwave-bar" />
+                  </div>
+                  <VolumeX size={14} />
+                  <span>Stop</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 size={14} />
+                  <span>Speak</span>
+                </>
+              )}
+              <kbd className="action-kbd-badge">S</kbd>
+            </button>
 
-          {/* Button 2: Copy */}
-          <button
-            className={`action-btn copy-action-btn ${copied ? 'copy-success' : ''}`}
-            disabled={!hasTextToOperate}
-            onClick={handleCopy}
-            title="Copy translation to clipboard [C]"
-            aria-label="Copy translated text to clipboard"
-          >
-            {copied ? (
-              <>
-                <Check size={14} className="text-emerald" />
-                <span className="text-emerald">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy size={14} />
-                <span>Copy</span>
-              </>
-            )}
-            <kbd className="action-kbd-badge">C</kbd>
-          </button>
+            {/* Copy */}
+            <button
+              className={`action-btn copy-action-btn ${copied ? 'copy-success' : ''}`}
+              disabled={!hasTextToOperate}
+              onClick={handleCopy}
+              title="Copy translation to clipboard [C]"
+              aria-label="Copy text"
+            >
+              {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
+              <kbd className="action-kbd-badge">C</kbd>
+            </button>
 
-          {/* Button 3: Backspace */}
-          {onBackspaceSentence && (
+            {/* Multi-Format Export Dropdown */}
+            <div className="export-dropdown-container" ref={exportMenuRef}>
+              <button
+                className="action-btn export-action-btn"
+                disabled={!hasTextToOperate}
+                onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                title="Export transcript in multiple formats [E]"
+                aria-label="Export transcript"
+                aria-haspopup="true"
+                aria-expanded={isExportMenuOpen}
+              >
+                <Download size={14} />
+                <span>Export</span>
+                <ChevronDown size={12} className={`export-chevron ${isExportMenuOpen ? 'open' : ''}`} />
+              </button>
+
+              {isExportMenuOpen && (
+                <div className="export-subdropdown-menu" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="export-dropdown-item"
+                    onClick={handleExportMarkdown}
+                  >
+                    <FileCode size={14} className="export-item-icon" />
+                    <div className="export-item-text">
+                      <span className="export-item-title">Markdown Document (.md)</span>
+                      <span className="export-item-desc">Structured report with all Indic translations</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="export-dropdown-item"
+                    onClick={handleExportPlainText}
+                  >
+                    <FileText size={14} className="export-item-icon" />
+                    <div className="export-item-text">
+                      <span className="export-item-title">Plain Text (.txt)</span>
+                      <span className="export-item-desc">Clean transcript for easy sharing</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="export-dropdown-item"
+                    onClick={handlePrint}
+                  >
+                    <Printer size={14} className="export-item-icon" />
+                    <div className="export-item-text">
+                      <span className="export-item-title">Print / Save as PDF</span>
+                      <span className="export-item-desc">Formatted printable transcript</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Subgroup 2: Buffer Editing Actions */}
+          <div className="actions-subgroup-edit">
+            {/* Backspace */}
             <button
               className="action-btn backspace-action-btn"
               disabled={!activeSentence}
               onClick={onBackspaceSentence}
-              title="Delete previous sign [Backspace]"
-              aria-label="Delete last recognized sign"
+              title="Delete last letter or word [Backspace]"
+              aria-label="Backspace last character"
             >
               <Delete size={14} />
-              <span>Backspace</span>
+              <span>Back</span>
+              <kbd className="action-kbd-badge">⌫</kbd>
             </button>
-          )}
 
-          {/* Button 4: More Options Dropdown (Clear, Export, Print) */}
-          <div className="more-actions-wrapper" ref={moreMenuRef}>
+            {/* Clear */}
             <button
-              type="button"
-              className={`action-btn more-actions-trigger-btn ${isMoreMenuOpen ? 'open' : ''}`}
-              onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-              title="More options: Clear buffer, Export transcript, Print"
-              aria-expanded={isMoreMenuOpen}
-              aria-haspopup="true"
+              className="action-btn clear-action-btn"
+              disabled={!hasTextToOperate}
+              onClick={handleClear}
+              title="Clear all text from buffer"
+              aria-label="Clear all text"
             >
-              <MoreHorizontal size={14} />
-              <span>More</span>
-              <ChevronDown size={11} className={`export-chevron ${isMoreMenuOpen ? 'open' : ''}`} />
+              <Trash2 size={14} />
+              <span>Clear</span>
+              <kbd className="action-kbd-badge">Del</kbd>
             </button>
-
-            {isMoreMenuOpen && (
-              <div className="more-menu-dropdown" role="menu">
-                <button
-                  type="button"
-                  className="more-menu-item text-danger"
-                  disabled={!hasTextToOperate}
-                  onClick={() => {
-                    setIsMoreMenuOpen(false);
-                    handleClear();
-                  }}
-                  role="menuitem"
-                >
-                  <Trash2 size={14} className="text-danger" />
-                  <div className="more-item-text">
-                    <span className="more-item-title text-danger">Clear Buffer</span>
-                    <span className="more-item-desc">Reset assembled signs and text</span>
-                  </div>
-                </button>
-
-                <div className="dropdown-divider" />
-
-                <button
-                  type="button"
-                  className="more-menu-item"
-                  disabled={!hasSentenceContent}
-                  onClick={handleExportMarkdown}
-                  role="menuitem"
-                >
-                  <FileCode size={14} className="text-accent" />
-                  <div className="more-item-text">
-                    <span className="more-item-title">Export Markdown (.md)</span>
-                    <span className="more-item-desc">Formatted transcript with timestamps</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  className="more-menu-item"
-                  disabled={!hasSentenceContent}
-                  onClick={handleExportPlainText}
-                  role="menuitem"
-                >
-                  <FileText size={14} className="text-muted" />
-                  <div className="more-item-text">
-                    <span className="more-item-title">Export Plain Text (.txt)</span>
-                    <span className="more-item-desc">Raw multiline text transcript</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  className="more-menu-item"
-                  disabled={!hasSentenceContent}
-                  onClick={handlePrint}
-                  role="menuitem"
-                >
-                  <Printer size={14} className="text-muted" />
-                  <div className="more-item-text">
-                    <span className="more-item-title">Print / Save as PDF</span>
-                    <span className="more-item-desc">System print dialog</span>
-                  </div>
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-export default TranslationPanel;

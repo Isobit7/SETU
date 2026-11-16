@@ -12,13 +12,12 @@ export interface LandmarkGroups {
 }
 
 export type ActiveModelType =
-  | 'unified'
   | 'realsign'
   | 'isl_numerals'
   | 'isl_hindi_vowels'
+  | 'dynamic_unified'
   | 'amrita_phrase'
-  | 'isl_mvp'
-  | 'isl_sequence_lstm'
+  | 'isl_dynamic_master_bilstm'
   | 'include_stream';
 
 export interface Candidate {
@@ -59,12 +58,6 @@ export interface RecognitionPayload {
     entropy?: number;
   };
   buffer_fill?: number;
-  kinetic_energy?: number;
-  motion_threshold?: number;
-  rest_y_threshold?: number;
-  auto_calibrating?: boolean;
-  auto_calib_progress?: number;
-  auto_calib_message?: string;
   hand_detected?: boolean;
   hands_in_subtitle_zone?: boolean;
   guidance?: string;
@@ -75,18 +68,14 @@ export interface RecognitionPayload {
   translated_text?: string;
   translated_indic?: Record<string, string>;
   translations?: Record<string, string>;
-  head_gesture?: 'nod' | 'shake' | 'neutral';
-  current_word?: string;
-  effective_tokens?: string[];
   non_manual_markers?: {
     is_question: boolean;
     is_negation: boolean;
     is_affirmation: boolean;
     eyebrow_elevation: number;
     head_yaw_oscillation: number;
-    head_pitch_oscillation?: number;
-    head_gesture?: 'nod' | 'shake' | 'neutral';
     confidence: number;
+    head_gesture?: string;
   };
   sentence_tokens?: string[];
   message?: string;
@@ -114,7 +103,12 @@ export interface RecognitionPayload {
     enhanced: boolean;
   };
   predictive_suggestions?: string[];
+  head_gesture?: 'nod' | 'shake' | 'none';
+  awaiting_nod?: boolean;
+  require_head_nod_confirm?: boolean;
 }
+
+export type BufferInsertionMode = 'auto' | 'head_nod';
 
 export interface HistoryItem {
   id: string;
@@ -141,6 +135,7 @@ export type SubtitleSize = 'small' | 'medium' | 'large';
 export interface LandmarkStyles {
   showLeftHand: boolean;
   showRightHand: boolean;
+  showFace?: boolean;
   mirrored: boolean;
 }
 

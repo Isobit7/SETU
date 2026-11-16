@@ -21,7 +21,6 @@ import { drawLandmarksOnCanvas } from '../utils/landmarksDrawer';
 import { evaluateFraming } from '../utils/framingEvaluator';
 import { VisualFramingGuide } from './VisualFramingGuide';
 import { DisambiguationOverlay } from './DisambiguationOverlay';
-import { DiagnosticHUD } from './DiagnosticHUD';
 
 interface CameraWorkspaceProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -42,8 +41,6 @@ interface CameraWorkspaceProps {
   onOpenVocabulary?: () => void;
   onResolveDisambiguation?: (label: string) => void;
   onAcceptPrediction?: (phrase: string) => void;
-  showDiagnosticHUD?: boolean;
-  confidenceThreshold?: number;
 }
 
 export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
@@ -64,8 +61,6 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   onOpenVocabulary,
   onResolveDisambiguation,
   onAcceptPrediction: _onAcceptPrediction,
-  showDiagnosticHUD = false,
-  confidenceThreshold = 0.35,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -106,13 +101,17 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       return 'Low Light — Turn on front light';
     }
     const raw = currentResult?.guidance || framingFeedback.message;
-    if (!raw) return 'Optimal Framing (50–70cm)';
-    if (raw.includes('Too close') || raw.includes('step back')) return 'Move Back (Sit 50–70cm away)';
-    if (raw.includes('Too far') || raw.includes('closer')) return 'Move Closer (Sit 50–70cm away)';
+    if (!raw) return 'Optimal Framing (50–70 cm)';
+    const hasHands = Boolean(currentResult?.hand_detected || framingFeedback.handsDetected);
+    if (hasHands && (raw.includes('Tilt Camera Down') || raw.includes('Tilt camera down'))) {
+      return 'Optimal Framing (50–70 cm)';
+    }
+    if (raw.includes('Too close') || raw.includes('step back')) return 'Move Back (50–70 cm)';
+    if (raw.includes('Too far') || raw.includes('closer')) return 'Move Closer (50–70 cm)';
     if (raw.includes('Camera too low')) return 'Tilt Camera Up';
     if (raw.includes('Camera too high')) return 'Tilt Camera Down';
     if (raw.includes('Raise your hands')) return 'Raise Hands into View';
-    if (raw.includes('Position good')) return 'Optimal Framing (50–70cm)';
+    if (raw.includes('Position good')) return 'Optimal Framing (50–70 cm)';
     return raw;
   }, [currentResult?.lighting?.score, currentResult?.guidance, framingFeedback.message]);
 
@@ -133,8 +132,12 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       }
     } else {
       if (document.exitFullscreen) {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
+        try {
+          await document.exitFullscreen();
+          setIsFullscreen(false);
+        } catch (err) {
+          console.warn('Exit fullscreen error:', err);
+        }
       }
     }
   };
@@ -147,11 +150,17 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  // Ref-decoupled 60 FPS landmark drawing loop for silky-smooth, zero-lag tracking
+  // Ref-decoupled 60 FPS landmark drawing loop with continuous client-side lerp for buttery-smooth tracking
   const currentResultRef = useRef<RecognitionPayload | null>(currentResult);
   currentResultRef.current = currentResult;
   const landmarkStylesRef = useRef<LandmarkStyles>(landmarkStyles);
   landmarkStylesRef.current = landmarkStyles;
+  const displayedLandmarksRef = useRef<{
+    left_hand?: Array<{ x: number; y: number; z: number }>;
+    right_hand?: Array<{ x: number; y: number; z: number }>;
+    pose?: Array<{ x: number; y: number; z: number }>;
+    face?: Array<{ x: number; y: number; z: number }>;
+  }>({});
 
   useEffect(() => {
     let animId: number;
@@ -159,8 +168,8 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       const canvas = canvasRef.current;
       const video = videoRef.current;
       if (canvas && video && video.readyState >= 2) {
-        const width = video.videoWidth || 640;
-        const height = video.videoHeight || 480;
+        const width = video.videoWidth > 0 ? video.videoWidth : 640;
+        const height = video.videoHeight > 0 ? video.videoHeight : 480;
 
         if (canvas.width !== width || canvas.height !== height) {
           canvas.width = width;
@@ -170,16 +179,54 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
         const ctx = canvas.getContext('2d');
         const res = currentResultRef.current;
         if (ctx) {
-          if (res?.landmarks || res?.detected_objects) {
+          const targetLandmarks = res?.landmarks;
+          const hasLandmarks = targetLandmarks && (
+            (targetLandmarks.left_hand && targetLandmarks.left_hand.length > 0) ||
+            (targetLandmarks.right_hand && targetLandmarks.right_hand.length > 0)
+          );
+
+          if (hasLandmarks || res?.detected_objects) {
+            // Adaptive exponential lerp (0.72 provides instantaneous responsive follow with 0 micro-stutter)
+            const lerpFactor = 0.72;
+            const disp = displayedLandmarksRef.current;
+
+            const updateGroup = (key: 'left_hand' | 'right_hand') => {
+              const target = targetLandmarks?.[key];
+              if (target && target.length > 0) {
+                if (!disp[key] || disp[key]!.length !== target.length) {
+                  // Immediate snap on new landmark arrival
+                  disp[key] = target.map((p) => ({ ...p }));
+                } else {
+                  const current = disp[key]!;
+                  const len = Math.min(current.length, target.length);
+                  for (let i = 0; i < len; i++) {
+                    const t = target[i];
+                    const c = current[i];
+                    if (t && c) {
+                      c.x += (t.x - c.x) * lerpFactor;
+                      c.y += (t.y - c.y) * lerpFactor;
+                      c.z += (t.z - c.z) * lerpFactor;
+                    }
+                  }
+                }
+              } else {
+                disp[key] = undefined;
+              }
+            };
+
+            updateGroup('left_hand');
+            updateGroup('right_hand');
+
             drawLandmarksOnCanvas(
               ctx,
               width,
               height,
-              res.landmarks || {},
+              disp,
               landmarkStylesRef.current,
-              res.detected_objects
+              res?.detected_objects
             );
           } else {
+            displayedLandmarksRef.current = {};
             ctx.clearRect(0, 0, width, height);
           }
         }
@@ -205,22 +252,16 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
   if (cameraStatus === 'paused') {
     subtitleText = 'Detection Paused';
   } else if (cameraStatus === 'detecting') {
-    if (isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input') {
-      if (currentResult?.display_name) {
-        subtitleText = currentResult.display_name;
-      } else if (currentResult?.active_model === 'realsign' && label.length === 1) {
+    if (currentResult?.display_name && currentResult.display_name !== 'Awaiting Sign Input') {
+      subtitleText = currentResult.display_name;
+    } else if (isKnown && label !== 'no_sign' && label !== 'Awaiting Sign Input') {
+      if (currentResult?.active_model === 'realsign' && label.length === 1) {
         subtitleText = `Letter ${label.toUpperCase()}`;
       } else {
         subtitleText = label.replace('_', ' ').toUpperCase();
       }
     } else if (handDetected) {
-      if (currentResult?.display_name && currentResult.display_name !== 'Awaiting Sign Input' && currentResult.display_name !== 'no_sign') {
-        subtitleText = currentResult.display_name;
-      } else if (label && label !== 'no_sign' && label !== 'unknown' && label !== 'Awaiting Sign Input') {
-        subtitleText = `Tracking: ${label.toUpperCase()}`;
-      } else {
-        subtitleText = 'Holding sign...';
-      }
+      subtitleText = 'Holding sign...';
     } else {
       subtitleText = 'Show hands to translate';
     }
@@ -236,24 +277,23 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
       <div className="camera-header-overlay">
         <div className="camera-header-left">
           {cameraStatus === 'requesting' && (
-            <div className="camera-readiness-pill status-starting">
+            <div className="camera-readiness-pill status-starting" role="status">
               <span className="readiness-dot starting" aria-hidden="true" />
               <span>Starting Camera...</span>
             </div>
           )}
           {cameraStatus === 'detecting' && (
-            <div className="camera-readiness-pill status-live">
+            <div className="camera-readiness-pill status-live" role="status">
               <span className="readiness-dot live" aria-hidden="true" />
-              <span>Live Recognition</span>
+              <span>Live ISL Recognition</span>
             </div>
           )}
           {cameraStatus === 'paused' && (
-            <div className="camera-readiness-pill status-paused">
+            <div className="camera-readiness-pill status-paused" role="status">
               <span className="readiness-dot paused" aria-hidden="true" />
-              <span>Detection Paused</span>
+              <span>Recognition Paused</span>
             </div>
           )}
-
         </div>
 
         <div className="right-tools">
@@ -492,19 +532,10 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
           />
         )}
 
-        {/* Live Computer Vision & Model Diagnostic HUD (Off by default for zero-lag rendering) */}
-        {showDiagnosticHUD && (
-          <DiagnosticHUD
-            currentResult={currentResult}
-            activeThreshold={confidenceThreshold}
-            visible={showDiagnosticHUD && cameraStatus === 'detecting'}
-          />
-        )}
-
-        {/* Luminous Center Camera Prediction (Transparent Background, Active Prediction Only) */}
-        {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (handDetected && currentResult?.display_name && (currentResult.display_name.startsWith('HOLDING') || currentResult.display_name.startsWith('Tracking')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
-          <div className="center-camera-prediction" aria-live="polite">
-            <div className={`center-prediction-badge ${isKnown ? 'active-sign' : 'holding-sign'}`}>
+        {/* Sleek Bottom Subtitle Prediction (Movie-Style, Non-Intrusive) */}
+        {subtitleVisible && cameraStatus === 'detecting' && (isKnown || (currentResult?.display_name && (currentResult.display_name.includes('✓') || currentResult.display_name.includes('✕')))) && label !== 'no_sign' && label !== 'Awaiting Sign Input' && (
+          <div className="center-camera-prediction" aria-live="polite" aria-atomic="true">
+            <div className={`center-prediction-badge ${currentResult?.display_name?.includes('✓') ? 'confirmed-sign' : currentResult?.display_name?.includes('✕') ? 'undone-sign' : 'active-sign'}`}>
               <div className="center-sign-text">
                 {subtitleText}
               </div>
@@ -528,8 +559,10 @@ export const CameraWorkspace: React.FC<CameraWorkspaceProps> = ({
                 : 'adjust'
             }`}
             title="Real-time distance and lighting calibration"
+            role="status"
+            aria-live="polite"
           >
-            <span className="guidance-dot" />
+            <span className="guidance-dot" aria-hidden="true" />
             <span className="guidance-text">{guidanceMessage}</span>
           </div>
         )}

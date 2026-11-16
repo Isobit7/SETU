@@ -113,15 +113,23 @@ def test_websocket_user_error_corrupt_frame_bytes(client):
 # ---------------------------------------------------------------------------
 
 def test_websocket_user_control_action_set_model(client):
-    """User changes active model via dropdown or shortcuts."""
+    """User changes active model via dropdown or shortcuts; verifies buffer persistence."""
     with client.websocket_connect("/api/v1/ws/recognize") as ws:
-        # Valid model switches
+        # User first adds a token via accept_prediction or resolve_disambiguation
+        ws.send_text(json.dumps({"action": "accept_prediction", "phrase": "GOOD MORNING"}))
+        r_pred = ws.receive_json()
+        assert r_pred["type"] == "info"
+        assert r_pred["sentence_buffer"] == "GOOD MORNING"
+
+        # Switching from dynamic to static (realsign) or vice versa MUST preserve sentence_buffer!
         for model_name in ("realsign", "isl_mvp", "isl_sequence_lstm", "include"):
             ws.send_text(json.dumps({"action": "set_model", "model": model_name}))
             resp = ws.receive_json()
             assert resp["type"] == "info"
             expected = "include_stream" if model_name == "include" else model_name
             assert resp["active_model"] == expected
+            # Ensure sentence buffer was NOT cleared on model switch!
+            assert resp.get("sentence_buffer") == "GOOD MORNING"
 
 
 def test_websocket_user_control_action_set_threshold_boundaries(client):

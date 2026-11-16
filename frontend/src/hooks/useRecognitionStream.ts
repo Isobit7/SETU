@@ -153,15 +153,10 @@ export function useRecognitionStream({
           clearTimeout(reconnectTimeoutRef.current);
           reconnectTimeoutRef.current = null;
         }
-        // Sync active model and confidence threshold
+        // Sync active model, confidence threshold, and default buffer mode
         ws.send(JSON.stringify({ action: 'set_model', model: activeModel }));
         ws.send(JSON.stringify({ action: 'set_threshold', threshold: confidenceThresholdRef.current }));
-        try {
-          const savedCalib = localStorage.getItem('setu_user_calibration');
-          if (savedCalib) {
-            ws.send(JSON.stringify({ action: 'calibrate', ...JSON.parse(savedCalib) }));
-          }
-        } catch {}
+        ws.send(JSON.stringify({ action: 'set_buffer_mode', mode: 'head_nod' }));
       };
 
       ws.onmessage = (event) => {
@@ -185,43 +180,60 @@ export function useRecognitionStream({
             const label = data.label ?? '';
 
             // Check for idle baseline (hand dropout, no_sign label, or P(no_sign) > 0.70)
-            if (!isHand || label === 'no_sign' || label === 'unknown' || label === 'Awaiting Sign Input' || label === 'Transitioning' || noSignProb > 0.70) {
+            if (!isHand || label === 'no_sign' || label === 'unknown' || label === 'Awaiting Sign Input' || noSignProb > 0.70) {
               hadIdleBaselineRef.current = true;
               candidateStreakRef.current = { sign: '', count: 0 };
             } else if (isKnown && label) {
+              const requiredStreak = data.required_streak ?? (data.active_model === 'realsign' ? 2 : 2);
               const activeMinThreshold = confidenceThresholdRef.current;
 
               if ((data.confidence || 0) >= activeMinThreshold) {
-                const now = Date.now();
-                const timeSinceLast = now - lastCommittedTimeRef.current;
-                const isSameSign = label === lastCommittedSignRef.current;
+                if (candidateStreakRef.current.sign === label) {
+                  candidateStreakRef.current.count += 1;
+                } else {
+                  candidateStreakRef.current = { sign: label, count: 1 };
+                }
 
-                // Cooldown Lockout:
-                // 1. Lock out duplicate commits of the same character for 400 ms unless idle baseline passed
-                // 2. Allow distinct new signs to commit after 250 ms
-                let canCommit = false;
-                if (isSameSign) {
-                  if (timeSinceLast >= 400 && hadIdleBaselineRef.current) {
+                if (candidateStreakRef.current.count >= requiredStreak) {
+                  const now = Date.now();
+                  const timeSinceLast = now - lastCommittedTimeRef.current;
+                  const isSameSign = label === lastCommittedSignRef.current;
+
+                  // Cooldown Lockout:
+                  // 1. Lock out duplicate commits of the same character for 900 ms
+                  // 2. Require transition through idle baseline before allowing identical sign again
+                  // 3. Allow distinct new signs to commit immediately once consecutive streak is met
+                  let canCommit = false;
+                  if (isSameSign) {
+                    if (timeSinceLast >= 900 && hadIdleBaselineRef.current) {
+                      canCommit = true;
+                    }
+                  } else {
                     canCommit = true;
                   }
-                } else {
-                  canCommit = (timeSinceLast >= 250);
-                }
 
-                if (canCommit && !isFramingGatedRef.current) {
-                  lastCommittedSignRef.current = label;
-                  lastCommittedTimeRef.current = now;
-                  hadIdleBaselineRef.current = false;
+                  if (canCommit && !isFramingGatedRef.current) {
+                    if (data.require_head_nod_confirm && !data.display_name?.includes('✓')) {
+                      // Waiting for deliberate head-nod confirmation before adding to session history
+                    } else {
+                      lastCommittedSignRef.current = label;
+                      lastCommittedTimeRef.current = now;
+                      hadIdleBaselineRef.current = false;
 
-                  const newItem: HistoryItem = {
-                    id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                    timestamp: new Date(),
-                    signKey: label,
-                    text: data.display_name || label.toUpperCase(),
-                    confidence: data.confidence || 0,
-                  };
-                  setHistory((prev) => [newItem, ...prev.slice(0, 49)]);
+                      const cleanText = (data.display_name || label.toUpperCase()).replace('✓ ', '').replace(' (Confirmed)', '').trim();
+                      const newItem: HistoryItem = {
+                        id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                        timestamp: new Date(),
+                        signKey: label,
+                        text: cleanText,
+                        confidence: data.confidence || 0,
+                      };
+                      setHistory((prev) => [newItem, ...prev.slice(0, 49)]);
+                    }
+                  }
                 }
+              } else {
+                candidateStreakRef.current = { sign: '', count: 0 };
               }
             }
           } else if (data.type === 'error') {
@@ -446,24 +458,17 @@ export function useRecognitionStream({
         ws &&
         ws.readyState === WebSocket.OPEN
       ) {
-        // Zero-Lag Ping-Pong Gating:
-        // Watchdog: If waiting for response for > 150ms (timeout or dropped packet), release lock
-        if (waitingForResponseRef.current && now - lastFrameSentTimeRef.current > 150) {
-          waitingForResponseRef.current = false;
-        }
-
-        // Only capture and transmit when previous response has returned and socket buffer is 0.
-        // This eliminates queued frame delay entirely: returned landmarks match the exact current hand position.
-        const isSocketReady = ws.bufferedAmount === 0 && !waitingForResponseRef.current;
-        if (now - lastFrameSentTimeRef.current >= intervalMs && isSocketReady) {
-          waitingForResponseRef.current = true;
+        // Send frame if elapsed time exceeds fps interval AND (server responded or lock is stale >33ms)
+        const isStaleLock = waitingForResponseRef.current && (now - lastFrameSentTimeRef.current > 33);
+        if (now - lastFrameSentTimeRef.current >= intervalMs && (!waitingForResponseRef.current || isStaleLock)) {
           lastFrameSentTimeRef.current = now;
+          waitingForResponseRef.current = true;
 
-          // Preserve camera aspect ratio dynamically to prevent squishing 16:9 frames into 4:3
+          // Preserve camera aspect ratio dynamically with optimized 400px bound for fast compression
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            const maxDim = 480;
-            let targetW = 480;
-            let targetH = 360;
+            const maxDim = 400;
+            let targetW = 400;
+            let targetH = 300;
             if (video.videoWidth >= video.videoHeight) {
               targetW = maxDim;
               targetH = Math.round((video.videoHeight / video.videoWidth) * maxDim);
@@ -483,18 +488,8 @@ export function useRecognitionStream({
             canvas.toBlob(
               (blob) => {
                 if (blob && ws.readyState === WebSocket.OPEN) {
-                  blob
-                    .arrayBuffer()
-                    .then((buf) => {
-                      if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(buf);
-                      } else {
-                        waitingForResponseRef.current = false;
-                      }
-                    })
-                    .catch(() => {
-                      waitingForResponseRef.current = false;
-                    });
+                  // Direct binary Blob send eliminates unnecessary ArrayBuffer microtask Promise delays
+                  ws.send(blob);
                 } else {
                   waitingForResponseRef.current = false;
                 }
@@ -540,21 +535,19 @@ export function useRecognitionStream({
     }
   }, []);
 
-  // Send personalized calibration settings to WebSocket
-  const sendCalibration = useCallback(
-    (params: {
-      rest_y: number;
-      pitch_threshold: number;
-      yaw_threshold: number;
-      motion_threshold?: number;
-      hand_scale?: number;
-    }) => {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ action: 'calibrate', ...params }));
-      }
-    },
-    []
-  );
+  // Set buffer insertion mode ('auto' or 'head_nod')
+  const setBufferMode = useCallback((mode: 'auto' | 'head_nod') => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'set_buffer_mode', mode }));
+    }
+  }, []);
+
+  // Hands-free or manual Undo last token from sentence buffer
+  const undoLastToken = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'undo' }));
+    }
+  }, []);
 
   const initRef = useRef({ connectWebSocket, refreshDevices, stopCamera });
   useEffect(() => {
@@ -606,6 +599,7 @@ export function useRecognitionStream({
     setErrorMessage,
     resolveDisambiguation,
     acceptPrediction,
-    sendCalibration,
+    setBufferMode,
+    undoLastToken,
   };
 }

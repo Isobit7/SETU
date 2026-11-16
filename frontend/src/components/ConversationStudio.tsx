@@ -163,147 +163,146 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-4rem)] bg-slate-950 text-slate-100 overflow-hidden">
+    <div className="conversation-studio-container">
       {/* LEFT PANE: Signer Camera & Live Recognition */}
-      <div className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-slate-800 p-4 gap-4 overflow-y-auto">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
-              <Video className="w-5 h-5" />
+      <div className="conversation-pane conversation-pane-left">
+        <div className="conversation-pane-header">
+          <div className="conversation-header-info">
+            <span className="conversation-icon-badge badge-indigo">
+              <Video size={18} />
             </span>
             <div>
-              <h2 className="text-base font-semibold">Signer View (ISL $\to$ Speech)</h2>
-              <p className="text-xs text-slate-400">Live Indian Sign Language Camera</p>
+              <h2 className="conversation-pane-title">Signer View (ISL → Speech)</h2>
+              <p className="conversation-pane-desc">Live Indian Sign Language Camera</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={isCameraActive ? onStopCamera : onStartCamera}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              isCameraActive
-                ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
-                : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
-            }`}
+            className={`conversation-camera-btn ${isCameraActive ? 'btn-stop' : 'btn-start'}`}
           >
             {isCameraActive ? 'Stop Camera' : 'Start Camera'}
           </button>
         </div>
 
         {/* Camera Container */}
-        <div className="relative aspect-video bg-slate-900 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+        <div className="conversation-camera-view">
           <video
             ref={videoRef as any}
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
+            className={`conversation-video-element ${isCameraActive ? 'active' : 'hidden'}`}
           />
           {!isCameraActive && (
-            <div className="text-center p-6 text-slate-500">
-              <Video className="w-10 h-10 mx-auto mb-2 opacity-50" />
-              <p className="text-xs">Camera preview off. Click "Start Camera" above.</p>
+            <div className="conversation-camera-idle">
+              <Video size={40} className="conversation-camera-idle-icon" />
+              <p className="conversation-camera-idle-text">Camera preview off. Click "Start Camera" above.</p>
             </div>
           )}
 
           {/* Current Live Sign Overlay */}
           {currentResult?.is_known_sign && (
-            <div className="absolute top-3 left-3 px-3 py-1 bg-slate-900/80 backdrop-blur rounded-lg border border-indigo-500/40 text-indigo-300 font-mono text-sm font-semibold">
+            <div className="conversation-live-sign-pill">
               {currentResult?.label ? currentResult.label.toUpperCase() : ''}
             </div>
           )}
         </div>
 
         {/* Live Signer Sentence Box */}
-        <div className="bg-slate-900/80 rounded-xl p-4 border border-slate-800 flex flex-col gap-2">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <div className="conversation-sentence-card">
+          <span className="conversation-sentence-label">
             Accumulated Sentence
           </span>
-          <p className="text-lg font-medium text-slate-100 min-h-[2rem]">
+          <p className="conversation-sentence-text">
             {activeSignerSentence || (
-              <span className="text-slate-600 italic">Waiting for sign gestures...</span>
+              <span className="conversation-sentence-placeholder">Waiting for sign gestures...</span>
             )}
           </p>
 
           {currentResult?.translated_indic?.hi && (
-            <p className="text-sm font-medium text-amber-400">
+            <p className="conversation-indic-text">
               {currentResult.translated_indic.hi}
             </p>
           )}
 
-          <div className="flex gap-2 mt-2">
+          <div className="conversation-signer-actions">
             <button
+              type="button"
               onClick={handleCommitSignerMessage}
               disabled={!activeSignerSentence.trim()}
-              className="flex-1 py-2 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2"
+              className="conversation-speak-btn"
             >
-              <Send className="w-3.5 h-3.5" /> Speak to Participant
+              <Send size={14} /> Speak to Participant
             </button>
             <button
+              type="button"
               onClick={() => onSpeak && onSpeak(activeSignerSentence)}
               disabled={!activeSignerSentence.trim()}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 transition-colors"
+              className="conversation-quick-audio-btn"
               title="Speak immediately"
             >
-              <Volume2 className="w-4 h-4" />
+              <Volume2 size={16} />
             </button>
           </div>
         </div>
       </div>
 
       {/* RIGHT PANE: Hearing Participant Voice & Dialogue History */}
-      <div className="w-full md:w-1/2 flex flex-col p-4 gap-4 overflow-hidden">
+      <div className="conversation-pane conversation-pane-right">
         {/* Header Actions */}
-        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-              <User className="w-5 h-5" />
+        <div className="conversation-pane-header">
+          <div className="conversation-header-info">
+            <span className="conversation-icon-badge badge-emerald">
+              <User size={18} />
             </span>
             <div>
-              <h2 className="text-base font-semibold">Conversation Dialogue</h2>
-              <p className="text-xs text-slate-400">Bilingual Sign $\leftrightarrow$ Voice Transcript</p>
+              <h2 className="conversation-pane-title">Conversation Dialogue</h2>
+              <p className="conversation-pane-desc">Bilingual Sign ↔ Voice Transcript</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="conversation-dialogue-actions">
             <button
+              type="button"
               onClick={exportTranscript}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-xs flex items-center gap-1.5"
+              className="conversation-header-btn"
               title="Download Transcript"
             >
-              <Download className="w-3.5 h-3.5" /> Export
+              <Download size={13} /> Export
             </button>
             <button
+              type="button"
               onClick={() => setMessages([])}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 transition-colors text-xs"
+              className="conversation-header-btn btn-danger"
               title="Clear Transcript"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 size={13} />
             </button>
           </div>
         </div>
 
         {/* Message Feed */}
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+        <div className="conversation-feed">
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`flex flex-col ${
-                m.sender === 'signer' ? 'items-start' : 'items-end'
+              className={`conversation-bubble-row ${
+                m.sender === 'signer' ? 'row-signer' : 'row-speaker'
               }`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-3.5 text-sm ${
-                  m.sender === 'signer'
-                    ? 'bg-indigo-600/20 text-indigo-100 border border-indigo-500/30'
-                    : 'bg-emerald-600/20 text-emerald-100 border border-emerald-500/30'
+                className={`conversation-bubble ${
+                  m.sender === 'signer' ? 'bubble-signer' : 'bubble-speaker'
                 }`}
               >
-                <div className="flex items-center gap-1.5 mb-1 text-[11px] font-semibold opacity-70">
-                  {m.sender === 'signer' ? '🤟 Deaf Participant (ISL)' : '🎙️ Hearing Participant (Voice)'}
+                <div className="conversation-bubble-meta">
+                  <span>{m.sender === 'signer' ? '🤟 Deaf Participant (ISL)' : '🎙️ Hearing Participant (Voice)'}</span>
                   <span>•</span>
                   <span>{m.timestamp}</span>
                 </div>
-                <p className="font-medium">{m.text}</p>
+                <p className="conversation-bubble-text">{m.text}</p>
                 {m.indicText && (
-                  <p className="text-xs text-amber-300 mt-1 font-medium">{m.indicText}</p>
+                  <p className="conversation-bubble-indic">{m.indicText}</p>
                 )}
               </div>
             </div>
@@ -311,37 +310,36 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
         </div>
 
         {/* Speaker Voice Input Box */}
-        <div className="bg-slate-900 rounded-xl p-3 border border-slate-800 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
+        <div className="conversation-input-box">
+          <div className="conversation-input-row">
             <input
               type="text"
               value={speechInput}
               onChange={(e) => setSpeechInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendSpeakerMessage()}
               placeholder="Speak or type your response for the signer..."
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="conversation-input-field"
             />
             <button
+              type="button"
               onClick={toggleListening}
-              className={`p-2.5 rounded-lg transition-colors ${
-                isListening
-                  ? 'bg-rose-500 text-white animate-pulse'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-              }`}
+              className={`conversation-mic-btn ${isListening ? 'listening' : ''}`}
               title={isListening ? 'Stop Mic' : 'Listen with Mic'}
             >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
             </button>
             <button
+              type="button"
               onClick={handleSendSpeakerMessage}
               disabled={!speechInput.trim()}
-              className="p-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-colors"
+              className="conversation-send-btn"
+              title="Send reply"
             >
-              <Send className="w-4 h-4" />
+              <Send size={15} />
             </button>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
-            <span>Avatar translating word: <strong className="text-emerald-400">{activeAvatarSign}</strong></span>
+          <div className="conversation-input-footer">
+            <span>Avatar translating word: <strong className="active-sign-token">{activeAvatarSign}</strong></span>
             <span>Web Speech Voice Enabled</span>
           </div>
         </div>

@@ -1,0 +1,612 @@
+{
+  "model_id": "isl_dynamic_master_bilstm",
+  "name": "isl_dynamic_master_bilstm.pth",
+  "task": "General Sign / Multimodal Processing",
+  "architecture_type": ".PTH Model",
+  "file_name": "isl_dynamic_master_bilstm.pth",
+  "file_path": "models\\weights\\isl_dynamic_master_bilstm.pth",
+  "file_size_bytes": 3667887,
+  "file_size_formatted": "3.50 MB",
+  "last_modified": "2026-11-13T09:45:59.899278+00:00",
+  "status": "active",
+  "total_parameters": 914093,
+  "weights_parameters": 909180,
+  "biases_parameters": 4913,
+  "layers_count": 31,
+  "hyperparameters": {},
+  "evaluation_metrics": {
+    "test_accuracy": 0.8173,
+    "macro_f1": 0.8039
+  },
+  "layers": [
+    {
+      "name": "input_norm.weight",
+      "param_type": "weight",
+      "shape": [
+        316
+      ],
+      "dtype": "float32",
+      "numel": 316,
+      "mean": 1.043725,
+      "std": 0.105269,
+      "min": 0.842366,
+      "max": 1.476004,
+      "l2_norm": 18.647491,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "input_norm.bias",
+      "param_type": "bias",
+      "shape": [
+        316
+      ],
+      "dtype": "float32",
+      "numel": 316,
+      "mean": -0.002789,
+      "std": 0.029953,
+      "min": -0.080382,
+      "max": 0.110449,
+      "l2_norm": 0.533922,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_ih_l0",
+      "param_type": "weight",
+      "shape": [
+        512,
+        316
+      ],
+      "dtype": "float32",
+      "numel": 161792,
+      "mean": -0.001093,
+      "std": 0.065988,
+      "min": -0.259949,
+      "max": 0.319381,
+      "l2_norm": 26.546015,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_hh_l0",
+      "param_type": "weight",
+      "shape": [
+        512,
+        128
+      ],
+      "dtype": "float32",
+      "numel": 65536,
+      "mean": 0.00017,
+      "std": 0.072158,
+      "min": -0.264612,
+      "max": 0.283559,
+      "l2_norm": 18.472284,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_ih_l0",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": 0.024932,
+      "std": 0.060526,
+      "min": -0.114059,
+      "max": 0.200836,
+      "l2_norm": 1.479952,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_hh_l0",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": 0.019633,
+      "std": 0.060901,
+      "min": -0.127133,
+      "max": 0.207676,
+      "l2_norm": 1.446588,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_ih_l0_reverse",
+      "param_type": "weight",
+      "shape": [
+        512,
+        316
+      ],
+      "dtype": "float32",
+      "numel": 161792,
+      "mean": 0.001137,
+      "std": 0.06607,
+      "min": -0.332162,
+      "max": 0.356759,
+      "l2_norm": 26.579445,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_hh_l0_reverse",
+      "param_type": "weight",
+      "shape": [
+        512,
+        128
+      ],
+      "dtype": "float32",
+      "numel": 65536,
+      "mean": 5e-06,
+      "std": 0.072523,
+      "min": -0.258168,
+      "max": 0.313248,
+      "l2_norm": 18.565632,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_ih_l0_reverse",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": 0.017068,
+      "std": 0.061928,
+      "min": -0.129519,
+      "max": 0.199993,
+      "l2_norm": 1.45219,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_hh_l0_reverse",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": 0.016335,
+      "std": 0.060018,
+      "min": -0.111623,
+      "max": 0.259615,
+      "l2_norm": 1.406162,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_ih_l1",
+      "param_type": "weight",
+      "shape": [
+        512,
+        256
+      ],
+      "dtype": "float32",
+      "numel": 131072,
+      "mean": 0.00042,
+      "std": 0.06963,
+      "min": -0.309044,
+      "max": 0.281537,
+      "l2_norm": 25.20904,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_hh_l1",
+      "param_type": "weight",
+      "shape": [
+        512,
+        128
+      ],
+      "dtype": "float32",
+      "numel": 65536,
+      "mean": 0.000703,
+      "std": 0.078429,
+      "min": -0.289969,
+      "max": 0.32609,
+      "l2_norm": 20.078365,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_ih_l1",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": -0.018625,
+      "std": 0.058103,
+      "min": -0.208233,
+      "max": 0.120894,
+      "l2_norm": 1.37939,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_hh_l1",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": -0.01623,
+      "std": 0.057287,
+      "min": -0.160303,
+      "max": 0.132565,
+      "l2_norm": 1.346061,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_ih_l1_reverse",
+      "param_type": "weight",
+      "shape": [
+        512,
+        256
+      ],
+      "dtype": "float32",
+      "numel": 131072,
+      "mean": 2.4e-05,
+      "std": 0.06942,
+      "min": -0.313302,
+      "max": 0.282388,
+      "l2_norm": 25.132641,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.weight_hh_l1_reverse",
+      "param_type": "weight",
+      "shape": [
+        512,
+        128
+      ],
+      "dtype": "float32",
+      "numel": 65536,
+      "mean": 0.0003,
+      "std": 0.076363,
+      "min": -0.321145,
+      "max": 0.331412,
+      "l2_norm": 19.548885,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_ih_l1_reverse",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": -0.019532,
+      "std": 0.056636,
+      "min": -0.14806,
+      "max": 0.114496,
+      "l2_norm": 1.354417,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "lstm.bias_hh_l1_reverse",
+      "param_type": "bias",
+      "shape": [
+        512
+      ],
+      "dtype": "float32",
+      "numel": 512,
+      "mean": -0.020931,
+      "std": 0.056144,
+      "min": -0.174904,
+      "max": 0.126321,
+      "l2_norm": 1.354651,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "attention.0.weight",
+      "param_type": "weight",
+      "shape": [
+        64,
+        256
+      ],
+      "dtype": "float32",
+      "numel": 16384,
+      "mean": 0.000541,
+      "std": 0.054562,
+      "min": -0.197356,
+      "max": 0.190513,
+      "l2_norm": 6.984066,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "attention.0.bias",
+      "param_type": "bias",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 0.02196,
+      "std": 0.175759,
+      "min": -0.240682,
+      "max": 0.309549,
+      "l2_norm": 1.406066,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "attention.2.weight",
+      "param_type": "weight",
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": -0.002414,
+      "std": 0.101657,
+      "min": -0.17218,
+      "max": 0.178363,
+      "l2_norm": 0.80711,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.0.weight",
+      "param_type": "weight",
+      "shape": [
+        128,
+        256
+      ],
+      "dtype": "float32",
+      "numel": 32768,
+      "mean": 7.9e-05,
+      "std": 0.049333,
+      "min": -0.215999,
+      "max": 0.17603,
+      "l2_norm": 8.930074,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.0.bias",
+      "param_type": "bias",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": 0.002585,
+      "std": 0.028896,
+      "min": -0.051342,
+      "max": 0.07267,
+      "l2_norm": 0.326953,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.1.weight",
+      "param_type": "weight",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": 1.004118,
+      "std": 0.02199,
+      "min": 0.948899,
+      "max": 1.058882,
+      "l2_norm": 11.362996,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.1.bias",
+      "param_type": "bias",
+      "shape": [
+        128
+      ],
+      "dtype": "float32",
+      "numel": 128,
+      "mean": -0.100698,
+      "std": 0.019826,
+      "min": -0.150113,
+      "max": -0.05693,
+      "l2_norm": 1.160968,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.4.weight",
+      "param_type": "weight",
+      "shape": [
+        64,
+        128
+      ],
+      "dtype": "float32",
+      "numel": 8192,
+      "mean": 4.6e-05,
+      "std": 0.062533,
+      "min": -0.186746,
+      "max": 0.182696,
+      "l2_norm": 5.659509,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.4.bias",
+      "param_type": "bias",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 0.000486,
+      "std": 0.04673,
+      "min": -0.092908,
+      "max": 0.085367,
+      "l2_norm": 0.370925,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.5.weight",
+      "param_type": "weight",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 1.318874,
+      "std": 0.033379,
+      "min": 1.24949,
+      "max": 1.40064,
+      "l2_norm": 10.554316,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.5.bias",
+      "param_type": "bias",
+      "shape": [
+        64
+      ],
+      "dtype": "float32",
+      "numel": 64,
+      "mean": 0.229873,
+      "std": 0.024521,
+      "min": 0.157551,
+      "max": 0.28741,
+      "l2_norm": 1.849252,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.8.weight",
+      "param_type": "weight",
+      "shape": [
+        53,
+        64
+      ],
+      "dtype": "float32",
+      "numel": 3392,
+      "mean": -0.03838,
+      "std": 0.1392,
+      "min": -0.342215,
+      "max": 0.283758,
+      "l2_norm": 8.408519,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    },
+    {
+      "name": "classifier.8.bias",
+      "param_type": "bias",
+      "shape": [
+        53
+      ],
+      "dtype": "float32",
+      "numel": 53,
+      "mean": -0.006244,
+      "std": 0.070809,
+      "min": -0.129506,
+      "max": 0.136121,
+      "l2_norm": 0.512634,
+      "zeros_count": 0,
+      "sparsity_pct": 0.0
+    }
+  ],
+  "checkpoint_metadata": {
+    "architecture": {
+      "name": "DynamicMasterBiLSTM",
+      "input_size": 316,
+      "hidden_size": 128,
+      "num_layers": 2,
+      "num_classes": 53,
+      "dropout": 0.3,
+      "bidirectional": true,
+      "temporal_attention": true,
+      "sequence_length": 20
+    },
+    "class_names": [
+      "bird",
+      "you_are_perfect",
+      "monsoon",
+      "afternoon",
+      "angry",
+      "bad",
+      "boy",
+      "eat",
+      "friend",
+      "drinking",
+      "girl",
+      "black",
+      "brother",
+      "good",
+      "father",
+      "evening",
+      "help",
+      "mother",
+      "name",
+      "night",
+      "music",
+      "nose",
+      "cat",
+      "sleep",
+      "sit",
+      "sorry",
+      "stand",
+      "stop",
+      "student",
+      "study",
+      "teacher",
+      "thank_you",
+      "today",
+      "cow",
+      "tomorrow",
+      "welcome",
+      "work",
+      "yesterday",
+      "teeth",
+      "hand",
+      "write",
+      "umbrella",
+      "ring",
+      "dog",
+      "power",
+      "fish",
+      "good_morning",
+      "grey",
+      "hello",
+      "namaste",
+      "i",
+      "you",
+      "no_sign"
+    ],
+    "num_classes": 53,
+    "test_accuracy": 0.8173,
+    "top3_accuracy": 0.9615,
+    "top5_accuracy": 0.9615,
+    "macro_f1": 0.8039,
+    "split_ratio": {
+      "train": 0.8,
+      "val": 0.1,
+      "test": 0.1
+    },
+    "dataset_name": "SETU Unified Master Dynamic Dataset (Amrita 49 + Namaste + I + You + NoSign)",
+    "trained_at": "2026-11-13T09:45:59.891036+00:00"
+  }
+}
