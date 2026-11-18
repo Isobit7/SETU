@@ -323,7 +323,7 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
 
         {/* Hearing -> Deaf 3D Humanoid Signer Viewport */}
         {showAvatar && (
-          <div style={{ margin: '0 0 12px 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(99, 102, 241, 0.35)', background: '#0b1329', height: '280px', flexShrink: 0 }}>
+          <div style={{ margin: '0 0 12px 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(99, 102, 241, 0.35)', background: '#070b14', height: '340px', flexShrink: 0 }}>
             <Avatar3DViewer currentSign={activeAvatarSign} />
           </div>
         )}

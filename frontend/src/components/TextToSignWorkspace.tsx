@@ -435,6 +435,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [avatarMode, setAvatarMode] = useState<'3d' | '2d'>('3d');
+  const [autoSpeakToken, setAutoSpeakToken] = useState<boolean>(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -557,6 +558,14 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
     setActiveTokenIndex(0);
   }, [inputText]);
 
+  // Synchronized Text-to-Speech audio announcement when active sign changes
+  useEffect(() => {
+    if (autoSpeakToken && onSpeak && glossTokens[activeTokenIndex]) {
+      const token = glossTokens[activeTokenIndex].replace(/_/g, ' ');
+      onSpeak(token);
+    }
+  }, [activeTokenIndex, autoSpeakToken, onSpeak, glossTokens]);
+
   // Animated 3D Articulated Humanoid Avatar Canvas Loop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -636,54 +645,71 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
       ctx.arc(0, 0, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. High-Fidelity Multi-Phalange Fingers (Enlarged lengths, pronounced curling)
+      // 2. High-Fidelity 3-Segment Articulated Fingers (MCP, PIP, DIP with Knuckle Rings)
       const fingerAngles = isLeft ? [0.65, 0.32, 0, -0.32, -0.65] : [-0.65, -0.32, 0, 0.32, 0.65];
-      const fingerLengths = [22, 34, 38, 34, 26];
-      const knuckleSpacing = isLeft ? [16, 8, 0, -8, -16] : [-16, -8, 0, 8, 16];
+      const fingerLengths = [26, 38, 42, 38, 30];
+      const knuckleSpacing = isLeft ? [18, 9, 0, -9, -18] : [-18, -9, 0, 9, 18];
 
       for (let f = 0; f < 5; f++) {
         const ext = Math.max(0, Math.min(1, fingers[f] ?? 1));
         const baseAngle = fingerAngles[f];
         const totalLen = fingerLengths[f];
-        const seg1Len = totalLen * 0.55;
-        const seg2Len = totalLen * 0.52;
+        const seg1Len = totalLen * 0.40;
+        const seg2Len = totalLen * 0.35;
+        const seg3Len = totalLen * 0.25;
 
-        // Metacarpal base knuckle
+        // MCP Knuckle Joint
         const kX = knuckleSpacing[f];
         const kY = -pH / 2 + 2;
         drawJointSphere(kX, kY, 4.5, themeColor);
 
-        // Proximal segment (segment 1)
+        // Segment 1 (Proximal Phalanx)
         const p1X = kX + Math.sin(baseAngle) * seg1Len;
         const p1Y = kY - Math.cos(baseAngle) * seg1Len;
 
-        ctx.strokeStyle = ext > 0.4 ? themeColor : dimColor;
-        ctx.lineWidth = 4.5;
+        ctx.strokeStyle = ext > 0.3 ? themeColor : dimColor;
+        ctx.lineWidth = 4.4;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(kX, kY);
         ctx.lineTo(p1X, p1Y);
         ctx.stroke();
 
-        // Intermediate joint sphere (shows amber highlight when curled)
-        const jointHighlight = ext > 0.5 ? themeColor : '#f59e0b';
-        drawJointSphere(p1X, p1Y, 3.5, jointHighlight);
+        // PIP Joint (Flexion Crease Node)
+        const curlOffset1 = (1 - ext) * 1.2 * (isLeft ? -1 : 1);
+        const pipHighlight = ext > 0.5 ? themeColor : '#f59e0b';
+        drawJointSphere(p1X, p1Y, 3.8, pipHighlight);
 
-        // Distal segment (curls inward into palm when closed, straightens when open)
-        const curlOffset = (1 - ext) * 1.8 * (isLeft ? -1 : 1);
-        const distalAngle = baseAngle + curlOffset;
-        const p2X = p1X + Math.sin(distalAngle) * (seg2Len * (0.35 + ext * 0.65));
-        const p2Y = p1Y - Math.cos(distalAngle) * (seg2Len * (0.35 + ext * 0.65));
+        // Segment 2 (Intermediate Phalanx)
+        const a2 = baseAngle + curlOffset1;
+        const p2X = p1X + Math.sin(a2) * (seg2Len * (0.4 + ext * 0.6));
+        const p2Y = p1Y - Math.cos(a2) * (seg2Len * (0.4 + ext * 0.6));
 
-        ctx.strokeStyle = ext > 0.4 ? themeColor : '#475569';
-        ctx.lineWidth = 3.8;
+        ctx.strokeStyle = ext > 0.3 ? themeColor : '#64748b';
+        ctx.lineWidth = 3.6;
         ctx.beginPath();
         ctx.moveTo(p1X, p1Y);
         ctx.lineTo(p2X, p2Y);
         ctx.stroke();
 
-        // Fingertip radiant glowing node
-        drawJointSphere(p2X, p2Y, 3.5, ext > 0.5 ? '#ffffff' : '#94a3b8', '#ffffff');
+        // DIP Joint (Distal Flexion Node)
+        const curlOffset2 = (1 - ext) * 2.0 * (isLeft ? -1 : 1);
+        drawJointSphere(p2X, p2Y, 3.2, ext > 0.5 ? themeColor : '#fbbf24');
+
+        // Segment 3 (Distal Phalanx)
+        const a3 = baseAngle + curlOffset2;
+        const p3X = p2X + Math.sin(a3) * (seg3Len * (0.35 + ext * 0.65));
+        const p3Y = p2Y - Math.cos(a3) * (seg3Len * (0.35 + ext * 0.65));
+
+        ctx.strokeStyle = ext > 0.3 ? themeColor : '#475569';
+        ctx.lineWidth = 3.0;
+        ctx.beginPath();
+        ctx.moveTo(p2X, p2Y);
+        ctx.lineTo(p3X, p3Y);
+        ctx.stroke();
+
+        // Fingertip radiant glowing keratin node
+        drawJointSphere(p3X, p3Y, 3.0, ext > 0.5 ? '#ffffff' : '#cbd5e1', '#ffffff');
       }
 
       ctx.restore();
@@ -1065,6 +1091,19 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
                 <RotateCcw size={14} />
                 <span>Replay</span>
               </button>
+
+              {onSpeak && (
+                <button
+                  type="button"
+                  className={`playback-btn ${autoSpeakToken ? 'primary' : 'secondary'}`}
+                  onClick={() => setAutoSpeakToken(!autoSpeakToken)}
+                  title="Toggle spoken voice pronunciation in sync with sign gestures"
+                  aria-label="Toggle Voice Sync"
+                >
+                  <Volume2 size={14} />
+                  <span>{autoSpeakToken ? 'Voice Sync On' : 'Voice Sync Off'}</span>
+                </button>
+              )}
 
               {/* Speed Switcher */}
               <div className="speed-pills">
