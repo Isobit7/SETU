@@ -311,6 +311,56 @@ const SIGN_DATABASE: Record<string, { label: string; desc: string; pose: HandPos
       leftWristAngle: -0.2,
     },
   },
+  YES: {
+    label: 'Yes (Affirmation)',
+    desc: 'Fist nodding up and down at shoulder height like a nodding head.',
+    pose: { x: 330, y: 220, fingers: [0.2, 0, 0, 0, 0], wristAngle: 0.3 },
+  },
+  NO: {
+    label: 'No (Negation)',
+    desc: 'Index and middle fingers snapping down firmly onto thumb like a bird beak.',
+    pose: { x: 330, y: 230, fingers: [0.5, 0.5, 0.5, 0, 0], wristAngle: 0.1 },
+  },
+  SORRY: {
+    label: 'Sorry (Apology)',
+    desc: 'Fist rubbing clockwise in circular motion over center chest.',
+    pose: { x: 300, y: 250, fingers: [0, 0, 0, 0, 0], wristAngle: -0.2 },
+  },
+  STOP: {
+    label: 'Stop (Halt)',
+    desc: 'Two-handed: Left hand flat palm up; right hand chops down vertically forming a wall.',
+    pose: {
+      x: 320,
+      y: 240,
+      fingers: [1, 1, 1, 1, 1],
+      wristAngle: -1.2,
+      isTwoHanded: true,
+      leftHandX: 270,
+      leftHandY: 260,
+      leftFingers: [1, 1, 1, 1, 1],
+      leftWristAngle: 0.3,
+    },
+  },
+  GOOD: {
+    label: 'Good (Positive)',
+    desc: 'Thumbs up gesture moving slightly forward.',
+    pose: { x: 330, y: 240, fingers: [1, 0, 0, 0, 0], wristAngle: 0 },
+  },
+  MORNING: {
+    label: 'Morning (Time)',
+    desc: 'Right hand rises upward like the rising sun.',
+    pose: { x: 340, y: 200, fingers: [1, 1, 1, 1, 1], wristAngle: -0.2 },
+  },
+  '0': { label: 'Digit 0', desc: 'Fingers forming an O circle.', pose: { x: 330, y: 240, fingers: [0.8, 0.8, 0.8, 0.8, 0.8], wristAngle: 0 } },
+  '1': { label: 'Digit 1', desc: 'Index finger extended upright.', pose: { x: 330, y: 230, fingers: [0, 1, 0, 0, 0], wristAngle: 0 } },
+  '2': { label: 'Digit 2', desc: 'Index and middle fingers extended upright in V shape.', pose: { x: 330, y: 230, fingers: [0, 1, 1, 0, 0], wristAngle: 0.1 } },
+  '3': { label: 'Digit 3', desc: 'Thumb, index, and middle fingers extended.', pose: { x: 330, y: 230, fingers: [1, 1, 1, 0, 0], wristAngle: 0 } },
+  '4': { label: 'Digit 4', desc: 'Four fingers upright, thumb folded in palm.', pose: { x: 330, y: 230, fingers: [0, 1, 1, 1, 1], wristAngle: 0 } },
+  '5': { label: 'Digit 5', desc: 'All five fingers spread open wide.', pose: { x: 330, y: 230, fingers: [1, 1, 1, 1, 1], wristAngle: 0 } },
+  '6': { label: 'Digit 6', desc: 'Thumb and pinky touching, three fingers upright.', pose: { x: 330, y: 230, fingers: [0.5, 1, 1, 1, 0.5], wristAngle: 0 } },
+  '7': { label: 'Digit 7', desc: 'Thumb and ring finger touching.', pose: { x: 330, y: 230, fingers: [0.5, 1, 1, 0.5, 1], wristAngle: 0 } },
+  '8': { label: 'Digit 8', desc: 'Thumb and middle finger touching.', pose: { x: 330, y: 230, fingers: [0.5, 1, 0.5, 1, 1], wristAngle: 0 } },
+  '9': { label: 'Digit 9', desc: 'Thumb and index finger touching in circle.', pose: { x: 330, y: 230, fingers: [0.5, 0.5, 1, 1, 1], wristAngle: 0 } },
 };
 
 // Simplified English-to-ISL Grammar Gloss converter
@@ -319,14 +369,24 @@ function convertEnglishToISLGloss(text: string): { glossTokens: string[]; words:
   const clean = text.trim().toUpperCase();
   if (!clean) return { glossTokens: [], words: [] };
 
-  const rawWords = clean.split(/\s+/).filter(Boolean);
+  // Replace multi-word common idioms first
+  const normalized = clean
+    .replace(/\bGOOD\s+MORNING\b/g, 'GOOD_MORNING')
+    .replace(/\bGOOD\s+AFTERNOON\b/g, 'GOOD_MORNING')
+    .replace(/\bTHANK\s+YOU\b/g, 'THANK_YOU')
+    .replace(/\bTHANK\s+U\b/g, 'THANK_YOU')
+    .replace(/\bPLEASE\s+HELP\b/g, 'PLEASE HELP')
+    .replace(/\bHOW\s+ARE\s+YOU\b/g, 'YOU HOW');
+
+  const rawWords = normalized.split(/\s+/).filter(Boolean);
   const glossTokens: string[] = [];
 
   rawWords.forEach((word) => {
-    // Check known compound words/phrases
-    if (word === 'NAMASTE' || word === 'VANAKKAM' || word === 'NAMASKAR') {
+    if (word === 'GOOD_MORNING') {
+      glossTokens.push('GOOD_MORNING');
+    } else if (word === 'NAMASTE' || word === 'VANAKKAM' || word === 'NAMASKAR') {
       glossTokens.push('NAMASTE');
-    } else if (word === 'HELLO' || word === 'HI') {
+    } else if (word === 'HELLO' || word === 'HI' || word === 'HEY') {
       glossTokens.push('HELLO');
     } else if (word === 'HELP') {
       glossTokens.push('HELP');
@@ -334,20 +394,30 @@ function convertEnglishToISLGloss(text: string): { glossTokens: string[]; words:
       glossTokens.push('WATER');
     } else if (word === 'FOOD' || word === 'EAT') {
       glossTokens.push('FOOD');
-    } else if (word === 'THANK' || word === 'THANKS') {
+    } else if (word === 'THANK_YOU' || word === 'THANK' || word === 'THANKS') {
       glossTokens.push('THANK_YOU');
     } else if (word === 'YOU' || word === 'YOUR') {
       glossTokens.push('YOU');
     } else if (word === 'I' || word === 'ME' || word === 'MY') {
       glossTokens.push('ME');
-    } else if (word === 'PLEASE') {
+    } else if (word === 'PLEASE' || word === 'PLZ') {
       glossTokens.push('PLEASE');
     } else if (word === 'WELCOME') {
       glossTokens.push('WELCOME');
+    } else if (word === 'YES' || word === 'YEAH') {
+      glossTokens.push('YES');
+    } else if (word === 'NO' || word === 'NOT') {
+      glossTokens.push('NO');
+    } else if (word === 'SORRY') {
+      glossTokens.push('SORRY');
+    } else if (word === 'STOP') {
+      glossTokens.push('STOP');
+    } else if (SIGN_DATABASE[word]) {
+      glossTokens.push(word);
     } else {
-      // Spell out letters if no whole-word sign
+      // Spell out letters or numbers if no whole-word sign
       for (const char of word) {
-        if (/^[A-Z]$/.test(char)) {
+        if (/^[A-Z0-9]$/.test(char)) {
           glossTokens.push(char);
         }
       }
@@ -389,8 +459,25 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
       try {
         const res = await ApiService.toGloss(trimmed);
         if (isMounted && res && Array.isArray(res.gloss_tokens) && res.gloss_tokens.length > 0) {
+          // Merge compound tokens like ['GOOD', 'MORNING'] -> 'GOOD_MORNING'
+          const rawList = res.gloss_tokens;
+          const mergedTokens: string[] = [];
+          for (let i = 0; i < rawList.length; i++) {
+            const current = rawList[i].toUpperCase().replace(/\s+/g, '_');
+            const next = i + 1 < rawList.length ? rawList[i + 1].toUpperCase().replace(/\s+/g, '_') : '';
+            if (current === 'GOOD' && next === 'MORNING') {
+              mergedTokens.push('GOOD_MORNING');
+              i++; // skip next
+            } else if (current === 'THANK' && (next === 'YOU' || next === 'U')) {
+              mergedTokens.push('THANK_YOU');
+              i++;
+            } else {
+              mergedTokens.push(current);
+            }
+          }
+
           const expanded: string[] = [];
-          for (const rawToken of res.gloss_tokens) {
+          for (const rawToken of mergedTokens) {
             const upper = rawToken.toUpperCase().replace(/\s+/g, '_');
             const mapped =
               upper === 'I' || upper === 'MY'
@@ -401,19 +488,21 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
                 ? 'WATER'
                 : upper === 'EAT'
                 ? 'FOOD'
+                : upper === 'PLZ'
+                ? 'PLEASE'
                 : upper;
 
             if (SIGN_DATABASE[mapped]) {
               expanded.push(mapped);
             } else {
               for (const ch of mapped) {
-                if (/^[A-Z]$/.test(ch)) {
+                if (/^[A-Z0-9]$/.test(ch)) {
                   expanded.push(ch);
                 }
               }
             }
           }
-          setGlossTokens(expanded.length > 0 ? expanded : res.gloss_tokens);
+          setGlossTokens(expanded.length > 0 ? expanded : mergedTokens);
           setGlossSource('ai_neural');
           setIsGlossLoading(false);
           return;
@@ -902,7 +991,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
                 type="button"
                 className="avatar-mode-toggle-btn"
                 onClick={() => setAvatarMode((m) => (m === '3d' ? '2d' : '3d'))}
-                title="Toggle 3D Skeletal Rig vs 2D Canvas"
+                title="Toggle 3D Realistic Humanoid Model vs 2D Canvas"
                 style={{
                   background: avatarMode === '3d' ? '#4f46e5' : '#1e293b',
                   color: '#ffffff',
@@ -914,7 +1003,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
                   cursor: 'pointer',
                 }}
               >
-                {avatarMode === '3d' ? '3D Rigged' : '2D Classic'}
+                {avatarMode === '3d' ? '👤 3D Humanoid (10 Fingers)' : '2D Wireframe'}
               </button>
               <button
                 className="overlay-icon-btn"

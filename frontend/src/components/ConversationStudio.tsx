@@ -9,6 +9,7 @@ import {
   Video,
   User,
 } from 'lucide-react';
+import { Avatar3DViewer } from './Avatar3DViewer';
 import type { RecognitionPayload } from '../types';
 
 interface Message {
@@ -48,7 +49,8 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
 
   const [speechInput, setSpeechInput] = useState<string>('');
   const [isListening, setIsListening] = useState<boolean>(false);
-  const [activeAvatarSign, setActiveAvatarSign] = useState<string>('HELLO');
+  const [activeAvatarSign, setActiveAvatarSign] = useState<string>('GOOD_MORNING');
+  const [showAvatar, setShowAvatar] = useState<boolean>(true);
   const recognitionRef = useRef<any>(null);
 
   // Active signer sentence from live recognition
@@ -129,9 +131,38 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
   const handleSendSpeakerMessage = () => {
     if (!speechInput.trim()) return;
 
-    const words = speechInput.trim().toUpperCase().split(/\s+/);
-    if (words.length > 0) {
-      setActiveAvatarSign(words[0]);
+    const upperText = speechInput.trim().toUpperCase();
+    if (upperText.includes('GOOD MORNING') || upperText.includes('MORNING')) {
+      setActiveAvatarSign('GOOD_MORNING');
+    } else if (upperText.includes('THANK YOU') || upperText.includes('THANKS') || upperText.includes('THANK')) {
+      setActiveAvatarSign('THANK_YOU');
+    } else if (upperText.includes('NAMASTE') || upperText.includes('VANAKKAM')) {
+      setActiveAvatarSign('NAMASTE');
+    } else if (upperText.includes('HELP')) {
+      setActiveAvatarSign('HELP');
+    } else if (upperText.includes('PLEASE') || upperText.includes('PLZ')) {
+      setActiveAvatarSign('PLEASE');
+    } else if (upperText.includes('WELCOME')) {
+      setActiveAvatarSign('WELCOME');
+    } else if (upperText.includes('WATER') || upperText.includes('DRINK')) {
+      setActiveAvatarSign('WATER');
+    } else if (upperText.includes('FOOD') || upperText.includes('EAT')) {
+      setActiveAvatarSign('FOOD');
+    } else if (upperText.includes('YES') || upperText.includes('YEAH')) {
+      setActiveAvatarSign('YES');
+    } else if (upperText.includes('NO') || upperText.includes('NOT')) {
+      setActiveAvatarSign('NO');
+    } else if (upperText.includes('SORRY')) {
+      setActiveAvatarSign('SORRY');
+    } else if (upperText.includes('STOP')) {
+      setActiveAvatarSign('STOP');
+    } else if (upperText.includes('HELLO') || upperText.includes('HI') || upperText.includes('HEY')) {
+      setActiveAvatarSign('HELLO');
+    } else {
+      const words = upperText.split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        setActiveAvatarSign(words[0]);
+      }
     }
 
     const newMsg: Message = {
@@ -264,6 +295,15 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
           <div className="conversation-dialogue-actions">
             <button
               type="button"
+              onClick={() => setShowAvatar(!showAvatar)}
+              className="conversation-header-btn"
+              style={{ background: showAvatar ? '#4f46e5' : 'rgba(255,255,255,0.08)', color: '#ffffff' }}
+              title="Toggle 3D Signer Avatar for Deaf participant"
+            >
+              👤 {showAvatar ? '3D Avatar Active' : 'Show 3D Avatar'}
+            </button>
+            <button
+              type="button"
               onClick={exportTranscript}
               className="conversation-header-btn"
               title="Download Transcript"
@@ -280,6 +320,13 @@ export const ConversationStudio: React.FC<ConversationStudioProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Hearing -> Deaf 3D Humanoid Signer Viewport */}
+        {showAvatar && (
+          <div style={{ margin: '0 0 12px 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(99, 102, 241, 0.35)', background: '#0b1329', height: '280px', flexShrink: 0 }}>
+            <Avatar3DViewer currentSign={activeAvatarSign} />
+          </div>
+        )}
 
         {/* Message Feed */}
         <div className="conversation-feed">
