@@ -35,6 +35,8 @@ dist/
 # Logs & Temporary Files
 *.log
 scratch/
+scratch_screenshots/
+inspect_frontend.py
 *.tmp
 temp/
 tmp/

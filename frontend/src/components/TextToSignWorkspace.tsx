@@ -1167,56 +1167,65 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({ onSpea
             </div>
           </div>
 
-          {/* Fingerspelling Letter Rail */}
-          <div className="fingerspelling-rail-card">
-            <div className="card-header-clean">
-              <span className="card-header-title">ISL Fingerspelling Sequence</span>
-              <span className="card-sub-hint">Click any letter to demonstrate</span>
-            </div>
+          {/* Fingerspelling Letter Rail - Only shown when fingerspelling alphabet letters */}
+          {glossTokens.length > 0 && glossTokens.every((t) => t.length === 1) && (
+            <div className="fingerspelling-rail-card">
+              <div className="card-header-clean">
+                <span className="card-header-title">ISL Fingerspelling Sequence</span>
+                <span className="card-sub-hint">Click any letter to demonstrate</span>
+              </div>
 
-            <div className="letters-scroll-row">
-              {inputText.replace(/[^a-zA-Z]/g, '').split('').map((char, cIdx) => {
-                const upper = char.toUpperCase();
-                const isActive = glossTokens[activeTokenIndex] === upper;
-                return (
-                  <button
-                    key={`${upper}-${cIdx}`}
-                    type="button"
-                    className={`letter-rail-box ${isActive ? 'active-letter' : ''}`}
-                    onClick={() => {
-                      const foundIdx = glossTokens.indexOf(upper);
-                      if (foundIdx !== -1) setActiveTokenIndex(foundIdx);
-                    }}
-                  >
-                    <span className="rail-char">{upper}</span>
-                    <span className="rail-sign-type">ISL</span>
-                  </button>
-                );
-              })}
+              <div className="letters-scroll-row">
+                {inputText.replace(/[^a-zA-Z0-9]/g, '').split('').map((char, cIdx) => {
+                  const upper = char.toUpperCase();
+                  const isActive = glossTokens[activeTokenIndex] === upper;
+                  return (
+                    <button
+                      key={`${upper}-${cIdx}`}
+                      type="button"
+                      className={`letter-rail-box ${isActive ? 'active-letter' : ''}`}
+                      onClick={() => {
+                        const foundIdx = glossTokens.indexOf(upper);
+                        if (foundIdx !== -1) setActiveTokenIndex(foundIdx);
+                      }}
+                    >
+                      <span className="rail-char">{upper}</span>
+                      <span className="rail-sign-type">ISL</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Quick Suggestion Chips */}
           <div className="quick-chips-card">
             <span className="chips-label">Quick Phrases:</span>
             <div className="chips-wrap">
               {[
-                'Namaste',
+                'Good morning',
                 'Hello',
+                'Namaste',
+                'Thank you',
                 'Help',
                 'Water',
                 'Food',
-                'Thank you',
-                'Good morning',
                 'Please',
                 'Welcome',
+                'Yes',
+                'No',
+                'Sorry',
                 'B D P Q T',
               ].map((phrase) => (
                 <button
                   key={phrase}
                   type="button"
                   className="quick-chip-btn"
-                  onClick={() => setInputText(phrase)}
+                  onClick={() => {
+                    setInputText(phrase);
+                    setActiveTokenIndex(0);
+                    setIsPlaying(true);
+                  }}
                 >
                   {phrase}
                 </button>

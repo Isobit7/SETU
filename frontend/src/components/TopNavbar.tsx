@@ -16,6 +16,7 @@ import {
   Moon,
   Contrast,
   BarChart3,
+  Sparkles,
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -140,15 +141,35 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       {/* 2. Center: Core Navigation Links (Only 3 Primary Workspace Tabs) */}
       <nav className="navbar-links" aria-label="Main Navigation">
         <button
-          className={`nav-link-btn ${activeTab === 'translator' ? 'active' : ''}`}
+          className={`nav-link-btn ${activeTab === 'translator' && translationDirection === 'isl-to-en' ? 'active' : ''}`}
           onClick={() => {
             setActiveTab('translator');
+            if (translationDirection !== 'isl-to-en' && onToggleDirection) {
+              onToggleDirection();
+            }
             setMobileMenuOpen(false);
           }}
-          aria-current={activeTab === 'translator' ? 'page' : undefined}
+          aria-current={activeTab === 'translator' && translationDirection === 'isl-to-en' ? 'page' : undefined}
+          title="Sign Language Recognition (Camera to Text)"
         >
           <Video size={14} className="nav-icon" />
-          <span>Translator</span>
+          <span>Sign to Text</span>
+        </button>
+
+        <button
+          className={`nav-link-btn ${activeTab === 'translator' && translationDirection === 'en-to-isl' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('translator');
+            if (translationDirection !== 'en-to-isl' && onToggleDirection) {
+              onToggleDirection();
+            }
+            setMobileMenuOpen(false);
+          }}
+          aria-current={activeTab === 'translator' && translationDirection === 'en-to-isl' ? 'page' : undefined}
+          title="Sign Language Generation (Text to 3D Avatar)"
+        >
+          <Sparkles size={14} className="nav-icon" />
+          <span>Text to Sign</span>
         </button>
 
         <button
