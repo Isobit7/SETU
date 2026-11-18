@@ -234,4 +234,21 @@ export class ApiService {
       body: JSON.stringify({ text }),
     });
   }
+
+  /**
+   * Translate ISL gloss tokens to fluent English and multilingual Indic text
+   */
+  public static async translateGloss(tokens: string[], isQuestion: boolean = false): Promise<{
+    input_tokens: string[];
+    translations: Record<string, string>;
+    canonical_match: boolean;
+    fluent_english: string;
+    rule_applied?: string;
+  }> {
+    return this.request<any>('/api/v1/nlp/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tokens, is_question: isQuestion }),
+    });
+  }
 }

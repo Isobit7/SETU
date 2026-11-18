@@ -81,7 +81,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
   };
 
   // -------------------------------------------------------------
-  // Conversational Phrases & Greetings with Fluid Dynamic Phases
+  // Conversational Phrases & Core ISL Vocabulary
   // -------------------------------------------------------------
   if (s === 'GOOD_MORNING' || s === 'GOOD MORNING') {
     pose.isTwoHanded = true;
@@ -93,7 +93,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       pose.rightArm = {
         wristRot: [0.15, -0.20, 0.10],
         wristPos: [0.12, 0.20 + nod * 0.5, 0.28],
-        thumb: f(0.0, 0.0, 0.0, 0.55), // High vertical thumbs-up
+        thumb: f(0.0, 0.0, 0.0, 0.55),
         index: FIST_FINGER,
         middle: FIST_FINGER,
         ring: FIST_FINGER,
@@ -109,12 +109,11 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
         pinky: f(0.3, 0.4, 0.2, 0.1),
       };
     } else {
-      // Phase 2: "MORNING" -> Non-dominant arm forms horizontal horizon, dominant hand rises like sun
+      // Phase 2: "MORNING" -> Horizon arm & rising sun
       const p2 = (progress - 0.46) / 0.54;
       const riseY = 0.14 + p2 * 0.18;
       const sunSpread = 0.18 + p2 * 0.22;
-      pose.headRot = [-0.08, 0, 0]; // Approving gaze towards morning sunrise
-      // Left arm horizontal horizon across chest
+      pose.headRot = [-0.08, 0, 0];
       pose.leftArm = {
         wristRot: [1.45, 0.0, 0.0],
         wristPos: [-0.06, 0.12, 0.28],
@@ -124,7 +123,6 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
         ring: OPEN_FINGER,
         pinky: OPEN_FINGER,
       };
-      // Right hand rising up with fingers spreading like sun rays
       pose.rightArm = {
         wristRot: [0.10, -0.15, 0.14],
         wristPos: [0.10 + p2 * 0.06, riseY, 0.28],
@@ -135,8 +133,49 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
         pinky: f(0.0, 0.0, 0.0, -sunSpread * 1.4),
       };
     }
-  } else if (s === 'HELLO' || s === 'HI' || s === 'WAVE') {
-    // Right hand raised to temple, fingers upright, waving side-to-side
+  } else if (s === 'GOOD_AFTERNOON' || s === 'GOOD AFTERNOON') {
+    pose.isTwoHanded = true;
+    pose.headRot = [0.02, 0, 0];
+    pose.leftArm = {
+      wristRot: [1.45, 0.0, 0.0],
+      wristPos: [-0.06, 0.12, 0.28],
+      thumb: f(0.05, 0.05, 0.05, -0.30),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [0.0, 0.0, 0.0],
+      wristPos: [0.0, 0.32, 0.28],
+      thumb: f(0.0, 0.0, 0.0, 0.45),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'GOOD_NIGHT' || s === 'GOOD NIGHT') {
+    pose.isTwoHanded = true;
+    pose.headRot = [0.06, 0, 0.18];
+    pose.rightArm = {
+      wristRot: [0.2, -0.5, 0.3],
+      wristPos: [0.09, 0.30, 0.22],
+      thumb: f(0.1, 0.1, 0.1, 0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.2, 0.5, -0.3],
+      wristPos: [0.06, 0.28, 0.20],
+      thumb: f(0.1, 0.1, 0.1, -0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'HELLO' || s === 'HI' || s === 'HEY' || s === 'WAVE') {
     const wave = Math.sin(progress * Math.PI * 4) * 0.22;
     pose.headRot = [0.02, -0.05, wave * 0.12];
     pose.rightArm = {
@@ -148,8 +187,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: f(0.02, 0.02, 0.02, -0.18),
       pinky: f(0.02, 0.02, 0.02, -0.30),
     };
-  } else if (s === 'NAMASTE' || s === 'THANK_YOU' || s === 'THANK YOU' || s === 'THANKS') {
-    // Both palms pressed flat together at center chest, respectful head bow
+  } else if (s === 'NAMASTE' || s === 'VANAKKAM' || s === 'NAMASKAR') {
     pose.isTwoHanded = true;
     const bow = Math.sin(progress * Math.PI * 2) * 0.06;
     pose.headRot = [0.12 + bow, 0.0, 0.0];
@@ -171,8 +209,547 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: f(0.02, 0.02, 0.02, 0.04),
       pinky: f(0.02, 0.02, 0.02, 0.08),
     };
+  } else if (s === 'THANK_YOU' || s === 'THANK YOU' || s === 'THANKS' || s === 'THANK') {
+    const sweep = Math.sin(progress * Math.PI * 2) * 0.06;
+    pose.headRot = [0.06, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.25 - sweep, -0.15, 0.1],
+      wristPos: [0.12, 0.24 - sweep * 0.5, 0.24 + sweep],
+      thumb: f(0.05, 0.05, 0.05, 0.35),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'HOW') {
+    // Both open curved palms facing up, rocking outwards
+    pose.isTwoHanded = true;
+    const rock = Math.sin(progress * Math.PI * 4) * 0.25;
+    pose.headRot = [0, 0.08, 0.06];
+    pose.rightArm = {
+      wristRot: [0.35, -0.25, 0.25 + rock],
+      wristPos: [0.16, 0.18, 0.28],
+      thumb: f(0.2, 0.3, 0.2, 0.35),
+      index: f(0.3, 0.4, 0.2, 0.12),
+      middle: f(0.3, 0.4, 0.2, 0.0),
+      ring: f(0.3, 0.4, 0.2, -0.12),
+      pinky: f(0.3, 0.4, 0.2, -0.22),
+    };
+    pose.leftArm = {
+      wristRot: [0.35, 0.25, -0.25 - rock],
+      wristPos: [-0.16, 0.18, 0.28],
+      thumb: f(0.2, 0.3, 0.2, -0.35),
+      index: f(0.3, 0.4, 0.2, -0.12),
+      middle: f(0.3, 0.4, 0.2, 0.0),
+      ring: f(0.3, 0.4, 0.2, 0.12),
+      pinky: f(0.3, 0.4, 0.2, 0.22),
+    };
+  } else if (s === 'WHERE') {
+    // Both hands palms-up sweeping side-to-side with questioning shrug
+    pose.isTwoHanded = true;
+    const shrug = Math.sin(progress * Math.PI * 4) * 0.035;
+    pose.headRot = [-0.04, shrug * 1.5, shrug * 1.0];
+    pose.rightArm = {
+      wristRot: [0.25, -0.20, 0.20],
+      wristPos: [0.18 + shrug, 0.18, 0.30],
+      thumb: f(0.1, 0.1, 0.1, 0.40),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.25, 0.20, -0.20],
+      wristPos: [-0.18 - shrug, 0.18, 0.30],
+      thumb: f(0.1, 0.1, 0.1, -0.40),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'WHAT') {
+    // Index finger upright shaking side to side with questioning brow
+    const shake = Math.sin(progress * Math.PI * 6) * 0.25;
+    pose.headRot = [0.06, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.20, 0.0, 0.15 + shake],
+      wristPos: [0.14, 0.22, 0.28],
+      thumb: f(0.8, 1.0, 0.8, 0.2),
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'WHEN') {
+    pose.isTwoHanded = true;
+    const circle = progress * Math.PI * 2;
+    pose.headRot = [0.04, 0, 0];
+    pose.leftArm = {
+      wristRot: [0.1, 0.2, 0.0],
+      wristPos: [-0.04, 0.22, 0.26],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [0.1, -0.2, 0.0],
+      wristPos: [0.03 + Math.cos(circle) * 0.04, 0.22 + Math.sin(circle) * 0.03, 0.26],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'WHY') {
+    const pull = Math.sin(progress * Math.PI * 2) * 0.05;
+    pose.headRot = [0.05, 0.05, 0];
+    pose.rightArm = {
+      wristRot: [0.35, -0.3, 0.1],
+      wristPos: [0.18 + pull, 0.32 - pull, 0.24],
+      thumb: f(0.0, 0.0, 0.0, 0.55),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: f(0.0, 0.0, 0.0, -0.45),
+    };
+  } else if (s === 'WHO') {
+    const circle = progress * Math.PI * 4;
+    pose.headRot = [0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.35, -0.15, 0.1],
+      wristPos: [0.03 + Math.cos(circle) * 0.02, 0.33 + Math.sin(circle) * 0.02, 0.22],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'NAME') {
+    // Both hands form H-shape, tapping across each other
+    pose.isTwoHanded = true;
+    const tap = Math.abs(Math.sin(progress * Math.PI * 4)) * 0.025;
+    pose.headRot = [0.04, 0, 0];
+    pose.leftArm = {
+      wristRot: [0.0, 0.6, 0.8],
+      wristPos: [-0.03, 0.18, 0.26],
+      thumb: f(0.8, 1.0, 0.8, 0.1),
+      index: f(0.0, 0.0, 0.0, 0.02),
+      middle: f(0.0, 0.0, 0.0, -0.02),
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [0.0, -0.6, -0.8],
+      wristPos: [0.03, 0.20 + tap, 0.26],
+      thumb: f(0.8, 1.0, 0.8, 0.1),
+      index: f(0.0, 0.0, 0.0, 0.02),
+      middle: f(0.0, 0.0, 0.0, -0.02),
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'FATHER' || s === 'DAD' || s === 'PAPA') {
+    // Right open hand tapping temple
+    const tap = Math.abs(Math.sin(progress * Math.PI * 4)) * 0.025;
+    pose.headRot = [0.06, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.25, -0.35, 0.2],
+      wristPos: [0.14, 0.38 - tap, 0.22],
+      thumb: f(0.0, 0.0, 0.0, 0.50),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'MOTHER' || s === 'MOM' || s === 'MUMMY') {
+    // Soft curved right hand gently touching chin/jaw
+    const touch = Math.sin(progress * Math.PI * 2) * 0.02;
+    pose.headRot = [0.04, 0.05, 0];
+    pose.rightArm = {
+      wristRot: [0.35, -0.25, 0.15],
+      wristPos: [0.09, 0.31 + touch, 0.20],
+      thumb: f(0.2, 0.3, 0.2, 0.35),
+      index: f(0.3, 0.4, 0.3, 0.08),
+      middle: f(0.3, 0.4, 0.3, 0.0),
+      ring: f(0.3, 0.4, 0.3, -0.08),
+      pinky: f(0.3, 0.4, 0.3, -0.16),
+    };
+  } else if (s === 'BROTHER' || s === 'BRO') {
+    pose.isTwoHanded = true;
+    pose.headRot = [0.04, 0, 0];
+    pose.leftArm = {
+      wristRot: [1.45, 0.0, 0.0],
+      wristPos: [-0.035, 0.20, 0.30],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [1.45, 0.0, 0.0],
+      wristPos: [0.035, 0.20, 0.30],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'SISTER' || s === 'SIS') {
+    pose.isTwoHanded = true;
+    pose.headRot = [0.04, 0, 0];
+    pose.leftArm = {
+      wristRot: [1.45, 0.0, 0.0],
+      wristPos: [-0.035, 0.20, 0.30],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [1.45, 0.0, 0.0],
+      wristPos: [0.035, 0.20, 0.30],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'FAMILY') {
+    // Both hands form circles sweeping out and meeting at pinkies
+    pose.isTwoHanded = true;
+    const sweep = progress * Math.PI * 2;
+    pose.headRot = [0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.3, -0.4, 0.2],
+      wristPos: [0.12 + Math.cos(sweep) * 0.04, 0.20, 0.26],
+      thumb: f(0.6, 0.7, 0.4, 0.2),
+      index: f(0.8, 0.9, 0.6, 0.0),
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.3, 0.4, -0.2],
+      wristPos: [-0.12 - Math.cos(sweep) * 0.04, 0.20, 0.26],
+      thumb: f(0.6, 0.7, 0.4, -0.2),
+      index: f(0.8, 0.9, 0.6, 0.0),
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'FRIEND' || s === 'DOST') {
+    // Both index fingers hooked together
+    pose.isTwoHanded = true;
+    const rock = Math.sin(progress * Math.PI * 4) * 0.02;
+    pose.headRot = [0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.2, -0.3, 0.1],
+      wristPos: [0.03 + rock, 0.22, 0.28],
+      thumb: FIST_FINGER,
+      index: HOOK_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.2, 0.3, -0.1],
+      wristPos: [-0.03 - rock, 0.22, 0.28],
+      thumb: FIST_FINGER,
+      index: HOOK_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'SCHOOL' || s === 'COLLEGE') {
+    // Both flat hands clapping horizontally twice (teacher chalkboard clap)
+    pose.isTwoHanded = true;
+    const clap = Math.abs(Math.sin(progress * Math.PI * 4)) * 0.04;
+    pose.headRot = [0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.1, -1.2, 0.0],
+      wristPos: [0.04 - clap, 0.20, 0.28],
+      thumb: f(0.1, 0.1, 0.1, 0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.1, 1.2, 0.0],
+      wristPos: [-0.04 + clap, 0.20, 0.28],
+      thumb: f(0.1, 0.1, 0.1, -0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'HOME' || s === 'HOUSE') {
+    // Both flat hands forming peaked triangular roof
+    pose.isTwoHanded = true;
+    pose.headRot = [0.02, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.0, -0.65, 0.65],
+      wristPos: [0.045, 0.28, 0.26],
+      thumb: f(0.05, 0.05, 0.05, 0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.0, 0.65, -0.65],
+      wristPos: [-0.045, 0.28, 0.26],
+      thumb: f(0.05, 0.05, 0.05, -0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'HOSPITAL') {
+    // Right index draws cross on left upper arm
+    pose.isTwoHanded = true;
+    const cross = Math.sin(progress * Math.PI * 4) * 0.03;
+    pose.headRot = [0.04, -0.1, 0];
+    pose.leftArm = {
+      wristRot: [0.2, 0.4, 0.0],
+      wristPos: [-0.14, 0.12, 0.22],
+      thumb: FIST_FINGER,
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [0.4, -0.3, 0.1],
+      wristPos: [-0.16, 0.24 + cross, 0.18],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'DOCTOR') {
+    // Right fingertips feeling pulse at left inner wrist
+    pose.isTwoHanded = true;
+    const pulse = Math.sin(progress * Math.PI * 6) * 0.01;
+    pose.headRot = [0.08, -0.05, 0];
+    pose.leftArm = {
+      wristRot: [1.45, 0.0, 0.0],
+      wristPos: [-0.08, 0.16, 0.28],
+      thumb: OPEN_FINGER,
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [0.35, -0.2, 0.1],
+      wristPos: [-0.06, 0.18 + pulse, 0.28],
+      thumb: FIST_FINGER,
+      index: f(0.3, 0.4, 0.2, 0.02),
+      middle: f(0.3, 0.4, 0.2, -0.02),
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'TIME' || s === 'CLOCK') {
+    // Right index tapping wrist watch location on left wrist
+    pose.isTwoHanded = true;
+    const tap = Math.abs(Math.sin(progress * Math.PI * 4)) * 0.025;
+    pose.headRot = [0.08, -0.05, 0];
+    pose.leftArm = {
+      wristRot: [0.4, 0.8, -0.2],
+      wristPos: [-0.06, 0.16, 0.26],
+      thumb: FIST_FINGER,
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.rightArm = {
+      wristRot: [0.4, -0.3, 0.1],
+      wristPos: [-0.05, 0.19 + tap, 0.26],
+      thumb: FIST_FINGER,
+      index: f(0.0, 0.0, 0.0, 0.0),
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'TODAY') {
+    pose.isTwoHanded = true;
+    const dip = Math.sin(progress * Math.PI * 4) * 0.03;
+    pose.headRot = [0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.25, -0.15, 0.15],
+      wristPos: [0.15, 0.16 + dip, 0.28],
+      thumb: f(0.1, 0.1, 0.1, 0.35),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.25, 0.15, -0.15],
+      wristPos: [-0.15, 0.16 + dip, 0.28],
+      thumb: f(0.1, 0.1, 0.1, -0.35),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'TOMORROW') {
+    const flick = Math.sin(progress * Math.PI * 2) * 0.05;
+    pose.headRot = [0.04, 0.05, 0];
+    pose.rightArm = {
+      wristRot: [0.25, -0.3, 0.1],
+      wristPos: [0.12 + flick, 0.32, 0.22 + flick],
+      thumb: f(0.0, 0.0, 0.0, 0.55),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'YESTERDAY') {
+    const tilt = Math.sin(progress * Math.PI * 2) * 0.04;
+    pose.headRot = [0.04, -0.05, 0];
+    pose.rightArm = {
+      wristRot: [0.25, -0.3, -0.2],
+      wristPos: [0.14 - tilt, 0.34, 0.18 - tilt],
+      thumb: f(0.0, 0.0, 0.0, 0.55),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'HAPPY' || s === 'JOY') {
+    pose.isTwoHanded = true;
+    const brush = Math.sin(progress * Math.PI * 4) * 0.035;
+    pose.headRot = [-0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.2, -0.2, 0.1],
+      wristPos: [0.14, 0.18 + brush, 0.24],
+      thumb: f(0.05, 0.05, 0.05, 0.40),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.2, 0.2, -0.1],
+      wristPos: [-0.14, 0.18 + brush, 0.24],
+      thumb: f(0.05, 0.05, 0.05, -0.40),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'SAD') {
+    pose.isTwoHanded = true;
+    const droop = Math.sin(progress * Math.PI * 2) * 0.05;
+    pose.headRot = [0.12, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.4, -0.1, 0.0],
+      wristPos: [0.10, 0.28 - droop, 0.24],
+      thumb: f(0.3, 0.4, 0.2, 0.2),
+      index: f(0.5, 0.6, 0.4, 0.05),
+      middle: f(0.5, 0.6, 0.4, 0.0),
+      ring: f(0.5, 0.6, 0.4, -0.05),
+      pinky: f(0.5, 0.6, 0.4, -0.1),
+    };
+    pose.leftArm = {
+      wristRot: [0.4, 0.1, 0.0],
+      wristPos: [-0.10, 0.28 - droop, 0.24],
+      thumb: f(0.3, 0.4, 0.2, -0.2),
+      index: f(0.5, 0.6, 0.4, -0.05),
+      middle: f(0.5, 0.6, 0.4, 0.0),
+      ring: f(0.5, 0.6, 0.4, 0.05),
+      pinky: f(0.5, 0.6, 0.4, 0.1),
+    };
+  } else if (s === 'LOVE') {
+    // Both arms crossed tight over chest
+    pose.isTwoHanded = true;
+    const embrace = Math.sin(progress * Math.PI * 2) * 0.02;
+    pose.headRot = [0.06, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.2, -0.6, 0.4],
+      wristPos: [-0.08 + embrace, 0.20, 0.24],
+      thumb: f(0.5, 0.5, 0.4, 0.1),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.2, 0.6, -0.4],
+      wristPos: [0.08 - embrace, 0.18, 0.22],
+      thumb: f(0.5, 0.5, 0.4, -0.1),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'MONEY' || s === 'CASH') {
+    // Thumb rubbing index and middle
+    const rub = Math.sin(progress * Math.PI * 8) * 0.3;
+    pose.headRot = [0.04, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.35, -0.2, 0.1],
+      wristPos: [0.14, 0.20, 0.28],
+      thumb: f(0.3 + rub * 0.2, 0.4, 0.2, 0.4),
+      index: f(0.4 - rub * 0.2, 0.5, 0.3, 0.05),
+      middle: f(0.4 - rub * 0.2, 0.5, 0.3, -0.05),
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'BOOK' || s === 'READ') {
+    // Both flat hands opening like book
+    pose.isTwoHanded = true;
+    const openAngle = Math.sin(progress * Math.PI * 2) * 0.5;
+    pose.headRot = [0.10, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.4, -0.5 - openAngle, 0.2],
+      wristPos: [0.06 + openAngle * 0.08, 0.18, 0.28],
+      thumb: f(0.05, 0.05, 0.05, 0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.4, 0.5 + openAngle, -0.2],
+      wristPos: [-0.06 - openAngle * 0.08, 0.18, 0.28],
+      thumb: f(0.05, 0.05, 0.05, -0.2),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'CAR') {
+    // Steering wheel turning left and right
+    pose.isTwoHanded = true;
+    const turn = Math.sin(progress * Math.PI * 4) * 0.35;
+    pose.headRot = [0, turn * 0.2, 0];
+    pose.rightArm = {
+      wristRot: [0.3, -0.2, turn],
+      wristPos: [0.16, 0.22 + turn * 0.05, 0.32],
+      thumb: f(0.5, 0.6, 0.4, 0.2),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+    pose.leftArm = {
+      wristRot: [0.3, 0.2, turn],
+      wristPos: [-0.16, 0.22 - turn * 0.05, 0.32],
+      thumb: f(0.5, 0.6, 0.4, -0.2),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
   } else if (s === 'HELP') {
-    // Left palm horizontal facing up; right fist with thumb up placed on left palm, lifting together
     pose.isTwoHanded = true;
     const lift = Math.sin(progress * Math.PI * 2) * 0.035;
     pose.headRot = [0.04, 0, 0];
@@ -195,7 +772,6 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       pinky: FIST_FINGER,
     };
   } else if (s === 'PLEASE' || s === 'WELCOME') {
-    // Both open hands sweeping gently inwards over chest
     pose.isTwoHanded = true;
     const sweep = Math.sin(progress * Math.PI * 2) * 0.03;
     pose.rightArm = {
@@ -216,8 +792,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: f(0.05, 0.05, 0.05, 0.12),
       pinky: f(0.05, 0.05, 0.05, 0.22),
     };
-  } else if (s === 'WATER' || s === 'DRINK') {
-    // C-shaped hand brought near mouth
+  } else if (s === 'WATER' || s === 'DRINK' || s === 'DRINKING') {
     const sip = Math.sin(progress * Math.PI * 2) * 0.03;
     pose.headRot = [-0.08 - sip * 0.5, 0, 0];
     pose.rightArm = {
@@ -229,8 +804,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: f(0.75, 0.85, 0.65, -0.05),
       pinky: f(0.80, 0.90, 0.70, -0.10),
     };
-  } else if (s === 'FOOD' || s === 'EAT') {
-    // Bunched fingertips tapping near lips
+  } else if (s === 'FOOD' || s === 'EAT' || s === 'EATING') {
     const tap = Math.abs(Math.sin(progress * Math.PI * 4)) * 0.022;
     pose.headRot = [0.04, 0, 0];
     pose.rightArm = {
@@ -242,8 +816,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: f(0.95, 1.15, 0.85, 0.0),
       pinky: f(0.95, 1.15, 0.85, 0.0),
     };
-  } else if (s === 'YES') {
-    // Fist nodding at shoulder height
+  } else if (s === 'YES' || s === 'YEAH') {
     const nod = Math.sin(progress * Math.PI * 4) * 0.25;
     pose.headRot = [0.10 + nod * 0.3, 0, 0];
     pose.rightArm = {
@@ -255,8 +828,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: FIST_FINGER,
       pinky: FIST_FINGER,
     };
-  } else if (s === 'NO') {
-    // Index and middle extended, snapping down; head shaking
+  } else if (s === 'NO' || s === 'NOT') {
     const shake = Math.sin(progress * Math.PI * 4) * 0.15;
     const snap = Math.abs(Math.sin(progress * Math.PI * 2)) * 0.4;
     pose.headRot = [0, shake, 0];
@@ -269,8 +841,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: FIST_FINGER,
       pinky: FIST_FINGER,
     };
-  } else if (s === 'YOU') {
-    // Index pointing directly forward to partner
+  } else if (s === 'YOU' || s === 'YOUR') {
     pose.rightArm = {
       wristRot: [1.45, 0.0, 0.0],
       wristPos: [0.12, 0.18, 0.38],
@@ -280,8 +851,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: FIST_FINGER,
       pinky: FIST_FINGER,
     };
-  } else if (s === 'I' || s === 'ME') {
-    // Index pointing gently to center chest
+  } else if (s === 'I' || s === 'ME' || s === 'MY') {
     pose.rightArm = {
       wristRot: [0.55, -0.4, 0.1],
       wristPos: [0.05, 0.18, 0.18],
@@ -292,7 +862,6 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       pinky: FIST_FINGER,
     };
   } else if (s === 'SORRY') {
-    // Fist rubbing circular motion on chest
     const rub = progress * Math.PI * 4;
     pose.headRot = [0.08, 0, 0];
     pose.rightArm = {
@@ -304,12 +873,33 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
       ring: FIST_FINGER,
       pinky: FIST_FINGER,
     };
-  } else if (s === 'STOP') {
-    // Open palm pushed forward firmly
+  } else if (s === 'STOP' || s === 'HALT') {
     pose.rightArm = {
       wristRot: [0.0, 0.0, 0.0],
       wristPos: [0.18, 0.22, 0.35],
       thumb: f(0.0, 0.0, 0.0, 0.45),
+      index: OPEN_FINGER,
+      middle: OPEN_FINGER,
+      ring: OPEN_FINGER,
+      pinky: OPEN_FINGER,
+    };
+  } else if (s === 'GOOD') {
+    pose.headRot = [0.06, 0, 0];
+    pose.rightArm = {
+      wristRot: [0.15, -0.20, 0.10],
+      wristPos: [0.14, 0.20, 0.28],
+      thumb: f(0.0, 0.0, 0.0, 0.55),
+      index: FIST_FINGER,
+      middle: FIST_FINGER,
+      ring: FIST_FINGER,
+      pinky: FIST_FINGER,
+    };
+  } else if (s === 'BAD') {
+    pose.headRot = [-0.04, 0.05, 0];
+    pose.rightArm = {
+      wristRot: [1.2, 0.0, 0.0],
+      wristPos: [0.14, 0.16, 0.28],
+      thumb: f(0.1, 0.1, 0.1, 0.3),
       index: OPEN_FINGER,
       middle: OPEN_FINGER,
       ring: OPEN_FINGER,
@@ -479,7 +1069,7 @@ export function getSignPose(rawSign: string, progress: number = 0.5): BodyPoseSt
     pose.rightArm.pinky = FIST_FINGER;
   } else if (s === 'S') {
     pose.rightArm.wristPos = [0.16, 0.22, 0.26];
-    pose.rightArm.thumb = f(1.1, 1.1, 0.9, 0.0); // Folded tight over front of fingers
+    pose.rightArm.thumb = f(1.1, 1.1, 0.9, 0.0);
     pose.rightArm.index = FIST_FINGER;
     pose.rightArm.middle = FIST_FINGER;
     pose.rightArm.ring = FIST_FINGER;
@@ -697,7 +1287,6 @@ export const HumanoidAvatar3D: React.FC<HumanoidAvatar3DProps> = ({
       metalness: 0.02,
     });
 
-
     const knuckleMaterial = new THREE.MeshStandardMaterial({
       color: 0xc87d4e,
       roughness: 0.42,
@@ -790,7 +1379,7 @@ export const HumanoidAvatar3D: React.FC<HumanoidAvatar3DProps> = ({
     hairBack.position.set(0, 0.008, -0.018);
     headGroup.add(hairBack);
 
-    // Clean hairline fringe: Smooth curved torus band across hairline (above brow, zero facial clipping)
+    // Clean hairline fringe: Smooth curved torus band across hairline
     const fringeGeo = new THREE.TorusGeometry(0.106, 0.012, 10, 24, Math.PI * 0.65);
     const fringe = new THREE.Mesh(fringeGeo, hairMaterial);
     fringe.rotation.x = Math.PI * 0.28;
@@ -811,27 +1400,23 @@ export const HumanoidAvatar3D: React.FC<HumanoidAvatar3DProps> = ({
     // Expressive 3D Eyes with Almond Shape, Iris, Pupil, and Specular Catchlight
     const createEye = (isRight: boolean) => {
       const eyeG = new THREE.Group();
-      // Almond eye sclera
       const whiteGeo = new THREE.SphereGeometry(0.015, 16, 16);
       const whiteMesh = new THREE.Mesh(whiteGeo, eyeWhiteMaterial);
       whiteMesh.scale.set(1.25, 0.85, 0.60);
       eyeG.add(whiteMesh);
 
-      // Warm hazel/amber iris
       const irisGeo = new THREE.CylinderGeometry(0.0075, 0.0075, 0.003, 16);
       const irisMesh = new THREE.Mesh(irisGeo, irisMaterial);
       irisMesh.rotation.x = Math.PI / 2;
       irisMesh.position.set(0, 0, 0.008);
       eyeG.add(irisMesh);
 
-      // Deep black pupil
       const pupilGeo = new THREE.CylinderGeometry(0.0042, 0.0042, 0.0032, 16);
       const pupilMesh = new THREE.Mesh(pupilGeo, pupilMaterial);
       pupilMesh.rotation.x = Math.PI / 2;
       pupilMesh.position.set(0, 0, 0.0088);
       eyeG.add(pupilMesh);
 
-      // Specular catchlight (adds vivid lifelike gaze)
       const catchlight = new THREE.Mesh(
         new THREE.SphereGeometry(0.0018, 8, 8),
         new THREE.MeshBasicMaterial({ color: 0xffffff })
@@ -839,7 +1424,6 @@ export const HumanoidAvatar3D: React.FC<HumanoidAvatar3DProps> = ({
       catchlight.position.set(0.0025, 0.0025, 0.010);
       eyeG.add(catchlight);
 
-      // Upper eyelid fold
       const lidGeo = new THREE.TorusGeometry(0.014, 0.0022, 8, 16, Math.PI * 0.9);
       const lidMesh = new THREE.Mesh(lidGeo, knuckleMaterial);
       lidMesh.position.set(0, 0.004, 0.007);
