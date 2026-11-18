@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 interface TextToSignWorkspaceProps {
-  onSpeak?: (text: string) => void;
+  onSpeak?: (text: string, lang?: string) => void;
   isSpeaking?: boolean;
 }
 
@@ -1047,6 +1047,14 @@ interface TranslationResult {
   rule_applied?: string;
 }
 
+export const INDIC_LANGUAGES = [
+  { code: 'hi', label: 'Hindi', native: 'हिन्दी', ttsCode: 'hi-IN' },
+  { code: 'ta', label: 'Tamil', native: 'தமிழ்', ttsCode: 'ta-IN' },
+  { code: 'te', label: 'Telugu', native: 'తెలుగు', ttsCode: 'te-IN' },
+  { code: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ', ttsCode: 'kn-IN' },
+  { code: 'ml', label: 'Malayalam', native: 'മലയാളം', ttsCode: 'ml-IN' },
+];
+
 export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
   onSpeak,
   isSpeaking: _isSpeaking = false,
@@ -1068,6 +1076,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
   const [isGlossLoading, setIsGlossLoading] = useState<boolean>(false);
   const [glossSource, setGlossSource] = useState<'ai_neural' | 'heuristic'>('ai_neural');
   const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
+  const [selectedIndicLang, setSelectedIndicLang] = useState<string>('all');
 
   // Trigger translation pipeline (reverse-gloss + multilingual Indic translation)
   const executeTranslation = useCallback(async (textToTranslate: string) => {
@@ -1682,36 +1691,168 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
               </span>
             </div>
 
-            {/* Multilingual Meanings Grid */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '8px',
-                background: 'rgba(15, 23, 42, 0.6)',
-                padding: '8px 10px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-              }}
-            >
-              <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '2px' }}>
-                  🇮🇳 हिन्दी (Hindi)
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
-                  {translationResult?.translations?.hi ||
-                    activeSignData.indicHindi ||
-                    'अनुवाद तैयार...'}
-                </div>
+            {/* Multilingual Indic Language Switcher & Full Translation Grid */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Language Selector Pills */}
+              <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIndicLang('all')}
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: selectedIndicLang === 'all' ? '#38bdf8' : 'rgba(255,255,255,0.1)',
+                    background: selectedIndicLang === 'all' ? 'rgba(56, 189, 248, 0.18)' : 'rgba(15, 23, 42, 0.5)',
+                    color: selectedIndicLang === 'all' ? '#38bdf8' : '#94a3b8',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  All Languages (5)
+                </button>
+                {INDIC_LANGUAGES.map((lang) => {
+                  const isSel = selectedIndicLang === lang.code;
+                  return (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => setSelectedIndicLang(lang.code)}
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid',
+                        borderColor: isSel ? '#38bdf8' : 'rgba(255,255,255,0.1)',
+                        background: isSel ? 'rgba(56, 189, 248, 0.18)' : 'rgba(15, 23, 42, 0.5)',
+                        color: isSel ? '#38bdf8' : '#94a3b8',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {lang.native}
+                    </button>
+                  );
+                })}
               </div>
-              <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '2px' }}>
-                  🇮🇳 தமிழ் (Tamil)
+
+              {/* Translation Display */}
+              {selectedIndicLang === 'all' ? (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                    gap: '6px',
+                    background: 'rgba(15, 23, 42, 0.65)',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                  }}
+                >
+                  {INDIC_LANGUAGES.map((lang) => {
+                    const transText =
+                      translationResult?.translations?.[lang.code] ||
+                      (lang.code === 'hi' ? activeSignData.indicHindi : '') ||
+                      '—';
+                    return (
+                      <div
+                        key={lang.code}
+                        style={{
+                          background: 'rgba(30, 41, 59, 0.5)',
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(255, 255, 255, 0.04)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '2px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '9.5px', color: '#94a3b8', fontWeight: 600 }}>
+                            {lang.native} ({lang.label})
+                          </span>
+                          {onSpeak && transText && transText !== '—' && (
+                            <button
+                              type="button"
+                              onClick={() => onSpeak(transText, lang.ttsCode)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#38bdf8',
+                                cursor: 'pointer',
+                                padding: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                              title={`Speak in ${lang.label}`}
+                            >
+                              <Volume2 size={11} />
+                            </button>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#f8fafc', wordBreak: 'break-word' }}>
+                          {transText}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: 500, color: '#cbd5e1' }}>
-                  {translationResult?.translations?.ta || 'பொருளடக்கம்...'}
-                </div>
-              </div>
+              ) : (
+                (() => {
+                  const target = INDIC_LANGUAGES.find((l) => l.code === selectedIndicLang) || INDIC_LANGUAGES[0];
+                  const transText =
+                    translationResult?.translations?.[target.code] ||
+                    (target.code === 'hi' ? activeSignData.indicHindi : '') ||
+                    '—';
+                  return (
+                    <div
+                      style={{
+                        background: 'rgba(15, 23, 42, 0.8)',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 700 }}>
+                          🇮🇳 {target.native} ({target.label})
+                        </span>
+                        {onSpeak && transText && transText !== '—' && (
+                          <button
+                            type="button"
+                            onClick={() => onSpeak(transText, target.ttsCode)}
+                            style={{
+                              background: 'rgba(56, 189, 248, 0.15)',
+                              border: '1px solid rgba(56, 189, 248, 0.3)',
+                              color: '#38bdf8',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              padding: '2px 6px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '10px',
+                            }}
+                          >
+                            <Volume2 size={12} />
+                            <span>Listen</span>
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>
+                        {transText}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
             </div>
 
             {/* Fluent English Interpretation */}
