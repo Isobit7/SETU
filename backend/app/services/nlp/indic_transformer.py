@@ -16,6 +16,34 @@ postpositional markers.
 """
 
 from __future__ import annotations
+import urllib.request
+import urllib.parse
+import json
+
+_OPEN_VOCAB_CACHE: Dict[tuple, str] = {}
+
+def fetch_open_translation(query: str, target_lang: str) -> Optional[str]:
+    """Translates arbitrary open-vocabulary words or sentences into target Indic language."""
+    clean_q = query.strip()
+    if not clean_q or len(clean_q) <= 1:
+        return None
+    cache_key = (clean_q.lower(), target_lang.lower())
+    if cache_key in _OPEN_VOCAB_CACHE:
+        return _OPEN_VOCAB_CACHE[cache_key]
+    try:
+        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={target_lang}&dt=t&q={urllib.parse.quote(clean_q)}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=3.5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data and data[0]:
+                trans = "".join([part[0] for part in data[0] if part and part[0]]).strip()
+                if trans:
+                    _OPEN_VOCAB_CACHE[cache_key] = trans
+                    return trans
+    except Exception:
+        pass
+    return None
+
 
 from typing import Dict, List, Optional, Sequence
 
@@ -498,88 +526,91 @@ class IndicTransformer:
         import re
         return re.sub(r'(.)\1+', r'\1', s).strip()
 
-    def translate(self, tokens: Sequence[str], lang: str = "hi") -> str:
-        """Translates an ISL gloss token sequence into the specified Indic language."""
-        if not tokens:
+    def translate(self, tokens: Sequence[str], lang: str = "hi", raw_text: Optional[str] = None) -> str:
+        """
+        Translates an ISL gloss token sequence or arbitrary English text into specified Indic language.
+        Supports both authentic ISL curated SOV dictionary idioms and open-vocabulary translation
+        for ANY arbitrary English words, proper nouns, and complete sentences.
+        """
+        if not tokens and not raw_text:
             return ""
 
-        clean_tokens = [str(t).strip().upper().replace("_", " ") for t in tokens if str(t).strip()]
-        if not clean_tokens:
-            return ""
-
-        # Normalize language code (e.g. 'hi-IN' -> 'hi')
+        # Normalize target language code (e.g. 'hi-IN' -> 'hi')
         norm_lang = lang.split("-")[0].lower()
         if norm_lang not in self.SUPPORTED_LANGUAGES:
             norm_lang = "hi"
 
+        clean_text = raw_text.strip() if raw_text else ""
+        clean_tokens = [str(t).strip().upper().replace("_", " ") for t in tokens if str(t).strip()]
+
         sentence_key = " ".join(clean_tokens)
 
-        # 1. Exact canonical idiom match
+        # 1. Exact curated canonical idiom match (0ms instant lookup)
         if sentence_key in CANONICAL_INDIC_IDIOMS:
             idiom_dict = CANONICAL_INDIC_IDIOMS[sentence_key]
             if norm_lang in idiom_dict:
                 return idiom_dict[norm_lang]
 
-        # Check single-word exact match
+        if clean_text.upper() in CANONICAL_INDIC_IDIOMS:
+            idiom_dict = CANONICAL_INDIC_IDIOMS[clean_text.upper()]
+            if norm_lang in idiom_dict:
+                return idiom_dict[norm_lang]
+
         if len(clean_tokens) == 1 and clean_tokens[0] in CANONICAL_INDIC_IDIOMS:
             idiom_dict = CANONICAL_INDIC_IDIOMS[clean_tokens[0]]
             if norm_lang in idiom_dict:
                 return idiom_dict[norm_lang]
 
-        # 2. Fingerspelling Run Collapsing
-        # e.g., ['C', 'A', 'T'], ['CC', 'AA', 'T'], ['CC', 'AA', 'TX'], or 'CCAAT'
-        joined_chars = "".join(clean_tokens).replace(" ", "")
-        collapsed_word = self._collapse_char_runs(joined_chars)
-
-        if collapsed_word in CANONICAL_INDIC_IDIOMS:
-            return CANONICAL_INDIC_IDIOMS[collapsed_word][norm_lang]
-
-        if collapsed_word in INDIC_LEXICON:
-            stem = INDIC_LEXICON[collapsed_word][norm_lang]
-            return f"{stem}।" if norm_lang == "hi" else f"{stem}."
-
-        # Handle 1-char noise suffix on fingerspelled words (e.g., 'CATX' -> 'CAT')
-        if len(collapsed_word) > 2 and collapsed_word[:-1] in CANONICAL_INDIC_IDIOMS:
-            return CANONICAL_INDIC_IDIOMS[collapsed_word[:-1]][norm_lang]
-
-        # 3. Single Alphabet Letter
-        if len(clean_tokens) == 1 and len(clean_tokens[0]) == 1 and clean_tokens[0].isalpha():
+        # 2. Single Alphabet Letter
+        if len(clean_tokens) == 1 and len(clean_tokens[0]) == 1 and clean_tokens[0].isalpha() and (not clean_text or len(clean_text) == 1):
             letter = clean_tokens[0]
-            prefix = self.LETTER_PREFIX.get(norm_lang, "ಅಕ್ಷರ")
+            prefix = self.LETTER_PREFIX.get(norm_lang, "अक्षर")
             return f"{prefix} {letter}।" if norm_lang == "hi" else f"{prefix} {letter}."
 
-        # 4. Compositional SOV Word Translation
-        # In ISL and Indic languages, word order is naturally Subject -> Object -> Verb
+        # 3. Fingerspelled Word from sequence of individual characters (e.g. ['E', 'L', 'E', 'P', 'H', 'A', 'N', 'T'])
+        if clean_tokens and all(len(t) == 1 and t.isalnum() for t in clean_tokens):
+            spelled_word = "".join(clean_tokens)
+            if spelled_word in CANONICAL_INDIC_IDIOMS:
+                return CANONICAL_INDIC_IDIOMS[spelled_word][norm_lang]
+            if spelled_word in INDIC_LEXICON:
+                stem = INDIC_LEXICON[spelled_word][norm_lang]
+                return f"{stem}।" if norm_lang == "hi" else f"{stem}."
+            open_trans = fetch_open_translation(spelled_word, norm_lang)
+            if open_trans:
+                return f"{open_trans}।" if norm_lang == "hi" else f"{open_trans}."
+
+        # 4. Open-Vocabulary Translation for arbitrary input sentence or word
+        if clean_text and clean_text.upper() not in CANONICAL_INDIC_IDIOMS:
+            open_trans = fetch_open_translation(clean_text, norm_lang)
+            if open_trans:
+                if not open_trans.endswith(("।", ".", "?")):
+                    open_trans += "।" if norm_lang == "hi" else "."
+                return open_trans
+
+        # 5. Compositional SOV Word Translation for camera vision gloss tokens
         translated_words: List[str] = []
         is_question = any(t in ("WHAT", "WHERE", "WHEN", "WHY", "HOW", "WHO", "WHICH") for t in clean_tokens)
         has_negation = any(t in ("NOT", "NO", "NEVER") for t in clean_tokens)
 
         for token in clean_tokens:
             if token in ("NOT", "NO") and has_negation:
-                continue  # Scoped at end for Indic verbs
+                continue
 
-            # Individual token run-collapse (e.g. 'CC' -> 'C')
-            tok_norm = self._collapse_char_runs(token) if len(token) > 1 else token
-
-            if tok_norm in INDIC_LEXICON and norm_lang in INDIC_LEXICON[tok_norm]:
-                translated_words.append(INDIC_LEXICON[tok_norm][norm_lang])
-            elif tok_norm in CANONICAL_INDIC_IDIOMS and norm_lang in CANONICAL_INDIC_IDIOMS[tok_norm]:
-                translated_words.append(CANONICAL_INDIC_IDIOMS[tok_norm][norm_lang].rstrip("।."))
-            elif token in INDIC_LEXICON and norm_lang in INDIC_LEXICON[token]:
+            if token in INDIC_LEXICON and norm_lang in INDIC_LEXICON[token]:
                 translated_words.append(INDIC_LEXICON[token][norm_lang])
             elif token in CANONICAL_INDIC_IDIOMS and norm_lang in CANONICAL_INDIC_IDIOMS[token]:
                 translated_words.append(CANONICAL_INDIC_IDIOMS[token][norm_lang].rstrip("।."))
             else:
-                # Keep fingerspelled letters or unknown words as-is
-                translated_words.append(token)
+                open_tok = fetch_open_translation(token, norm_lang)
+                if open_tok:
+                    translated_words.append(open_tok)
+                else:
+                    translated_words.append(token)
 
-        # Append negation if present
         if has_negation and "NOT" in INDIC_LEXICON:
             translated_words.append(INDIC_LEXICON["NOT"][norm_lang])
 
         result = " ".join(translated_words)
-
-        # Add appropriate punctuation
         if is_question:
             if not result.endswith("?"):
                 result += "?"
@@ -591,9 +622,9 @@ class IndicTransformer:
 
         return result
 
-    def translate_all(self, tokens: Sequence[str]) -> Dict[str, str]:
-        """Returns translations for all supported Indic languages simultaneously."""
-        return {lang: self.translate(tokens, lang=lang) for lang in self.SUPPORTED_LANGUAGES}
+    def translate_all(self, tokens: Sequence[str], raw_text: Optional[str] = None) -> Dict[str, str]:
+        """Returns translations for all supported Indic languages simultaneously with open-vocabulary resolution."""
+        return {lang: self.translate(tokens, lang=lang, raw_text=raw_text) for lang in self.SUPPORTED_LANGUAGES}
 
 
 # Singleton instance

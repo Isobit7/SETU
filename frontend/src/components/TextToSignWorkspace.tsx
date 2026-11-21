@@ -1121,7 +1121,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
         // Step B: Query multilingual Indic translation for identified tokens
         try {
           const isQ = trimmed.includes('?') || /\b(how|where|what|when|why|who)\b/i.test(trimmed);
-          const tr = await ApiService.translateGloss(finalTokens, isQ);
+          const tr = await ApiService.translateGloss(finalTokens, isQ, trimmed);
           if (tr) {
             setTranslationResult(tr);
           }
@@ -1142,7 +1142,7 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
     setGlossSource('heuristic');
 
     try {
-      const tr = await ApiService.translateGloss(local.glossTokens, local.isQuestion);
+      const tr = await ApiService.translateGloss(local.glossTokens, local.isQuestion, trimmed);
       if (tr) {
         setTranslationResult(tr);
       }
@@ -1549,7 +1549,9 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
                     }}
                   >
                     <span className="subtitle-category-label">
-                      {activeSignData.category?.toUpperCase() || 'ISL SIGN'}
+                      {isFingerspelledOnly
+                        ? `SPELLING: ${inputText.trim().toUpperCase()}`
+                        : activeSignData.category?.toUpperCase() || 'ISL SIGN'}
                     </span>
                     <span
                       style={{
@@ -1567,21 +1569,49 @@ export const TextToSignWorkspace: React.FC<TextToSignWorkspaceProps> = ({
 
                   <div className="avatar-subtitle-main">
                     <span className="active-sign-token">
-                      {activeSignData.label}
-                      {activeSignData.indicHindi && activeSignData.indicHindi !== activeToken && (
-                        <span
-                          style={{
-                            marginLeft: '8px',
-                            color: '#fbbf24',
-                            fontSize: '0.85em',
-                            fontWeight: 600,
-                          }}
-                        >
-                          • {activeSignData.indicHindi}
-                        </span>
+                      {isFingerspelledOnly ? (
+                        <>
+                          <span style={{ color: '#38bdf8' }}>Fingerspelling:</span>{' '}
+                          <span style={{ color: '#ffffff' }}>"{inputText.trim()}"</span>{' '}
+                          <span style={{ color: '#34d399', fontSize: '0.9em' }}>
+                            ({activeSignData.label})
+                          </span>
+                          {translationResult?.translations?.hi && (
+                            <span
+                              style={{
+                                marginLeft: '8px',
+                                color: '#fbbf24',
+                                fontSize: '0.85em',
+                                fontWeight: 600,
+                              }}
+                            >
+                              • {translationResult.translations.hi}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {activeSignData.label}
+                          {activeSignData.indicHindi && activeSignData.indicHindi !== activeToken && (
+                            <span
+                              style={{
+                                marginLeft: '8px',
+                                color: '#fbbf24',
+                                fontSize: '0.85em',
+                                fontWeight: 600,
+                              }}
+                            >
+                              • {activeSignData.indicHindi}
+                            </span>
+                          )}
+                        </>
                       )}
                     </span>
-                    <span className="sign-description-text">{activeSignData.desc}</span>
+                    <span className="sign-description-text">
+                      {isFingerspelledOnly
+                        ? `Authentic ISL manual alphabet for letter "${activeToken}" in fingerspelling "${inputText.trim()}". ${activeSignData.desc}`
+                        : activeSignData.desc}
+                    </span>
                   </div>
                 </div>
               </div>

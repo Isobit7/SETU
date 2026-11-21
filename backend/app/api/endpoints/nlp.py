@@ -162,10 +162,18 @@ async def translate_gloss(request: TranslateRequest) -> TranslateResponse:
     canonical = rule_match is not None
 
     # 3. Syntax transformation (SOV -> SVO English)
-    english_parsed = rule_match or syntax_transformer.transform(clean_tokens) or _parser.parse_gloss(clean_tokens)
+    if rule_match:
+        english_parsed = rule_match
+    elif request.text and len(request.text.strip().split()) >= 1 and not all(len(t) == 1 for t in raw_tokens):
+        # Keep clean fluent English input if already well-formed
+        english_parsed = request.text.strip()
+        if not english_parsed.endswith(('.', '?', '!')):
+            english_parsed += '?' if request.is_question else '.'
+    else:
+        english_parsed = syntax_transformer.transform(clean_tokens) or _parser.parse_gloss(clean_tokens)
 
     # 4. Indic Multilingual Translation
-    indic_translations = indic_transformer.translate_all(clean_tokens)
+    indic_translations = indic_transformer.translate_all(clean_tokens, raw_text=request.text)
 
     translations: Dict[str, str] = {"en": english_parsed}
     for lang, trans in indic_translations.items():
